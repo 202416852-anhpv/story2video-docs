@@ -1,0 +1,33 @@
+@startuml overview
+left to right direction
+
+actor "Người dùng" as User
+actor "SSO Vbee" as SSO
+actor "AI sinh giọng đọc" as AI_TTS
+actor "AI sinh ảnh" as AI_IMG
+actor "AI phân tích truyện" as AI_LLM
+
+rectangle {
+    usecase "Quản lý thế giới truyện" as UC_01
+    usecase "Quản lý chương truyện" as UC_02
+    usecase "Đăng ký, đăng nhập" as UC_03
+    usecase "Tạo & chỉnh sửa storyboard" as UC_04
+    usecase "Chỉnh sửa & xuất video" as UC_05
+    usecase "Tạo & chỉnh sửa ảnh minh họa" as UC_06
+    usecase "Tạo & chỉnh sửa giọng đọc" as UC_07
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+UC_03 --> SSO
+UC_06 --> AI_IMG
+UC_07 --> AI_TTS
+UC_04 --> AI_LLM
+
+UC_05 <.. UC_07 : <<extend>>
+UC_04 <.. UC_06 : <<extend>>
+
+@enduml
