@@ -1,4 +1,4 @@
-@startuml
+@startuml uc_01
 title Quản lý thế giới truyện
 left to right direction
 
