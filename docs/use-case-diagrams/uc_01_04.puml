@@ -1,0 +1,20 @@
+@startuml uc_01_04
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle {
+    usecase "Chọn phong cách nghệ thuật chung cho truyện" as UC_01
+    usecase "Thêm các luật khi sinh ảnh cho truyện" as UC_02
+    usecase "Chỉnh sửa các luật khi sinh ảnh cho truyện" as UC_03
+    usecase "Xóa các luật khi sinh ảnh cho truyện" as UC_04
+    usecase "Xem danh sách các luật khi sinh ảnh cho truyện" as UC_05
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+
+@enduml

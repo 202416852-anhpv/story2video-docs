@@ -1,0 +1,23 @@
+@startuml uc_01_05
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle {
+    usecase "Thêm mốc thời gian trong truyện" as UC_01
+    usecase "Chỉnh sửa mốc thời gian trong truyện" as UC_02
+    usecase "Xem toàn bộ dòng thời gian truyện" as UC_03
+    usecase "Xem theo mạch truyện" as UC_03_1
+    usecase "Xem theo thứ tự thời gian" as UC_03_2
+    usecase "Xóa mốc thời gian truyện" as UC_04
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+
+UC_03 <|-- UC_03_1
+UC_03 <|-- UC_03_2
+
+@enduml

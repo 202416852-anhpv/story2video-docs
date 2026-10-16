@@ -1,4 +1,4 @@
-@startuml overview
+@startuml uc_01_01
 left to right direction
 
 actor "Người dùng" as User

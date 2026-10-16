@@ -1,0 +1,18 @@
+@startuml uc_01_06
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle {
+    usecase "Thêm mối quan hệ giữa các nhân vật" as UC_01
+    usecase "Chỉnh sửa mối quan hệ giữa các nhân vật" as UC_02
+    usecase "Xem đồ thị mối quan hệ giữa các nhân vật" as UC_03
+    usecase "Xóa mối quan hệ giữa các nhân vật" as UC_04
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+
+@enduml
