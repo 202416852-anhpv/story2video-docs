@@ -1,4 +1,5 @@
-@startuml uc_01_01
+@startuml
+title Quản lý nhân vật trong truyện
 left to right direction
 
 actor "Người dùng" as User

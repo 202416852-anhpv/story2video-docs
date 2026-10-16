@@ -1,4 +1,5 @@
-@startuml uc_01_05
+@startuml
+title Quản lý dòng thời gian của truyện
 left to right direction
 
 actor "Người dùng" as User

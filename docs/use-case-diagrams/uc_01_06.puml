@@ -1,4 +1,5 @@
-@startuml uc_01_06
+@startuml
+title Quản lý mối quan hệ giữa các nhân vật
 left to right direction
 
 actor "Người dùng" as User
