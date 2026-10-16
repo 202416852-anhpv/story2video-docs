@@ -1,0 +1,21 @@
+@startuml overview
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle {
+    usecase "Tạo chương truyện mới" as UC_01
+    usecase "Chỉnh sửa chương truyện" as UC_02
+    usecase "Xem danh sách chương truyện" as UC_03
+    usecase "Xóa chương truyện" as UC_04
+    usecase "Tìm kiếm chương truyện" as UC_05
+}
+
+User --> UC_04
+User --> UC_01
+User --> UC_02
+User --> UC_03
+
+UC_03 <.. UC_05 : <<extend>>
+
+@enduml

@@ -1,0 +1,22 @@
+@startuml overview
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle {
+    usecase "Quản lý nhân vật trong truyện" as UC_01
+    usecase "Quản lý vật phẩm trong truyện" as UC_02
+    usecase "Quản lý địa điểm trong truyện" as UC_03
+    usecase "Quản lý phong cách nghệ thuật  của truyện" as UC_04
+    usecase "Quản lý dòng thời gian của truyện" as UC_05
+    usecase "Quản lý mối quan hệ giữa các nhân vật" as UC_06
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+
+@enduml
