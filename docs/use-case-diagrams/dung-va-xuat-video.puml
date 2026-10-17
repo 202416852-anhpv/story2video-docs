@@ -1,4 +1,5 @@
-@startuml uc_06
+@startuml dung-va-xuat-video
+title Dựng & xuất video
 left to right direction
 
 actor "Người dùng" as User
@@ -15,16 +16,16 @@ rectangle "Dựng & xuất video" {
     usecase "Tải về video hoàn chỉnh" as UC_08
 }
 
-User -- UC_01
-User -- UC_02
-User -- UC_03
-User -- UC_04
-User -- UC_05
-User -- UC_06
-User -- UC_07
-User -- UC_08
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+User --> UC_07
+User --> UC_08
 
-UC_02 -- AI_Service
-UC_07 -- AI_Service
+UC_02 --> AI_Service
+UC_07 --> AI_Service
 
 @enduml

@@ -1,10 +1,10 @@
-@startuml uc_01_06
+@startuml moi-quan-he-nhan-vat
 title Quản lý mối quan hệ giữa các nhân vật
 left to right direction
 
 actor "Người dùng" as User
 
-rectangle {
+rectangle "Quản lý mối quan hệ giữa các nhân vật" {
     usecase "Thêm mối quan hệ giữa các nhân vật" as UC_01
     usecase "Chỉnh sửa mối quan hệ giữa các nhân vật" as UC_02
     usecase "Xem đồ thị mối quan hệ giữa các nhân vật" as UC_03

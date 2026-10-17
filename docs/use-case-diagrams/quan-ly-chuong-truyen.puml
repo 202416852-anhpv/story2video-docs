@@ -1,21 +1,23 @@
-@startuml uc_02
-title Quản lý chương truyện
+@startuml quan-ly-chuong-truyen
+title Biên tập nội dung & chương truyện
 left to right direction
 
 actor "Người dùng" as User
 
-rectangle {
+rectangle "Biên tập nội dung & chương truyện" {
     usecase "Tạo chương truyện mới" as UC_01
-    usecase "Chỉnh sửa chương truyện" as UC_02
+    usecase "Chỉnh sửa thông tin chung chương truyện" as UC_02
     usecase "Xem danh sách chương truyện" as UC_03
     usecase "Xóa chương truyện" as UC_04
     usecase "Tìm kiếm chương truyện" as UC_05
+    usecase "Chỉnh sửa nội dung chương truyện" as UC_06
 }
 
-User --> UC_04
 User --> UC_01
 User --> UC_02
 User --> UC_03
+User --> UC_04
+User --> UC_06
 
 UC_03 <.. UC_05 : <<extend>>
 

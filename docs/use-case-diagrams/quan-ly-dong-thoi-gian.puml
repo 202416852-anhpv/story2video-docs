@@ -1,10 +1,10 @@
-@startuml uc_01_05
+@startuml quan-ly-dong-thoi-gian
 title Quản lý dòng thời gian của truyện
 left to right direction
 
 actor "Người dùng" as User
 
-rectangle {
+rectangle "Quản lý dòng thời gian của truyện" {
     usecase "Thêm mốc thời gian trong truyện" as UC_01
     usecase "Chỉnh sửa mốc thời gian trong truyện" as UC_02
     usecase "Xem toàn bộ dòng thời gian truyện" as UC_03

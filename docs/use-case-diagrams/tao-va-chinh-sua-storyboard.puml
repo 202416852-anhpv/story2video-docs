@@ -1,4 +1,5 @@
-@startuml uc_05
+@startuml tao-va-chinh-sua-storyboard
+title Tạo & chỉnh sửa storyboard
 left to right direction
 
 actor "Người dùng" as User
@@ -21,19 +22,19 @@ rectangle "Tạo & chỉnh sửa storyboard" {
     usecase "So sánh các phiên bản storyboard" as UC_14
 }
 
-User -- UC_01
-User -- UC_02
-User -- UC_03
-User -- UC_04
-User -- UC_05
-User -- UC_06
-User -- UC_07
-User -- UC_08
-User -- UC_09
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+User --> UC_07
+User --> UC_08
+User --> UC_09
 
-UC_01 -- AI_Service
-UC_05 -- AI_Service
-UC_06 -- AI_Service
+UC_01 --> AI_Service
+UC_05 --> AI_Service
+UC_06 --> AI_Service
 
 UC_09 <.. UC_10 : <<extend>>
 UC_09 <.. UC_11 : <<extend>>

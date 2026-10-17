@@ -1,10 +1,10 @@
-@startuml uc_01
-title Quản lý thế giới truyện
+@startuml xay-dung-the-gioi-truyen
+title Xây dựng thế giới truyện
 left to right direction
 
 actor "Người dùng" as User
 
-rectangle {
+rectangle "Xây dựng thế giới truyện" {
     usecase "Quản lý nhân vật trong truyện" as UC_01
     usecase "Quản lý vật phẩm trong truyện" as UC_02
     usecase "Quản lý địa điểm trong truyện" as UC_03

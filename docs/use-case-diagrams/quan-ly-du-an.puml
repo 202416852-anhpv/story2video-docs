@@ -1,4 +1,5 @@
-@startuml uc_02
+@startuml quan-ly-du-an
+title Quản lý dự án
 left to right direction
 
 actor "Người dùng" as User
