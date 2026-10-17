@@ -1,0 +1,34 @@
+@startuml uc_04
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
+
+rectangle "Biên tập nội dung & chương truyện" {
+    usecase "Nhập truyện & bóc tách chương tự động" as UC_01
+    usecase "Tạo chương mới thủ công" as UC_02
+    usecase "Chỉnh sửa thông tin chương" as UC_03
+    usecase "Xem danh sách & sắp xếp chương" as UC_04
+    usecase "Xóa chương truyện" as UC_05
+    usecase "Bóc tách câu thoại và lời dẫn" as UC_06
+    usecase "Cấu hình giọng đọc TTS & tham số phát âm" as UC_07
+    usecase "Nghe thử âm thanh câu/đoạn" as UC_08
+    usecase "Kết xuất file âm thanh chương" as UC_09
+}
+
+User -- UC_01
+User -- UC_02
+User -- UC_03
+User -- UC_04
+User -- UC_05
+User -- UC_06
+User -- UC_07
+User -- UC_08
+User -- UC_09
+
+UC_01 -- AI_Service
+UC_06 -- AI_Service
+UC_08 -- AI_Service
+UC_09 -- AI_Service
+
+@enduml

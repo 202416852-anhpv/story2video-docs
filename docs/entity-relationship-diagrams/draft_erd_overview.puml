@@ -1,0 +1,105 @@
+@startuml erd_overview
+title Sơ đồ Thực thể Tổng quan Hệ thống Story2Video (Conceptual Overview ERD)
+hide circle
+skinparam linetype ortho
+skinparam roundcorner 8
+skinparam classFontSize 13
+skinparam classFontName "Arial"
+skinparam nodesep 60
+skinparam ranksep 50
+
+entity "User\n(Người dùng)" as User #D5E8D4 {
+    * id : UUID <<PK>>
+    --
+    full_name : VARCHAR
+    email : VARCHAR
+}
+
+entity "Project\n(Dự án truyện)" as Project #D5E8D4 {
+    * id : UUID <<PK>>
+    --
+    * user_id : UUID <<FK>>
+    title : VARCHAR
+    aspect_ratio : VARCHAR ' 16:9, 9:16, 1:1
+}
+
+entity "WorldAsset\n(Thế giới truyện)" as WorldAsset #E1D5E7 {
+    * id : UUID <<PK>>
+    --
+    * project_id : UUID <<FK>>
+    asset_type : VARCHAR ' Nhân vật, Bối cảnh, Đạo cụ
+    name : VARCHAR
+    visual_prompt : TEXT
+}
+
+entity "Chapter\n(Chương truyện)" as Chapter #FFE6CC {
+    * id : UUID <<PK>>
+    --
+    * project_id : UUID <<FK>>
+    chapter_number : INT
+    title : VARCHAR
+    full_audio_url : VARCHAR ' File audio lồng tiếng hoàn chỉnh
+    status : VARCHAR ' Vòng đời sản xuất
+}
+
+entity "Storyboard\n(Bản phân cảnh)" as Storyboard #FADBD8 {
+    * id : UUID <<PK>>
+    --
+    * chapter_id : UUID <<FK>>
+    version_name : VARCHAR ' v1.0, v2.0
+    script_snapshot : TEXT
+}
+
+entity "Shot\n(Khối phân cảnh)" as Shot #FFF2CC {
+    * id : UUID <<PK>>
+    --
+    * storyboard_id : UUID <<FK>>
+    order_index : INT
+    dialogue_text : TEXT ' Câu thoại / lời dẫn
+    image_url : VARCHAR ' Ảnh AI sinh theo brief
+    duration_sec : FLOAT ' Thời lượng cảnh
+}
+
+entity "Timeline\n(Trục dựng video)" as Timeline #A9DFBF {
+    * id : UUID <<PK>>
+    --
+    * storyboard_id : UUID <<FK>>
+    total_duration_sec : FLOAT
+    preview_playhead_time : FLOAT ' Màn hình preview tua thời gian
+    subtitle_style : VARCHAR ' Phụ đề chữ chạy
+}
+
+entity "AudioLibrary\n(Kho âm thanh)" as Audio #EDBB99 {
+    * id : UUID <<PK>>
+    --
+    * user_id : UUID <<FK>>
+    file_name : VARCHAR
+    audio_type : VARCHAR ' BGM (Nhạc nền), SFX (Hiệu ứng)
+}
+
+entity "VideoExport\n(Xuất video MP4)" as Export #D4EFDF {
+    * id : UUID <<PK>>
+    --
+    * timeline_id : UUID <<FK>>
+    video_url : VARCHAR
+    status : VARCHAR ' Đang render / Hoàn thành
+}
+
+' ================= MỐI QUAN HỆ TỔNG QUÁT =================
+User ||--o{ Project : "1-n : Sở hữu"
+User ||--o{ Audio : "1-n : Tải lên nhạc nền/SFX"
+
+Project ||--o{ WorldAsset : "1-n : Xây dựng nhân vật, bối cảnh"
+Project ||--o{ Chapter : "1-n : Quản lý các tập truyện"
+
+WorldAsset ..> Shot : "Nạp mô tả ngoại hình/bối cảnh vào cảnh"
+
+Chapter ||--o{ Storyboard : "1-n : Tách kịch bản thành phân cảnh"
+Storyboard ||--o{ Shot : "1-n : Chứa danh sách các shot"
+
+Storyboard ||--|| Timeline : "1-1 : Trục dựng đồng bộ thời gian & preview"
+Audio ||--o{ Timeline : "Chèn nhạc nền/SFX vào timeline"
+
+Timeline ||--o{ Export : "1-n : Render thành phẩm MP4"
+
+@enduml

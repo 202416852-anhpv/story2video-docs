@@ -1,0 +1,22 @@
+@startuml uc_02
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle "Quản lý dự án" {
+    usecase "Xóa dự án" as UC_01
+    usecase "Đổi tên dự án" as UC_02
+    usecase "Tìm kiếm dự án" as UC_03
+    usecase "Xem danh sách dự án" as UC_04
+    usecase "Tạo dự án từ tài liệu" as UC_05
+    usecase "Tạo dự án bằng nhập văn bản" as UC_06
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+
+@enduml
