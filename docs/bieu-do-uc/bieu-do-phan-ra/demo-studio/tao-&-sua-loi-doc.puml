@@ -1,0 +1,52 @@
+@startuml UC_TaoVaChinhSuaStoryboard
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam roundCorner 8
+
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #FFFFFF
+    BorderColor #455A64
+    ArrowColor #37474F
+}
+
+left to right direction
+
+actor "Người dùng" as User
+actor "AI Text-to-Speech\n(Edge TTS)" as TTS <<System>>
+
+rectangle "Phân hệ: Lời đọc & Kịch bản AI" {
+    usecase "Chỉnh sửa nội dung văn bản khối" as UC_EditText
+    usecase "Thêm / Chèn khối mới" as UC_AddBlock
+    usecase "Hợp nhất 2 khối liền kề" as UC_MergeBlocks
+    usecase "Xóa khối lời đọc" as UC_DeleteBlock
+    usecase "Chọn giọng đọc AI (Nam Minh / Hoài My)" as UC_SelectVoice
+    usecase "Điều chỉnh tốc độ đọc (Speed)" as UC_AdjustSpeed
+    usecase "Phát nghe thử khối lẻ" as UC_PlaySingleBlock
+    usecase "Tạo âm thanh lồng tiếng AI (TTS)" as UC_GenerateTTS
+    usecase "Hủy cache audio khi sửa nội dung" as UC_InvalidateCache
+}
+
+User --> UC_EditText
+User --> UC_AddBlock
+User --> UC_MergeBlocks
+User --> UC_DeleteBlock
+User --> UC_SelectVoice
+User --> UC_AdjustSpeed
+User --> UC_PlaySingleBlock
+
+' Include / Extend relationships
+UC_PlaySingleBlock ..> UC_GenerateTTS : <<include>>\n(nếu chưa có audio)
+UC_GenerateTTS --> TTS : Yêu cầu sinh âm thanh
+
+' Khi sửa text, đổi giọng hoặc gộp khối -> hệ thống tự hủy cache audio cũ
+UC_EditText ..> UC_InvalidateCache : <<include>>
+UC_SelectVoice ..> UC_InvalidateCache : <<include>>
+UC_MergeBlocks ..> UC_InvalidateCache : <<include>>
+
+@enduml

@@ -1,0 +1,51 @@
+@startuml AI_Content_Studio_UC_TongQuan
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 13
+skinparam roundCorner 10
+
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+    ArrowColor #263238
+}
+
+left to right direction
+
+actor "Người dùng\n(Content Creator)" as User
+actor "AI Speech-to-Text\n(Sherpa-onnx)" as STT <<System>>
+actor "AI Text-to-Speech\n(Edge TTS)" as TTS <<System>>
+actor "Render Service\n(FFmpeg / GPU Agent)" as Renderer <<System>>
+
+rectangle "Hệ thống AI Content Studio" {
+    usecase "UC01: Quản lý Dự án & Tài nguyên\n(Project & Asset Management)" as UC_Project
+    usecase "UC02: Tạo & Lồng tiếng Kịch bản AI\n(Voiceover & AI Transcription)" as UC_Voice
+    usecase "UC03: Quản lý Dòng thời gian Đa Track\n(Multi-track Timeline Editing)" as UC_Timeline
+    usecase "UC04: Thiết kế Phụ đề & Xem trước\n(Caption Styling & Canvas Preview)" as UC_CaptionPreview
+    usecase "UC05: Dựng & Xuất bản Video\n(Video Rendering & Export)" as UC_Export
+}
+
+' Người dùng tương tác với các phân hệ chính
+User --> UC_Project
+User --> UC_Voice
+User --> UC_Timeline
+User --> UC_CaptionPreview
+User --> UC_Export
+
+' Kết nối với hệ thống ngoài
+UC_Voice --> STT : Kích hoạt phiên âm
+UC_Voice --> TTS : Kích hoạt sinh giọng đọc
+UC_Export --> Renderer : Thực thi kết xuất MP4
+
+' Mối quan hệ tương hỗ giữa các khối chức năng
+UC_Project ..> UC_Voice : <<include>>\n(Tạo dự án kích hoạt AI)
+UC_Timeline ..> UC_Voice : <<include>>\n(Đồng bộ block)
+UC_CaptionPreview ..> UC_Timeline : <<include>>\n(Phát đồng bộ)
+UC_Export ..> UC_CaptionPreview : <<include>>\n(Vẽ canvas lên frame)
+
+@enduml
