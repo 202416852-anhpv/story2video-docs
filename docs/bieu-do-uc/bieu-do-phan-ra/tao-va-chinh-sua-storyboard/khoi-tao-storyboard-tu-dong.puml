@@ -7,7 +7,7 @@ actor "Dịch vụ AI" as AI_Service
 rectangle "Khởi tạo Storyboard tự động bằng AI" {
     usecase "Yêu cầu khởi tạo Storyboard tự động" as UC_01
     usecase "Đọc & phân tích văn bản kịch bản chương" as UC_02
-    usecase "Tự động bóc tách thực thể (nhân vật, bối cảnh)" as UC_03
+    usecase "Tự động bóc tách thực thể\n (nhân vật, bối cảnh, đạo cụ,...)" as UC_03
     usecase "Tự động tách shot theo nhịp truyện" as UC_04
     usecase "Tự động sinh Illustration Brief ban đầu" as UC_05
 }

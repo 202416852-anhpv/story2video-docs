@@ -10,7 +10,7 @@ rectangle "Tạo & tùy chỉnh hình ảnh minh họa" {
     usecase "Sinh ảnh minh họa bằng AI theo phong cách" as UC_03
     usecase "Tải ảnh minh họa lên cho shot" as UC_04
     usecase "Chọn ảnh minh họa từ thư viện tài nguyên" as UC_05
-    usecase "Thiết lập quy tắc phong cách & Bảng màu" as UC_06
+    usecase "Thiết lập quy tắc ngoại hình nhân vật & Bảng màu" as UC_06
 }
 
 User --> UC_01
