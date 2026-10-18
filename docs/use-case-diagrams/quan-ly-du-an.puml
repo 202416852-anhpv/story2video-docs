@@ -12,7 +12,7 @@ rectangle "Quản lý dự án" {
     usecase "Tạo dự án bằng nhập văn bản" as UC_06
 }
 
-User --> ,UC_01
+User --> UC_01
 User --> UC_02
 User --> UC_03
 User --> UC_04
