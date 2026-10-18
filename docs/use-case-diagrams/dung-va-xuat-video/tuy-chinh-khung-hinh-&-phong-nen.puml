@@ -1,0 +1,20 @@
+@startuml tuy-chinh-khung-hinh-&-phong-nen
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle "Tuỳ chỉnh khung hình & Phông nền" {
+    usecase "Chọn tỷ lệ khung hình (16:9, 9:16, 1:1)" as UC_01
+    usecase "Tùy chỉnh màu sắc phông nền" as UC_02
+    usecase "Áp dụng hiệu ứng phông nền làm mờ (Blur Background)" as UC_03
+    usecase "Cấu hình chế độ hiển thị ảnh/video (Fit / Fill)" as UC_04
+    usecase "Bật / Tắt khung an toàn & Lưới căn chỉnh (Safe Zone)" as UC_05
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+
+@enduml

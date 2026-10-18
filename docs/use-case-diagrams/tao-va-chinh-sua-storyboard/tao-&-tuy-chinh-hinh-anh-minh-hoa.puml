@@ -1,0 +1,28 @@
+@startuml tao-&-tuy-chinh-hinh-anh-minh-hoa
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
+
+rectangle "Tạo & tùy chỉnh hình ảnh minh họa" {
+    usecase "Tạo & chỉnh sửa Illustration Brief" as UC_01
+    usecase "Tự động viết lại / tối ưu Brief bằng AI" as UC_02
+    usecase "Sinh ảnh minh họa bằng AI theo phong cách" as UC_03
+    usecase "Tải ảnh minh họa lên cho shot" as UC_04
+    usecase "Chọn ảnh minh họa từ thư viện tài nguyên" as UC_05
+    usecase "Thiết lập quy tắc phong cách & Bảng màu" as UC_06
+}
+
+User --> UC_01
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+
+UC_01 <.. UC_02 : <<extend>>
+UC_03 ..> UC_01 : <<include>>
+
+UC_02 --> AI_Service
+UC_03 --> AI_Service
+
+@enduml

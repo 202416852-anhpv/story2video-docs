@@ -5,14 +5,12 @@ actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
 
 rectangle "Dựng & xuất video" {
-    usecase "Cấu hình tỷ lệ khung hình video" as UC_01
-    usecase "Tự động xây dựng timeline video" as UC_02
-    usecase "Biên tập âm thanh nền & hiệu ứng" as UC_03
-    usecase "Cấu hình phụ đề video" as UC_04
-    usecase "Thiết lập hiệu ứng & chuyển cảnh" as UC_05
-    usecase "Xem trước video (Preview)" as UC_06
-    usecase "Khởi tạo kết xuất video MP4" as UC_07
-    usecase "Tải về video hoàn chỉnh" as UC_08
+    usecase "Tuỳ chỉnh khung hình & Phông nền" as UC_01
+    usecase "Tùy chỉnh hình ảnh phân cảnh" as UC_02
+    usecase "Tùy chỉnh lời thoại & Giọng đọc" as UC_03
+    usecase "Biên tập Timeline đa lớp\n(giọng đọc, hình ảnh/video, nhạc nền/hiệu ứng)" as UC_04
+    usecase "Thiết lập phụ đề video" as UC_05
+    usecase "Xem trước & Xuất video" as UC_06
 }
 
 User --> UC_01
@@ -21,10 +19,10 @@ User --> UC_03
 User --> UC_04
 User --> UC_05
 User --> UC_06
-User --> UC_07
-User --> UC_08
 
-UC_02 --> AI_Service
-UC_07 --> AI_Service
+UC_03 --> AI_Service
+UC_04 --> AI_Service
+UC_05 --> AI_Service
+UC_06 --> AI_Service
 
 @enduml

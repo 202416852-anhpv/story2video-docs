@@ -5,40 +5,19 @@ actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
 
 rectangle "Tạo & chỉnh sửa storyboard" {
-    usecase "Tự động tách shot và bóc tách thực thể" as UC_01
-    usecase "Chia lại phân cảnh" as UC_02
-    usecase "Thêm shot mới" as UC_03
-    usecase "Xóa shot" as UC_04
-    usecase "Tạo & tối ưu Illustration Brief" as UC_05
-    usecase "Sinh ảnh minh họa bằng AI" as UC_06
-    usecase "Tải ảnh minh họa lên cho shot" as UC_07
-    usecase "Lưu phiên bản storyboard mới" as UC_08
-    usecase "Xem danh sách phiên bản storyboard" as UC_09
-    usecase "Đặt tên phiên bản storyboard" as UC_10
-    usecase "Đặt làm phiên bản làm việc" as UC_11
-    usecase "Nhân bản phiên bản storyboard" as UC_12
-    usecase "Xóa phiên bản storyboard" as UC_13
-    usecase "So sánh các phiên bản storyboard" as UC_14
+    usecase "Khởi tạo Storyboard tự động" as UC_01
+    usecase "Biên tập cấu trúc phân cảnh" as UC_02
+    usecase "Tạo & tùy chỉnh hình ảnh minh họa" as UC_03
+    usecase "Quản lý phiên bản Storyboard" as UC_04
 }
 
 User --> UC_01
 User --> UC_02
 User --> UC_03
 User --> UC_04
-User --> UC_05
-User --> UC_06
-User --> UC_07
-User --> UC_08
-User --> UC_09
 
 UC_01 --> AI_Service
-UC_05 --> AI_Service
-UC_06 --> AI_Service
-
-UC_09 <.. UC_10 : <<extend>>
-UC_09 <.. UC_11 : <<extend>>
-UC_09 <.. UC_12 : <<extend>>
-UC_09 <.. UC_13 : <<extend>>
-UC_09 <.. UC_14 : <<extend>>
+UC_02 --> AI_Service
+UC_03 --> AI_Service
 
 @enduml

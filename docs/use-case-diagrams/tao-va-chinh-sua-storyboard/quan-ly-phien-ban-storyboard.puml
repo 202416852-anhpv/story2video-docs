@@ -1,0 +1,25 @@
+@startuml quan-ly-phien-ban-storyboard
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle "Quản lý phiên bản Storyboard" {
+    usecase "Lưu phiên bản Storyboard mới" as UC_01
+    usecase "Xem danh sách các phiên bản Storyboard" as UC_02
+    usecase "Đặt tên / Đổi tên phiên bản" as UC_03
+    usecase "Đặt làm phiên bản làm việc chính" as UC_04
+    usecase "So sánh giữa 2 phiên bản Storyboard" as UC_05
+    usecase "Nhân bản phiên bản Storyboard" as UC_06
+    usecase "Xóa phiên bản Storyboard" as UC_07
+}
+
+User --> UC_01
+User --> UC_02
+
+UC_02 <.. UC_03 : <<extend>>
+UC_02 <.. UC_04 : <<extend>>
+UC_02 <.. UC_05 : <<extend>>
+UC_02 <.. UC_06 : <<extend>>
+UC_02 <.. UC_07 : <<extend>>
+
+@enduml

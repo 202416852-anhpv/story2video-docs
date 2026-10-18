@@ -1,0 +1,34 @@
+@startuml tuy-chinh-loi-thoai-&-giong-doc
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
+
+rectangle "Tùy chỉnh lời thoại & Giọng đọc" {
+    usecase "Chỉnh sửa nội dung lời thoại phân cảnh" as UC_01
+    usecase "Thêm / Chèn phân cảnh lời thoại mới" as UC_02
+    usecase "Tách / Hợp nhất khối lời thoại liền kề" as UC_03
+    usecase "Xóa khối lời thoại phân cảnh" as UC_04
+    usecase "Chọn giọng đọc AI (Nam/Nữ, Vùng miền)" as UC_05
+    usecase "Điều chỉnh tốc độ đọc (0.5x - 2.0x)" as UC_06
+    usecase "Phát nghe thử giọng đọc phân cảnh lẻ" as UC_07
+    usecase "Tạo âm thanh giọng đọc AI (TTS)" as UC_08
+    usecase "Tự động hủy cache âm thanh khi sửa lời" as UC_09
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+User --> UC_07
+
+UC_07 ..> UC_08 : <<include>>
+UC_08 --> AI_Service
+
+UC_01 ..> UC_09 : <<include>>
+UC_03 ..> UC_09 : <<include>>
+UC_05 ..> UC_09 : <<include>>
+
+@enduml
