@@ -1,11 +1,10 @@
 @startuml phong-cach-nghe-thuat
-title Quản lý phong cách nghệ thuật của truyện
 left to right direction
 
 actor "Người dùng" as User
 
 rectangle "Quản lý phong cách nghệ thuật của truyện" {
-    usecase "Chọn phong cách nghệ thuật chung cho truyện" as UC_01
+    usecase "Chọn phong cách nghệ thuật chung khi sinh ảnh cho truyện" as UC_01
     usecase "Thêm các luật khi sinh ảnh cho truyện" as UC_02
     usecase "Chỉnh sửa các luật khi sinh ảnh cho truyện" as UC_03
     usecase "Xóa các luật khi sinh ảnh cho truyện" as UC_04

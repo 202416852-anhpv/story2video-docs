@@ -1,5 +1,4 @@
 @startuml xay-dung-the-gioi-truyen
-title Xây dựng thế giới truyện
 left to right direction
 
 actor "Người dùng" as User

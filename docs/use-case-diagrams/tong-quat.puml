@@ -1,5 +1,4 @@
 @startuml tong-quat
-title Sơ đồ use case tổng quan
 left to right direction
 
 actor "Người dùng" as User

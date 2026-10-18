@@ -1,5 +1,4 @@
 @startuml moi-quan-he-nhan-vat
-title Quản lý mối quan hệ giữa các nhân vật
 left to right direction
 
 actor "Người dùng" as User

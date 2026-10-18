@@ -1,5 +1,4 @@
 @startuml tao-va-chinh-sua-storyboard
-title Tạo & chỉnh sửa storyboard
 left to right direction
 
 actor "Người dùng" as User

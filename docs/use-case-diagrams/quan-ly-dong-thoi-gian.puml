@@ -1,5 +1,4 @@
 @startuml quan-ly-dong-thoi-gian
-title Quản lý dòng thời gian của truyện
 left to right direction
 
 actor "Người dùng" as User

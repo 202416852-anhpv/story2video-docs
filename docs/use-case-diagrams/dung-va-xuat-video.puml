@@ -1,5 +1,4 @@
 @startuml dung-va-xuat-video
-title Dựng & xuất video
 left to right direction
 
 actor "Người dùng" as User

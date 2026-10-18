@@ -1,5 +1,4 @@
 @startuml quan-ly-chuong-truyen
-title Biên tập nội dung & chương truyện
 left to right direction
 
 actor "Người dùng" as User
