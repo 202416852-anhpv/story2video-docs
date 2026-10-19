@@ -7,7 +7,7 @@ actor "Dịch vụ AI" as AI_Service
 rectangle "Tạo & chỉnh sửa storyboard" {
     usecase "Khởi tạo Storyboard tự động" as UC_01
     usecase "Biên tập cấu trúc phân cảnh" as UC_02
-    usecase "Tạo & tùy chỉnh hình ảnh minh họa" as UC_03
+    usecase "Tạo và tùy chỉnh hình ảnh minh họa" as UC_03
     usecase "Quản lý phiên bản Storyboard" as UC_04
 }
 

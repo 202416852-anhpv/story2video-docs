@@ -1,4 +1,4 @@
-@startuml tao-&-tuy-chinh-hinh-anh-minh-hoa
+@startuml tao-va-tuy-chinh-hinh-anh-minh-hoa
 left to right direction
 
 actor "Người dùng" as User

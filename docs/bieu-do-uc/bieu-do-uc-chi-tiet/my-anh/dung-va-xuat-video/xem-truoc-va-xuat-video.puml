@@ -1,4 +1,4 @@
-@startuml xem-truoc-&-xuat-video
+@startuml xem-truoc-va-xuat-video
 left to right direction
 
 actor "Người dùng" as User
