@@ -1,0 +1,47 @@
+@startuml C2Story_UC04_2_BanThao
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Cộng tác viên (Editor)" as Editor
+rectangle "AI ngôn ngữ" as LLM
+rectangle "UC04.2: Biên tập bản thảo & chương" {
+    usecase "Xem văn bản gốc (Write / source)" as UC1
+    usecase "Nhập lại văn bản (Re-import)" as UC1a
+    usecase "Sao chép toàn bộ văn bản" as UC1b
+    usecase "Soạn thảo trong Workspace\n(một bản thảo liền mạch)" as UC2
+    usecase "Chia chương tại vị trí (Split here)" as UC3
+    usecase "AI gợi ý điểm chia chương" as UC4
+    usecase "Thêm / xóa chương" as UC5
+    usecase "Sắp xếp lại chương" as UC6
+    usecase "Gộp chương vào chương trước" as UC7
+    usecase "Dời ranh giới chương\n(từng đoạn văn)" as UC8
+    usecase "Tìm & thay thế\n(mọi chương, phân biệt hoa thường)" as UC9
+    usecase "Lưu bản lưu trữ (Archive)\n(ảnh chụp chỉ đọc)" as UC10
+    usecase "Xem / sao chép / xóa Archive" as UC11
+    usecase "Ghi chú dự án (Notes)" as UC12
+}
+Editor --> UC1
+Editor --> UC2
+Editor --> UC5
+Editor --> UC6
+Editor --> UC9
+Editor --> UC10
+Editor --> UC11
+Editor --> UC12
+UC1a ..> UC1 : <<extend>>
+UC1b ..> UC1 : <<extend>>
+UC3 ..> UC2 : <<extend>>
+UC4 ..> UC1 : <<extend>>
+UC7 ..> UC2 : <<extend>>
+UC8 ..> UC2 : <<extend>>
+UC4 --> LLM
+@enduml

@@ -1,0 +1,129 @@
+@startuml erd_3_the_gioi_truyen
+' Sinh tự động từ erd.puml - chỉ sửa erd.puml rồi chạy: python3 so-do/tools/split_erd.py
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam linetype ortho
+hide circle
+hide empty members
+title ERD 3 - Thế giới truyện
+
+package "Thế giới truyện" #FFF8E8 {
+    entity styles {
+        * id : uuid <<PK>>
+        --
+        * code : text <<UQ>>
+        * name : text
+        description : text
+        prompt_fragment : text
+        preview_media_id : uuid <<FK>>
+        active : bool
+    }
+    entity library_assets {
+        * id : uuid <<PK>>
+        --
+        * owner_id : uuid <<FK>>
+        * kind : asset_kind
+        * name : text
+        aliases : text[]
+        appearance : text
+        facts : text
+        style_id : uuid <<FK>>
+        reference_media_id : uuid <<FK>>
+        use_exact_image : bool
+        deleted_at : timestamptz
+    }
+    entity story_assets {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * kind : asset_kind
+        * name : text
+        aliases : text[]
+        appearance : text
+        facts : text
+        current_image_id : uuid <<FK>>
+        use_exact_image : bool
+        source_library_asset_id : uuid <<FK>>
+        * version : int
+    }
+    entity story_asset_group_members {
+        * group_asset_id : uuid <<PK,FK>>
+        * member_asset_id : uuid <<PK,FK>>
+        --
+    }
+    entity asset_images {
+        * id : uuid <<PK>>
+        --
+        * story_asset_id : uuid <<FK>>
+        * media_id : uuid <<FK>>
+        style_id : uuid <<FK>>
+        prompt_snapshot : text
+        job_id : uuid <<FK>>
+    }
+    entity visual_rules {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * name : text
+        * instruction : text
+        * scope : text
+        chapter_id : uuid <<FK>>
+        active : bool
+        order_index : int
+    }
+    entity chapter_rules {
+        * id : uuid <<PK>>
+        --
+        * chapter_id : uuid <<FK>>
+        * instruction : text
+        order_index : int
+    }
+    entity timeline_events {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * chapter_id : uuid <<FK>>
+        day_label : text
+        season : text
+        story_date : text
+        summary : text
+        order_index : int
+    }
+    entity relationships {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * asset_a_id : uuid <<FK>>
+        * asset_b_id : uuid <<FK>>
+        label : text
+        dynamic : text
+        from_chapter_id : uuid <<FK>>
+    }
+}
+package "Bảng thuộc phân hệ khác" #FFFFFF {
+    entity chapters #EEEEEE
+    entity character_voices #EEEEEE
+    entity dialogue_attributions #EEEEEE
+    entity media_files #EEEEEE
+    entity projects #EEEEEE
+    entity shot_asset_refs #EEEEEE
+    entity users #EEEEEE
+}
+
+styles |o--o{ projects
+users ||--o{ library_assets
+styles |o--o{ library_assets
+projects ||--o{ story_assets
+library_assets |o--o{ story_assets : copied from
+story_assets ||--o{ story_asset_group_members
+story_assets ||--o{ asset_images
+projects ||--o{ visual_rules
+chapters ||--o{ chapter_rules
+chapters ||--o{ timeline_events
+projects ||--o{ relationships
+story_assets ||--o{ relationships
+story_assets |o--o{ shot_asset_refs
+story_assets ||--o{ character_voices
+story_assets |o--o{ dialogue_attributions
+media_files ||--o{ asset_images
+@enduml

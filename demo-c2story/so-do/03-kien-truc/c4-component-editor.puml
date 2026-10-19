@@ -1,0 +1,49 @@
+@startuml C4_Component_Editor
+!include <C4/C4_Component>
+title Trình chỉnh sửa video - Components (C4 L3, client + server + render)
+LAYOUT_LEFT_RIGHT()
+
+Person(ed, "Editor")
+
+Container_Boundary(client, "Web App - Trình chỉnh sửa") {
+    Component(view, "TimelineView", "Canvas", "Vẽ track/clip, ảo hóa, snap theo word_timings")
+    Component(store, "TimelineStore", "Zustand + immer", "Trạng thái timeline, undo/redo ≥ 100 bước")
+    Component(guardc, "NarrationGuard", "@studio/timeline-rules", "Chặn thao tác vi phạm BR-24 trên client")
+    Component(batch, "OpsBatcher", "TS", "Gom thao tác, debounce, If-Match, hàng đợi offline")
+    Component(player, "PreviewPlayer", "Remotion Player", "Component StoryVideo dùng chung với render")
+    Component(audio, "AudioEngine", "WebAudio", "Trộn thuyết minh, nhạc, SFX; ducking; đồng hồ mức")
+    Component(panels, "AudioLibraryPanel / MediaBinPanel", "React", "Tìm nhạc/SFX, kéo thả tư liệu")
+}
+
+Container_Boundary(server, "API Server - module editor") {
+    Component(ops, "OpsApplier", "NestJS", "Áp lô apply-ops nguyên tử")
+    Component(guards, "NarrationGuard", "@studio/timeline-rules", "Kiểm tra IC-10 / BR-24, 422 NARRATION_LOCKED")
+    Component(builder, "TimelineBuilder", "NestJS", "Dựng bản nháp từ tư liệu")
+    Component(sync, "MediaSync", "NestJS", "Cập nhật clip khi tư liệu đổi, giữ user_modified")
+    Component(lib, "AudioLibraryService", "NestJS", "FTS + tags; upload; AI nhạc/SFX")
+    Component(sfx, "SfxSuggestService", "NestJS", "Gợi ý SFX theo đoạn văn")
+    Component(ready, "ReadinessChecker", "NestJS", "Độ phủ 100%, thuyết minh đạt, IC-10")
+    Component(rs, "RenderService", "NestJS", "timeline_snapshot, job RENDER_TIMELINE, link tải")
+}
+
+Container(rw, "Render Worker", "Remotion + FFmpeg", "Dựng khung hình, trộn âm, loudnorm, encode")
+ContainerDb(db, "PostgreSQL", "", "timelines, tracks, items, versions, audio_assets, renders")
+
+Rel(ed, view, "Kéo thả, cắt, chỉnh")
+Rel(view, store, "Thao tác")
+Rel(store, guardc, "Kiểm tra")
+Rel(store, batch, "Thay đổi")
+Rel(store, player, "Trạng thái")
+Rel(player, audio, "Âm thanh")
+Rel(panels, store, "Thêm clip")
+Rel(batch, ops, "POST apply-ops", "HTTPS")
+Rel(ops, guards, "Kiểm tra")
+Rel(ops, db, "Ghi items, version")
+Rel(builder, db, "Tạo timeline nháp")
+Rel(sync, db, "Cập nhật clip")
+Rel(lib, db, "audio_assets")
+Rel(sfx, db, "sfx_suggestions")
+Rel(rs, ready, "Trước khi xuất")
+Rel(rs, rw, "Job render", "BullMQ")
+Rel(rw, db, "renders")
+@enduml

@@ -1,0 +1,152 @@
+@startuml erd_5_trinh_chinh_sua_video
+' Sinh tự động từ erd.puml - chỉ sửa erd.puml rồi chạy: python3 so-do/tools/split_erd.py
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam linetype ortho
+hide circle
+hide empty members
+title ERD 5 - Trình chỉnh sửa & xuất video
+
+package "Trình chỉnh sửa & xuất video" #FFEFEF {
+    entity timelines {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * scope : text
+        chapter_id : uuid <<FK>>
+        * aspect_ratio : text
+        framing : text
+        subtitle_style : jsonb
+        master : jsonb
+        * status : timeline_status
+        * version : int
+        updated_by : uuid <<FK>>
+    }
+    entity timeline_versions {
+        * id : uuid <<PK>>
+        --
+        * timeline_id : uuid <<FK>>
+        * version : int
+        name : text
+        * snapshot : jsonb
+        created_by : uuid <<FK>>
+    }
+    entity timeline_tracks {
+        * id : uuid <<PK>>
+        --
+        * timeline_id : uuid <<FK>>
+        * kind : track_kind
+        name : text
+        * order_index : int
+        muted : bool
+        solo : bool
+        hidden : bool
+        locked : bool
+        volume : numeric
+    }
+    entity timeline_items {
+        * id : uuid <<PK>>
+        --
+        * track_id : uuid <<FK>>
+        * kind : item_kind
+        * start_ms : int
+        * duration_ms : int
+        source_in_ms : int
+        shot_id : uuid <<FK>>
+        illustration_id : uuid <<FK>>
+        narration_id : uuid <<FK>>
+        audio_asset_id : uuid <<FK>>
+        media_id : uuid <<FK>>
+        text : text
+        text_style : jsonb
+        motion : jsonb
+        transition_in : jsonb
+        color : jsonb
+        volume : numeric
+        volume_keyframes : jsonb
+        fade_in_ms : int
+        fade_out_ms : int
+        ducking_db : numeric
+        user_modified : bool
+        sync_flag : text
+    }
+    entity audio_assets {
+        * id : uuid <<PK>>
+        --
+        owner_user_id : uuid <<FK>>
+        * kind : text
+        * title : text
+        genre : text
+        mood : text
+        tags : text[]
+        * media_id : uuid <<FK>>
+        duration_ms : int
+        waveform : jsonb
+        * license : text
+        license_note : text
+        published : bool
+    }
+    entity sfx_suggestions {
+        * id : uuid <<PK>>
+        --
+        * timeline_id : uuid <<FK>>
+        * shot_id : uuid <<FK>>
+        * at_ms : int
+        * query : text
+        audio_asset_id : uuid <<FK>>
+        * status : text
+        job_id : uuid <<FK>>
+    }
+    entity renders {
+        * id : uuid <<PK>>
+        --
+        * timeline_id : uuid <<FK>>
+        * timeline_version : int
+        * project_id : uuid <<FK>>
+        render_group_id : uuid
+        part_no : int
+        * version_no : int
+        is_primary : bool
+        * resolution : text
+        * aspect_ratio : text
+        watermark : bool
+        * status : render_status
+        progress : int
+        media_id : uuid <<FK>>
+        subtitle_srt_media_id : uuid <<FK>>
+        subtitle_vtt_media_id : uuid <<FK>>
+        narration_audio_media_id : uuid <<FK>>
+        duration_ms : int
+        * coverage_chars : int
+        * total_chars : int
+        * timeline_snapshot : jsonb
+        job_id : uuid <<FK>>
+    }
+}
+package "Bảng thuộc phân hệ khác" #FFFFFF {
+    entity chapters #EEEEEE
+    entity illustrations #EEEEEE
+    entity media_files #EEEEEE
+    entity narrations #EEEEEE
+    entity projects #EEEEEE
+    entity shots #EEEEEE
+    entity users #EEEEEE
+}
+
+projects ||--o{ timelines
+chapters |o--o{ timelines
+timelines ||--o{ timeline_versions
+timelines ||--|{ timeline_tracks
+timeline_tracks ||--o{ timeline_items
+shots |o--o{ timeline_items
+illustrations |o--o{ timeline_items
+narrations |o--o{ timeline_items
+audio_assets |o--o{ timeline_items
+users |o--o{ audio_assets : uploads
+timelines ||--o{ sfx_suggestions
+shots ||--o{ sfx_suggestions
+audio_assets |o--o{ sfx_suggestions
+timelines ||--o{ renders
+media_files |o--o{ renders
+media_files ||--o{ audio_assets
+@enduml

@@ -1,0 +1,78 @@
+@startuml UC_M06_Editor
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M06 - Trình chỉnh sửa & xuất video
+
+actor "Editor" as Editor
+
+rectangle "M06 Trình chỉnh sửa & xuất video" {
+    usecase "UC-06.01\nMở trình chỉnh sửa\n(chương / cả dự án)" as UC1
+    usecase "UC-06.01a\nDựng bản nháp timeline\ntừ tư liệu" as UC1a
+    usecase "UC-06.02\nThao tác timeline\n(kéo thả, cắt, trim, undo/redo)" as UC2
+    usecase "UC-06.02a\nKiểm tra khóa thuyết minh\n(BR-24)" as UC2a
+    usecase "UC-06.03\nQuản lý track\n(thêm, ẩn, tắt tiếng)" as UC3
+    usecase "UC-06.04\nHiệu ứng Ken Burns\n& điểm tập trung" as UC4
+    usecase "UC-06.05\nChuyển cảnh" as UC5
+    usecase "UC-06.06\nKhung hình & tinh chỉnh màu" as UC6
+    usecase "UC-06.07\nOverlay chữ / logo,\nclip tiêu đề & kết" as UC7
+    usecase "UC-06.08\nKiểu phụ đề (nội dung nguyên văn)" as UC8
+    usecase "UC-06.09\nThêm nhạc nền\n(fade, ducking)" as UC9
+    usecase "UC-06.10\nThêm SFX" as UC10
+    usecase "UC-06.11\nTìm trong thư viện âm thanh" as UC11
+    usecase "UC-06.11a\nTải nhạc / SFX lên" as UC11a
+    usecase "UC-06.11b\nSinh nhạc / SFX bằng AI" as UC11b
+    usecase "UC-06.11c\nGợi ý SFX theo đoạn văn" as UC11c
+    usecase "UC-06.12\nTrộn âm & chuẩn hóa loudness" as UC12
+    usecase "UC-06.13\nXem trước" as UC13
+    usecase "UC-06.14\nLịch sử phiên bản & khôi phục" as UC14
+    usecase "UC-06.15\nĐồng bộ khi tư liệu thay đổi" as UC15
+    usecase "UC-06.16\nXuất video MP4" as UC16
+    usecase "UC-06.16a\nKiểm tra điều kiện\n& độ phủ 100%" as UC16a
+    usecase "UC-06.16b\nChia video thành phần" as UC16b
+    usecase "UC-06.17\nTải MP4 / SRT / audio" as UC17
+}
+rectangle "Music / SFX Provider\n(tùy chọn)" as MUS
+rectangle "Render Worker" as RW
+
+Editor --> UC1
+Editor --> UC2
+Editor --> UC3
+Editor --> UC4
+Editor --> UC5
+Editor --> UC6
+Editor --> UC7
+Editor --> UC8
+Editor --> UC9
+Editor --> UC10
+Editor --> UC12
+Editor --> UC13
+Editor --> UC14
+Editor --> UC16
+Editor --> UC17
+UC1 ..> UC1a : <<include>>
+UC1 <.. UC15 : <<extend>>
+UC2 ..> UC2a : <<include>>
+UC9 ..> UC11 : <<include>>
+UC10 ..> UC11 : <<include>>
+UC11 <.. UC11a : <<extend>>
+UC11 <.. UC11b : <<extend>>
+UC10 <.. UC11c : <<extend>>
+UC16 ..> UC16a : <<include>>
+UC16 <.. UC16b : <<extend>>
+UC11b --> MUS
+UC11c --> MUS
+UC16 --> RW
+@enduml

@@ -1,0 +1,172 @@
+@startuml erd_6_director_job_ha_tang
+' Sinh tự động từ erd.puml - chỉ sửa erd.puml rồi chạy: python3 so-do/tools/split_erd.py
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam linetype ortho
+hide circle
+hide empty members
+title ERD 6 - Director, job & hạ tầng
+
+package "Director, job & hạ tầng" #EEEEEE {
+    entity director_plans {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * started_by : uuid <<FK>>
+        * status : plan_status
+        current_step : text
+        awaiting_reason : text
+        step_state : jsonb
+        estimated_remaining_credits : int
+        * version : int
+    }
+    entity director_messages {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        plan_id : uuid <<FK>>
+        * sender : text
+        user_id : uuid <<FK>>
+        content : text
+        tool_call : jsonb
+    }
+    entity director_tool_proposals {
+        * id : uuid <<PK>>
+        --
+        * message_id : uuid <<FK>>
+        * tool : text
+        * args : jsonb
+        credit_cost : int
+        * status : text
+        decided_by : uuid <<FK>>
+        decided_at : timestamptz
+        job_id : uuid <<FK>>
+    }
+    entity jobs {
+        * id : uuid <<PK>>
+        --
+        project_id : uuid <<FK>>
+        * user_id : uuid <<FK>>
+        * type : text
+        * status : job_status
+        priority : smallint
+        target_type : text
+        target_id : uuid
+        params : jsonb
+        result : jsonb
+        error_code : text
+        error_message : text
+        attempts : int
+        credit_cost : int
+        * idempotency_key : text <<UQ>>
+        parent_job_id : uuid <<FK>>
+        heartbeat_at : timestamptz
+        started_at : timestamptz
+        finished_at : timestamptz
+    }
+    entity ai_providers {
+        * id : uuid <<PK>>
+        --
+        * code : text <<UQ>>
+        * kind : provider_kind
+        enabled : bool
+        priority : int
+        * config_ref : text
+    }
+    entity ai_models {
+        * id : uuid <<PK>>
+        --
+        * provider_id : uuid <<FK>>
+        * code : text
+        display_name : text
+        capabilities : jsonb
+        unit_cost_usd : numeric
+        enabled : bool
+        user_selectable : bool
+    }
+    entity ai_usage_records {
+        * id : uuid <<PK>>
+        --
+        * job_id : uuid <<FK>>
+        provider_id : uuid <<FK>>
+        model : text
+        * unit : text
+        * quantity : numeric
+        cost_usd : numeric
+        latency_ms : int
+        request_id : text
+    }
+    entity price_rules {
+        * id : uuid <<PK>>
+        --
+        * operation : text
+        * formula : jsonb
+        * effective_from : timestamptz
+        effective_to : timestamptz
+        created_by : uuid <<FK>>
+    }
+    entity media_files {
+        * id : uuid <<PK>>
+        --
+        owner_user_id : uuid <<FK>>
+        owner_project_id : uuid <<FK>>
+        * storage_key : text <<UQ>>
+        * mime : text
+        bytes : bigint
+        width : int
+        height : int
+        duration_ms : int
+        sha256 : text
+        storage_class : text
+    }
+    entity outbox_events {
+        * id : uuid <<PK>>
+        --
+        * aggregate_type : text
+        * aggregate_id : uuid
+        * event_type : text
+        * payload : jsonb
+        published_at : timestamptz
+    }
+    entity idempotency_keys {
+        * key : text <<PK>>
+        * user_id : uuid <<PK,FK>>
+        --
+        * request_hash : text
+        response_status : int
+        response_body : jsonb
+        * expires_at : timestamptz
+    }
+}
+package "Bảng thuộc phân hệ khác" #FFFFFF {
+    entity asset_images #EEEEEE
+    entity audio_assets #EEEEEE
+    entity credit_ledger_entries #EEEEEE
+    entity illustrations #EEEEEE
+    entity narrations #EEEEEE
+    entity projects #EEEEEE
+    entity renders #EEEEEE
+    entity users #EEEEEE
+    entity voices #EEEEEE
+}
+
+jobs |o--o{ credit_ledger_entries
+ai_models |o--o{ projects : image model
+ai_providers ||--o{ voices
+projects ||--o{ director_plans
+director_plans |o--o{ director_messages
+director_messages ||--o{ director_tool_proposals
+jobs |o--o{ director_tool_proposals
+projects |o--o{ jobs
+users ||--o{ jobs
+jobs |o--o{ jobs : parent
+jobs ||--o{ ai_usage_records
+ai_providers ||--o{ ai_models
+ai_providers |o--o{ ai_usage_records
+users ||--o{ idempotency_keys
+media_files ||--o{ illustrations
+media_files |o--o{ narrations
+media_files |o--o{ renders
+media_files ||--o{ asset_images
+media_files ||--o{ audio_assets
+@enduml

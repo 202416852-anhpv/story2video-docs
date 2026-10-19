@@ -1,0 +1,38 @@
+@startuml C2Story_UC10_Guide
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Khách" as Guest
+actor "Người dùng" as User
+actor "Quản trị viên" as Admin
+User -|> Guest
+rectangle "UC10: Hướng dẫn cộng đồng (/guide)" {
+    usecase "Xem danh sách hướng dẫn" as UC1
+    usecase "Lọc theo chủ đề" as UC1a
+    usecase "Lọc theo tác giả\n(C2Story Team / Community)" as UC1b
+    usecase "Đọc hướng dẫn" as UC2
+    usecase "Thích hướng dẫn" as UC3
+    usecase "Viết hướng dẫn" as UC4
+    usecase "Xem bài đã gửi (My submissions)" as UC5
+    usecase "Duyệt hướng dẫn" as UC6
+    usecase "Nhận thưởng tín dụng\n(10 credits/bài, 1 credit/like)" as UC7
+}
+Guest --> UC1
+Guest --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+Admin --> UC6
+UC1a .> UC1 : <<extend>>
+UC1b .> UC1 : <<extend>>
+UC6 ..> UC7 : <<include>>
+@enduml

@@ -1,0 +1,66 @@
+@startuml Seq_ChinhSuaXuatVideo
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-06.01 + UC-06.16: Chỉnh sửa video trên timeline, xuất và tải
+actor Editor
+participant "Web App\n(Timeline editor + Preview)" as Web
+participant "API (editor module)" as API
+database PostgreSQL as DB
+participant "Render Worker\n(Remotion / FFmpeg)" as R
+participant "Object Storage" as S3
+
+== Mở trình chỉnh sửa ==
+Editor -> Web : Mở trình chỉnh sửa chương 1
+Web -> API : GET /timelines/{tl} (ETag v1)
+API -> DB : tracks + items (ảnh, thuyết minh khóa, phụ đề)
+API --> Web : timeline
+Web -> Web : Preview realtime (cùng component dựng khung hình)
+
+== Chỉnh sửa ==
+Editor -> Web : Ken Burns, chuyển cảnh, màu cho các clip ảnh
+Editor -> Web : Tìm "calm piano" trong thư viện, kéo vào track Nhạc nền
+Web -> API : GET /audio-assets?kind=MUSIC&q=calm piano
+Editor -> Web : Kéo SFX "pháo hoa" vào track SFX tại 01:42
+Web -> Web : Áp thao tác vào store cục bộ (undo/redo)
+Web -> API : POST /timelines/{tl}:apply-ops {ifMatch: v1, ops[]} (debounce)
+API -> API : Kiểm tra BR-24 / IC-10\n(thuyết minh đủ, đúng thứ tự, không cắt;\nảnh phủ khoảng đọc)
+alt hợp lệ
+    API -> DB : ghi items; version v2
+    API --> Web : 200 ETag v2
+else vi phạm (vd. xóa clip thuyết minh)
+    API --> Web : 422 NARRATION_LOCKED {opIndex}
+    Web -> Web : hoàn tác thao tác, hiện giải thích
+else xung đột version
+    API --> Web : 409 → xử lý như UC-02.10
+end
+opt AI âm thanh (tùy chọn, tốn credit)
+    Editor -> Web : "Gợi ý SFX" / "Sinh nhạc"
+    Web -> API : POST :suggest-sfx / audio-assets:generate
+    API --> Web : đề xuất → Editor duyệt → ADD_ITEM
+end
+
+== Xuất & tải ==
+Editor -> Web : Xuất video 1080p
+Web -> API : GET /timelines/{tl}/readiness
+API -> DB : độ phủ, ảnh DONE, thuyết minh VERIFIED/ACCEPTED, IC-10
+alt chưa đạt
+    API --> Web : 422 {needsReview[], outdated[], violations[]}
+else đạt (độ phủ 9895/9895)
+    Web -> API : POST /timelines/{tl}/renders {resolution: 1080p}
+    API -> DB : renders(QUEUED, timeline_snapshot v2, coverage)
+    API --> Web : 202
+    R -> S3 : tải ảnh, audio thuyết minh, nhạc, SFX, font
+    R -> R : Dựng khung hình (Ken Burns, chuyển cảnh, overlay,\nmàu, phụ đề nguyên văn) theo đoạn song song
+    R -> R : Trộn âm: thuyết minh + nhạc (ducking) + SFX;\nloudnorm -14 LUFS; encode H.264/AAC
+    R --> Web : SSE render.progress
+    R -> S3 : PUT video.mp4, subs.srt, subs.vtt
+    R -> DB : renders READY, is_primary
+    R --> Web : SSE render.ready
+    Editor -> Web : Tải xuống
+    Web -> API : GET /renders/{rid}/download?file=MP4
+    API --> Web : 302 → link ký 15 phút
+    Web -> S3 : tải video.mp4
+end
+@enduml

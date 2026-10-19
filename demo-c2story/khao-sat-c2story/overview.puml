@@ -1,0 +1,71 @@
+@startuml C2Story_UC_TongQuan
+' Nguồn: khảo sát https://c2story.com bằng REA (headless Brave, chưa đăng nhập) ngày 2026-10-19
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 13
+skinparam roundCorner 10
+
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+    ArrowColor #263238
+}
+
+left to right direction
+
+actor "Khách\n(chưa đăng nhập)" as Guest
+actor "Người dùng\n(đã đăng nhập)" as User
+rectangle "Clerk Auth\n(Email / Google)" as Clerk
+rectangle "AI sinh ảnh\n(Nano Banana / GPT Image)" as ImageAI
+rectangle "AI ngôn ngữ & video" as StoryAI
+rectangle "Cổng thanh toán" as Payment
+
+User -|> Guest
+
+rectangle "Hệ thống C2Story" {
+    usecase "UC01: Đăng ký & đăng nhập" as UC_Auth
+    usecase "UC02: Khám phá & đọc truyện\n(Explore / Book Reader)" as UC_Explore
+    usecase "UC03: Tạo truyện nhanh\n(Create - Auto-make)" as UC_Create
+    usecase "UC04: Quản lý dự án Studio\n(Projects - Direct every detail)" as UC_Studio
+    usecase "UC05: Quản lý thư viện tài sản\n(Characters / Locations / Items)" as UC_Assets
+    usecase "UC06: Chuyển thể đa định dạng\n(Poster / Trailer / Movie / Xuất file)" as UC_Media
+    usecase "UC07: Trò chuyện với nhân vật\n(Chat)" as UC_Chat
+    usecase "UC08: Quản lý sách của tôi\n(My Books)" as UC_Library
+    usecase "UC09: Mua gói & tín dụng\n(Pricing / Credits)" as UC_Billing
+    usecase "UC10: Hướng dẫn cộng đồng\n(Guide)" as UC_Guide
+}
+
+' Khách chỉ xem được nội dung công khai
+Guest --> UC_Auth
+Guest --> UC_Explore
+Guest --> UC_Guide
+
+User --> UC_Create
+User --> UC_Studio
+User --> UC_Assets
+User --> UC_Media
+User --> UC_Chat
+User --> UC_Library
+User --> UC_Billing
+
+UC_Auth --> Clerk
+UC_Create --> ImageAI
+UC_Create --> StoryAI
+UC_Studio --> ImageAI
+UC_Studio --> StoryAI
+UC_Assets --> ImageAI
+UC_Media --> StoryAI
+UC_Chat --> StoryAI
+UC_Billing --> Payment
+UC_Explore --> Payment : Mua PDF / HD
+
+UC_Create ..> UC_Assets : <<include>>\n(gắn nhân vật)
+UC_Media ..> UC_Library : <<extend>>
+UC_Chat ..> UC_Assets : <<include>>\n(chọn nhân vật)
+
+@enduml

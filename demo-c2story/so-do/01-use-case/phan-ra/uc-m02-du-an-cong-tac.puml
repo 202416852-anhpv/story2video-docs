@@ -1,0 +1,56 @@
+@startuml UC_M02_DuAn
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M02 - Quản lý dự án & cộng tác
+
+actor "Editor" as Editor
+actor "Owner" as Owner
+actor "User" as User
+Owner -|> Editor
+Editor -|> User
+
+rectangle "M02 Quản lý dự án & cộng tác" {
+    usecase "UC-02.01\nXem danh sách dự án" as UC1
+    usecase "UC-02.02\nImport truyện\n(giữ nguyên văn)" as UC2
+    usecase "UC-02.02a\nKiểm tra & chuẩn hóa kỹ thuật\n(NFC, xuống dòng)" as UC2a
+    usecase "UC-02.03\nTạo dự án trống" as UC3
+    usecase "UC-02.04\nCài đặt dự án\n(style, model, ngôn ngữ,\nthời lượng mỗi ảnh, tỷ lệ khung hình)" as UC4
+    usecase "UC-02.05\nXóa dự án" as UC5
+    usecase "UC-02.06\nTạo / thu hồi link mời" as UC6
+    usecase "UC-02.07\nQuản lý thành viên" as UC7
+    usecase "UC-02.08\nTham gia dự án qua link" as UC8
+    usecase "UC-02.09\nXem bản đồ quy trình (Map)" as UC9
+    usecase "UC-02.10\nXử lý xung đột khi lưu" as UC10
+    usecase "UC-02.10a\nLưu bản của tôi thành nháp" as UC10a
+    usecase "UC-02.10b\nTải bản của người khác" as UC10b
+    usecase "UC-02.11\nNhân bản dự án" as UC11
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC8
+Owner --> UC4
+Owner --> UC5
+Owner --> UC6
+Owner --> UC7
+Owner --> UC11
+Editor --> UC9
+Editor --> UC10
+UC2 ..> UC2a : <<include>>
+UC10 <.. UC10a : <<extend>>
+UC10 <.. UC10b : <<extend>>
+@enduml

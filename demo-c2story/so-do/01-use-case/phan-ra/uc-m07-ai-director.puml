@@ -1,0 +1,62 @@
+@startuml UC_M07_Director
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M07 - AI Director
+
+actor "Editor" as Editor
+
+rectangle "M07 AI Director" {
+    usecase "UC-07.01\nRa lệnh bằng chat" as UC1
+    usecase "UC-07.01a\nHỏi lại khi lệnh mơ hồ" as UC1a
+    usecase "UC-07.01b\nXác nhận thao tác tốn phí" as UC1b
+    usecase "UC-07.01c\nTừ chối sửa / tóm tắt văn bản\n(BR-19, BR-21)" as UC1c
+    usecase "UC-07.01d\nDirector viết nội dung hộ\n(prompt, caption, Visual Rule)" as UC1d
+    usecase "UC-07.02\nChạy chế độ tự động\n(đến bản nháp timeline)" as UC2
+    usecase "UC-07.02a\nLập & cập nhật kế hoạch bước" as UC2a
+    usecase "UC-07.03\nChọn style (điểm duyệt)" as UC3
+    usecase "UC-07.04\nDuyệt cast (điểm duyệt)" as UC4
+    usecase "UC-07.05\nChọn giọng (điểm duyệt)" as UC5
+    usecase "UC-07.06\nDuyệt thuyết minh (điểm duyệt)" as UC6
+    usecase "UC-07.07\nTạm dừng / tiếp tục / thoát" as UC7
+    usecase "UC-07.08\nXem tiến độ & Director note" as UC8
+}
+rectangle "LLM Provider" as LLM
+
+Editor --> UC1
+Editor --> UC2
+Editor --> UC7
+Editor --> UC8
+UC1 <.. UC1a : <<extend>>
+UC1 <.. UC1b : <<extend>>
+UC1 <.. UC1c : <<extend>>
+UC1 <.. UC1d : <<extend>>
+UC2 ..> UC2a : <<include>>
+UC2 <.. UC3 : <<extend>>
+UC2 <.. UC4 : <<extend>>
+UC2 <.. UC5 : <<extend>>
+UC2 <.. UC6 : <<extend>>
+UC1 --> LLM
+UC2a --> LLM
+
+legend right
+  Chế độ tự động gọi lại các use case của M03–M05
+  (chia chương, phân tích tài sản, sinh tư liệu: storyboard,
+  ảnh, thuyết minh) rồi dựng bản nháp timeline (M06),
+  với cùng quyền và cùng bảng giá như thao tác tay.
+  Nhạc nền, SFX và xuất video do Editor thực hiện.
+  Tại mỗi **điểm duyệt**, Director dừng và Editor trả lời.
+endlegend
+@enduml

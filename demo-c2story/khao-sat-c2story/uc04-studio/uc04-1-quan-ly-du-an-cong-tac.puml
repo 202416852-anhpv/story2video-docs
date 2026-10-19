@@ -1,0 +1,43 @@
+@startuml C2Story_UC04_1_DuAn
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Chủ dự án (Owner)" as Owner
+actor "Cộng tác viên (Editor)" as Editor
+rectangle "AI ngôn ngữ" as LLM
+Owner -|> Editor
+rectangle "UC04.1: Quản lý dự án & cộng tác" {
+    usecase "Xem danh sách dự án\n(số chương, style, trạng thái, ngày)" as UC1
+    usecase "Nhập truyện (Import your story)" as UC2
+    usecase "Giữ nguyên văn bản\n(chỉ chia trang & minh họa)" as UC2a
+    usecase "AI viết lại theo giọng sách tranh" as UC2b
+    usecase "Xóa dự án" as UC3
+    usecase "Tạo link chia sẻ / mời cộng tác" as UC4
+    usecase "Tham gia dự án qua link\n(vai trò Editor)" as UC5
+    usecase "Xóa cộng tác viên" as UC6
+    usecase "Thiết lập dự án\n(style, image model, ngôn ngữ,\nsố trang/chương, hiển thị)" as UC7
+    usecase "Xử lý xung đột khi cùng sửa\n(lưu bản của tôi thành nháp / tải bản của họ)" as UC8
+    usecase "Xem bản đồ quy trình (Map)" as UC9
+}
+Editor --> UC1
+Owner --> UC2
+Owner --> UC3
+Owner --> UC4
+Owner --> UC6
+Owner --> UC7
+Editor --> UC5
+Editor --> UC8
+Editor --> UC9
+UC2a .> UC2 : <<extend>>
+UC2b .> UC2 : <<extend>>
+UC2b --> LLM
+@enduml

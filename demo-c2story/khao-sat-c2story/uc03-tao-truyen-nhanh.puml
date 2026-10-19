@@ -1,0 +1,56 @@
+@startuml C2Story_UC03_TaoTruyen
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Người dùng" as User
+rectangle "AI ngôn ngữ" as LLM
+rectangle "AI sinh ảnh" as ImageAI
+rectangle "UC03: Tạo truyện nhanh (/create)" {
+    usecase "Tạo truyện mới" as UC1
+    usecase "Mô tả ý tưởng truyện" as UC1a
+    usecase "Dán văn bản truyện có sẵn" as UC1b
+    usecase "Gắn nhân vật từ thư viện" as UC2
+    usecase "Tải ảnh lên làm tham chiếu" as UC3
+    usecase "Chọn phong cách nghệ thuật\n(50+ styles)" as UC4
+    usecase "Chọn mẫu (Template)" as UC5
+    usecase "Chọn mô hình ảnh\n(Nano Banana / Nano Banana 2 / GPT Image 2)" as UC6
+    usecase "Thiết lập Story preferences\n(mood, ngôi kể, plot twist, độ tuổi)" as UC7
+    usecase "Chọn số trang (8 / 12 / 16)" as UC8
+    usecase "Xem trước kết quả (Preview)" as UC9
+    usecase "Sinh truyện minh họa tự động" as UC10
+    usecase "Kiểm tra số dư tín dụng" as UC11
+    usecase "Xem lịch sử truyện" as UC12
+    usecase "Viết tiếp / tập mới / viết lại\n(mode=continue|series|rewrite)" as UC13
+    usecase "Tạo nhân vật nhanh" as UC14
+    usecase "Gửi phản hồi (Feedback)" as UC15
+}
+User --> UC1
+User --> UC12
+User --> UC13
+User --> UC14
+User --> UC15
+UC1a .> UC1 : <<extend>>
+UC1b .> UC1 : <<extend>>
+UC2 .> UC1 : <<extend>>
+UC3 .> UC1 : <<extend>>
+UC5 .> UC1 : <<extend>>
+UC7 .> UC1 : <<extend>>
+UC8 .> UC1 : <<extend>>
+UC1 ..> UC4 : <<include>>
+UC1 ..> UC6 : <<include>>
+UC1 ..> UC10 : <<include>>
+UC10 ..> UC11 : <<include>>
+UC10 ..> UC9 : <<include>>
+UC13 ..> UC10 : <<include>>
+UC10 --> LLM
+UC10 --> ImageAI
+@enduml

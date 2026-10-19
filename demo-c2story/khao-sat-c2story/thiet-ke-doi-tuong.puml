@@ -1,0 +1,237 @@
+@startuml C2Story_ThietKeDoiTuong
+' Suy ra từ giao diện công khai của c2story.com (REA, 2026-10-19) - không phải schema thật của hệ thống
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam classAttributeIconSize 0
+hide empty methods
+
+enum Visibility {
+    PUBLIC
+    PRIVATE
+}
+enum ImageModel {
+    NANO_BANANA
+    NANO_BANANA_2
+    GPT_IMAGE_2
+}
+enum BookFormat {
+    ILLUSTRATED_BOOK
+    COMIC
+    MANGA
+}
+enum CreateMode {
+    NEW
+    CONTINUE
+    SERIES
+    REWRITE
+}
+enum Audience {
+    CHILDREN
+    ALL_AGES
+    TEENS
+    ADULTS
+}
+enum TrailerType {
+    STANDARD
+    ANIMATED
+    MOVIE
+}
+enum AssetType {
+    CHARACTER
+    LOCATION
+    ITEM
+    GROUP
+}
+enum PlanTier {
+    STARTER
+    CREATOR
+    STUDIO
+}
+
+class User {
+    id: UUID
+    username: String
+    email: String
+    language: String
+    creditBalance: int
+}
+
+class Subscription {
+    tier: PlanTier
+    billingCycle: Monthly | Annual
+    monthlyCredits: int
+    renewsAt: DateTime
+    cancel()
+}
+class CreditTransaction {
+    amount: int
+    reason: String
+    createdAt: DateTime
+}
+class Purchase {
+    kind: PDF | HD_UNLOCK | CREDIT_PACK
+    price: Money
+    creatorShare: Money
+}
+
+class ArtStyle {
+    slug: String
+    name: String
+}
+class Template {
+    name: String
+}
+class StoryPreference {
+    mood: String
+    perspective: FirstPerson | ThirdPerson
+    plotTwist: boolean
+    audience: Audience
+}
+
+class Book {
+    id: UUID
+    slug: String
+    title: String
+    format: BookFormat
+    language: String
+    pageCount: 8 | 12 | 16
+    visibility: Visibility
+    mode: CreateMode
+    imageModel: ImageModel
+    likeCount: int
+    viewCount: int
+    createdAt: DateTime
+    continueStory()
+    newEpisode()
+    rewrite()
+}
+class Series {
+    title: String
+}
+class Page {
+    order: int
+    text: String
+}
+class Illustration {
+    imageUrl: String
+    status: Pending | Done | Failed
+    edit(prompt)
+    fixSpot(mask, prompt)
+    retry()
+}
+
+class Project {
+    id: UUID
+    title: String
+    artDirection: String
+}
+class Manuscript {
+    content: Text
+}
+class ManuscriptArchive {
+    name: String
+    savedAt: DateTime
+}
+class Chapter {
+    order: int
+    title: String
+}
+' Chi tiết module Projects: uc04-studio/thiet-ke-doi-tuong-project.puml
+class Storyboard {
+    isCurrent: boolean
+}
+class Shot {
+    order: int
+    description: String
+}
+
+class StoryAsset {
+    id: UUID
+    name: String
+    type: AssetType
+    description: String
+    referenceImageUrl: String
+    visibility: Visibility
+    useCost: int
+}
+class Character {
+    personality: String
+    role: Hero | Supporting
+}
+class Location
+class Item
+class CharacterGroup
+
+class Poster {
+    imageUrl: String
+}
+class Trailer {
+    type: TrailerType
+    videoUrl: String
+    aspectRatio: String
+}
+
+class ChatSession {
+    startedAt: DateTime
+}
+class ChatMessage {
+    sender: User | Character
+    content: String
+    sentAt: DateTime
+}
+
+class Guide {
+    title: String
+    topic: String
+    official: boolean
+    status: Draft | Submitted | Approved
+}
+class Like {
+    createdAt: DateTime
+}
+
+StoryAsset <|-- Character
+StoryAsset <|-- Location
+StoryAsset <|-- Item
+StoryAsset <|-- CharacterGroup
+CharacterGroup o-- "2..*" Character
+
+User "1" -- "0..1" Subscription
+User "1" -- "*" CreditTransaction
+User "1" -- "*" Purchase
+User "1" -- "*" Book : tác giả >
+User "1" -- "*" Project
+User "1" -- "*" StoryAsset : sở hữu >
+User "1" -- "*" ChatSession
+User "1" -- "*" Guide : viết >
+User "1" -- "*" Like
+
+Book "*" --> "1" ArtStyle
+Book "*" --> "0..1" Template
+Book "1" *-- "1" StoryPreference
+Book "1" *-- "1..*" Page
+Page "1" *-- "0..1" Illustration
+Book "*" --> "*" StoryAsset : sử dụng >
+Book "0..1" --> "*" Book : nhánh (continue/rewrite) >
+Series "1" o-- "1..*" Book : tập >
+Book "1" *-- "0..1" Poster
+Book "1" *-- "*" Trailer
+Purchase "*" --> "0..1" Book
+
+Project "1" *-- "1" Manuscript
+Manuscript "1" *-- "*" ManuscriptArchive
+Project "1" *-- "*" Chapter
+Chapter "1" --> "0..1" Book : xuất bản thành >
+Project "1" *-- "*" StoryAsset : Story Assets >
+Project "1" *-- "0..1" Storyboard
+Storyboard "1" *-- "*" Shot
+Shot "*" --> "*" StoryAsset
+Project "*" --> "1" ArtStyle
+
+ChatSession "*" --> "1" Character
+ChatSession "1" *-- "*" ChatMessage
+
+Like "*" --> "0..1" Book
+Like "*" --> "0..1" Guide
+
+@enduml

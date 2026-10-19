@@ -1,0 +1,17 @@
+@startuml State_Job
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Trạng thái Job
+[*] --> QUEUED : tạo + HOLD credit
+QUEUED --> RUNNING : worker nhận
+QUEUED --> CANCELLED : người dùng hủy / RELEASE
+RUNNING --> SUCCEEDED : xong / CAPTURE
+RUNNING --> RETRYING : lỗi tạm thời
+RETRYING --> RUNNING : backoff hết
+RETRYING --> FAILED : quá 3 lần / RELEASE
+RUNNING --> FAILED : lỗi vĩnh viễn, CONTENT_POLICY / RELEASE
+RUNNING --> FAILED : reconciler: mất heartbeat / RELEASE
+SUCCEEDED --> [*]
+FAILED --> [*]
+CANCELLED --> [*]
+@enduml

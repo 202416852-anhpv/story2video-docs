@@ -1,0 +1,39 @@
+@startuml Act_PhuKinVanBan
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title CoverageValidator: bảo đảm các shot phủ kín văn bản chương (BR-20)
+
+start
+:Nhận chapter.content và\nshots[] = {startSentence, endSentence} từ LLM;
+:Tách câu tất định → sentences[i] = [start, end);
+:Sắp shots theo startSentence;
+:Kẹp chỉ số vào [0, n-1];\nbỏ shot rỗng (endSentence < startSentence);
+if (Còn shot nào?) then (không)
+  :Tạo 1 shot phủ toàn chương;
+endif
+:shot[0].startSentence = 0;
+repeat :Xét cặp shot[k], shot[k+1];
+  if (Có khoảng hở?) then (có)
+    :Gộp câu hở vào cuối shot[k];
+  elseif (Chồng lấn?) then (có)
+    :shot[k].endSentence = shot[k+1].startSentence - 1;
+    if (shot[k] thành rỗng?) then (có)
+      :Gộp brief của shot[k] vào shot[k+1]\n(ghi Director note);
+    endif
+  else (liên tục)
+  endif
+repeat while (Còn cặp?) is (có)
+->không;
+:shot[last].endSentence = n - 1;
+:Đổi chỉ số câu → offset ký tự:\nsource_start = sentences[s].start\nsource_end = sentences[e+1].start (hoặc len);
+:Ranh giới thuộc khoảng trắng / xuống dòng\nđược gán cho shot trước;
+if (concat(content[start:end]) == content\nVÀ mọi đoạn khác rỗng?) then (đúng)
+  :Tính source_hash từng shot;
+  :Ghi số ranh giới đã sửa vào log;
+  :Lưu draft;
+  stop
+else (sai — lỗi lập trình)
+  :Từ chối lưu, báo lỗi nội bộ (P1);
+  end
+endif
+@enduml

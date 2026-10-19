@@ -1,0 +1,52 @@
+@startuml UC_M10_QuanTri
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M10 - Quản trị
+
+actor "Admin" as Admin
+
+rectangle "M10 Quản trị" {
+    usecase "UC-10.01\nCấu hình bảng giá credit" as UC1
+    usecase "UC-10.02\nCấu hình gói & credit pack" as UC2
+    usecase "UC-10.03\nQuản lý provider & mô hình AI" as UC3
+    usecase "UC-10.04\nQuản lý danh mục style" as UC4
+    usecase "UC-10.05\nQuản lý danh mục giọng đọc" as UC5
+    usecase "UC-10.06\nQuản lý thư viện nhạc & SFX có license" as UC6
+    usecase "UC-10.07\nGiám sát job" as UC7
+    usecase "UC-10.07a\nChạy lại job" as UC7a
+    usecase "UC-10.07b\nHoàn credit thủ công" as UC7b
+    usecase "UC-10.08\nĐiều chỉnh credit người dùng" as UC8
+    usecase "UC-10.09\nGhi audit log" as UC9
+    usecase "UC-10.10\nXem báo cáo\n(credit, chi phí AI, biên lợi nhuận)" as UC10
+}
+rectangle "Payment Gateway" as PAY
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC10
+UC7 <.. UC7a : <<extend>>
+UC7 <.. UC7b : <<extend>>
+UC1 ..> UC9 : <<include>>
+UC8 ..> UC9 : <<include>>
+UC7b ..> UC9 : <<include>>
+UC2 --> PAY
+@enduml

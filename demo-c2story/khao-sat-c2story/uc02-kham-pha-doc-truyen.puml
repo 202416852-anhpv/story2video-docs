@@ -1,0 +1,56 @@
+@startuml C2Story_UC02_KhamPha
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Khách" as Guest
+actor "Người dùng" as User
+rectangle "Cổng thanh toán" as Payment
+User -|> Guest
+rectangle "UC02: Khám phá & đọc truyện" {
+    usecase "Duyệt thư viện cộng đồng" as UC1
+    usecase "Sắp xếp: Trending / New / Most Viewed" as UC1a
+    usecase "Lọc theo phong cách\n(Picture Book, Manga, Ghibli...)" as UC1b
+    usecase "Lọc theo độ tuổi\n(Children / All Ages / Teens / Adults)" as UC1c
+    usecase "Tải thêm (Load More)" as UC1d
+    usecase "Đọc truyện" as UC2
+    usecase "Chế độ Flip / Scroll" as UC2a
+    usecase "Xem Story Tree\n(series / chương / phần tiếp)" as UC2b
+    usecase "Xem Story Trailer / Poster" as UC2c
+    usecase "Xem nhân vật trong truyện" as UC2d
+    usecase "Chia sẻ truyện" as UC3
+    usecase "Thích truyện (Like)" as UC4
+    usecase "Mua PDF (.99)" as UC5
+    usecase "Mở khóa HD (/bin/bash.99)" as UC6
+    usecase "Viết tiếp (Continue)" as UC7
+    usecase "Tạo tập mới (New Episode)" as UC8
+    usecase "Viết lại / Remix (Rewrite)" as UC9
+}
+Guest --> UC1
+Guest --> UC2
+Guest --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+UC1a .> UC1 : <<extend>>
+UC1b .> UC1 : <<extend>>
+UC1c .> UC1 : <<extend>>
+UC1d .> UC1 : <<extend>>
+UC2a .> UC2 : <<extend>>
+UC2b .> UC2 : <<extend>>
+UC2c .> UC2 : <<extend>>
+UC2d .> UC2 : <<extend>>
+UC5 --> Payment
+UC6 --> Payment
+@enduml

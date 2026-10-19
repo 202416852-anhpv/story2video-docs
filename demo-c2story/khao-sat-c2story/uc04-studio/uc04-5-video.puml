@@ -1,0 +1,67 @@
+@startuml C2Story_UC04_5_Video
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Cộng tác viên (Editor)" as Editor
+rectangle "AI ngôn ngữ" as LLM
+rectangle "AI sinh video\n(+ TTS, nhạc)" as VideoAI
+rectangle "UC04.5: Làm video" {
+    package "Video Storyboard" {
+        usecase "Thiết lập âm thanh toàn dự án\n(thuyết minh, ngôn ngữ, giọng, ngôi kể,\nthoại, nhạc, phụ đề, trang phục)" as V1
+        usecase "Quét lại chương thành cảnh\n(Re-scan chapter)" as V2
+        usecase "Biên tập cảnh\n(cast, đạo cụ, địa điểm, kịch bản cảnh)" as V3
+        usecase "Gộp / xóa cảnh" as V3a
+        usecase "Sửa prompt nâng cao" as V3b
+        usecase "Chọn độ dài (5s / 10s / 15s)" as V4
+        usecase "Chọn chất lượng\n(Basic / Enhance / Cinema)" as V5
+        usecase "Sinh clip cảnh" as V6
+        usecase "Sinh tất cả video" as V6a
+        usecase "Viết lại tất cả prompt" as V7
+    }
+    package "Animated Book" {
+        usecase "Lập kế hoạch hoạt hình từ ảnh minh họa\n(Re-plan)" as A1
+        usecase "Tách / gộp đoạn video\n(kéo ảnh giữa các cảnh)" as A2
+        usecase "Sinh video Animated Book" as A3
+    }
+    package "Videos" {
+        usecase "Xem clip theo loại\n(Clips / Animated Book / Book→Video / Merged)" as W1
+        usecase "Xem lịch sử phiên bản\n(chuyển / xóa phiên bản)" as W2
+        usecase "Ghép clip thành video" as W3
+        usecase "Tải clip / video" as W4
+        usecase "Tạo Book trailer" as W5
+    }
+}
+Editor --> V1
+Editor --> V2
+Editor --> V3
+Editor --> V6
+Editor --> V7
+Editor --> A1
+Editor --> A2
+Editor --> A3
+Editor --> W1
+Editor --> W2
+Editor --> W3
+Editor --> W4
+Editor --> W5
+V3a .> V3 : <<extend>>
+V3b .> V3 : <<extend>>
+V6 ..> V4 : <<include>>
+V6 ..> V5 : <<include>>
+V6a .> V6 : <<extend>>
+V2 --> LLM
+V7 --> LLM
+A1 --> LLM
+V6 --> VideoAI
+A3 --> VideoAI
+W5 --> VideoAI
+@enduml

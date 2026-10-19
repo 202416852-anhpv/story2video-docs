@@ -1,0 +1,40 @@
+@startuml UC_M08_ThuVien
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M08 - Thư viện tài sản cá nhân
+
+actor "User" as User
+
+rectangle "M08 Thư viện tài sản" {
+    usecase "UC-08.01\nXem thư viện\n(Characters / Locations / Items)" as UC1
+    usecase "UC-08.01a\nLọc & tìm kiếm\n(All / My Created / From Projects)" as UC1a
+    usecase "UC-08.02\nTạo tài sản từ ảnh hoặc mô tả" as UC2
+    usecase "UC-08.02a\nSinh ảnh tham chiếu" as UC2a
+    usecase "UC-08.03\nSửa / xóa tài sản" as UC3
+    usecase "UC-08.04\nLưu tài sản từ dự án vào thư viện" as UC4
+    usecase "UC-08.05\nThêm tài sản vào dự án" as UC5
+}
+rectangle "Image Provider" as IMG
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+UC1 <.. UC1a : <<extend>>
+UC2 ..> UC2a : <<include>>
+UC2a --> IMG
+@enduml

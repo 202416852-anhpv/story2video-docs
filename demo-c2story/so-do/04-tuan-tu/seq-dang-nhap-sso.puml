@@ -1,0 +1,55 @@
+@startuml Seq_DangNhapSSO
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-01.01: Đăng nhập / đăng xuất qua SSO có sẵn (OIDC, mẫu BFF)
+
+actor "Người dùng" as U
+participant "Web App" as Web
+participant "API (auth module)\n= OIDC Relying Party" as API
+database PostgreSQL as DB
+participant "SSO có sẵn\n(vd. SSO Vbee)" as SSO
+
+== Đăng nhập ==
+U -> Web : Mở /invite/{token} (chưa đăng nhập)
+Web -> API : GET /auth/login?returnTo=/invite/{token}
+API -> API : Tạo state, nonce, code_verifier (PKCE)\nlưu tạm (cookie ký / Redis, 10 phút)
+API --> U : 302 → SSO authorization_endpoint\n(client_id, redirect_uri, scope=openid email profile,\nstate, nonce, code_challenge)
+U -> SSO : Đăng nhập (hoặc đăng ký) trên trang SSO
+note right of SSO
+  Mọi màn hình đăng ký, đăng nhập,
+  quên mật khẩu, MFA thuộc SSO.
+  Ứng dụng không phát triển lại.
+end note
+SSO --> U : 302 → /auth/callback?code&state
+U -> API : GET /auth/callback?code&state
+API -> API : Kiểm tra state
+API -> SSO : POST token_endpoint (code, code_verifier, client_secret)
+SSO --> API : id_token, access_token, refresh_token
+API -> SSO : GET jwks_uri (có cache)
+API -> API : Xác thực id_token: chữ ký, iss, aud, exp, nonce
+API -> DB : UPSERT users theo sso_subject (JIT)\ncập nhật email, tên, avatar, role từ claims
+API -> DB : INSERT user_sessions (refresh_token mã hóa, sso_sid)
+API --> U : Set-Cookie session (HttpOnly, Secure, SameSite=Lax)\n302 → /invite/{token}
+
+== Gia hạn phiên ==
+API -> SSO : refresh_token grant (khi access sắp hết hạn)
+alt SSO từ chối (tài khoản khóa / thu hồi)
+    API -> DB : revoke session
+    API --> Web : 401 → yêu cầu đăng nhập lại
+end
+
+== Đăng xuất ==
+U -> Web : "Đăng xuất"
+Web -> API : POST /auth/logout
+API -> DB : revoke user_sessions
+API --> Web : { logoutUrl: end_session_endpoint?id_token_hint&post_logout_redirect_uri }
+Web -> SSO : Chuyển hướng logoutUrl
+SSO --> U : Kết thúc phiên SSO → 302 về trang chủ ứng dụng
+
+== Back-channel logout (nếu SSO hỗ trợ) ==
+SSO -> API : POST /auth/backchannel-logout (logout_token)
+API -> API : Xác thực logout_token theo JWKS
+API -> DB : revoke mọi session có sso_sid / sub tương ứng
+@enduml

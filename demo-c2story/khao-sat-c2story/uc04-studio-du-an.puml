@@ -1,0 +1,54 @@
+@startuml C2Story_UC04_Studio
+' Quan sát trực tiếp bằng REA khi đã đăng nhập (dự án f3cc9da5..., 2026-10-19)
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Chủ dự án\n(Owner)" as Owner
+actor "Cộng tác viên\n(Editor)" as Editor
+rectangle "AI ngôn ngữ\n(phân tích / viết kịch bản)" as LLM
+rectangle "AI sinh ảnh" as ImageAI
+rectangle "AI sinh video\n(+ giọng đọc, nhạc)" as VideoAI
+Owner -|> Editor
+
+rectangle "UC04: Quản lý dự án Studio (/project)" {
+    usecase "UC04.1: Quản lý dự án & cộng tác" as UC1
+    usecase "UC04.2: Biên tập bản thảo & chương" as UC2
+    usecase "UC04.3: Thiết kế thế giới truyện\n(Story Assets, Timeline, Relationships, Visual Rules)" as UC3
+    usecase "UC04.4: Lập storyboard & làm sách" as UC4
+    usecase "UC04.5: Làm video\n(Video Storyboard, Animated Book, Videos)" as UC5
+    usecase "UC04.6: Làm việc với AI Director" as UC6
+    usecase "Xem bản đồ quy trình\n(Map overview)" as UC7
+}
+Owner --> UC1
+Editor --> UC2
+Editor --> UC3
+Editor --> UC4
+Editor --> UC5
+Editor --> UC6
+Editor --> UC7
+
+UC4 ..> UC2 : <<include>>\n(cần chương)
+UC4 ..> UC3 : <<include>>\n(giữ nhất quán nhân vật)
+UC5 ..> UC4 : <<include>>\n(dựa trên storyboard / ảnh)
+UC6 ..> UC2 : <<include>>
+UC6 ..> UC3 : <<include>>
+UC6 ..> UC4 : <<include>>
+UC6 ..> UC5 : <<include>>
+
+UC2 --> LLM
+UC3 --> LLM
+UC3 --> ImageAI
+UC4 --> LLM
+UC4 --> ImageAI
+UC5 --> VideoAI
+UC6 --> LLM
+@enduml

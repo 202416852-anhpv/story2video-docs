@@ -1,0 +1,32 @@
+@startuml C4_Context
+!include <C4/C4_Context>
+title AI Story Studio - System Context (C4 L1)
+
+Person(editor, "Owner / Editor", "Tác giả, cộng tác viên chuyển truyện thành video minh họa")
+Person(admin, "Admin", "Cấu hình giá, provider, giọng, thư viện âm thanh; giám sát")
+
+System(studio, "AI Story Studio", "6 bước: nhập truyện → chia chương → thế giới truyện → sinh tư liệu (ảnh + thuyết minh nguyên văn) → chỉnh sửa video (nhạc nền, SFX) → xuất & tải")
+
+System_Ext(sso, "SSO có sẵn", "vd. SSO Vbee - đăng ký, đăng nhập, đăng xuất, MFA (không phát triển lại)")
+System_Ext(pay, "Stripe", "Checkout, subscription, webhook (tài khoản của nhóm)")
+System_Ext(llm, "LLM Provider", "Chia chương, phân tích, storyboard, Director, gợi ý SFX")
+System_Ext(img, "Image Provider", "Sinh và sửa ảnh có tham chiếu")
+System_Ext(tts, "TTS Provider", "Giọng đọc nguyên văn")
+System_Ext(stt, "STT / Aligner", "Timestamp từng từ, kiểm chứng WER (có thể tự host)")
+System_Ext(agen, "Music / SFX Provider", "Sinh nhạc nền, SFX (tùy chọn)")
+System_Ext(mail, "Email Service", "Email giao dịch")
+System_Ext(store, "Object Storage + CDN", "S3/R2")
+
+Rel(editor, studio, "Dùng", "HTTPS")
+Rel(admin, studio, "Quản trị", "HTTPS")
+Rel(editor, sso, "Đăng nhập", "HTTPS")
+Rel(studio, sso, "Xác thực, logout", "OIDC")
+Rel(studio, pay, "Checkout, nhận webhook", "HTTPS")
+Rel(studio, llm, "Gọi", "HTTPS")
+Rel(studio, img, "Sinh ảnh", "HTTPS")
+Rel(studio, tts, "Sinh thuyết minh", "HTTPS")
+Rel(studio, stt, "Kiểm chứng lời đọc", "HTTPS")
+Rel(studio, agen, "Sinh nhạc / SFX", "HTTPS")
+Rel(studio, mail, "Gửi email", "API")
+Rel(studio, store, "Lưu media", "S3 API")
+@enduml

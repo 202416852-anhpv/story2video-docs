@@ -1,0 +1,83 @@
+@startuml UC_Studio_ChiTiet
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam packageStyle rectangle
+left to right direction
+
+' Tác nhân liên kết với cả gói = tương tác với mọi use case trong gói
+actor "Owner" as Owner
+actor "Editor" as Editor
+Owner -|> Editor
+
+rectangle "Studio dự án" {
+    package "M02 Dự án & cộng tác" as P2 {
+        usecase "UC-02.02 Import truyện" as UC02
+        usecase "UC-02.06 Mời cộng tác" as UC03
+        usecase "Cài đặt dự án" as UCset
+        usecase "UC-02.10 Xử lý xung đột lưu" as UC04
+        usecase "Xem Map" as UCmap
+    }
+    package "M03 Bản thảo" as P3 {
+        usecase "UC-03.03 Chia chương" as UC05
+        usecase "UC-03.11 Archive" as UC06
+        usecase "Find & replace" as UCfr
+        usecase "Notes" as UCnote
+    }
+    package "M04 Thế giới truyện" as P4 {
+        usecase "UC-04.01 Story Assets" as UC07
+        usecase "UC-04.10 Visual Rules" as UC08
+        usecase "Timeline & Relationships" as UCtl
+    }
+    package "M05 Sinh tư liệu" as P5 {
+        usecase "UC-05.07 Sinh tư liệu chương" as UC11
+        usecase "UC-05.01 Storyboard\n(tự động, tinh chỉnh tùy chọn)" as UC09
+        usecase "UC-05.09 Sinh & sửa ảnh" as UC10
+        usecase "UC-05.13 Thuyết minh nguyên văn\n& kiểm chứng WER" as UC12
+    }
+    package "M06 Trình chỉnh sửa & xuất video" as P6 {
+        usecase "UC-06.01 Chỉnh sửa video trên timeline\n(chuyển cảnh, nhạc nền, SFX, tinh chỉnh)" as UC13
+        usecase "UC-06.16 Xuất & tải video" as UC14
+    }
+    package "M07 AI Director" as P7 {
+        usecase "UC-07.02 Director tự động" as UC15
+        usecase "UC-07.01 Ra lệnh Director" as UC16
+    }
+}
+
+' Chỉ Owner: các UC quản trị dự án
+Owner --> UC02
+Owner --> UC03
+Owner --> UCset
+' Editor: dùng toàn bộ các gói còn lại
+Editor --> UC04
+Editor --> UCmap
+Editor --> P3
+Editor --> P4
+Editor --> P5
+Editor --> P6
+Editor --> P7
+
+' Quan hệ trong gói (theo luồng)
+UC05 ..> UC04 : <<extend>>
+UC11 ..> UC09 : <<include>>
+UC11 ..> UC10 : <<include>>
+UC11 ..> UC12 : <<include>>
+UC14 ..> UC13 : <<include>>
+
+' Phụ thuộc giữa các gói ghi bằng chú thích để tránh mũi tên chéo
+legend right
+  **Phụ thuộc giữa các gói** (<<include>>)
+  • M05 dùng tài sản của M04 (giữ nhất quán)
+  • M06 dựng video từ ảnh + thuyết minh của M05
+  • M07 Director điều phối M03 → M04 → M05 và dựng bản nháp timeline M06
+endlegend
+@enduml

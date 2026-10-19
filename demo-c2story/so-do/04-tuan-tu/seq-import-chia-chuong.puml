@@ -1,0 +1,54 @@
+@startuml Seq_Import_ChiaChuong
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-02.02 + UC-03.03: Import truyện và chia chương bằng AI
+actor Editor
+participant "Web App" as Web
+participant "API Server" as API
+database PostgreSQL as DB
+queue "Redis/BullMQ" as Q
+participant "LLM Worker" as W
+participant "AI Gateway" as GW
+participant "LLM Provider" as LLM
+
+== Import ==
+Editor -> Web : Dán văn bản, đặt tiêu đề, chọn "Giữ nguyên văn"
+Web -> API : POST /projects:import
+API -> DB : BEGIN; INSERT projects, project_members(OWNER),\nsource_texts, chapters(#1, v1); COMMIT
+API --> Web : 201 {projectId}
+Web -> Web : Mở Studio ?v=source
+
+== Gợi ý chia chương ==
+Editor -> Web : "Suggest chapter splits"
+Web -> API : POST /projects/{pid}/source:suggest-splits\nIdempotency-Key
+API -> DB : INSERT jobs(SUGGEST_SPLITS, QUEUED) + outbox
+API --> Web : 202 {jobId}
+API -> Q : enqueue (outbox relay)
+Q -> W : job
+W -> GW : complete(schema = SplitSuggestion[])
+GW -> LLM : văn bản đã đánh số đoạn
+LLM --> GW : [{startParagraph, title}]
+GW --> W : kết quả hợp lệ schema
+W -> DB : jobs.result, SUCCEEDED
+W -> API : publish job.updated
+API --> Web : SSE job.updated
+Web -> Editor : Đánh dấu điểm chia đề xuất
+
+== Áp dụng ==
+Editor -> Web : Chấp nhận (bỏ chọn vài điểm)
+Web -> API : POST /chapters:restructure\n{operations[], ifMatch}
+API -> DB : BEGIN; SELECT chapters FOR UPDATE
+alt version khớp & chương không bị khóa
+    API -> DB : UPDATE/INSERT chapters, order_index (deferred unique)\nversion++, narrations của shot bị ảnh hưởng → OUTDATED; COMMIT
+    API --> Web : 200 {chapters[], outdatedShotIds[]}
+    API -> API : publish chapters.restructured
+else sai version
+    API -> DB : ROLLBACK
+    API --> Web : 409 VERSION_CONFLICT {current}
+else chương đang khóa
+    API -> DB : ROLLBACK
+    API --> Web : 423 RESOURCE_LOCKED
+end
+@enduml

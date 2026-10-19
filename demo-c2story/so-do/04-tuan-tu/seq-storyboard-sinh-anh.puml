@@ -1,0 +1,63 @@
+@startuml Seq_Storyboard_SinhAnh
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-05.01 + UC-05.09: Lập storyboard và sinh ảnh shot
+actor Editor
+participant "Web App" as Web
+participant "API Server" as API
+database PostgreSQL as DB
+queue "BullMQ" as Q
+participant "Worker" as W
+participant "AI Gateway" as GW
+participant "LLM" as LLM
+participant "Image Provider" as IMG
+participant "Object Storage" as S3
+
+== Tạo bản nháp storyboard ==
+Editor -> Web : "Create storyboard draft" (chương 1)
+Web -> API : POST .../chapters/{cid}/storyboards {kind: INITIAL}
+API -> DB : INSERT jobs(STORYBOARD_DRAFT)
+API --> Web : 202
+Q -> W : job
+W -> DB : Đọc chương, story_assets, timeline,\nvisual_rules, chapter_rules
+W -> W : Tách câu tất định, đánh số câu
+W -> GW : ContextBuilder + complete(schema Shot[])\n(LLM chỉ trả startSentence/endSentence)
+GW -> LLM : prompt + danh sách câu đánh số
+LLM --> GW : shots JSON (chỉ số câu + brief)
+W -> W : CoverageValidator: câu → offset,\nsửa hở/chồng lấn, kiểm tra concat == content
+W -> W : Ánh xạ tên → asset_id (tên + bí danh);\nkhông khớp → unlinked
+W -> DB : INSERT storyboard_drafts, shots(source_start/end/hash), shot_asset_refs;\nchapters.current_storyboard_id (nếu là bản đầu)
+W --> Web : SSE job.updated (SUCCEEDED)
+
+== Sinh ảnh một shot ==
+Editor -> Web : "Generate" trên shot 3
+Web -> API : POST .../shots/{shid}:generate-image\nIdempotency-Key
+API -> DB : BEGIN\nSELECT credit_balances FOR UPDATE
+alt đủ credit
+    API -> DB : ledger HOLD(1); balances; jobs(QUEUED); outbox; COMMIT
+    API --> Web : 202 {jobId, creditCost: 1}
+else thiếu
+    API -> DB : ROLLBACK
+    API --> Web : 402 INSUFFICIENT_CREDITS
+end
+Q -> W : job (queue image)
+W -> DB : jobs RUNNING; illustrations(PENDING)
+W -> GW : PromptCompiler: Style → ArtDirection → VisualRules\n→ ChapterRules → brief + facts
+GW -> GW : Moderation input
+GW -> S3 : Lấy ảnh tham chiếu cast/location/item
+GW -> IMG : generate(prompt, references)
+alt thành công
+    IMG --> GW : ảnh
+    GW -> GW : Moderation output; UsageMeter
+    GW -> S3 : PUT media
+    W -> DB : BEGIN; media_files, illustrations(DONE, vN+1),\nshots.current_illustration_id, ledger CAPTURE(1),\njobs SUCCEEDED; COMMIT
+    W --> Web : SSE illustration.ready
+else lỗi tạm thời
+    W -> W : Retry (backoff, tối đa 3)
+else lỗi vĩnh viễn / vi phạm
+    W -> DB : BEGIN; ledger RELEASE(1); illustrations FAILED;\njobs FAILED; COMMIT
+    W --> Web : SSE job.updated (FAILED, error_code)
+end
+@enduml

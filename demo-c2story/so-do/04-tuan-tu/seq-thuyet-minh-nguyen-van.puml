@@ -1,0 +1,65 @@
+@startuml Seq_ThuyetMinhNguyenVan
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-05.13: Sinh và kiểm chứng thuyết minh nguyên văn (BR-19)
+actor Editor
+participant "Web App" as Web
+participant "API" as API
+database PostgreSQL as DB
+participant "TTS Worker" as W
+participant "SpeechNormalizer" as N
+participant "TTS Provider" as TTS
+participant "Alignment Worker\n(Aligner + STT)" as AL
+participant "Object Storage" as S3
+
+Editor -> Web : "Sinh thuyết minh chương 1"
+Web -> API : GET .../narrations:quote
+API -> DB : SUM(source_end - source_start) các shot hiện hành
+API --> Web : {chars: 9895, credits: 10}
+Editor -> Web : Xác nhận
+Web -> API : POST .../chapters/{cid}/narrations (Idempotency-Key)
+API -> DB : HOLD 10; jobs NARRATE_CHAPTER + NARRATE_SEGMENT × n;\nkhóa chương (BR-12)
+API --> Web : 202
+
+loop mỗi shot (song song có giới hạn)
+    W -> DB : Đọc chapter.content, shot.source_start/end/hash
+    W -> W : text = content[start:end]
+    alt sha256(text) != shot.source_hash
+        W -> DB : narration OUTDATED; RELEASE phần credit
+    else khớp
+        W -> N : text + pronunciation_entries + settings
+        N --> W : SSML (chỉ break / alias / phoneme;\nbỏ ký hiệu markdown) + log biến đổi
+        note right of N
+          Kiểm tra: bỏ thẻ SSML và áp ngược
+          alias → chuỗi chữ phải bằng text
+        end note
+        W -> TTS : speak(SSML, voice, speed)\n(chia theo câu nếu dài)
+        TTS --> W : audio (+ timestamp nếu có)
+        W -> S3 : PUT narration.mp3
+        W -> AL : align(audio, text) + transcribe(audio)
+        AL --> W : word_timings, transcript
+        W -> W : WER = dist(normalize(text), normalize(transcript))
+        alt WER <= ngưỡng
+            W -> DB : narrations(VERIFIED, word_timings, wer)
+        else WER > ngưỡng
+            W -> DB : narrations(NEEDS_REVIEW, mismatches[])
+        end
+        W -> DB : CAPTURE phần credit
+    end
+    W --> Web : SSE narration.updated
+end
+W -> DB : mở khóa chương
+
+opt Có shot NEEDS_REVIEW
+    Editor -> Web : Nghe, xem từ tô đỏ
+    alt Thêm từ điển phát âm
+        Web -> API : POST /pronunciations
+        Web -> API : POST .../shots/{shid}/narration:generate
+    else Chấp nhận thủ công
+        Web -> API : POST .../narration:accept
+        API -> DB : ACCEPTED (accepted_by, accepted_at)
+    end
+end
+@enduml

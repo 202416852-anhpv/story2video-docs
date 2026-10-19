@@ -1,0 +1,43 @@
+@startuml C2Story_UC04_6_Director
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Cộng tác viên (Editor)" as Editor
+rectangle "AI ngôn ngữ" as LLM
+rectangle "UC04.6: Làm việc với AI Director" {
+    usecase "Chạy quy trình tự động\n(bản thảo → sách / video)" as UC1
+    usecase "Chọn phong cách trước khi sinh ảnh" as UC1a
+    usecase "Chia chương" as UC1b
+    usecase "Thiết kế cast & địa điểm" as UC1c
+    usecase "Lập storyboard" as UC1d
+    usecase "Sinh ảnh" as UC1e
+    usecase "Biên dịch sách / làm video" as UC1f
+    usecase "Tạm dừng / tiếp tục / thoát chế độ tự động" as UC2
+    usecase "Duyệt kết quả từng bước (review)" as UC3
+    usecase "Hỏi / ra lệnh cho Director" as UC4
+    usecase "Director viết lời / prompt hộ" as UC5
+}
+Editor --> UC1
+Editor --> UC2
+Editor --> UC3
+Editor --> UC4
+UC1 ..> UC1a : <<include>>
+UC1 ..> UC1b : <<include>>
+UC1 ..> UC1c : <<include>>
+UC1 ..> UC1d : <<include>>
+UC1 ..> UC1e : <<include>>
+UC1 ..> UC1f : <<include>>
+UC1 ..> UC3 : <<include>>
+UC5 .> UC4 : <<extend>>
+UC1 --> LLM
+UC4 --> LLM
+@enduml

@@ -1,0 +1,36 @@
+@startuml State_NarrationRender
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Trạng thái thuyết minh (mỗi shot) và bản xuất video
+
+state Narration {
+    [*] --> PENDING : shot mới / chưa sinh
+    PENDING --> GENERATING : sinh (HOLD credit)
+    GENERATING --> VERIFIED : WER <= ngưỡng
+    GENERATING --> NEEDS_REVIEW : WER > ngưỡng
+    GENERATING --> FAILED : TTS lỗi / chính sách (RELEASE)
+    NEEDS_REVIEW --> GENERATING : sinh lại (từ điển phát âm / đổi giọng)
+    NEEDS_REVIEW --> ACCEPTED : người dùng chấp nhận
+    FAILED --> GENERATING : thử lại
+    VERIFIED --> OUTDATED : đoạn nguồn đổi hash
+    ACCEPTED --> OUTDATED : đoạn nguồn đổi hash
+    NEEDS_REVIEW --> OUTDATED : đoạn nguồn đổi hash
+    OUTDATED --> GENERATING : sinh lại
+}
+
+state Render {
+    [*] --> QUEUED : readiness OK (coverage 100%)
+    QUEUED --> RENDERING
+    RENDERING --> READY : encode xong
+    RENDERING --> FAILED_R : lỗi encode
+    QUEUED --> CANCELLED : hủy
+    RENDERING --> CANCELLED : hủy
+    READY --> [*]
+    FAILED_R --> [*]
+    CANCELLED --> [*]
+}
+note bottom of Render
+  Render chỉ được tạo khi mọi shot trên timeline
+  có Narration VERIFIED hoặc ACCEPTED (BR-23)
+end note
+@enduml

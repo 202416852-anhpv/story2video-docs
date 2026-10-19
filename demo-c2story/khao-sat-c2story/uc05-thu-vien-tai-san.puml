@@ -1,0 +1,46 @@
+@startuml C2Story_UC05_TaiSan
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Khách" as Guest
+actor "Người dùng" as User
+rectangle "AI sinh ảnh" as ImageAI
+User -|> Guest
+rectangle "UC05: Quản lý thư viện tài sản (/characters)" {
+    usecase "Xem tài sản công khai" as UC1
+    usecase "Tìm kiếm tài sản" as UC1a
+    usecase "Lọc All / Public, sắp xếp Recent" as UC1b
+    usecase "Tạo nhân vật\n(từ ảnh hoặc mô tả)" as UC2
+    usecase "Tạo địa điểm\n(reference sheet 4 góc nhìn)" as UC3
+    usecase "Tạo đạo cụ (Item / Prop)" as UC4
+    usecase "Tạo nhóm nhân vật (Group)" as UC5
+    usecase "Sinh ảnh tham chiếu" as UC6
+    usecase "Đặt công khai / riêng tư" as UC7
+    usecase "Dùng nhân vật cộng đồng\n(1 credit / lần)" as UC8
+    usecase "Sửa / xóa tài sản" as UC9
+}
+Guest --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC7
+User --> UC8
+User --> UC9
+UC1a .> UC1 : <<extend>>
+UC1b .> UC1 : <<extend>>
+UC2 ..> UC6 : <<include>>
+UC3 ..> UC6 : <<include>>
+UC4 ..> UC6 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC6 --> ImageAI
+@enduml

@@ -1,0 +1,39 @@
+@startuml C2Story_UC09_Billing
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Khách" as Guest
+actor "Người dùng" as User
+rectangle "Cổng thanh toán" as Payment
+User -|> Guest
+rectangle "UC09: Mua gói & tín dụng (/pricing)" {
+    usecase "Xem bảng giá" as UC1
+    usecase "Chuyển Monthly / Annual / Credit Packs" as UC1a
+    usecase "Xem FAQ" as UC1b
+    usecase "Đăng ký gói\n(Starter / Creator / Studio)" as UC2
+    usecase "Mua gói tín dụng (không hết hạn)" as UC3
+    usecase "Hủy gói đăng ký" as UC4
+    usecase "Xem số dư tín dụng" as UC5
+    usecase "Truy cập API (gói trả phí)" as UC6
+}
+Guest --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+UC1a .> UC1 : <<extend>>
+UC1b .> UC1 : <<extend>>
+UC2 --> Payment
+UC3 --> Payment
+UC4 --> Payment
+@enduml

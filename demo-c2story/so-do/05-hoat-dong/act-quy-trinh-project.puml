@@ -1,0 +1,75 @@
+@startuml Act_QuyTrinhProject
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Luồng chính của Studio: 6 bước từ truyện đến video
+
+|Editor|
+start
+partition "1. Nhập truyện" {
+  :Import truyện (giữ nguyên văn)\n/ viết trong Workspace;
+  :Chọn style, tỷ lệ khung hình;
+}
+partition "2. Chia chương" {
+  |AI|
+  :Gợi ý điểm chia chương;
+  |Editor|
+  :Chấp nhận / chỉnh chia chương;
+  :Lưu Archive (khuyến nghị);
+}
+partition "3. Thế giới truyện" {
+  |AI|
+  :Phân tích nhân vật, địa điểm, đạo cụ;
+  :Dựng Timeline & Relationships;
+  |Editor|
+  :Duyệt cast, Art Direction, Visual Rules;
+  |AI|
+  :Sinh ảnh tham chiếu tài sản;
+}
+partition "4. Sinh tư liệu (ảnh + thuyết minh)" {
+  |Editor|
+  :Chọn giọng đọc;
+  :Bấm "Sinh tư liệu" cho chương\n(xác nhận một báo giá tổng);
+  |AI|
+  :Storyboard tự động:\nchia **toàn bộ** chương thành shot\n(kiểm tra phủ kín văn bản);
+  fork
+    :Sinh ảnh minh họa\ntừng shot;
+  fork again
+    :TTS **nguyên văn** từng shot\n+ kiểm chứng WER;
+  end fork
+  |Editor|
+  if (Có ảnh lỗi / thuyết minh NEEDS_REVIEW?) then (có)
+    :Sửa ảnh, sửa phát âm, sinh lại\nhoặc chấp nhận thủ công;
+  else (không)
+  endif
+  |AI|
+  :Chương "Sẵn sàng dựng"\n→ dựng bản nháp timeline;
+}
+partition "5. Chỉnh sửa video" {
+  |Editor|
+  :Mở trình chỉnh sửa timeline;
+  :Ken Burns, chuyển cảnh,\nkhung hình, tinh chỉnh màu;
+  :Thêm **nhạc nền** và **SFX**\n(thư viện / tải lên / AI tùy chọn);
+  :Phụ đề, overlay chữ, trộn âm;
+  :Xem trước;
+}
+partition "6. Xuất & tải" {
+  if (Độ phủ 100% & thuyết minh đã kiểm chứng?) then (có)
+    |Render|
+    :Xuất MP4 + SRT/VTT;
+    |Editor|
+    :Tải video xuống;
+  else (không)
+    :Xử lý các vị trí chưa đạt\ntrên timeline;
+  endif
+}
+stop
+
+note right
+  AI Director có thể chạy tự động bước 2 → 4
+  và dựng sẵn bản nháp timeline; dừng ở:
+  chọn style, duyệt cast, chọn giọng,
+  duyệt thuyết minh. AI không bao giờ
+  sửa văn bản truyện; track thuyết minh
+  trên timeline bị khóa nội dung.
+end note
+@enduml

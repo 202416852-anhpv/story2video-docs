@@ -1,0 +1,230 @@
+@startuml C2Story_ThietKeDoiTuong_Project
+' Suy ra từ giao diện Studio + các endpoint /api/projects/* trong bundle app/project/[id] (REA, 2026-10-19)
+' Tên thuộc tính là suy luận; quan hệ bám theo cấu trúc URL API
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam classAttributeIconSize 0
+hide empty methods
+
+enum ProjectRole {
+    OWNER
+    EDITOR
+}
+enum AssetKind {
+    CHARACTER
+    LOCATION
+    PROP
+    GROUP
+}
+enum VideoQuality {
+    BASIC
+    ENHANCE
+    CINEMA
+}
+enum WardrobeMode {
+    ADAPT_TO_SCENE
+    LOCK_TO_REFERENCE
+}
+enum ImportMode {
+    KEEP_EXACT_TEXT
+    AI_REWRITE
+}
+
+class Project <<api/projects/{id}>> {
+    id: UUID
+    title: String
+    artStyle: String
+    imageModel: String
+    language: String
+    pagesPerChapter: int
+    visibility: String
+    artDirection: String
+    status: InProgress | Done
+    updatedAt: DateTime
+    importSource(text, mode: ImportMode)
+    suggestSplits()
+    analyzeAssets()
+}
+class ProjectMember <<invite>> {
+    role: ProjectRole
+    joinedAt: DateTime
+}
+class InviteLink <<invite>> {
+    token: String
+}
+class SourceText <<source>> {
+    content: Text
+    charCount: int
+}
+class Archive <<archives>> {
+    name: String
+    content: Text
+    savedAt: DateTime
+}
+class Note <<notes>> {
+    content: String
+    attachedTo: String
+}
+
+class Chapter <<chapters/{id}>> {
+    order: int
+    title: String
+    text: Text
+    lastEditedBy: User
+    locked: boolean
+    reorder()
+    moveBoundary()
+    mergeIntoPrevious()
+    scanCharacters()
+}
+class ChapterVersion <<versions>> {
+    createdAt: DateTime
+}
+class ChapterRule {
+    instruction: String
+}
+
+class StoryAsset <<story-assets>> {
+    name: String
+    kind: AssetKind
+    appearance: String
+    facts: String
+    aliases: String[]
+    referenceImageUrl: String
+    useUploadedImageAsIs: boolean
+    regenerate()
+}
+class VisualRule <<visual-rules>> {
+    name: String
+    instruction: String
+    scope: WholeProject | Chapter
+}
+class StoryMeta <<story-meta>> {
+}
+class TimelineEvent {
+    dayLabel: String
+    season: String
+    summary: String
+}
+class Relationship {
+    label: String
+    dynamic: String
+}
+
+class StoryboardDraft <<storyboards/{id}>> {
+    name: String
+    isCurrent: boolean
+    duplicate()
+    improve(note)
+    resplit(more | fewer)
+    compileBook()
+    syncText()
+}
+class Shot <<scenes/{id}>> {
+    order: int
+    title: String
+    focus: String
+    time: String
+    date: String
+    illustrationBrief: Text
+    caption: String
+    sourceText: Text
+    imageUrl: String
+    rewriteBrief(note)
+    generateImage()
+    editImage(prompt)
+}
+class BookPage <<book-pages>> {
+    pageNo: int
+    text: String
+    imageUrl: String
+}
+class Book {
+    isOutdated: boolean
+}
+
+class VideoSettings <<video-storyboard>> {
+    narration: boolean
+    language: String
+    voice: String
+    perspective: Third | First
+    dialogue: boolean
+    music: boolean
+    musicStyle: String
+    burnInSubtitles: boolean
+    wardrobe: WardrobeMode
+    extraAudioDirection: String
+}
+class VideoScene {
+    order: int
+    title: String
+    lengthSec: 5 | 10 | 15
+    quality: VideoQuality
+    sceneScript: Text
+    generationPrompt: Text
+    creditCost: int
+    generate()
+}
+class AnimatedSegment <<animated-book>> {
+    order: int
+    lengthSec: int
+    dialogueLines: int
+    status: Ready | Generating | Failed
+}
+class VideoClip <<videos>> {
+    type: Clip | AnimatedBook | BookToVideo | Merged
+    url: String
+    durationSec: int
+    isLatest: boolean
+}
+class DirectorPlan <<director/plan>> {
+    target: book | video
+    currentStep: pickStyle | split | cast | storyboard | pictures | book | video
+    paused: boolean
+    continue()
+    pause()
+    exit()
+    review()
+}
+class DirectorMessage <<director>> {
+    sender: User | Director
+    content: String
+}
+
+Project "1" *-- "1..*" ProjectMember
+Project "1" *-- "0..1" InviteLink
+Project "1" *-- "1" SourceText
+Project "1" *-- "*" Archive
+Project "1" *-- "*" Note
+Project "1" *-- "*" Chapter : ordered >
+Project "1" *-- "*" StoryAsset : Story Assets >
+Project "1" *-- "*" VisualRule
+Project "1" *-- "0..1" StoryMeta
+StoryMeta "1" *-- "*" TimelineEvent
+StoryMeta "1" *-- "*" Relationship
+Relationship "*" --> "2" StoryAsset : giữa nhân vật >
+Project "1" *-- "1" VideoSettings
+Project "1" *-- "*" VideoClip
+Project "1" *-- "0..1" DirectorPlan
+DirectorPlan "1" *-- "*" DirectorMessage
+StoryAsset "0..1" o-- "*" StoryAsset : nhóm (GROUP) >
+
+Chapter "1" *-- "*" ChapterVersion
+Chapter "1" *-- "*" ChapterRule
+Chapter "1" *-- "*" StoryboardDraft
+Chapter "1" *-- "0..1" Book
+Chapter "1" *-- "*" VideoScene
+Chapter "1" *-- "*" AnimatedSegment
+TimelineEvent "*" --> "1" Chapter
+
+StoryboardDraft "1" *-- "1..*" Shot
+Shot "*" --> "*" StoryAsset : cast / item / location >
+Book "1" *-- "1..*" BookPage
+BookPage "1" --> "1" Shot : sinh từ >
+VideoScene "*" --> "*" StoryAsset
+AnimatedSegment "*" --> "1..*" Shot : keyframes >
+VideoClip "*" --> "0..1" VideoScene
+VideoClip "*" --> "0..1" AnimatedSegment
+VideoClip "0..1" o-- "*" VideoClip : merged from >
+
+@enduml

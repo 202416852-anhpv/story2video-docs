@@ -1,0 +1,33 @@
+@startuml C2Story_UC07_Chat
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Người dùng" as User
+rectangle "AI ngôn ngữ" as LLM
+rectangle "UC07: Trò chuyện với nhân vật (/chat)" {
+    usecase "Duyệt / tìm nhân vật để chat" as UC1
+    usecase "Mở chat từ trang truyện" as UC2
+    usecase "Gửi tin nhắn cho nhân vật" as UC3
+    usecase "Nhận phản hồi theo tính cách nhân vật" as UC4
+    usecase "Xem lịch sử hội thoại" as UC5
+    usecase "Tạo nhân vật mới" as UC6
+    usecase "Kiểm tra hạn mức tin nhắn\n(theo gói)" as UC7
+}
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC5
+User --> UC6
+UC3 ..> UC4 : <<include>>
+UC3 ..> UC7 : <<include>>
+UC4 --> LLM
+@enduml

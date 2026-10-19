@@ -1,0 +1,49 @@
+@startuml Seq_SinhTuLieu
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-05.07: Sinh tư liệu chương (ảnh + thuyết minh nguyên văn)
+actor Editor
+participant "Web App" as Web
+participant "API" as API
+database PostgreSQL as DB
+participant "Media Orchestrator\n(job cha)" as ORC
+participant "LLM Worker\n(storyboard)" as SB
+participant "Image Worker" as IMG
+participant "TTS + Align Worker" as NAR
+
+Editor -> Web : "Sinh tư liệu" chương 1
+Web -> API : GET /media:quote?chapterIds=c1
+API --> Web : {shots≈10, imageCredits 10, ttsChars 9895, ttsCredits 10, total 20}
+Editor -> Web : Xác nhận
+Web -> API : POST /media:generate {chapterIds:[c1]} (Idempotency-Key)
+API -> DB : HOLD 20; jobs GENERATE_MEDIA_CHAPTER (QUEUED)
+API --> Web : 202
+ORC -> DB : chương có storyboard hiện hành?
+alt chưa có
+    ORC -> SB : STORYBOARD_DRAFT (tách câu → LLM chọn ranh giới\n→ CoverageValidator phủ kín)
+    SB --> ORC : N shot (source_start/end/hash)
+    ORC -> DB : điều chỉnh HOLD theo N thực tế
+end
+par mỗi shot (giới hạn đồng thời)
+    ORC -> IMG : GENERATE_SHOT_IMAGE(shot)
+    IMG --> ORC : illustration DONE / FAILED
+else
+    ORC -> NAR : NARRATE_SEGMENT(shot)\n(text = content[start:end], SSML, TTS, align, WER)
+    NAR --> ORC : narration VERIFIED / NEEDS_REVIEW / FAILED
+end
+ORC --> Web : SSE media.progress (từng shot, từng phần)
+ORC -> DB : CAPTURE phần thành công; RELEASE phần lỗi
+alt mọi shot: ảnh DONE & thuyết minh VERIFIED/ACCEPTED
+    ORC -> DB : chương READY_TO_EDIT;\ntạo timeline nháp: track Video (ảnh), Thuyết minh (khóa),\nPhụ đề (nguyên văn), Nhạc nền & SFX trống
+    ORC --> Web : SSE chapter.media-ready {timelineId}
+else còn lỗi / NEEDS_REVIEW
+    ORC -> DB : chương NEEDS_ATTENTION
+    ORC --> Web : danh sách shot cần xử lý
+end
+note over Editor, NAR
+  Bước này **chỉ** sinh ảnh + thuyết minh.
+  Nhạc nền và SFX được thêm trong trình chỉnh sửa (UC-06.01).
+end note
+@enduml

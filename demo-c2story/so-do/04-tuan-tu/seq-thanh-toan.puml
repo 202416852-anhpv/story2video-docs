@@ -1,0 +1,32 @@
+@startuml Seq_ThanhToan
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-09.02: Đăng ký gói qua Stripe (tài khoản của nhóm)
+actor User
+participant "Web App" as Web
+participant "API" as API
+database PostgreSQL as DB
+participant "Stripe" as ST
+
+User -> Web : Chọn Creator / Monthly
+Web -> API : POST /billing/checkout-sessions {planCode, cycle}
+API -> ST : Create Checkout Session\n(client_reference_id = userId)
+ST --> API : session.url
+API --> Web : {url}
+Web -> ST : redirect
+User -> ST : Thanh toán
+ST --> Web : redirect success_url → Dashboard (đang xử lý)
+ST -> API : webhook checkout.session.completed / invoice.paid
+API -> API : Xác thực chữ ký + timestamp
+API -> DB : INSERT payment_events (gateway_event_id UNIQUE)
+alt event mới
+    API -> DB : BEGIN; upsert subscriptions(ACTIVE, period);\nEXPIRE credit SUBSCRIPTION cũ; GRANT monthly_credits;\npayments; processed_at; COMMIT
+else trùng event
+    API -> API : bỏ qua (idempotent)
+end
+API --> ST : 200
+Web -> API : GET /me/dashboard
+API --> Web : Creator, 300 credits
+@enduml

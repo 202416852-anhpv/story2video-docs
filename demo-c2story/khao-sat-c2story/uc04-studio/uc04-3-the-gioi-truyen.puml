@@ -1,0 +1,53 @@
+@startuml C2Story_UC04_3_TheGioi
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Cộng tác viên (Editor)" as Editor
+rectangle "AI ngôn ngữ" as LLM
+rectangle "AI sinh ảnh" as ImageAI
+rectangle "UC04.3: Thiết kế thế giới truyện" {
+    usecase "Phân tích truyện tìm tài sản\n(nhân vật / địa điểm / đạo cụ lặp lại)" as UC1
+    usecase "Quản lý Story Assets" as UC2
+    usecase "Thêm nhân vật / địa điểm / đạo cụ" as UC2a
+    usecase "Thêm tài sản có sẵn từ thư viện" as UC2b
+    usecase "Gỡ khỏi Story Assets / dự án" as UC2c
+    usecase "Quản lý bí danh & nhóm\n(Project Assets)" as UC2d
+    usecase "Dùng ảnh tải lên làm tài sản\n(không vẽ lại)" as UC2e
+    usecase "Sinh / sinh lại ảnh tham chiếu" as UC3
+    usecase "Tạo lại tất cả (Regenerate all)" as UC3a
+    usecase "Đặt phong cách (Set style)" as UC4
+    usecase "Thiết lập Art Direction" as UC5
+    usecase "Xem dòng thời gian truyện\n(ngày, mùa theo chương)" as UC6
+    usecase "Xem đồ thị quan hệ nhân vật" as UC7
+    usecase "Phân tích lại (Re-analyse)" as UC8
+    usecase "Quản lý Visual Rules\n(luật hình ảnh toàn dự án)" as UC9
+}
+Editor --> UC1
+Editor --> UC2
+Editor --> UC4
+Editor --> UC5
+Editor --> UC6
+Editor --> UC7
+Editor --> UC9
+UC2a ..> UC2 : <<extend>>
+UC2b ..> UC2 : <<extend>>
+UC2c ..> UC2 : <<extend>>
+UC2d ..> UC2 : <<extend>>
+UC2e ..> UC2a : <<extend>>
+UC2a ..> UC3 : <<include>>
+UC3a ..> UC3 : <<extend>>
+UC8 ..> UC6 : <<extend>>
+UC8 ..> UC7 : <<extend>>
+UC1 --> LLM
+UC8 --> LLM
+UC3 --> ImageAI
+@enduml

@@ -1,0 +1,83 @@
+@startuml UC_M05b_SinhTuLieu
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M05b - Sinh tư liệu: ảnh + thuyết minh nguyên văn
+
+actor "Editor" as Editor
+
+rectangle "M05 Sinh tư liệu" {
+    usecase "UC-05.07\nSinh tư liệu chương\n(một báo giá tổng)" as UC1
+    usecase "UC-05.07a\nStoryboard tự động\n(M05a)" as UC1a
+    usecase "UC-05.07b\nXem tiến độ theo shot" as UC1b
+    usecase "UC-05.07c\nSinh lại phần thiếu / lỗi" as UC1c
+    usecase "UC-05.08\nXem Tư liệu dự án (media bin)" as UC2
+    usecase "UC-05.09\nSinh ảnh shot" as UC3
+    usecase "UC-05.10\nSửa ảnh" as UC4
+    usecase "UC-05.10a\nDescribe → Edit" as UC4a
+    usecase "UC-05.10b\nFix a spot (tô vùng)" as UC4b
+    usecase "UC-05.10c\nKhôi phục phiên bản ảnh" as UC4c
+    usecase "UC-05.11\nCài đặt thuyết minh\n(giọng, tốc độ, ngắt nghỉ)" as UC5
+    usecase "UC-05.11a\nNghe thử giọng" as UC5a
+    usecase "UC-05.12\nQuản lý từ điển phát âm" as UC6
+    usecase "UC-05.13\nSinh thuyết minh nguyên văn" as UC7
+    usecase "UC-05.13a\nCắt đoạn nguồn & kiểm tra hash" as UC7a
+    usecase "UC-05.13b\nChuẩn hóa phát âm (SSML)" as UC7b
+    usecase "UC-05.13c\nKiểm chứng lời đọc (WER)" as UC7c
+    usecase "UC-05.14\nDuyệt shot NEEDS_REVIEW" as UC8
+    usecase "UC-05.14a\nChấp nhận thủ công" as UC8a
+    usecase "UC-05.15\nGán giọng theo nhân vật" as UC9
+    usecase "UC-05.17\nGiữ / trừ / hoàn credit" as UC11
+    usecase "UC-05.16\nTải ZIP ảnh" as UC10
+}
+rectangle "Image Provider" as IMG
+rectangle "TTS Provider" as TTS
+rectangle "STT / Aligner" as STT
+
+Editor --> UC1
+Editor --> UC2
+Editor --> UC4
+Editor --> UC5
+Editor --> UC6
+Editor --> UC8
+Editor --> UC9
+Editor --> UC10
+UC1 ..> UC1a : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC7 : <<include>>
+UC1 ..> UC11 : <<include>>
+UC1 <.. UC1b : <<extend>>
+UC1 <.. UC1c : <<extend>>
+UC4 <.. UC4a : <<extend>>
+UC4 <.. UC4b : <<extend>>
+UC4 <.. UC4c : <<extend>>
+UC5 <.. UC5a : <<extend>>
+UC7 ..> UC7a : <<include>>
+UC7 ..> UC7b : <<include>>
+UC7 ..> UC7c : <<include>>
+UC8 <.. UC8a : <<extend>>
+UC3 --> IMG
+UC4 --> IMG
+UC5a --> TTS
+UC7 --> TTS
+UC7c --> STT
+
+legend right
+  **Đầu ra của bước 4 chỉ gồm ảnh + thuyết minh nguyên văn.**
+  Nhạc nền và SFX được thêm ở trình chỉnh sửa (M06).
+  Khi mọi shot đạt → chương "Sẵn sàng dựng"
+  → hệ thống dựng bản nháp timeline.
+endlegend
+@enduml

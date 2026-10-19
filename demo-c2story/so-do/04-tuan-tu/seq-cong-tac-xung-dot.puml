@@ -1,0 +1,42 @@
+@startuml Seq_CongTac_XungDot
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-02.06 + UC-02.10: Mời cộng tác và xử lý xung đột khi lưu
+actor Owner
+actor "Editor A" as A
+actor "Editor B" as B
+participant "API" as API
+database PostgreSQL as DB
+
+== Mời ==
+Owner -> API : POST /projects/{pid}/invite-link
+API -> DB : token ngẫu nhiên 32B → lưu sha256
+API --> Owner : https://app/invite/{token}
+Owner -> A : gửi link
+A -> API : POST /invites/{token}:accept
+API -> DB : tìm theo sha256(token), chưa thu hồi
+API -> DB : INSERT project_members(EDITOR)
+API --> A : 200 → vào Studio
+
+== Xung đột ==
+A -> API : GET chapter C1
+API --> A : ETag "3"
+B -> API : GET chapter C1
+API --> B : ETag "3"
+B -> API : PATCH C1, If-Match "3"
+API -> DB : UPDATE ... WHERE version=3 → version=4
+API --> B : 200 ETag "4"
+API -> A : SSE chapter.updated {v4, lastEditedBy: B}
+A -> API : PATCH C1, If-Match "3"
+API -> DB : UPDATE ... WHERE version=3 → 0 rows
+API --> A : 409 VERSION_CONFLICT {current v4, by B}
+alt A chọn "Lưu bản của tôi thành nháp"
+    A -> API : POST /archives {source: CONFLICT, content}
+    API --> A : 201
+    A -> API : GET C1 (v4)
+else A chọn "Tải bản của họ"
+    A -> API : GET C1 (v4)
+end
+@enduml

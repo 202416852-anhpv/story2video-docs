@@ -1,0 +1,40 @@
+@startuml C2Story_UC06_DaDinhDang
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Người dùng" as User
+rectangle "AI sinh ảnh" as ImageAI
+rectangle "AI sinh video" as VideoAI
+rectangle "UC06: Chuyển thể đa định dạng" {
+    usecase "Chọn định dạng đầu ra\n(Illustrated book / Comic / Manga)" as UC1
+    usecase "Tạo Story Poster (2 credits)" as UC2
+    usecase "Tạo Story Trailer" as UC3
+    usecase "Standard Trailer\n(1 credit/trang, tối thiểu 4)" as UC3a
+    usecase "Animated Trailer\n(3 credits/trang, tối thiểu 12)" as UC3b
+    usecase "Movie Trailer (cinematic)" as UC3c
+    usecase "Xuất PDF" as UC4
+    usecase "Xuất ảnh / MP4" as UC5
+    usecase "Tải toàn bộ tài nguyên (ZIP)" as UC6
+}
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+UC3a .> UC3 : <<extend>>
+UC3b .> UC3 : <<extend>>
+UC3c .> UC3 : <<extend>>
+UC1 --> ImageAI
+UC2 --> ImageAI
+UC3 --> VideoAI
+@enduml

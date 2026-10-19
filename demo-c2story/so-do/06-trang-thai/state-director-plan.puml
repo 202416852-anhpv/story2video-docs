@@ -1,0 +1,26 @@
+@startuml State_DirectorPlan
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Trạng thái kế hoạch AI Director
+[*] --> RUNNING : start()
+state RUNNING {
+    [*] --> pickStyle
+    pickStyle --> split
+    split --> cast
+    cast --> pickVoice
+    pickVoice --> media : storyboard tự động\n+ ảnh + thuyết minh
+    media --> verify
+    verify --> draftTimeline
+    draftTimeline --> [*] : Editor tự chỉnh sửa\nnhạc, SFX và xuất
+}
+RUNNING --> AWAITING_INPUT : chọn style / duyệt cast / chọn giọng /\nduyệt NEEDS_REVIEW / thiếu credit
+AWAITING_INPUT --> RUNNING : submit-input / nạp credit + continue
+RUNNING --> PAUSED : pause
+PAUSED --> RUNNING : continue
+RUNNING --> COMPLETED : mọi bước xong
+RUNNING --> CANCELLED : exit auto
+PAUSED --> CANCELLED : exit auto
+AWAITING_INPUT --> CANCELLED : exit auto
+COMPLETED --> [*]
+CANCELLED --> [*]
+@enduml

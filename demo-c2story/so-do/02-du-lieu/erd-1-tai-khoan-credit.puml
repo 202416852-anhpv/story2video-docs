@@ -1,0 +1,152 @@
+@startuml erd_1_tai_khoan_credit
+' Sinh tự động từ erd.puml - chỉ sửa erd.puml rồi chạy: python3 so-do/tools/split_erd.py
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam linetype ortho
+hide circle
+hide empty members
+title ERD 1 - Tài khoản, credit & thanh toán
+
+package "Tài khoản & thanh toán" #EEF5FF {
+    entity users {
+        * id : uuid <<PK>>
+        --
+        * sso_subject : text <<UQ>>
+        email : citext
+        display_name : text
+        avatar_url : text
+        locale : text
+        * role : user_role
+        * status : user_status
+        gateway_customer_id : text
+        last_login_at : timestamptz
+        last_daily_claim_on : date
+        deletion_requested_at : timestamptz
+    }
+    entity user_sessions {
+        * id : uuid <<PK>>
+        --
+        * user_id : uuid <<FK>>
+        * session_hash : text <<UQ>>
+        sso_sid : text
+        refresh_token_enc : bytea
+        id_token_hint_enc : bytea
+        * expires_at : timestamptz
+        revoked_at : timestamptz
+        last_seen_at : timestamptz
+    }
+    entity plans {
+        * id : uuid <<PK>>
+        --
+        * code : text <<UQ>>
+        name : text
+        * monthly_credits : int
+        price_monthly : numeric
+        price_annual : numeric
+        gateway_price_ids : jsonb
+        features : jsonb
+        active : bool
+    }
+    entity credit_packs {
+        * id : uuid <<PK>>
+        --
+        * code : text <<UQ>>
+        * credits : int
+        * price : numeric
+        gateway_price_id : text
+        active : bool
+    }
+    entity subscriptions {
+        * id : uuid <<PK>>
+        --
+        * user_id : uuid <<FK>>
+        * plan_id : uuid <<FK>>
+        * status : sub_status
+        * billing_cycle : text
+        current_period_start : timestamptz
+        current_period_end : timestamptz
+        cancel_at_period_end : bool
+        gateway_subscription_id : text <<UQ>>
+    }
+    entity payments {
+        * id : uuid <<PK>>
+        --
+        * user_id : uuid <<FK>>
+        * kind : payment_kind
+        plan_id : uuid <<FK>>
+        credit_pack_id : uuid <<FK>>
+        * amount : numeric
+        * currency : text
+        * status : text
+        gateway_ref : text
+    }
+    entity payment_events {
+        * id : uuid <<PK>>
+        --
+        * gateway_event_id : text <<UQ>>
+        * type : text
+        payload : jsonb
+        processed_at : timestamptz
+    }
+    entity credit_balances {
+        * user_id : uuid <<PK,FK>>
+        * bucket : credit_bucket <<PK>>
+        --
+        * available : int
+        * held : int
+        expires_at : timestamptz
+    }
+    entity credit_ledger_entries {
+        * id : uuid <<PK>>
+        --
+        * user_id : uuid <<FK>>
+        * bucket : credit_bucket
+        * delta : int
+        * type : ledger_type
+        job_id : uuid <<FK>>
+        payment_id : uuid <<FK>>
+        project_id : uuid <<FK>>
+        actor_id : uuid <<FK>>
+        reason : text
+        expires_at : timestamptz
+    }
+    entity audit_logs {
+        * id : uuid <<PK>>
+        --
+        * actor_id : uuid <<FK>>
+        * action : text
+        * target_type : text
+        target_id : uuid
+        before : jsonb
+        after : jsonb
+        reason : text
+        ip : inet
+    }
+}
+package "Bảng thuộc phân hệ khác" #FFFFFF {
+    entity audio_assets #EEEEEE
+    entity idempotency_keys #EEEEEE
+    entity jobs #EEEEEE
+    entity library_assets #EEEEEE
+    entity project_members #EEEEEE
+    entity projects #EEEEEE
+}
+
+users ||--o{ user_sessions
+users ||--o{ subscriptions
+plans ||--o{ subscriptions
+users ||--o{ payments
+plans |o--o{ payments
+credit_packs |o--o{ payments
+users ||--o{ credit_balances
+users ||--o{ credit_ledger_entries
+payments |o--o{ credit_ledger_entries
+jobs |o--o{ credit_ledger_entries
+users ||--o{ audit_logs : actor
+users ||--o{ projects : owns
+users ||--o{ project_members
+users ||--o{ library_assets
+users |o--o{ audio_assets : uploads
+users ||--o{ jobs
+users ||--o{ idempotency_keys
+@enduml

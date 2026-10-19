@@ -1,0 +1,29 @@
+@startuml C2Story_UC08_MyBooks
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Người dùng" as User
+rectangle "UC08: Quản lý sách của tôi (/library)" {
+    usecase "Xem danh sách sách đã tạo" as UC1
+    usecase "Mở / đọc sách" as UC2
+    usecase "Đặt công khai / riêng tư" as UC3
+    usecase "Quản lý series & chương" as UC4
+    usecase "Xóa sách" as UC5
+    usecase "Xem doanh thu từ sách\n(70% doanh thu PDF / HD)" as UC6
+}
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+@enduml

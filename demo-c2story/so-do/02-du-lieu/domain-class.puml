@@ -1,0 +1,258 @@
+@startuml Domain_StoryStudio
+' Mô hình miền (Domain Model) - các khái niệm nghiệp vụ và quan hệ, không phải schema vật lý
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam classAttributeIconSize 0
+hide empty methods
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+package "Định danh & Thanh toán" {
+    class User {
+        email
+        displayName
+        locale
+    }
+    class Subscription {
+        plan
+        status
+        periodEnd
+    }
+    class CreditWallet {
+        subscriptionCredits
+        packCredits
+        held
+        +hold(amount, job)
+        +capture(job)
+        +release(job)
+    }
+    class LibraryAsset
+}
+
+package "Dự án" {
+    class Project {
+        title
+        style
+        imageModel
+        language
+        targetShotSeconds
+        aspectRatio
+        artDirection
+        workflowStep : 1..6
+        +importSource(text)
+        +invite() : InviteLink
+    }
+    class Membership {
+        role : OWNER | EDITOR
+    }
+    class SourceText
+    class Chapter {
+        order
+        title
+        content
+        mediaStatus
+        version
+        +split(at)
+        +mergeIntoPrevious()
+        +moveBoundary(delta)
+    }
+    class Archive <<immutable>>
+    class Note
+}
+
+package "Thế giới truyện" {
+    abstract class StoryAsset {
+        name
+        aliases
+        appearance
+        facts
+        +generateReference()
+    }
+    class Character
+    class Location
+    class Prop
+    class Group
+    class VisualRule {
+        instruction
+        scope
+    }
+    class ChapterRule
+    class TimelineEvent {
+        dayLabel
+        season
+    }
+    class Relationship {
+        label
+        dynamic
+    }
+}
+
+package "Sinh tư liệu" {
+    class StoryboardDraft {
+        name
+        isCurrent
+        +resplit(more|fewer)
+        +redirect()
+    }
+    class Shot {
+        sourceStart
+        sourceEnd
+        sourceHash
+        title
+        focus
+        time
+        date
+        brief
+        caption
+        +rewrite(note)
+        +generateImage()
+    }
+    class Illustration {
+        version
+        status
+        +edit(prompt)
+        +inpaint(mask, prompt)
+    }
+    class NarrationSettings {
+        voice
+        language
+        speed
+        werThreshold
+    }
+    class PronunciationEntry {
+        written
+        spoken
+    }
+    class Narration {
+        sourceHash
+        wordTimings
+        wer
+        status
+        +verify()
+        +accept()
+    }
+}
+
+package "Trình chỉnh sửa video" {
+    class Timeline {
+        scope
+        aspectRatio
+        framing
+        subtitleStyle
+        version
+        +applyOps(ops)
+        +syncMedia()
+        +readiness() : Report
+    }
+    class Track {
+        kind : VIDEO|OVERLAY|SUBTITLE|NARRATION|MUSIC|SFX
+        locked
+        muted
+        volume
+    }
+    class TimelineItem {
+        kind : IMAGE|NARRATION|TITLE|TEXT|AUDIO
+        startMs
+        durationMs
+        motion
+        transitionIn
+        volume
+        duckingDb
+    }
+    class AudioAsset {
+        kind : MUSIC|SFX
+        license
+    }
+    class Render {
+        versionNo
+        partNo
+        watermark
+        coverage
+        timelineSnapshot
+    }
+    class SfxSuggestion {
+        atMs
+        query
+        status : PROPOSED|ACCEPTED|REJECTED
+    }
+}
+
+package "Tự động hóa" {
+    class DirectorPlan {
+        status
+        currentStep
+        +continue()
+        +pause()
+        +exit()
+    }
+    class DirectorMessage
+    class ToolProposal {
+        tool
+        creditCost
+        status : PENDING|CONFIRMED|REJECTED
+    }
+    class Job {
+        type
+        status
+        creditCost
+        attempts
+    }
+}
+
+User "1" -- "1" CreditWallet
+User "1" -- "0..1" Subscription
+User "1" -- "*" LibraryAsset
+User "1" -- "*" Membership
+Project "1" *-- "1..*" Membership
+Project "1" *-- "1..*" SourceText
+Project "1" *-- "*" Chapter
+Project "1" *-- "*" Archive
+Project "1" *-- "*" Note
+Project "1" *-- "*" StoryAsset
+Project "1" *-- "*" VisualRule
+Project "1" *-- "1" NarrationSettings
+Project "1" *-- "*" PronunciationEntry
+Project "1" *-- "*" Timeline
+Project "1" *-- "0..1" DirectorPlan
+DirectorPlan "1" *-- "*" DirectorMessage
+DirectorMessage "1" *-- "*" ToolProposal
+ToolProposal ..> Job : khi xác nhận
+StoryAsset <|-- Character
+StoryAsset <|-- Location
+StoryAsset <|-- Prop
+StoryAsset <|-- Group
+Group o-- "2..*" Character
+Relationship "*" --> "2" Character
+Chapter "1" *-- "*" ChapterRule
+Chapter "1" *-- "0..1" TimelineEvent
+Chapter "1" *-- "*" StoryboardDraft
+StoryboardDraft "1" *-- "1..*" Shot
+Shot "*" --> "*" StoryAsset
+Shot "1" *-- "*" Illustration
+Shot "1" *-- "*" Narration : verbatim(source) >
+Timeline "1" *-- "1..*" Track
+Track "1" *-- "*" TimelineItem
+TimelineItem "*" --> "0..1" Shot
+TimelineItem "*" --> "0..1" Illustration : ảnh
+TimelineItem "*" --> "0..1" Narration : thuyết minh (khóa)
+TimelineItem "*" --> "0..1" AudioAsset : nhạc / SFX
+Timeline "1" *-- "*" Render
+Timeline "1" *-- "*" SfxSuggestion
+SfxSuggestion ..> AudioAsset
+DirectorPlan ..> Job : spawns
+
+' Bố cục lưới: hàng 1 Identity | Project | Automation ; hàng 2 Story World | Sinh tư liệu | Trình chỉnh sửa
+User -[hidden]right- Project
+Project -[hidden]right- DirectorPlan
+Chapter -[hidden]down- StoryboardDraft
+StoryAsset -[hidden]right- StoryboardDraft
+Shot -[hidden]right- Timeline
+
+legend right
+  **Phụ thuộc không vẽ để đỡ rối**
+  • Job giữ / trừ / hoàn credit trên CreditWallet
+  • Job sinh ra Illustration, Narration, Render
+  • LibraryAsset được sao chép thành StoryAsset khi thêm vào dự án
+endlegend
+@enduml

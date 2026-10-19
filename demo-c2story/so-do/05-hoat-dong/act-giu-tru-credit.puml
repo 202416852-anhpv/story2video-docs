@@ -1,0 +1,49 @@
+@startuml Act_GiuTruCredit
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Vòng đời credit của một job tốn phí (BR-02, CR-01..05)
+
+start
+:Nhận yêu cầu + Idempotency-Key;
+if (Key đã xử lý?) then (có)
+  :Trả lại kết quả cũ;
+  stop
+endif
+:Tính giá theo price_rules hiệu lực;
+partition "Giao dịch DB #1" {
+  :SELECT credit_balances FOR UPDATE;
+  if (available >= giá?) then (không)
+    :ROLLBACK;
+    :402 INSUFFICIENT_CREDITS;
+    stop
+  endif
+  :Chọn bucket theo thứ tự\nSUBSCRIPTION → BONUS → PACK;
+  :ledger HOLD(-giá);\navailable -= giá; held += giá;
+  :INSERT jobs(QUEUED) + outbox;
+  :COMMIT;
+}
+:Relay outbox → BullMQ;
+:Worker chạy job;
+if (Kết quả?) then (thành công)
+  partition "Giao dịch DB #2" {
+    :Lưu đầu ra;
+    :ledger CAPTURE; held -= giá;
+    :jobs SUCCEEDED;
+  }
+else (thất bại / hủy / vi phạm)
+  partition "Giao dịch DB #2" {
+    :ledger RELEASE; held -= giá;\navailable += giá (đúng bucket);
+    :jobs FAILED / CANCELLED;
+  }
+endif
+:Publish sự kiện SSE;
+stop
+
+floating note right
+  Reconciler mỗi 5 phút:
+  job RUNNING mất heartbeat > 10 phút
+  → FAILED + RELEASE.
+  Reconciler hằng ngày:
+  Σ ledger == balances, lệch → cảnh báo P1.
+end note
+@enduml

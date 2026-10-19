@@ -1,0 +1,64 @@
+@startuml C2Story_UC04_4_Storyboard
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Cộng tác viên (Editor)" as Editor
+rectangle "AI ngôn ngữ" as LLM
+rectangle "AI sinh ảnh" as ImageAI
+rectangle "UC04.4: Lập storyboard & làm sách" {
+    usecase "Tạo bản nháp storyboard cho chương\n(chia chương thành shot)" as UC1
+    usecase "Quản lý bản nháp\n(đổi tên, nhân bản, xóa)" as UC2
+    usecase "So sánh hai bản nháp" as UC2a
+    usecase "Đặt bản nháp hiện hành\n(cấp dữ liệu cho Pages & Images)" as UC2b
+    usecase "Chia lại shot (nhiều hơn / ít hơn)" as UC3
+    usecase "Thiết lập luật chương\n(Chapter rules)" as UC4
+    usecase "Chỉ đạo lại toàn chương (Re-direct)" as UC5
+    usecase "Biên tập shot" as UC6
+    usecase "Gộp / tách / xóa shot" as UC6a
+    usecase "Gắn Cast / Item / Location" as UC6b
+    usecase "Đặt thời điểm & ngày" as UC6c
+    usecase "Sửa Illustration brief" as UC6d
+    usecase "Sửa lời trang (caption)" as UC6e
+    usecase "AI viết lại brief một shot" as UC6f
+    usecase "Sinh / sinh lại ảnh shot" as UC7
+    usecase "Sửa ảnh (Edit)" as UC7a
+    usecase "Biên dịch thành sách (Compile book)" as UC8
+    usecase "Sửa trang sách (Pages)" as UC9
+    usecase "Xem ảnh theo trang (Images)" as UC10
+    usecase "Mở sách (Open book)" as UC11
+}
+Editor --> UC1
+Editor --> UC2
+Editor --> UC3
+Editor --> UC4
+Editor --> UC5
+Editor --> UC6
+Editor --> UC7
+Editor --> UC8
+Editor --> UC9
+Editor --> UC10
+Editor --> UC11
+UC2a ..> UC2 : <<extend>>
+UC2b ..> UC2 : <<extend>>
+UC6a ..> UC6 : <<extend>>
+UC6b ..> UC6 : <<extend>>
+UC6c ..> UC6 : <<extend>>
+UC6d ..> UC6 : <<extend>>
+UC6e ..> UC6 : <<extend>>
+UC6f ..> UC6 : <<extend>>
+UC7a ..> UC7 : <<extend>>
+UC8 ..> UC7 : <<include>>\n(cần đủ ảnh)
+UC1 --> LLM
+UC5 --> LLM
+UC6f --> LLM
+UC7 --> ImageAI
+@enduml

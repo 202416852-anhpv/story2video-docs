@@ -1,0 +1,164 @@
+@startuml erd_4_sinh_tu_lieu
+' Sinh tự động từ erd.puml - chỉ sửa erd.puml rồi chạy: python3 so-do/tools/split_erd.py
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam linetype ortho
+hide circle
+hide empty members
+title ERD 4 - Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn
+
+package "Sinh tư liệu" #F5EEFF {
+    entity storyboard_drafts {
+        * id : uuid <<PK>>
+        --
+        * chapter_id : uuid <<FK>>
+        * project_id : uuid <<FK>>
+        * name : text
+        * kind : text
+        boundary_fixes : int
+        created_by : uuid <<FK>>
+    }
+    entity shots {
+        * id : uuid <<PK>>
+        --
+        * draft_id : uuid <<FK>>
+        * project_id : uuid <<FK>>
+        * order_index : int
+        title : text
+        focus : text
+        time_of_day : text
+        story_date : text
+        brief : jsonb
+        caption : text
+        * source_start : int
+        * source_end : int
+        * source_hash : text
+        current_illustration_id : uuid <<FK>>
+        current_narration_id : uuid <<FK>>
+        * version : int
+    }
+    entity shot_asset_refs {
+        * id : uuid <<PK>>
+        --
+        * shot_id : uuid <<FK>>
+        story_asset_id : uuid <<FK>>
+        * raw_name : text
+        * role : text
+    }
+    entity illustrations {
+        * id : uuid <<PK>>
+        --
+        * shot_id : uuid <<FK>>
+        media_id : uuid <<FK>>
+        * status : media_status
+        * edit_kind : text
+        instruction : text
+        mask_media_id : uuid <<FK>>
+        prompt_snapshot : text
+        shot_version : int
+        parent_illustration_id : uuid <<FK>>
+        job_id : uuid <<FK>>
+    }
+    entity narration_settings {
+        * project_id : uuid <<PK,FK>>
+        --
+        language : text
+        voice_id : uuid <<FK>>
+        speed : numeric
+        pitch : numeric
+        sentence_pause_ms : int
+        paragraph_pause_ms : int
+        wer_threshold : numeric
+        multi_voice : bool
+    }
+    entity voices {
+        * id : uuid <<PK>>
+        --
+        * provider_id : uuid <<FK>>
+        * code : text
+        * name : text
+        language : text
+        gender : text
+        sample_media_id : uuid <<FK>>
+        min_plan_code : text
+        sample_wer : numeric
+        enabled : bool
+    }
+    entity pronunciation_entries {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * written : text
+        * spoken : text
+        * kind : text
+        case_sensitive : bool
+    }
+    entity character_voices {
+        * project_id : uuid <<PK,FK>>
+        * story_asset_id : uuid <<PK,FK>>
+        --
+        * voice_id : uuid <<FK>>
+    }
+    entity dialogue_attributions {
+        * id : uuid <<PK>>
+        --
+        * shot_id : uuid <<FK>>
+        * char_start : int
+        * char_end : int
+        story_asset_id : uuid <<FK>>
+        confirmed : bool
+    }
+    entity narrations {
+        * id : uuid <<PK>>
+        --
+        * shot_id : uuid <<FK>>
+        * project_id : uuid <<FK>>
+        * version_no : int
+        * source_hash : text
+        spoken_text : text
+        ssml : text
+        normalization_log : jsonb
+        voice_id : uuid <<FK>>
+        media_id : uuid <<FK>>
+        duration_ms : int
+        word_timings : jsonb
+        wer : numeric
+        mismatches : jsonb
+        * status : narration_status
+        accepted_by : uuid <<FK>>
+        accepted_at : timestamptz
+        job_id : uuid <<FK>>
+    }
+}
+package "Bảng thuộc phân hệ khác" #FFFFFF {
+    entity ai_providers #EEEEEE
+    entity chapters #EEEEEE
+    entity media_files #EEEEEE
+    entity projects #EEEEEE
+    entity sfx_suggestions #EEEEEE
+    entity story_assets #EEEEEE
+    entity timeline_items #EEEEEE
+}
+
+chapters ||--o{ storyboard_drafts
+storyboard_drafts ||--|{ shots
+shots ||--o{ shot_asset_refs
+story_assets |o--o{ shot_asset_refs
+shots ||--o{ illustrations
+projects ||--|| narration_settings
+voices |o--o{ narration_settings
+ai_providers ||--o{ voices
+projects ||--o{ pronunciation_entries
+story_assets ||--o{ character_voices
+voices ||--o{ character_voices
+shots ||--o{ dialogue_attributions
+story_assets |o--o{ dialogue_attributions
+shots ||--o{ narrations
+voices |o--o{ narrations
+shots |o--o{ timeline_items
+illustrations |o--o{ timeline_items
+narrations |o--o{ timeline_items
+shots ||--o{ sfx_suggestions
+media_files ||--o{ illustrations
+media_files |o--o{ narrations
+@enduml

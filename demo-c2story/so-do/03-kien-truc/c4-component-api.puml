@@ -1,0 +1,46 @@
+@startuml C4_Component_API
+!include <C4/C4_Component>
+title API Server - Components (C4 L3)
+LAYOUT_LEFT_RIGHT()
+
+Container(web, "Web App", "Next.js")
+ContainerDb(db, "PostgreSQL")
+ContainerDb(redis, "Redis")
+System_Ext(sso, "SSO có sẵn")
+System_Ext(pay, "Stripe")
+
+Container_Boundary(api, "API Server (NestJS modular monolith)") {
+    Component(auth, "auth (M01)", "Module", "OIDC client, phiên BFF, JIT hồ sơ, back-channel logout")
+    Component(projects, "projects (M02)", "Module", "Dự án, thành viên, link mời, cài đặt, Map")
+    Component(manu, "manuscript (M03)", "Module", "Chương, tái cấu trúc nguyên tử, phiên bản, archive. **Duy nhất được ghi văn bản truyện**")
+    Component(world, "world (M04)", "Module", "Story assets, art direction, visual rules, story timeline, relationships")
+    Component(media, "media (M05)", "Module", "Điều phối Sinh tư liệu; storyboard, illustration, narration; media_status")
+    Component(editor, "editor (M06)", "Module", "Timeline apply-ops + BR-24, sync-media, audio library, SFX gợi ý, render, tải")
+    Component(director, "director (M07)", "Module", "PlanEngine, ToolRegistry, tool proposals")
+    Component(library, "library (M08)", "Module", "Thư viện tài sản cá nhân")
+    Component(billing, "billing (M09)", "Module", "Ví credit, ledger, gói, webhook")
+    Component(adminm, "admin (M10)", "Module", "Giá, provider, giọng, thư viện âm thanh, giám sát, báo cáo")
+    Component(platform, "platform", "Shared", "authz, jobs (HOLD + outbox), idempotency, realtime SSE, audit, storage")
+}
+
+Rel(web, auth, "Đăng nhập / phiên")
+Rel(web, editor, "apply-ops, preview data")
+Rel(web, media, "Sinh tư liệu, media bin")
+Rel(auth, sso, "OIDC")
+Rel(pay, billing, "Webhook")
+Rel(media, world, "Tài sản, rules (đọc)")
+Rel(media, manu, "Đoạn nguồn (đọc)")
+Rel(media, editor, "createDraftTimeline")
+Rel(editor, media, "Tư liệu hiện hành (đọc)")
+Rel(director, manu, "Chia chương")
+Rel(director, world, "Phân tích cast")
+Rel(director, media, "Sinh tư liệu")
+Rel(director, editor, "Bản nháp timeline")
+Rel(world, library, "Sao chép tài sản")
+Rel(media, platform, "Tạo job, HOLD credit")
+Rel(editor, platform, "Tạo job render")
+Rel(platform, billing, "hold / capture / release")
+Rel(adminm, platform, "audit")
+Rel(platform, db, "SQL")
+Rel(platform, redis, "Pub/Sub")
+@enduml

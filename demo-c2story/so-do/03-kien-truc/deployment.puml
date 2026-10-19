@@ -1,0 +1,77 @@
+@startuml Deployment
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam nodesep 50
+skinparam ranksep 50
+title AI Story Studio - Deployment (production)
+
+actor "Người dùng" as U
+
+rectangle "Tầng biên" {
+    node "CDN / Edge" as cdn
+    node "Web hosting" as webhost {
+        component "Next.js Web App\n(Remotion Player)" as web
+    }
+}
+
+cloud "Container platform (ECS / Fly / GKE)" {
+    node "API service (2..N)" {
+        component "NestJS API + SSE" as api
+    }
+    node "Scheduler (1, leader lock)" {
+        component "Outbox relay\nReconciler\nCleanup" as sched
+    }
+    node "Job workers (autoscale)" {
+        component "orchestrator / llm /\nimage / tts / audio-gen / export" as wk
+    }
+    node "Alignment (GPU nhỏ)" {
+        component "WhisperX / MFA" as al
+    }
+    node "Media processing" {
+        component "FFmpeg + ClamAV" as mp
+    }
+    node "Render (CPU / NVENC)" {
+        component "Remotion + FFmpeg\n(Chromium headless)" as rw
+    }
+}
+
+rectangle "Tầng dữ liệu (managed)" {
+    database "PostgreSQL\n(Multi-AZ)" as pg
+    database "Redis" as rd
+    storage "Object storage\n(private)" as s3
+}
+
+cloud "Bên thứ ba" {
+    component "SSO có sẵn (OIDC)" as sso
+    component "Stripe" as stripe
+    component "AI Providers" as ai
+    component "Email" as mail
+}
+
+U --> cdn
+U ..> sso : đăng nhập
+cdn --> web
+cdn --> s3 : media (signed URL)
+web --> api : HTTPS
+api --> pg
+api --> rd
+api --> sso : OIDC
+stripe --> api : webhook
+sched --> pg : outbox, reconcile
+sched --> rd : enqueue, publish
+rd --> wk : job
+rd --> al : align
+rd --> mp : media-proc
+rd --> rw : render
+wk --> ai
+wk --> pg
+rw --> s3 : MP4, SRT
+
+legend right
+  **Không vẽ mũi tên để gọn**
+  • Mọi worker đọc/ghi PostgreSQL và Object storage
+  • Mọi service đọc secret từ **Secrets Manager**
+  • Trace/log/metric qua **OpenTelemetry** → Grafana / Sentry
+  • Email gửi từ API và worker qua dịch vụ Email
+endlegend
+@enduml

@@ -1,0 +1,72 @@
+@startuml Seq_Director
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-07.02: AI Director tự động (bước 2 → 4, dựng bản nháp timeline)
+actor Editor
+participant "Web App" as Web
+participant "API / Director module" as DIR
+database PostgreSQL as DB
+participant "Job pipeline\n(như thao tác tay)" as JOBS
+participant "LLM" as LLM
+
+Editor -> Web : Bật Director tự động
+Web -> DIR : POST /director/plan
+DIR -> DB : INSERT director_plans(RUNNING)
+loop tới khi COMPLETED / PAUSED / AWAITING_INPUT
+    DIR -> DB : Đọc trạng thái dự án
+    DIR -> DIR : nextStep() = bước đầu tiên chưa xong
+    alt pickStyle (chưa có style)
+        DIR -> DB : plan AWAITING_INPUT(reason=PICK_STYLE)
+        DIR --> Web : SSE director.plan + mở Styles Library
+        Editor -> Web : Chọn style
+        Web -> DIR : POST plan:submit-input {styleId}
+    else split
+        DIR -> JOBS : SUGGEST_SPLITS → restructure
+    else cast
+        DIR -> JOBS : ANALYZE_ASSETS
+        DIR -> DB : plan AWAITING_INPUT(reason=REVIEW_CAST)
+        DIR --> Web : "Review your cast & places" + tổng giá ảnh tham chiếu
+        Editor -> Web : Duyệt cast
+        Web -> DIR : plan:submit-input {approvedAssetIds}
+        DIR -> JOBS : GENERATE_ASSET_IMAGE × n (HOLD credit)
+    else pickVoice
+        DIR -> DB : plan AWAITING_INPUT(reason=PICK_VOICE)
+        Editor -> Web : Nghe thử, chọn giọng
+        Web -> DIR : plan:submit-input {voiceId}
+    else media
+        DIR -> JOBS : GENERATE_MEDIA_CHAPTER cho mỗi chương chưa "Sẵn sàng dựng"\n(storyboard tự động + ảnh + thuyết minh nguyên văn)
+    else verify
+        DIR -> DB : nếu có NEEDS_REVIEW → AWAITING_INPUT(reason=REVIEW_NARRATION)
+    else draftTimeline
+        DIR -> JOBS : dựng bản nháp timeline cho mỗi chương
+    end
+    JOBS --> DIR : sự kiện job xong
+    DIR -> DB : cập nhật step_state; director_messages (tiến độ)
+    DIR --> Web : SSE director.plan
+end
+opt Editor bấm Pause
+    Web -> DIR : plan:pause
+    DIR -> DB : PAUSED (job đang chạy được để xong)
+end
+opt thiếu credit
+    DIR -> DB : AWAITING_INPUT(reason=INSUFFICIENT_CREDITS)
+end
+DIR -> DB : plan COMPLETED
+DIR --> Web : "Mọi chương đã sẵn sàng dựng video"\n→ Editor mở trình chỉnh sửa: nhạc nền, SFX, xuất
+
+== Chat ra lệnh (UC-07.01) ==
+Editor -> Web : "Làm lại shot 3 chương 2, trời tối hơn"
+Web -> DIR : POST /director/messages (SSE)
+DIR -> LLM : messages + tóm tắt dự án + tools (theo quyền)
+LLM --> DIR : tool_call rewrite_shot(2,3,"trời tối hơn")
+note right of DIR
+  Tool registry KHÔNG có thao tác ghi văn bản chương.
+  "Tóm tắt / viết lại truyện" → từ chối (BR-19, BR-21)
+end note
+DIR --> Web : tool_proposal (giá = 0) / cần xác nhận nếu tốn phí
+DIR -> JOBS : REWRITE_SHOT
+JOBS --> DIR : xong
+DIR --> Web : tool_result + phản hồi
+@enduml

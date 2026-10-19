@@ -1,0 +1,66 @@
+@startuml UC_M04_TheGioi
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M04 - Thế giới truyện
+
+actor "Editor" as Editor
+
+rectangle "M04 Thế giới truyện" {
+    usecase "UC-04.01\nPhân tích tài sản bằng AI" as UC1
+    usecase "UC-04.01a\nDuyệt tài sản đề xuất" as UC1a
+    usecase "UC-04.02\nQuản lý Story Assets" as UC2
+    usecase "UC-04.02a\nTạo nhân vật / địa điểm / đạo cụ" as UC2a
+    usecase "UC-04.02b\nTạo nhóm nhân vật" as UC2b
+    usecase "UC-04.02c\nThêm từ thư viện cá nhân" as UC2c
+    usecase "UC-04.02d\nGỡ khỏi dự án" as UC2d
+    usecase "UC-04.02e\nQuản lý bí danh & facts" as UC2e
+    usecase "UC-04.03\nSinh ảnh tham chiếu" as UC3
+    usecase "UC-04.03a\nSinh lại tất cả (Regenerate all)" as UC3a
+    usecase "UC-04.04\nDùng ảnh tải lên nguyên bản" as UC4
+    usecase "UC-04.05\nChọn style dự án" as UC5
+    usecase "UC-04.06\nThiết lập Art Direction" as UC6
+    usecase "UC-04.07\nXem dòng thời gian truyện" as UC7
+    usecase "UC-04.08\nXem đồ thị quan hệ" as UC8
+    usecase "UC-04.09\nPhân tích lại (Re-analyse)" as UC9
+    usecase "UC-04.10\nQuản lý Visual Rules" as UC10
+    usecase "UC-04.11\nXuất ZIP ảnh tài sản" as UC11
+}
+rectangle "LLM Provider" as LLM
+rectangle "Image Provider" as IMG
+
+Editor --> UC1
+Editor --> UC2
+Editor --> UC5
+Editor --> UC6
+Editor --> UC7
+Editor --> UC8
+Editor --> UC10
+Editor --> UC11
+UC1 ..> UC1a : <<include>>
+UC2 <.. UC2a : <<extend>>
+UC2 <.. UC2b : <<extend>>
+UC2 <.. UC2c : <<extend>>
+UC2 <.. UC2d : <<extend>>
+UC2 <.. UC2e : <<extend>>
+UC2a ..> UC3 : <<include>>
+UC2a <.. UC4 : <<extend>>
+UC3 <.. UC3a : <<extend>>
+UC7 <.. UC9 : <<extend>>
+UC8 <.. UC9 : <<extend>>
+UC1 --> LLM
+UC9 --> LLM
+UC3 --> IMG
+@enduml

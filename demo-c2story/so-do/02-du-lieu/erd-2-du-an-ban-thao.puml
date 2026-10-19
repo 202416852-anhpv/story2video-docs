@@ -1,0 +1,142 @@
+@startuml erd_2_du_an_ban_thao
+' Sinh tự động từ erd.puml - chỉ sửa erd.puml rồi chạy: python3 so-do/tools/split_erd.py
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam linetype ortho
+hide circle
+hide empty members
+title ERD 2 - Dự án & bản thảo
+
+package "Dự án & bản thảo" #F3FFF0 {
+    entity projects {
+        * id : uuid <<PK>>
+        --
+        * owner_id : uuid <<FK>>
+        * title : text
+        cover_media_id : uuid <<FK>>
+        style_id : uuid <<FK>>
+        image_model_id : uuid <<FK>>
+        language : text
+        target_shot_seconds : int
+        * aspect_ratio : text
+        visibility : text
+        art_direction : text
+        current_source_id : uuid <<FK>>
+        workflow_step : smallint
+        * version : int
+        deleted_at : timestamptz
+    }
+    entity project_members {
+        * project_id : uuid <<PK,FK>>
+        * user_id : uuid <<PK,FK>>
+        --
+        * role : member_role
+        joined_at : timestamptz
+        last_active_at : timestamptz
+    }
+    entity invite_links {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * token_hash : text <<UQ>>
+        created_by : uuid <<FK>>
+        revoked_at : timestamptz
+        expires_at : timestamptz
+    }
+    entity source_texts {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * content : text
+        char_count : int
+        * sha256 : text
+        normalization_log : jsonb
+        original_media_id : uuid <<FK>>
+    }
+    entity chapters {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * order_index : int
+        * title : text
+        * content : text
+        char_count : int
+        content_sha256 : text
+        * media_status : chapter_media_status
+        current_storyboard_id : uuid <<FK>>
+        locked_by_job_id : uuid <<FK>>
+        last_edited_by : uuid <<FK>>
+        * version : int
+    }
+    entity chapter_versions {
+        * id : uuid <<PK>>
+        --
+        * chapter_id : uuid <<FK>>
+        * version : int
+        title : text
+        * content : text
+        edited_by : uuid <<FK>>
+    }
+    entity archives {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * name : text
+        * content : text
+        char_count : int
+        chapter_count : int
+        * source : text
+        created_by : uuid <<FK>>
+    }
+    entity notes {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        author_id : uuid <<FK>>
+        * author_kind : text
+        * content : text
+        target_type : text
+        target_id : uuid
+    }
+}
+package "Bảng thuộc phân hệ khác" #FFFFFF {
+    entity ai_models #EEEEEE
+    entity chapter_rules #EEEEEE
+    entity director_plans #EEEEEE
+    entity jobs #EEEEEE
+    entity narration_settings #EEEEEE
+    entity pronunciation_entries #EEEEEE
+    entity relationships #EEEEEE
+    entity story_assets #EEEEEE
+    entity storyboard_drafts #EEEEEE
+    entity styles #EEEEEE
+    entity timeline_events #EEEEEE
+    entity timelines #EEEEEE
+    entity users #EEEEEE
+    entity visual_rules #EEEEEE
+}
+
+users ||--o{ projects : owns
+projects ||--|{ project_members
+users ||--o{ project_members
+projects ||--o{ invite_links
+projects ||--o{ source_texts
+projects ||--o{ chapters
+chapters ||--o{ chapter_versions
+projects ||--o{ archives
+projects ||--o{ notes
+styles |o--o{ projects
+ai_models |o--o{ projects : image model
+projects ||--o{ story_assets
+projects ||--o{ visual_rules
+chapters ||--o{ chapter_rules
+chapters ||--o{ timeline_events
+projects ||--o{ relationships
+chapters ||--o{ storyboard_drafts
+projects ||--|| narration_settings
+projects ||--o{ pronunciation_entries
+projects ||--o{ timelines
+chapters |o--o{ timelines
+projects ||--o{ director_plans
+projects |o--o{ jobs
+@enduml

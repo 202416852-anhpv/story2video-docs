@@ -1,0 +1,52 @@
+@startuml C4_Container
+!include <C4/C4_Container>
+title AI Story Studio - Containers (C4 L2)
+LAYOUT_TOP_DOWN()
+
+Person(user, "Owner / Editor")
+Person(admin, "Admin")
+
+System_Boundary(sys, "AI Story Studio") {
+    Container(web, "Web App", "Next.js, React, Zustand, Remotion Player, WebAudio", "Studio, trình chỉnh sửa timeline + preview, media bin, Director chat, admin")
+    Container(api, "API Server", "NestJS, TS", "BFF/OIDC, authz, nghiệp vụ M01–M10, tạo job + HOLD + outbox, webhook, SSE")
+    Container(sched, "Scheduler", "Node.js, BullMQ repeatable", "Outbox relay, reconciler job/credit, hết hạn credit, dọn dữ liệu, lưu trữ lạnh")
+    Container(worker, "Job Workers", "Node.js, BullMQ Flows", "orchestrator, llm, image, tts, audio-gen, export")
+    Container(align, "Alignment Worker", "Python, WhisperX/MFA", "align: word timings, STT, WER")
+    Container(mproc, "Media Processing Worker", "Node.js, FFmpeg, ClamAV", "media-proc: quét virus, chuyển mã audio, waveform, ZIP")
+    Container(render, "Render Worker", "Remotion + FFmpeg", "render: timeline_snapshot → MP4, SRT/VTT")
+    Container(gw, "AI Gateway", "Thư viện nội bộ", "Adapter, prompt compiler, speech normalizer, coverage validator, moderation, usage")
+    ContainerDb(db, "PostgreSQL", "16", "Nghiệp vụ, ledger, outbox, idempotency, audit, FTS âm thanh")
+    ContainerDb(redis, "Redis", "7", "Queue, pub/sub, rate limit, cache")
+    ContainerDb(s3, "Object Storage", "S3/R2 + CDN", "Ảnh, audio, video, nhạc & SFX")
+}
+
+System_Ext(sso, "SSO có sẵn", "OIDC Provider")
+System_Ext(pay, "Stripe")
+System_Ext(ai, "AI Providers", "LLM / Image / TTS / STT / Music-SFX")
+
+Rel(user, web, "Dùng", "HTTPS")
+Rel(admin, web, "Quản trị", "HTTPS")
+Rel(user, sso, "Đăng nhập (redirect)", "HTTPS")
+Rel(web, api, "REST, apply-ops, SSE", "HTTPS")
+Rel(web, s3, "Tải media", "Signed URL / CDN")
+Rel(api, sso, "Token, JWKS, end_session", "OIDC")
+Rel(pay, api, "Webhook", "HTTPS")
+Rel(api, db, "Đọc/ghi + outbox", "SQL")
+Rel(api, redis, "Pub/Sub, rate limit", "RESP")
+Rel(api, gw, "LLM streaming (Director)")
+Rel(sched, db, "Đọc outbox, reconcile", "SQL")
+Rel(sched, redis, "Enqueue, publish", "RESP")
+Rel(worker, redis, "Consume", "RESP")
+Rel(worker, db, "Kết quả, ledger, outbox", "SQL")
+Rel(worker, gw, "Gọi")
+Rel(worker, s3, "Lưu ảnh, audio", "S3 API")
+Rel(align, redis, "Consume align", "RESP")
+Rel(align, db, "word_timings, WER", "SQL")
+Rel(align, s3, "Đọc audio", "S3 API")
+Rel(mproc, redis, "Consume media-proc", "RESP")
+Rel(mproc, s3, "Đọc/ghi", "S3 API")
+Rel(render, redis, "Consume render", "RESP")
+Rel(render, db, "renders", "SQL")
+Rel(render, s3, "Đọc media, ghi MP4", "S3 API")
+Rel(gw, ai, "Gọi API", "HTTPS")
+@enduml

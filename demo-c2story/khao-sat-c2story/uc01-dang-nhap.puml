@@ -1,0 +1,35 @@
+@startuml C2Story_UC01_DangNhap
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+actor "Khách" as Guest
+rectangle "Clerk Auth" as Clerk
+rectangle "Google OAuth" as Google
+rectangle "UC01: Đăng ký & đăng nhập" {
+    usecase "Đăng ký tài khoản" as UC1
+    usecase "Đăng nhập bằng Email & mật khẩu" as UC2
+    usecase "Đăng nhập bằng Google" as UC3
+    usecase "Hiện / ẩn mật khẩu" as UC4
+    usecase "Chuyển hướng về trang yêu cầu\n(redirect_url)" as UC5
+    usecase "Đổi ngôn ngữ giao diện" as UC6
+}
+Guest --> UC1
+Guest --> UC2
+Guest --> UC3
+Guest --> UC6
+UC4 .> UC2 : <<extend>>
+UC2 ..> UC5 : <<include>>
+UC3 ..> UC5 : <<include>>
+UC1 --> Clerk
+UC2 --> Clerk
+UC3 --> Google
+@enduml
