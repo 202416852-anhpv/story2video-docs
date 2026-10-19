@@ -5,15 +5,14 @@ actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
 
 rectangle "Tạo & tùy chỉnh hình ảnh minh họa" {
-    usecase "Tạo & chỉnh sửa Illustration Brief" as UC_01
-    usecase "Tự động viết lại / tối ưu Brief bằng AI" as UC_02
-    usecase "Sinh ảnh minh họa bằng AI theo phong cách" as UC_03
-    usecase "Tải ảnh minh họa lên cho shot" as UC_04
+    usecase "Tạo & chỉnh sửa prompt sinh ảnh" as UC_01
+    usecase "Tự động tối ưu prompt sinh ảnh" as UC_02
+    usecase "Sinh ảnh minh họa" as UC_03
+    usecase "Tải ảnh minh họa lên cho phân cảnh" as UC_04
     usecase "Chọn ảnh minh họa từ thư viện tài nguyên" as UC_05
-    usecase "Thiết lập quy tắc ngoại hình nhân vật & Bảng màu" as UC_06
+    usecase "Thiết lập quy tắc Ngoại hình nhân vật & Bảng màu" as UC_06
 }
 
-User --> UC_01
 User --> UC_03
 User --> UC_04
 User --> UC_05

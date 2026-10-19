@@ -11,7 +11,7 @@ rectangle "Tính năng S2V" {
     usecase "Quản lý dự án" as UC_02
     usecase "Xây dựng thế giới truyện" as UC_03
     usecase "Biên tập nội dung truyện" as UC_04
-    usecase "Tạo và chỉnh sửa storyboard" as UC_05
+    usecase "Tạo và chỉnh sửa phân cảnh" as UC_05
     usecase "Dựng và xuất video" as UC_06
     usecase "Thanh toán" as UC_07
 }

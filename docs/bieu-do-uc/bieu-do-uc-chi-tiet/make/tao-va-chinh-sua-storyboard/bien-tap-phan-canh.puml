@@ -1,0 +1,23 @@
+@startuml bien-tap-phan-canh
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
+
+rectangle "Biên tập phân cảnh" {
+    usecase "Thêm phân cảnh mới" as UC_02
+    usecase "Xóa phân cảnh" as UC_03
+    usecase "Sắp xếp lại thứ tự phân cảnh" as UC_04
+    usecase "Chia lại phân cảnh" as UC_05
+    usecase "Dự tính số lượng phân cảnh\n sau khi chia lại" as UC_06
+}
+
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+
+UC_05 ..> UC_06 : <<include>>
+UC_05 --> AI_Service
+
+@enduml
