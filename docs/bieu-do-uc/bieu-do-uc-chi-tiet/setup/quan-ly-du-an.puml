@@ -2,21 +2,39 @@
 left to right direction
 
 actor "Người dùng" as User
+actor "Cộng tác viên" as Editor
+actor "Chủ dự án" as Owner
 
-rectangle "Quản lý dự án" {
+Editor -|> User
+Owner -|> Editor
+
+rectangle "Quản lý dự án & cộng tác" {
     usecase "Xóa dự án" as UC_01
     usecase "Đổi tên dự án" as UC_02
     usecase "Tìm kiếm dự án" as UC_03
     usecase "Xem danh sách dự án" as UC_04
     usecase "Tạo dự án từ tài liệu\n(Nhập cả bản thảo truyện)" as UC_05
     usecase "Tạo dự án bằng nhập văn bản" as UC_06
+    usecase "Mời cộng tác viên qua link" as UC_07
+    usecase "Quản lý thành viên (xem / xóa)" as UC_08
+    usecase "Tham gia dự án qua link mời" as UC_09
+    usecase "Xử lý xung đột khi cùng sửa" as UC_10
+    usecase "Chỉnh sửa nội dung dự án" as UC_11
 }
 
-User --> UC_01
-User --> UC_02
 User --> UC_03
 User --> UC_04
 User --> UC_05
 User --> UC_06
+User --> UC_09
+
+Editor --> UC_11
+
+Owner --> UC_01
+Owner --> UC_02
+Owner --> UC_07
+Owner --> UC_08
+
+UC_11 <.. UC_10 : <<extend>>
 
 @enduml
