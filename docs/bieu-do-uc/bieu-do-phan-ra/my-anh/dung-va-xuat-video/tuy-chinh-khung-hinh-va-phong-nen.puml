@@ -1,4 +1,4 @@
-@startuml tuy-chinh-khung-hinh-&-phong-nen
+@startuml tuy-chinh-khung-hinh-va-phong-nen
 left to right direction
 
 actor "Người dùng" as User

@@ -1,4 +1,4 @@
-@startuml tuy-chinh-loi-thoai-&-giong-doc
+@startuml tuy-chinh-loi-thoai-va-giong-doc
 left to right direction
 
 actor "Người dùng" as User
