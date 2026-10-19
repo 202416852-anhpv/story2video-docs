@@ -2,35 +2,29 @@
 left to right direction
 
 actor "Người dùng" as User
-actor "SSO của Vbee" as SSO
+actor "SSO Vbee" as SSO_Vbee
 
 rectangle "Đăng ký và đăng nhập" {
-    usecase "Đăng nhập qua SSO" as UC1
-    usecase "Xác thực ID token\n(JWKS, state, nonce, PKCE)" as UC1a
-    usecase "Tạo / đồng bộ hồ sơ cục bộ\n(JIT theo sub)" as UC1b
-    usecase "Quay về trang đã yêu cầu" as UC1c
-    usecase "Đăng xuất" as UC2
-    usecase "Kết thúc phiên SSO\n(RP-initiated logout)" as UC2a
-    usecase "Xem Dashboard" as UC3
-    usecase "Đổi ngôn ngữ giao diện" as UC4
-    usecase "Mở trang quản lý tài khoản SSO" as UC5
-    usecase "Yêu cầu xóa dữ liệu ứng dụng" as UC6
-    usecase "Nhận đăng xuất back-channel" as UC7
+    usecase "Đăng nhập qua SSO Vbee" as UC_01
+    usecase "Đăng ký tài khoản mới" as UC_02
+    usecase "Tạo / Đồng bộ hồ sơ người dùng" as UC_03
+    usecase "Đăng xuất khỏi hệ thống" as UC_04
+    usecase "Đăng xuất khỏi SSO Vbee" as UC_05
+    usecase "Mở trang quản lý tài khoản Vbee" as UC_06
 }
 
-User --> UC1
-User --> UC2
-User --> UC3
-User --> UC4
-User --> UC6
-UC1 ..> UC1a : <<include>>
-UC1 ..> UC1b : <<include>>
-UC1 ..> UC1c : <<include>>
-UC2 ..> UC2a : <<include>>
-UC3 <.. UC5 : <<extend>>
-UC1 --> SSO
-UC2a --> SSO
-UC5 --> SSO
-SSO --> UC7
+User --> UC_01
+User --> UC_02
+User --> UC_04
+User --> UC_06
+
+UC_01 <.. UC_02 : <<extend>>
+UC_01 ..> UC_03 : <<include>>
+UC_04 ..> UC_05 : <<include>>
+
+UC_01 --> SSO_Vbee
+UC_02 --> SSO_Vbee
+UC_05 --> SSO_Vbee
+UC_06 --> SSO_Vbee
 
 @enduml
