@@ -2,6 +2,7 @@
 left to right direction
 
 actor "Người dùng" as User
+actor "AI phân tích truyện" as AI_LLM
 
 rectangle "Quản lý dòng thời gian của truyện" {
     usecase "Thêm mốc thời gian trong truyện" as UC_01
@@ -10,12 +11,15 @@ rectangle "Quản lý dòng thời gian của truyện" {
     usecase "Xem theo mạch truyện" as UC_03_1
     usecase "Xem theo thứ tự thời gian" as UC_03_2
     usecase "Xóa mốc thời gian truyện" as UC_04
+    usecase "Tự động sinh dòng thời gian truyện\n(Dựa trên bản thảo truyện)" as UC_05
 }
 
 User --> UC_01
 User --> UC_02
 User --> UC_03
 User --> UC_04
+User --> UC_05
+UC_05 --> AI_LLM
 
 UC_03 <|-- UC_03_1
 UC_03 <|-- UC_03_2

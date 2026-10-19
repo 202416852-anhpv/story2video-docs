@@ -5,10 +5,10 @@ actor "Người dùng" as User
 
 rectangle "Quản lý phong cách nghệ thuật của truyện" {
     usecase "Chọn phong cách nghệ thuật chung khi sinh ảnh cho truyện" as UC_01
-    usecase "Thêm các luật khi sinh ảnh cho truyện" as UC_02
-    usecase "Chỉnh sửa các luật khi sinh ảnh cho truyện" as UC_03
-    usecase "Xóa các luật khi sinh ảnh cho truyện" as UC_04
-    usecase "Xem danh sách các luật khi sinh ảnh cho truyện" as UC_05
+    usecase "Thêm luật khi sinh ảnh cho truyện" as UC_02
+    usecase "Chỉnh sửa luật khi sinh ảnh cho truyện" as UC_03
+    usecase "Xóa luật khi sinh ảnh cho truyện" as UC_04
+    usecase "Xem danh sách luật khi sinh ảnh cho truyện" as UC_05
 }
 
 User --> UC_01

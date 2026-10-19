@@ -2,6 +2,7 @@
 left to right direction
 
 actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
 
 rectangle "Xây dựng thế giới truyện" {
     usecase "Quản lý nhân vật trong truyện" as UC_01
@@ -18,5 +19,12 @@ User --> UC_03
 User --> UC_04
 User --> UC_05
 User --> UC_06
+
+UC_01 --> AI_Service
+UC_02 --> AI_Service
+UC_03 --> AI_Service
+UC_04 --> AI_Service
+UC_05 --> AI_Service
+UC_06 --> AI_Service
 
 @enduml

@@ -4,14 +4,16 @@ left to right direction
 actor "Người dùng" as User
 actor "SSO Vbee" as SSO
 actor "Dịch vụ AI" as AI_Service
+actor "Hệ thống thanh toán" as PAY_SYS
 
 rectangle "Tính năng S2V" {
     usecase "Đăng ký & đăng nhập" as UC_01
     usecase "Quản lý dự án" as UC_02
     usecase "Xây dựng thế giới truyện" as UC_03
-    usecase "Biên tập nội dung & chương truyện" as UC_04
+    usecase "Biên tập nội dung truyện" as UC_04
     usecase "Tạo & chỉnh sửa storyboard" as UC_05
     usecase "Dựng & xuất video" as UC_06
+    usecase "Thanh toán" as UC_07
 }
 
 User --> UC_01
@@ -20,7 +22,9 @@ User --> UC_03
 User --> UC_04
 User --> UC_05
 User --> UC_06
+User --> UC_07
 
+UC_07 --> PAY_SYS
 UC_01 --> SSO
 UC_03 --> AI_Service
 UC_04 --> AI_Service

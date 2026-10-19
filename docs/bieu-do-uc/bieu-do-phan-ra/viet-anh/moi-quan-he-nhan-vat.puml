@@ -2,17 +2,21 @@
 left to right direction
 
 actor "Người dùng" as User
+actor "AI phân tích truyện" as AI_LLM
 
 rectangle "Quản lý mối quan hệ giữa các nhân vật" {
     usecase "Thêm mối quan hệ giữa các nhân vật" as UC_01
     usecase "Chỉnh sửa mối quan hệ giữa các nhân vật" as UC_02
     usecase "Xem đồ thị mối quan hệ giữa các nhân vật" as UC_03
     usecase "Xóa mối quan hệ giữa các nhân vật" as UC_04
+    usecase "Tự động sinh đồ thị mối quan hệ nhân vật\n(Dựa trên bản thảo truyện)" as UC_05
 }
 
 User --> UC_01
 User --> UC_02
 User --> UC_03
 User --> UC_04
+User --> UC_05
+UC_05 --> AI_LLM
 
 @enduml
