@@ -9,7 +9,7 @@ rectangle "Xem trước & Xuất video" {
     usecase "Xem trước video đồng bộ đa track (Canvas Preview)" as UC_01
     usecase "Tua và điều hướng dòng thời gian phát" as UC_02
     usecase "Sinh toàn bộ âm thanh TTS trước khi phát / xuất" as UC_03
-    usecase "Yêu cầu xuất video thành phẩm (Export Video)" as UC_04
+    usecase "Yêu cầu xuất video thành phẩm" as UC_04
     usecase "Xuất video qua Cloud Server (FFmpeg Backend)" as UC_04_1
     usecase "Xuất video cục bộ qua Desktop Agent (GPU HW)" as UC_04_2
     usecase "Theo dõi tiến độ kết xuất video" as UC_05

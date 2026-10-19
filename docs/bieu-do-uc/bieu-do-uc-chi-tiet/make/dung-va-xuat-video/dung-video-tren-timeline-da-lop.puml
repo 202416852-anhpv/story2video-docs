@@ -1,10 +1,10 @@
-@startuml bien-tap-timeline-da-lop
+@startuml dung-video-tren-timeline-da-lop
 left to right direction
 
 actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
 
-rectangle "Biên tập Timeline đa lớp" {
+rectangle "Dựng video trên timeline đa lớp" {
     usecase "Tự động xây dựng timeline từ kịch bản phân cảnh" as UC_01
     usecase "Kéo thả sắp xếp thứ tự các khối" as UC_02
     usecase "Co giãn & Cắt xén khối giọng đọc (Voice Track)" as UC_03

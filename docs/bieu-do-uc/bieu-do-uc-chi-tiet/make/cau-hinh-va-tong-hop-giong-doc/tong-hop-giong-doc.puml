@@ -1,0 +1,32 @@
+@startuml tong-hop-giong-doc
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
+
+rectangle "Tổng hợp giọng đọc" {
+    ' --- PHA 1: BÓC TÁCH VÀ PHÂN VAI KỊCH BẢN ---
+    usecase "Tự động nhận diện và gán vai thoại cho nhân vật" as UC_01
+    usecase "Chỉnh sửa phân chia lời dẫn và lời thoại" as UC_02
+    usecase "Gán lại nhân vật cho câu thoại" as UC_03
+
+    ' --- PHA 2: THỰC THI TỔNG HỢP ÂM THANH ---
+    usecase "Phát nghe thử câu thoại" as UC_04
+    usecase "Tổng hợp âm thanh giọng đọc toàn bộ chương" as UC_05
+    usecase "Tổng hợp lại âm thanh cho phân cảnh chỉ định" as UC_06
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+
+UC_05 <.. UC_06 : <<extend>>
+
+UC_01 --> AI_Service
+UC_04 --> AI_Service
+UC_05 --> AI_Service
+UC_06 --> AI_Service
+
+@enduml

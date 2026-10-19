@@ -1,4 +1,4 @@
-@startuml quan-ly-phien-ban-storyboard
+@startuml quan-ly-phien-ban-phan-canh
 left to right direction
 
 actor "Người dùng" as User

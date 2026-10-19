@@ -1,0 +1,25 @@
+@startuml cau-hinh-giong-doc
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle "Cấu hình giọng đọc" {
+    usecase "Chọn giọng đọc" as UC_01
+    usecase "Lọc & sắp xếp danh sách giọng" as UC_01_1
+    usecase "Đánh dấu giọng yêu thích" as UC_01_2
+    usecase "Điều chỉnh tốc độ đọc và mức nhấn nhá" as UC_02
+    usecase "Thiết lập cách đọc câu thoại trong ngoặc kép" as UC_03
+    usecase "Quản lý từ điển phát âm riêng" as UC_04
+    usecase "Gán giọng đọc mặc định cho từng nhân vật" as UC_05
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+
+UC_01 <.. UC_01_1 : <<extend>>
+UC_01 <.. UC_01_2 : <<extend>>
+
+@enduml

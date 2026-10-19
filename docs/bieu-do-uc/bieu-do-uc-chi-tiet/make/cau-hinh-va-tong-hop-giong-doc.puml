@@ -1,0 +1,17 @@
+@startuml cau-hinh-va-tong-hop-giong-doc
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
+
+rectangle "Cấu hình & tổng hợp giọng đọc" {
+    usecase "Cấu hình giọng đọc" as UC_01
+    usecase "Tổng hợp giọng đọc" as UC_02
+}
+
+User --> UC_01
+User --> UC_02
+
+UC_02 --> AI_Service
+
+@enduml
