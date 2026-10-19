@@ -10,6 +10,7 @@ rectangle "Biên tập nội dung truyện" {
     usecase "Tìm và thay thế từ ngữ" as UC_04
     usecase "Xem trước số kết quả" as UC_05
     usecase "Tự động chia thành các chương truyện\n(Dựa trên bản thảo truyện)" as UC_06
+    usecase "Xóa vạch chia chương truyện" as UC_07
 }
 
 User --> UC_01
@@ -19,6 +20,7 @@ UC_06 --> AI_LLM
 UC_01 <.. UC_02 : <<extend>>
 UC_01 <.. UC_03 : <<extend>>
 UC_01 <.. UC_04 : <<extend>>
+UC_01 <.. UC_07 : <<extend>>
 UC_04 <.. UC_05 : <<extend>>
 
 @enduml

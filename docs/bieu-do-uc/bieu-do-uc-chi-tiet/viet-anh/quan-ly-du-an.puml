@@ -8,7 +8,7 @@ rectangle "Quản lý dự án" {
     usecase "Đổi tên dự án" as UC_02
     usecase "Tìm kiếm dự án" as UC_03
     usecase "Xem danh sách dự án" as UC_04
-    usecase "Tạo dự án từ tài liệu" as UC_05
+    usecase "Tạo dự án từ tài liệu\n(Nhập cả bản thảo truyện)" as UC_05
     usecase "Tạo dự án bằng nhập văn bản" as UC_06
 }
 
