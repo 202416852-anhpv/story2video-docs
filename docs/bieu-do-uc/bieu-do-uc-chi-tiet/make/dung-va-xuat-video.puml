@@ -5,22 +5,19 @@ actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
 
 rectangle "Dựng & xuất video" {
-    usecase "Tuỳ chỉnh khung hình & Phông nền" as UC_01
-    usecase "Tùy chỉnh hình ảnh phân cảnh" as UC_02
-    usecase "Tùy chỉnh lời thoại & Giọng đọc" as UC_03
-    usecase "Biên tập Timeline đa lớp\n(giọng đọc, hình ảnh/video, nhạc nền/hiệu ứng)" as UC_04
+    usecase "Thiết lập khung hình và bố cục video" as UC_01
+    usecase "Thêm nhạc nền và hiệu ứng âm thanh" as UC_02
+    usecase "Dựng video trên Timeline đa lớp\n(giọng đọc, hình ảnh/video, nhạc nền/hiệu ứng)" as UC_04
     usecase "Thiết lập phụ đề video" as UC_05
     usecase "Xem trước & Xuất video" as UC_06
 }
 
 User --> UC_01
 User --> UC_02
-User --> UC_03
 User --> UC_04
 User --> UC_05
 User --> UC_06
 
-UC_03 --> AI_Service
 UC_04 --> AI_Service
 UC_05 --> AI_Service
 UC_06 --> AI_Service

@@ -5,7 +5,7 @@ actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
 
 rectangle "Tạo & tùy chỉnh hình ảnh minh họa" {
-    usecase "Tạo & chỉnh sửa prompt sinh ảnh" as UC_01
+    usecase "Biên tập prompt sinh ảnh" as UC_01
     usecase "Tự động tối ưu prompt sinh ảnh" as UC_02
     usecase "Sinh ảnh minh họa" as UC_03
     usecase "Tải ảnh minh họa lên cho phân cảnh" as UC_04
@@ -13,13 +13,13 @@ rectangle "Tạo & tùy chỉnh hình ảnh minh họa" {
     usecase "Thiết lập quy tắc Ngoại hình nhân vật & Bảng màu" as UC_06
 }
 
+User --> UC_01
 User --> UC_03
 User --> UC_04
 User --> UC_05
 User --> UC_06
 
 UC_01 <.. UC_02 : <<extend>>
-UC_03 ..> UC_01 : <<include>>
 
 UC_02 --> AI_Service
 UC_03 --> AI_Service
