@@ -8,7 +8,7 @@ rectangle "Tạo & tùy chỉnh hình ảnh minh họa" {
     usecase "Biên tập prompt sinh ảnh" as UC_01
     usecase "Tự động tối ưu prompt sinh ảnh" as UC_02
     usecase "Sinh ảnh minh họa" as UC_03
-    usecase "Tải ảnh minh họa lên cho phân cảnh" as UC_04
+    usecase "Tải ảnh lên từ thiết bị" as UC_04
     usecase "Chọn ảnh minh họa từ thư viện tài nguyên" as UC_05
     usecase "Thiết lập quy tắc Ngoại hình nhân vật & Bảng màu" as UC_06
 }
