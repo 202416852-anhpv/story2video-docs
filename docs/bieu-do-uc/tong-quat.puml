@@ -12,6 +12,7 @@ rectangle "Tính năng S2V" {
     usecase "Xây dựng thế giới truyện" as UC_03
     usecase "Biên tập nội dung truyện" as UC_04
     usecase "Tạo và chỉnh sửa phân cảnh" as UC_05
+    usecase "Tạo giọng đọc" as UC_08
     usecase "Dựng và xuất video" as UC_06
     usecase "Thanh toán" as UC_07
 }
@@ -23,6 +24,7 @@ User --> UC_04
 User --> UC_05
 User --> UC_06
 User --> UC_07
+User --> UC_08
 
 UC_07 --> PAY_SYS
 UC_01 --> SSO
@@ -30,5 +32,6 @@ UC_03 --> AI_Service
 UC_04 --> AI_Service
 UC_05 --> AI_Service
 UC_06 --> AI_Service
+UC_08 --> AI_Service
 
 @enduml
