@@ -8,7 +8,7 @@ actor "Chủ dự án" as Owner
 Editor -|> User
 Owner -|> Editor
 
-rectangle "Quản lý dự án & cộng tác" {
+rectangle "Quản lý dự án" {
     usecase "Xóa dự án" as UC_01
     usecase "Đổi tên dự án" as UC_02
     usecase "Tìm kiếm dự án" as UC_03
@@ -18,7 +18,6 @@ rectangle "Quản lý dự án & cộng tác" {
     usecase "Mời cộng tác viên qua link" as UC_07
     usecase "Quản lý thành viên (xem / xóa)" as UC_08
     usecase "Tham gia dự án qua link mời" as UC_09
-    usecase "Xử lý xung đột khi cùng sửa" as UC_10
     usecase "Chỉnh sửa nội dung dự án" as UC_11
 }
 
@@ -34,7 +33,5 @@ Owner --> UC_01
 Owner --> UC_02
 Owner --> UC_07
 Owner --> UC_08
-
-UC_11 <.. UC_10 : <<extend>>
 
 @enduml

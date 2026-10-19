@@ -6,7 +6,6 @@ actor "AI phân tích truyện" as AI_LLM
 rectangle "Biên tập nội dung truyện" {
     usecase "Soạn thảo văn bản trong workspace" as UC_01
     usecase "Chia chương tại vị trí chỉ định" as UC_02
-    usecase "Gộp chương vào chương trước / sau" as UC_03
     usecase "Tìm và thay thế từ ngữ" as UC_04
     usecase "Xem trước số kết quả" as UC_05
     usecase "Tự động chia thành các chương truyện\n(Dựa trên bản thảo truyện)" as UC_06
@@ -18,7 +17,6 @@ User --> UC_06
 UC_06 --> AI_LLM
 
 UC_01 <.. UC_02 : <<extend>>
-UC_01 <.. UC_03 : <<extend>>
 UC_01 <.. UC_04 : <<extend>>
 UC_01 <.. UC_07 : <<extend>>
 UC_04 <.. UC_05 : <<extend>>
