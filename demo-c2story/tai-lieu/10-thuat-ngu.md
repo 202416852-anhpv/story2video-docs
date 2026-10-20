@@ -20,6 +20,7 @@
 | **Story Assets** | Tài sản thế giới truyện của dự án: nhân vật (Character), địa điểm (Location), đạo cụ (Prop), nhóm (Group) |
 | **Reference image (Ảnh tham chiếu)** | Ảnh chuẩn của tài sản, đính kèm khi sinh mọi ảnh shot để giữ nhất quán |
 | **Facts** | Đặc điểm bất biến của tài sản (vd. "tóc đen ngang vai", "sẹo ở má trái") luôn được chèn vào prompt |
+| **Giai đoạn ngoại hình** *(sau MVP)* | Một bộ mô tả, facts, ảnh tham chiếu của tài sản áp từ một chương trở đi, cho nhân vật đổi ngoại hình theo mạch truyện (QĐ-142). MVP: tạo tài sản riêng cho mỗi giai đoạn |
 | **Art Direction** | Chỉ dẫn phong cách bổ sung lên style của dự án |
 | **Visual Rules** | Luật hình ảnh có điều kiện, áp toàn dự án hoặc theo chương |
 | **Chapter rules** | Chỉ dẫn cố định cho một chương, Director tuân theo khi viết brief |

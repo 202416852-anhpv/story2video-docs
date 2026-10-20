@@ -107,6 +107,7 @@ package "Bảng thuộc phân hệ khác" #FFFFFF {
     entity narration_settings #EEEEEE
     entity pronunciation_entries #EEEEEE
     entity relationships #EEEEEE
+    entity story_asset_variants #EEEEEE
     entity story_assets #EEEEEE
     entity storyboard_drafts #EEEEEE
     entity styles #EEEEEE
@@ -128,6 +129,7 @@ projects ||--o{ notes
 styles |o--o{ projects
 ai_models |o--o{ projects : image model
 projects ||--o{ story_assets
+chapters ||--o{ story_asset_variants : from
 projects ||--o{ visual_rules
 chapters ||--o{ chapter_rules
 chapters ||--o{ timeline_events

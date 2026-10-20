@@ -129,7 +129,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | POST | `/projects/{pid}/story-assets/{sid}/image` | E | | Tải ảnh lên (`useExact`) |
 | POST | `/projects/{pid}/story-assets/{sid}:save-to-library` | E | | *(sau MVP)* Lưu vào thư viện cá nhân |
 | PUT | `/projects/{pid}/art-direction` | E | | Art direction |
-| GET | `/projects/{pid}/timeline?order=narrative\|chronological` · `/relationships` | E | | Đọc. `order` mặc định `narrative` (`order_index`); `chronological` sắp theo `chrono_index`, mốc NULL xếp cuối |
+| GET | `/projects/{pid}/timeline?order=narrative\|chronological` · `/relationships` | E | | Đọc. `order` mặc định `narrative` (`order_index`); `chronological` sắp theo `chrono_index`, mốc NULL xếp cuối. `/relationships?atChapter={cid}`: chỉ giai đoạn hiệu lực ở chương đó; bỏ tham số thì trả mọi giai đoạn (QĐ-143) |
 | POST | `/projects/{pid}/story-meta:analyze` | E | ✓ | Re-analyse timeline + relationships |
 | CRUD | `/projects/{pid}/visual-rules[/{rid}]` | E | | Visual Rules |
 | CRUD | `/projects/{pid}/chapters/{cid}/rules[/{id}]` | E | | *(sau MVP)* Chapter rules |

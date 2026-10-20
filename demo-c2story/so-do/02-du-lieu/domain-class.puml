@@ -82,6 +82,12 @@ package "Thế giới truyện" {
     class Location
     class Prop
     class Group
+    class AssetVariant #DDDDDD {
+        label
+        appearance
+        facts
+        fromChapter
+    }
     class VisualRule {
         instruction
         scope
@@ -230,6 +236,7 @@ StoryAsset <|-- Character
 StoryAsset <|-- Location
 StoryAsset <|-- Prop
 StoryAsset <|-- Group
+StoryAsset "1" *-- "*" AssetVariant : giai đoạn ngoại hình
 Group o-- "2..*" Character
 Relationship "*" --> "2" Character
 Chapter "1" *-- "*" ChapterRule

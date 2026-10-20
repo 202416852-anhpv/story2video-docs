@@ -46,6 +46,17 @@ package "Thế giới truyện" #FFF8E8 {
         source_library_asset_id : uuid <<FK>>
         * version : int
     }
+    entity story_asset_variants #DDDDDD {
+        * id : uuid <<PK>>
+        --
+        * story_asset_id : uuid <<FK>>
+        * label : text
+        appearance : text
+        facts : text
+        current_image_id : uuid <<FK>>
+        * from_chapter_id : uuid <<FK>>
+        * version : int
+    }
     entity story_asset_group_members {
         * group_asset_id : uuid <<PK,FK>>
         * member_asset_id : uuid <<PK,FK>>
@@ -118,6 +129,8 @@ projects ||--o{ story_assets
 library_assets |o--o{ story_assets : copied from
 story_assets ||--o{ story_asset_group_members
 story_assets ||--o{ asset_images
+story_assets ||--o{ story_asset_variants
+chapters ||--o{ story_asset_variants : from
 projects ||--o{ visual_rules
 chapters ||--o{ chapter_rules
 chapters ||--o{ timeline_events

@@ -83,11 +83,12 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `library_assets` *(sau MVP)* | id PK, owner_id FK, kind, name, aliases, appearance, facts, style_id FK?, reference_media_id FK?, use_exact_image, deleted_at? | Thư viện cá nhân. UC-08.01..05 |
 | `story_assets` | id PK, project_id FK, kind, name, aliases, appearance, facts, current_image_id FK?, use_exact_image, source_library_asset_id FK?, version | UC-04.01..04 |
 | `story_asset_group_members` | (group_asset_id FK, member_asset_id FK) PK | Nhóm có ≥ 2 thành viên. UC-04.02b |
+| `story_asset_variants` *(sau MVP)* | id PK, story_asset_id FK, label, appearance, facts, current_image_id FK?, from_chapter_id FK, version | Giai đoạn ngoại hình (QĐ-142, FR-WLD-13). Shot dùng giai đoạn có `from_chapter_id` gần nhất không sau chương của shot; ghi đè theo shot bằng cột `shot_asset_refs.variant_id` thêm khi làm. MVP: `story_assets.appearance`, `facts` là một giá trị cho cả dự án, sửa thì ghi đè |
 | `asset_images` | id PK, story_asset_id FK, media_id FK, style_id FK?, prompt_snapshot, job_id FK? | Lịch sử ảnh tham chiếu. UC-04.03 |
 | `visual_rules` | id PK, project_id FK, name, instruction, scope (`PROJECT`/`CHAPTER`), chapter_id FK?, active, order_index | BR-08. UC-04.10 |
 | `chapter_rules` *(sau MVP)* | id PK, chapter_id FK, instruction, order_index | UC-05.04 |
 | `timeline_events` | id PK, project_id FK, chapter_id FK, day_label, season, story_date, summary, order_index, chrono_index | Dòng thời gian **truyện** (khác `timelines` của video). `order_index` = thứ tự theo mạch truyện; `chrono_index` = thứ hạng theo thời gian trong truyện do AI gán khi phân tích (`story_date` là text tự do, không dùng để sắp xếp); NULL = chưa xác định. UC-04.07, UC-04.09 |
-| `relationships` | id PK, project_id FK, asset_a_id FK, asset_b_id FK, label, dynamic, from_chapter_id FK? | UC-04.08, UC-04.09 |
+| `relationships` | id PK, project_id FK, asset_a_id FK, asset_b_id FK, label, dynamic, from_chapter_id FK? | Mỗi dòng là một **giai đoạn** của cặp nhân vật, áp từ `from_chapter_id` (NULL = từ đầu truyện) tới giai đoạn kế tiếp của cùng cặp; quan hệ hiệu lực ở chương N = dòng có chương bắt đầu gần nhất không sau N (theo `order_index`). IC-14, IC-19; QĐ-143. UC-04.08, UC-04.09 |
 
 ### 3.4 Sinh tư liệu: storyboard, ảnh, thuyết minh — `erd-4-sinh-tu-lieu`
 
@@ -155,6 +156,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | IC-16 | Mỗi người dùng có đúng một `TRIAL_GRANT` trong đời tài khoản; không tạo lại cho cùng email đã nhận (BR-28) | Partial unique index `(user_id) WHERE entry_type='TRIAL_GRANT'` + kiểm tra `beta_invites.used_by_user_id` |
 | IC-17 | *(Đã bỏ, QĐ-140: không còn tốc độ từng clip.)* | — |
 | IC-18 | `daily_ai_budgets`: `reserved_micro ≥ 0`, `spent_micro ≥ 0`, `spent_micro + reserved_micro ≤ cap_micro` tại mọi thời điểm giữ chỗ | CHECK + câu `UPDATE` có điều kiện (05 §6.1, ADR-25) |
+| IC-19 | `relationships`: không có hai dòng cùng `(asset_a_id, asset_b_id, from_chapter_id)` (QĐ-143) | Unique index `NULLS NOT DISTINCT` |
 
 ## 5. Cột trạng thái ↔ sơ đồ trạng thái
 

@@ -289,7 +289,8 @@ interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hi
 2. Ảnh shot đính kèm ảnh tham chiếu cast/location/item (ưu tiên nhân vật, theo giới hạn provider).
 3. `facts`, `appearance` chèn nguyên văn vào prompt.
 4. Timeline truyện cung cấp mùa, thời điểm.
-5. Ảnh sinh theo tỷ lệ khung hình video của dự án để hạn chế crop.
+5. Quan hệ nhân vật **hiệu lực ở chương của shot** (giai đoạn, QĐ-143) đưa vào prompt storyboard.
+6. Ảnh sinh theo tỷ lệ khung hình video của dự án để hạn chế crop.
 
 ## 8. Bảo mật (tóm tắt, chi tiết ở 07)
 

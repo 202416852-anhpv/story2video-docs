@@ -194,14 +194,14 @@
 | Hậu điều kiện | **Thành công:** StoryAsset được cập nhật, giữ nguyên `id`, `version` tăng 1; `shot_asset_refs`, nhóm và `relationships` trỏ tới tài sản không đổi. **Tối thiểu:** ảnh đã sinh không bị đổi; không tốn phí nếu Editor không chọn sinh lại |
 | Kích hoạt | Mở chi tiết tài sản, bấm "Edit" |
 | Quan hệ | được mở rộng bởi UC-04.04 (thay ảnh bằng ảnh tải lên) |
-| Truy vết | FR-WLD-02; BR-08, BR-14; IC-13; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10); API 2.4 `PATCH /projects/{pid}/story-assets/{sid}` (If-Match); seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-02, FR-WLD-13; BR-08, BR-14; IC-13; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10); API 2.4 `PATCH /projects/{pid}/story-assets/{sid}` (If-Match); seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor mở chi tiết tài sản và bấm "Edit"; hệ thống hiển thị biểu mẫu với giá trị hiện tại và `version`.
 2. Editor sửa một hoặc nhiều trường: tên, bí danh (thêm/xóa, tối đa 10), mô tả ngoại hình, facts bất biến (mỗi fact là một đặc điểm cố định, vd. "tóc đen ngang vai"). Với nhóm (`GROUP`): thêm hoặc bớt nhân vật thành viên.
 3. Editor lưu; hệ thống gửi `PATCH` kèm `If-Match`, cập nhật các trường đã đổi và tăng `version`.
-4. Lần sinh ảnh sau dùng mô tả và facts mới trong prompt (UC-04.03, UC-05.09); storyboard và UC-05.06f khớp tên theo tên và bí danh mới.
+4. Giá trị cũ bị ghi đè (không lưu lịch sử; giá trị lúc sinh còn trong `prompt_snapshot` của ảnh đã sinh). Ảnh đã sinh không đổi. Mọi lần sinh ảnh sau, kể cả sinh lại ảnh ở chương phía trước, dùng mô tả và facts mới trong prompt (UC-04.03, UC-05.09); storyboard và UC-05.06f khớp tên theo tên và bí danh mới.
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Tên hoặc bí danh trùng tên hoặc bí danh của tài sản khác trong dự án: cảnh báo khớp mơ hồ (UC-05.06f); Editor có thể vẫn lưu.
@@ -212,6 +212,7 @@
 - **2f.** Đổi loại tài sản (`kind`) không được hỗ trợ: Editor gỡ (UC-04.02d) rồi tạo mới (UC-04.02a) [ĐX].
 - **3a.** `409`: tài sản vừa được người khác sửa; xử lý theo UC-02.10.
 - **4a.** Sau khi sửa mô tả, facts hoặc thành viên nhóm, hệ thống gợi ý "Regenerate" kèm giá thay vì tự sinh lại (UC-04.03); tài sản "use exact" không có gợi ý này (BR-14).
+- **4b.** Nhân vật đổi ngoại hình theo mạch truyện (vd. cắt tóc từ chương 6): không sửa facts của tài sản đang dùng cho các chương trước, vì sinh lại ảnh ở các chương đó sẽ ra ngoại hình mới. Editor tạo tài sản riêng cho từng giai đoạn (UC-04.02a, vd. "An (trưởng thành)") và gán shot bằng UC-05.06b; trùng tên hoặc bí danh xử lý như 2a. Sau MVP: giai đoạn ngoại hình (FR-WLD-13, QĐ-142).
 - ***a.** Tài sản thêm từ thư viện cá nhân: sửa chỉ đổi bản trong dự án, không đổi bản ở thư viện (FR-LIB-05).
 
 ---
@@ -365,18 +366,22 @@
 | Mục | Nội dung |
 |---|---|
 | Tác nhân chính | Editor |
-| Mô tả | Xem đồ thị quan hệ giữa các nhân vật và diễn biến |
+| Mô tả | Xem đồ thị quan hệ giữa các nhân vật và diễn biến; quan hệ thay đổi theo giai đoạn truyện (QĐ-143) |
 | Tiền điều kiện | Đã chạy phân tích |
 | Hậu điều kiện | **Thành công:** hiển thị đồ thị |
 | Kích hoạt | Mở `?v=relationships` |
 | Quan hệ | được mở rộng bởi UC-04.09 |
-| Truy vết | FR-WLD-09; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-09; IC-14, IC-19; seq-the-gioi-truyen |
 | Giai đoạn | P2 ✂4 |
 
 **Luồng chính**
 1. Editor mở Relationship graph.
-2. Hệ thống vẽ nút (nhân vật) và cạnh (nhãn quan hệ, diễn biến, chương bắt đầu).
-3. Editor bấm một cạnh để đọc diễn biến.
+2. Hệ thống vẽ nút (nhân vật) và cạnh (nhãn quan hệ, diễn biến, chương bắt đầu) **hiệu lực ở chương đang chọn** trên thanh chọn chương (mặc định chương cuối).
+3. Editor kéo thanh chọn chương; cạnh đổi theo giai đoạn của từng cặp.
+4. Editor bấm một cạnh để đọc diễn biến và các giai đoạn trước của cặp đó (chương bắt đầu, nhãn).
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Cặp chưa có giai đoạn nào bắt đầu trước chương đang chọn: không vẽ cạnh của cặp đó.
 
 ---
 
@@ -391,13 +396,14 @@
 | Hậu điều kiện | **Thành công:** `timeline_events` và `relationships` được thay mới |
 | Kích hoạt | "Re-analyse" |
 | Quan hệ | extend UC-04.07, UC-04.08 |
-| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; 08 §3.2 (`STORY_META`); seq-the-gioi-truyen |
+| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; IC-19; 08 §3.2 (`STORY_META`); seq-the-gioi-truyen |
 | Giai đoạn | P2 ✂4 ✂5 |
 
 **Luồng chính**
 1. Editor bấm "Re-analyse".
-2. Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17) và tạo job `STORY_META`; LLM trả mốc thời gian theo chương (kèm thứ hạng thời gian trong truyện, lưu `chrono_index`) và cặp quan hệ (theo tên/bí danh tài sản).
-3. Hệ thống thay dữ liệu cũ, hiển thị kết quả.
+2. Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17) và tạo job `STORY_META`; LLM trả mốc thời gian theo chương (kèm thứ hạng thời gian trong truyện, lưu `chrono_index`) và cặp quan hệ (theo tên/bí danh tài sản) kèm chương bắt đầu.
+3. Hệ thống hợp nhất quan hệ theo thứ tự chương: cùng cặp, nhãn không đổi thì giữ giai đoạn trước; nhãn đổi thì tạo giai đoạn mới bắt đầu từ chương đó (QĐ-143, IC-19).
+4. Hệ thống thay dữ liệu cũ, hiển thị kết quả.
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Tên nhân vật không khớp tài sản: bỏ qua cạnh đó, liệt kê để Editor thêm tài sản.

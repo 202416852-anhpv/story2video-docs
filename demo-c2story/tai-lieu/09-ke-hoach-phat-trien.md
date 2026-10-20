@@ -419,14 +419,14 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
 | UC-04.01 Phân tích tài sản bằng AI | P1 | FR-WLD-01 | BO-01, BO-02 | seq-the-gioi-truyen | IT-analyze-assets, EVAL-asset-extraction |
-| UC-04.02 Quản lý Story Assets | P1 | FR-WLD-02, 03, 05, 11, 12; FR-LIB-05 | BO-02 | seq-the-gioi-truyen, seq-tai-san-phong-cach | IT-story-asset-crud |
+| UC-04.02 Quản lý Story Assets | P1 | FR-WLD-02, 03, 05, 11, 12, 13; FR-LIB-05 | BO-02 | seq-the-gioi-truyen, seq-tai-san-phong-cach | IT-story-asset-crud |
 | UC-04.03 Sinh ảnh tham chiếu | P1 | FR-WLD-03 | BO-02, BO-06 | seq-the-gioi-truyen | EVAL-consistency, IT-wallet-refund |
 | UC-04.04 Dùng ảnh tải lên nguyên bản | P1 | FR-WLD-04 | BO-02 | seq-the-gioi-truyen | IT-exact-image-upload |
 | UC-04.05 Chọn style dự án | P1 | FR-WLD-06 | BO-02 | seq-tai-san-phong-cach | IT-regenerate-all |
 | UC-04.06 Thiết lập Art Direction | P1 | FR-WLD-07 | BO-02 | seq-tai-san-phong-cach | UT-prompt-compiler-order |
 | UC-04.07 Xem dòng thời gian truyện | P2 ✂5 | FR-WLD-08 | BO-02 | seq-the-gioi-truyen | IT-story-timeline |
-| UC-04.08 Xem đồ thị quan hệ | P2 ✂4 | FR-WLD-09 | BO-02 | seq-the-gioi-truyen | IT-relationship-graph |
-| UC-04.09 Phân tích lại (Re-analyse) | P2 ✂4 ✂5 | FR-WLD-08, 09 | BO-02 | seq-the-gioi-truyen | IT-story-timeline, IT-relationship-graph |
+| UC-04.08 Xem đồ thị quan hệ | P2 ✂4 | FR-WLD-09 | BO-02 | seq-the-gioi-truyen | IT-relationship-graph, UT-relationship-at-chapter |
+| UC-04.09 Phân tích lại (Re-analyse) | P2 ✂4 ✂5 | FR-WLD-08, 09 | BO-02 | seq-the-gioi-truyen | IT-story-timeline, IT-relationship-graph, UT-relationship-at-chapter |
 | UC-04.10 Quản lý Visual Rules | P1 | FR-WLD-10 | BO-02 | seq-tai-san-phong-cach | UT-prompt-compiler-order |
 | UC-04.11 Xuất ZIP ảnh tài sản | Sau | FR-WLD-11 | — | — | IT-asset-zip-export |
 
@@ -609,6 +609,7 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `UT-prompt-compiler-order` | UT | ✓ | Prompt ảnh ghép đúng thứ tự style → Art Direction → Visual Rules → mô tả → facts (BR-08) |
 | `IT-story-timeline` | IT | ✓ | Phân tích lại gán `order_index`/`chrono_index`; hai chế độ xem sắp đúng |
 | `IT-relationship-graph` | IT | ✓ | Đồ thị quan hệ bỏ qua cạnh có tên không khớp tài sản và liệt kê chúng |
+| `UT-relationship-at-chapter` | UT | ✓ | Quan hệ hiệu lực ở chương N = giai đoạn có chương bắt đầu gần nhất không sau N; nhãn không đổi giữa các chương thì không tạo giai đoạn mới; cặp chưa bắt đầu thì không có cạnh (QĐ-143, IC-19) |
 | `IT-asset-zip-export` | IT |  | ZIP ảnh tài sản/ảnh shot đủ file, tên file an toàn, link ký có thời hạn |
 | `IT-storyboard-schema` | IT | ✓ | Bản nháp storyboard của LLM đúng schema, 1–40 shot; quản lý bản nháp, "Set as current" |
 | `PBT-coverage-validator` | PBT | ✓ | Mọi bản nháp và mọi thao tác shot: đoạn nguồn liên tục, không chồng lấn, nối lại bằng đúng chương (BR-20) |

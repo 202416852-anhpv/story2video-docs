@@ -92,8 +92,8 @@ Worker
 |---|---|---|---|---|---|---|---|
 | `SUGGEST_SPLITS` | `llm` | Llm | Văn bản đã đánh số **đoạn** | `[{startParagraph, title}]` | `SUGGEST_SPLITS` | UC-03.03 | P1 |
 | `ANALYZE_ASSETS` | `llm` | Llm | Từng chương (map), rồi kết quả gộp (reduce) | Tài sản: loại, tên, bí danh, ngoại hình, facts, chương xuất hiện | `ANALYZE_ASSETS` | UC-04.01, 04.09 | P1 |
-| `STORY_META` | `llm` | Llm | Chương + danh sách tài sản | Mốc thời gian theo chương (`chrono_index`), cặp quan hệ theo tên/bí danh | `STORY_META` | UC-04.07..09 | P1–P2 |
-| `STORYBOARD_DRAFT` | `llm` | Llm | Danh sách câu đã đánh số + tài sản, timeline truyện, Visual Rules, Chapter rules, thời lượng mục tiêu mỗi ảnh | `Shot[]`: `startSentence`, `endSentence`, title, focus, cast, items, location, thời điểm, ngày, brief 7 trường, caption | `STORYBOARD_DRAFT` | UC-05.01, 05.03, 05.07a | P1 |
+| `STORY_META` | `llm` | Llm | Chương + danh sách tài sản | Mốc thời gian theo chương (`chrono_index`), cặp quan hệ theo tên/bí danh, kèm chương bắt đầu (giai đoạn, QĐ-143) | `STORY_META` | UC-04.07..09 | P1–P2 |
+| `STORYBOARD_DRAFT` | `llm` | Llm | Danh sách câu đã đánh số + tài sản, timeline truyện, quan hệ hiệu lực ở chương (QĐ-143), Visual Rules, Chapter rules, thời lượng mục tiêu mỗi ảnh | `Shot[]`: `startSentence`, `endSentence`, title, focus, cast, items, location, thời điểm, ngày, brief 7 trường, caption | `STORYBOARD_DRAFT` | UC-05.01, 05.03, 05.07a | P1 |
 | `REWRITE_SHOT` | `llm` | Llm | Brief hiện tại, ghi chú, tài sản của shot, style, Art Direction, Visual Rules; đoạn nguồn **chỉ để đọc** | Brief mới (7 trường) | `REWRITE_SHOT` | UC-05.06e, 03.02a | P1–P2 |
 | `GENERATE_ASSET_IMAGE` | `image` | Image | Prompt (style + Art Direction + Visual Rules + mô tả + facts) | 1 ảnh (địa điểm: reference sheet nhiều góc) | `ASSET_REFERENCE_IMAGE` | UC-04.03 | P1 |
 | `GENERATE_SHOT_IMAGE` | `image` | Image | Prompt theo BR-08 + ảnh tham chiếu cast/location/item + tỷ lệ khung hình dự án | 1 ảnh | `SHOT_IMAGE` | UC-05.09 | P1 |

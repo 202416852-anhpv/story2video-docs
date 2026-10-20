@@ -116,7 +116,7 @@ def erd(post):
 
 # Lớp miền chỉ dùng sau MVP (khớp các bảng *(sau MVP)* ở 04)
 POST_CLASSES = {'Subscription', 'LibraryAsset', 'Archive', 'Note', 'ChapterRule',
-                'DirectorPlan', 'DirectorMessage', 'ToolProposal'}
+                'DirectorPlan', 'DirectorMessage', 'ToolProposal', 'AssetVariant'}
 
 
 def domain():

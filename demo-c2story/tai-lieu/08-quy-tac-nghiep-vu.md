@@ -13,7 +13,7 @@
 | BR-05 | Lưu đối tượng có version phải kèm `If-Match`; sai version thì từ chối. MVP báo "Dữ liệu đã thay đổi ở tab khác, tải lại"; hộp thoại xử lý xung đột giữa nhiều người (UC-02.10) làm sau MVP. | M02/M03 | P1 | QS |
 | BR-06 | Sửa nội dung chương, tái cấu trúc chương hoặc dời ranh giới shot: thuyết minh của các shot có đoạn nguồn bị đổi chuyển `OUTDATED`, và clip tương ứng trên timeline được đánh dấu. | M05/M06 | P2 | QS + ĐX |
 | BR-07 | Mỗi chương có tối đa 1 storyboard hiện hành. | M05 | P1 | QS |
-| BR-08 | Thứ tự chỉ dẫn hình ảnh: Style → Art Direction → Visual Rules (dự án) → Visual Rules (chương) → Chapter rules → Shot brief. Chỉ dẫn sau có ưu tiên cao hơn khi mâu thuẫn. | M04/M05 | P1 | QS |
+| BR-08 | Thứ tự chỉ dẫn hình ảnh: Style → Art Direction → Visual Rules (dự án) → Visual Rules (chương) → Chapter rules → Shot brief → mô tả ngoại hình và facts của tài sản. Chỉ dẫn sau có ưu tiên cao hơn khi mâu thuẫn. Mô tả và facts là một giá trị cho cả dự án, dùng giá trị **tại lúc sinh** (QĐ-142). | M04/M05 | P1 | QS |
 | BR-09 | Director không tạo job sinh ảnh khi chưa có style và chưa xác nhận cast; không sinh thuyết minh khi chưa chọn giọng. | M07 | Sau | QS + ĐX |
 | BR-10 | Archive là bất biến. | M03 | Sau | QS |
 | BR-11 | Chương chỉ "Sẵn sàng dựng" khi mọi shot của storyboard hiện hành có ảnh `DONE` và thuyết minh `DONE`. *Sau MVP, khi bật kiểm chứng ASR:* thuyết minh phải `VERIFIED` hoặc `ACCEPTED`. | M05 | P2 | QĐ-54 |

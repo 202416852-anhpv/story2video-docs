@@ -110,10 +110,11 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-WLD-06 | Set style cho dự án; "Regenerate all (n)" sinh lại mọi ảnh tham chiếu theo style hiện tại (hiện tổng giá trước khi chạy). | M | P1 | QS |
 | FR-WLD-07 | Art direction: văn bản phong cách bổ sung lên style dự án, áp cho mọi tài sản và mọi ảnh. | M | P1 | QS |
 | FR-WLD-08 | Story timeline: AI gán cho mỗi chương nhãn ngày, mùa và tóm tắt; hiển thị theo tỷ lệ thời gian; Re-analyse. Hai chế độ xem: **theo mạch truyện** (thứ tự chương) và **theo thứ tự thời gian** (theo nhãn ngày/mùa, cho truyện có hồi tưởng). Prompt storyboard dùng dữ liệu này để dựng bối cảnh. | M | P2 ✂5 | QS + ĐX, QĐ-04 |
-| FR-WLD-09 | Relationship graph: AI trích cặp nhân vật, nhãn quan hệ và diễn biến; hiển thị dạng đồ thị; Re-analyse. | M | P2 ✂4 | QS, QĐ-04 |
+| FR-WLD-09 | Relationship graph: AI trích cặp nhân vật, nhãn quan hệ và diễn biến **theo giai đoạn** (quan hệ đổi từ chương nào); hiển thị dạng đồ thị có thanh chọn chương; Re-analyse. Prompt storyboard chỉ dùng quan hệ hiệu lực ở chương đang dựng. | M | P2 ✂4 | QS, QĐ-04, QĐ-143 |
 | FR-WLD-10 | Visual Rules: tạo, sửa, xóa luật (tên, nội dung, phạm vi toàn dự án hoặc chương); áp theo BR-08. | M | P1 | QS |
 | FR-WLD-11 | Project Assets (hộp thoại quản trị đầy đủ): thêm, gỡ, bí danh, nhóm; xuất ZIP ảnh tài sản. | S | Sau | QS |
 | FR-WLD-12 | Thêm tài sản có sẵn từ thư viện cá nhân (M08); xóa vĩnh viễn khỏi thư viện (xác nhận 2 bước). | S | Sau | QS, QĐ-59 |
+| FR-WLD-13 | Giai đoạn ngoại hình của tài sản: mỗi giai đoạn có nhãn, mô tả ngoại hình, facts, ảnh tham chiếu và chương bắt đầu; ảnh shot dùng giai đoạn ứng với chương của shot (ghi đè được theo shot). MVP: một giá trị cho cả dự án, giai đoạn khác nhau tạo thành tài sản riêng. | C | Sau | ĐX, QĐ-142 |
 
 ### 2.5 M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn (MED) · lõi
 

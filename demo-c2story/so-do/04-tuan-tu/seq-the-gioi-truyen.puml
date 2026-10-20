@@ -131,12 +131,15 @@ loop mỗi chương
     LLM --> GW : JSON
 end
 HM -> HM : ánh xạ tên / bí danh → asset_id;\nkhông khớp → bỏ cạnh, ghi vào danh sách (2a)
-HM -> DB : BEGIN; thay timeline_events (order_index, chrono_index),\nrelationships (asset_a_id, asset_b_id, label, dynamic);\nquyết toán; COMMIT
+HM -> HM : hợp nhất theo thứ tự chương: cùng cặp, nhãn đổi\n→ giai đoạn mới từ chương đó (QĐ-143, IC-19)
+HM -> DB : BEGIN; thay timeline_events (order_index, chrono_index),\nrelationships (asset_a_id, asset_b_id, label, dynamic,\nfrom_chapter_id);\nquyết toán; COMMIT
 HM -> RT : job.updated {unmatchedNames[]}
 Editor -> Web : Mở ?v=timeline (Theo mạch truyện | Theo thứ tự thời gian)
 Web -> SM : GET /projects/{pid}/timeline?order=narrative | chronological
 SM -> DB : timeline_events ORDER BY order_index | chrono_index NULLS LAST
 Editor -> Web : Mở ?v=relationships
-Web -> SM : GET /projects/{pid}/relationships
+Web -> SM : GET /projects/{pid}/relationships?atChapter={cid}
+SM -> DB : mỗi cặp: giai đoạn có chương bắt đầu gần nhất\nkhông sau chương đã chọn (order_index)
 SM --> Web : nút (nhân vật), cạnh (nhãn, diễn biến, chương bắt đầu)
+note right of Web : Thanh chọn chương đổi atChapter;\nbấm cạnh xem các giai đoạn trước
 @enduml
