@@ -3,10 +3,11 @@
 skinparam defaultFontName "Segoe UI"
 title Trạng thái Subscription
 [*] --> INCOMPLETE : checkout tạo
-INCOMPLETE --> ACTIVE : invoice.paid / GRANT credit
+INCOMPLETE --> ACTIVE : checkout.session.completed /\ninvoice.paid / GRANT credit
 INCOMPLETE --> EXPIRED : quá hạn thanh toán lần đầu
 ACTIVE --> ACTIVE : gia hạn kỳ / EXPIRE cũ + GRANT mới
-ACTIVE --> PAST_DUE : invoice.payment_failed
+ACTIVE --> PAST_DUE : invoice.payment_failed\n(gửi email nhắc)
+ACTIVE --> CANCELED : customer.subscription.deleted\n(EXPIRE credit gói)
 PAST_DUE --> ACTIVE : thanh toán lại thành công
 PAST_DUE --> CANCELED : hết thời gian ân hạn
 ACTIVE --> CANCEL_AT_PERIOD_END : người dùng hủy

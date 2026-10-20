@@ -63,4 +63,8 @@ UC8 <.. UC9 : <<extend>>
 UC1 --> LLM
 UC9 --> LLM
 UC3 --> IMG
+note right of UC7
+  Nhánh 2b: xem theo mạch truyện (order_index)
+  hoặc theo thứ tự thời gian (chrono_index, do UC-04.09 gán)
+end note
 @enduml

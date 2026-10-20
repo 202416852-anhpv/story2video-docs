@@ -3,7 +3,7 @@
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 autonumber
-title UC-05.01 + UC-05.09: Lập storyboard và sinh ảnh shot
+title UC-05.01 + UC-05.09 + UC-05.10: Lập storyboard, sinh ảnh shot và thay ảnh tải lên
 actor Editor
 participant "Web App" as Web
 participant "API Server" as API
@@ -59,5 +59,43 @@ else lỗi tạm thời
 else lỗi vĩnh viễn / vi phạm
     W -> DB : BEGIN; ledger RELEASE(1); illustrations FAILED;\njobs FAILED; COMMIT
     W --> Web : SSE job.updated (FAILED, error_code)
+end
+
+== Thay ảnh bằng ảnh tải lên (UC-05.10, nhánh 1a) ==
+Editor -> Web : "Thay bằng ảnh của tôi" trên shot 3
+Web -> API : POST .../shots/{shid}/illustrations:upload (multipart)
+API -> API : Kiểm MIME thật, kích thước, cạnh ngắn >= 512 px,\nquét malware, bỏ EXIF (NFR-SEC-10)
+alt hợp lệ
+    API -> S3 : PUT media
+    API -> DB : BEGIN; media_files, illustrations(UPLOAD, DONE, vN+1,\nshot_version = shots.version),\nshots.current_illustration_id; COMMIT\n(không HOLD credit, không tạo job)
+    API --> Web : 201 {illustrationId}
+    API --> Web : SSE illustration.ready
+else không hợp lệ
+    API --> Web : 422 (lý do)
+end
+note right of API : Sinh ảnh hàng loạt (UC-05.07, UC-05.07c)\nbỏ qua shot có ảnh hiện hành UPLOAD (BR-14)
+
+== Sửa ảnh (UC-05.10a, UC-05.10b, UC-05.10c) ==
+alt Describe → Edit hoặc Fix a spot (1 credit)
+    Editor -> Web : Mô tả thay đổi (kèm mask nếu tô vùng)
+    Web -> API : POST .../illustrations/{iid}:edit {instruction, mask?}\nIdempotency-Key
+    API -> DB : HOLD(1); jobs(EDIT_IMAGE / INPAINT_IMAGE, QUEUED); mask → media_files
+    API --> Web : 202
+    Q -> W : job
+    W -> GW : moderation input; edit(ảnh gốc, instruction, mask?)
+    GW -> IMG : edit / inpaint
+    alt thành công
+        IMG --> GW : ảnh mới
+        W -> DB : illustrations(EDIT hoặc INPAINT, parent = ảnh gốc, DONE),\nshots.current_illustration_id, CAPTURE(1)
+        W --> Web : SSE illustration.ready
+    else lỗi sau 3 lần / vi phạm chính sách
+        W -> DB : RELEASE(1); illustrations FAILED (ảnh cũ vẫn là hiện hành)
+        W --> Web : SSE job.updated (FAILED)
+    end
+else Khôi phục phiên bản ảnh (miễn phí)
+    Editor -> Web : Chọn phiên bản trong lịch sử, "Make current"
+    Web -> API : POST .../illustrations/{iid}:make-current
+    API -> DB : shots.current_illustration_id = iid (không tạo bản ghi, không tốn credit)
+    API --> Web : 200 + SSE illustration.ready
 end
 @enduml

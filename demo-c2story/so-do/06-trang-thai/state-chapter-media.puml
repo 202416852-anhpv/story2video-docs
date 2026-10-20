@@ -7,8 +7,8 @@ title Trạng thái chương theo luồng Studio
 Draft --> Generating : "Sinh tư liệu"
 Generating --> NeedsAttention : còn ảnh lỗi /\nthuyết minh NEEDS_REVIEW
 NeedsAttention --> Generating : sinh lại phần thiếu
-NeedsAttention --> ReadyToEdit : sửa xong / chấp nhận thủ công
-Generating --> ReadyToEdit : mọi shot có ảnh DONE\n+ thuyết minh VERIFIED
+NeedsAttention --> ReadyToEdit : sửa xong / chấp nhận thủ công\n(UC-05.14a)
+Generating --> ReadyToEdit : mọi shot có ảnh DONE\n+ thuyết minh VERIFIED / ACCEPTED
 ReadyToEdit --> Editing : mở trình chỉnh sửa\n(bản nháp timeline)
 Editing --> Exported : xuất video thành công
 Exported --> Editing : chỉnh tiếp / xuất bản mới

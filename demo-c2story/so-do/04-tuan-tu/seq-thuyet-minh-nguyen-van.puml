@@ -24,29 +24,43 @@ API -> DB : HOLD 10; jobs NARRATE_CHAPTER + NARRATE_SEGMENT × n;\nkhóa chươn
 API --> Web : 202
 
 loop mỗi shot (song song có giới hạn)
-    W -> DB : Đọc chapter.content, shot.source_start/end/hash
+    W -> DB : UC-05.13a: đọc chapter.content, shot.source_start/end/hash
     W -> W : text = content[start:end]
     alt sha256(text) != shot.source_hash
         W -> DB : narration OUTDATED; RELEASE phần credit
     else khớp
-        W -> N : text + pronunciation_entries + settings
-        N --> W : SSML (chỉ break / alias / phoneme;\nbỏ ký hiệu markdown) + log biến đổi
+        W -> N : UC-05.13b: text + pronunciation_entries + settings
+        N --> W : SSML (chỉ break / alias / phoneme;\nbỏ ký hiệu markdown) + normalization_log
         note right of N
-          Kiểm tra: bỏ thẻ SSML và áp ngược
-          alias → chuỗi chữ phải bằng text
+          Kiểm tra ngược: bỏ thẻ SSML và áp ngược alias
+          → chỉ khác text ở các biến đổi mức phát âm
+          được phép (BR-19)
         end note
-        W -> TTS : speak(SSML, voice, speed)\n(chia theo câu nếu dài)
-        TTS --> W : audio (+ timestamp nếu có)
-        W -> S3 : PUT narration.mp3
-        W -> AL : align(audio, text) + transcribe(audio)
-        AL --> W : word_timings, transcript
-        W -> W : WER = dist(normalize(text), normalize(transcript))
-        alt WER <= ngưỡng
-            W -> DB : narrations(VERIFIED, word_timings, wer)
-        else WER > ngưỡng
-            W -> DB : narrations(NEEDS_REVIEW, mismatches[])
+        alt kiểm tra ngược thất bại
+            W -> DB : narration FAILED; RELEASE; cảnh báo P1
+        else đạt
+            W -> TTS : speak(SSML, voice, speed)\n(chia theo câu nếu dài; retry khi lỗi tạm thời)
+            alt TTS lỗi sau retry / vi phạm chính sách
+                W -> DB : narration FAILED; RELEASE (không tự sửa văn bản, BR-18)
+            else audio hợp lệ
+                TTS --> W : audio (+ timestamp nếu có)
+                W -> S3 : PUT narration.mp3
+                W -> AL : UC-05.13c: align(audio, text) + transcribe(audio)
+                alt Aligner / STT lỗi sau retry
+                    AL --> W : lỗi
+                    W -> DB : narration FAILED; RELEASE
+                else có kết quả
+                    AL --> W : word_timings, transcript
+                    W -> W : WER = dist(normalize(text), normalize(transcript))
+                    alt WER <= ngưỡng (mặc định 0,03)
+                        W -> DB : narrations(VERIFIED, word_timings, wer)
+                    else WER > ngưỡng (> 10% luôn cần người duyệt)
+                        W -> DB : narrations(NEEDS_REVIEW, word_timings, mismatches[])
+                    end
+                    W -> DB : CAPTURE phần credit
+                end
+            end
         end
-        W -> DB : CAPTURE phần credit
     end
     W --> Web : SSE narration.updated
 end
@@ -57,9 +71,15 @@ opt Có shot NEEDS_REVIEW
     alt Thêm từ điển phát âm
         Web -> API : POST /pronunciations
         Web -> API : POST .../shots/{shid}/narration:generate
-    else Chấp nhận thủ công
+    else Chấp nhận thủ công (UC-05.14a)
+        Editor -> Web : Nghe, tích "Tôi đã nghe và lời đọc đúng nguyên văn"
         Web -> API : POST .../narration:accept
-        API -> DB : ACCEPTED (accepted_by, accepted_at)
+        alt narration vẫn NEEDS_REVIEW
+            API -> DB : ACCEPTED (accepted_by, accepted_at)
+            API --> Web : 200 + SSE narration.updated
+        else đã sinh lại / OUTDATED
+            API --> Web : 409 / 422 → tải lại shot
+        end
     end
 end
 @enduml

@@ -1,10 +1,10 @@
 @startuml Act_PhuKinVanBan
 !theme plain
 skinparam defaultFontName "Segoe UI"
-title CoverageValidator: bảo đảm các shot phủ kín văn bản chương (BR-20)
+title CoverageValidator (UC-05.01a): bảo đảm các shot phủ kín văn bản chương (BR-20)
 
 start
-:Nhận chapter.content và\nshots[] = {startSentence, endSentence} từ LLM;
+:Nhận chapter.content (kèm version) và shots[] = {startSentence, endSentence}\ntừ LLM hoặc từ thao tác của Editor (tách / gộp / dời ranh giới);
 :Tách câu tất định → sentences[i] = [start, end);
 :Sắp shots theo startSentence;
 :Kẹp chỉ số vào [0, n-1];\nbỏ shot rỗng (endSentence < startSentence);
@@ -29,7 +29,14 @@ repeat while (Còn cặp?) is (có)
 :Ranh giới thuộc khoảng trắng / xuống dòng\nđược gán cho shot trước;
 if (concat(content[start:end]) == content\nVÀ mọi đoạn khác rỗng?) then (đúng)
   :Tính source_hash từng shot;
-  :Ghi số ranh giới đã sửa vào log;
+  :Ghi số ranh giới đã sửa vào boundary_fixes;
+  if (Chương còn đúng version đã nhận?) then (không — chương vừa đổi)
+    :Hủy kết quả, chạy lại từ đầu;
+    stop
+  endif
+  if (boundary_fixes > 20% số ranh giới?) then (có)
+    :Lưu kèm Director note cảnh báo chất lượng,\ngợi ý tạo lại;
+  endif
   :Lưu draft;
   stop
 else (sai — lỗi lập trình)

@@ -20,7 +20,7 @@ actor "Editor" as Editor
 
 rectangle "M05 Sinh tư liệu - phần Storyboard" {
     usecase "UC-05.01\nTạo bản nháp storyboard" as UC1
-    usecase "UC-05.01a\nTách câu & kiểm tra phủ kín\n(CoverageValidator)" as UC1a
+    usecase "UC-05.01a\nTách câu & kiểm tra phủ kín" as UC1a
     usecase "UC-05.02\nQuản lý bản nháp" as UC2
     usecase "UC-05.02a\nĐổi tên / nhân bản / xóa" as UC2a
     usecase "UC-05.02b\nSo sánh hai bản nháp" as UC2b
@@ -33,7 +33,7 @@ rectangle "M05 Sinh tư liệu - phần Storyboard" {
     usecase "UC-05.06b\nGắn cast / item / location" as UC6b
     usecase "UC-05.06c\nTách / gộp / xóa shot" as UC6c
     usecase "UC-05.06d\nDời ranh giới đoạn nguồn" as UC6d
-    usecase "UC-05.06e\nAI viết lại brief một shot" as UC6e
+    usecase "UC-05.06e\nViết lại brief một shot bằng\nAI" as UC6e
     usecase "UC-05.06f\nTự khớp tên với tài sản" as UC6f
 }
 rectangle "LLM Provider" as LLM

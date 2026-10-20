@@ -6,7 +6,7 @@ title Luồng chính của Studio: 6 bước từ truyện đến video
 |Editor|
 start
 partition "1. Nhập truyện" {
-  :Import truyện (giữ nguyên văn)\n/ viết trong Workspace;
+  :Nhập truyện giữ nguyên văn (Import)\n/ viết trong Workspace;
   :Chọn style, tỷ lệ khung hình;
 }
 partition "2. Chia chương" {
@@ -38,7 +38,7 @@ partition "4. Sinh tư liệu (ảnh + thuyết minh)" {
   end fork
   |Editor|
   if (Có ảnh lỗi / thuyết minh NEEDS_REVIEW?) then (có)
-    :Sửa ảnh, sửa phát âm, sinh lại\nhoặc chấp nhận thủ công;
+    :Sửa ảnh (mô tả / tô vùng) hoặc thay bằng ảnh tải lên,\nsửa phát âm, sinh lại, chấp nhận thủ công;
   else (không)
   endif
   |AI|

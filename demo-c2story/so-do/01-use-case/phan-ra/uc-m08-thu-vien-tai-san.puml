@@ -19,8 +19,8 @@ title M08 - Thư viện tài sản cá nhân
 actor "User" as User
 
 rectangle "M08 Thư viện tài sản" {
-    usecase "UC-08.01\nXem thư viện\n(Characters / Locations / Items)" as UC1
-    usecase "UC-08.01a\nLọc & tìm kiếm\n(All / My Created / From Projects)" as UC1a
+    usecase "UC-08.01\nXem thư viện" as UC1
+    usecase "UC-08.01a\nLọc & tìm kiếm" as UC1a
     usecase "UC-08.02\nTạo tài sản từ ảnh hoặc mô tả" as UC2
     usecase "UC-08.02a\nSinh ảnh tham chiếu" as UC2a
     usecase "UC-08.03\nSửa / xóa tài sản" as UC3

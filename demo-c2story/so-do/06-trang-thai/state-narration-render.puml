@@ -6,11 +6,11 @@ title Trạng thái thuyết minh (mỗi shot) và bản xuất video
 state Narration {
     [*] --> PENDING : shot mới / chưa sinh
     PENDING --> GENERATING : sinh (HOLD credit)
-    GENERATING --> VERIFIED : WER <= ngưỡng
-    GENERATING --> NEEDS_REVIEW : WER > ngưỡng
-    GENERATING --> FAILED : TTS lỗi / chính sách (RELEASE)
+    GENERATING --> VERIFIED : WER <= ngưỡng\n(mặc định 0,03)
+    GENERATING --> NEEDS_REVIEW : WER > ngưỡng\n(> 10% luôn cần người duyệt)
+    GENERATING --> FAILED : TTS / Aligner / STT lỗi sau retry,\nkiểm tra ngược SSML thất bại,\nvi phạm chính sách (RELEASE)
     NEEDS_REVIEW --> GENERATING : sinh lại (từ điển phát âm / đổi giọng)
-    NEEDS_REVIEW --> ACCEPTED : người dùng chấp nhận
+    NEEDS_REVIEW --> ACCEPTED : Editor chấp nhận thủ công\n(narration:accept, UC-05.14a)
     FAILED --> GENERATING : thử lại
     VERIFIED --> OUTDATED : đoạn nguồn đổi hash
     ACCEPTED --> OUTDATED : đoạn nguồn đổi hash

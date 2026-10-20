@@ -19,17 +19,17 @@ title M06 - Trình chỉnh sửa & xuất video
 actor "Editor" as Editor
 
 rectangle "M06 Trình chỉnh sửa & xuất video" {
-    usecase "UC-06.01\nMở trình chỉnh sửa\n(chương / cả dự án)" as UC1
+    usecase "UC-06.01\nMở trình chỉnh sửa" as UC1
     usecase "UC-06.01a\nDựng bản nháp timeline\ntừ tư liệu" as UC1a
-    usecase "UC-06.02\nThao tác timeline\n(kéo thả, cắt, trim, undo/redo)" as UC2
-    usecase "UC-06.02a\nKiểm tra khóa thuyết minh\n(BR-24)" as UC2a
-    usecase "UC-06.03\nQuản lý track\n(thêm, ẩn, tắt tiếng)" as UC3
-    usecase "UC-06.04\nHiệu ứng Ken Burns\n& điểm tập trung" as UC4
-    usecase "UC-06.05\nChuyển cảnh" as UC5
-    usecase "UC-06.06\nKhung hình & tinh chỉnh màu" as UC6
-    usecase "UC-06.07\nOverlay chữ / logo,\nclip tiêu đề & kết" as UC7
-    usecase "UC-06.08\nKiểu phụ đề (nội dung nguyên văn)" as UC8
-    usecase "UC-06.09\nThêm nhạc nền\n(fade, ducking)" as UC9
+    usecase "UC-06.02\nThao tác timeline" as UC2
+    usecase "UC-06.02a\nKiểm tra khóa thuyết minh" as UC2a
+    usecase "UC-06.03\nQuản lý track" as UC3
+    usecase "UC-06.04\nĐặt hiệu ứng Ken Burns &\nđiểm tập trung" as UC4
+    usecase "UC-06.05\nĐặt chuyển cảnh" as UC5
+    usecase "UC-06.06\nChọn khung hình & tinh chỉnh\nmàu" as UC6
+    usecase "UC-06.07\nThêm overlay chữ / logo,\nclip tiêu đề & kết" as UC7
+    usecase "UC-06.08\nĐịnh kiểu phụ đề" as UC8
+    usecase "UC-06.09\nThêm nhạc nền" as UC9
     usecase "UC-06.10\nThêm SFX" as UC10
     usecase "UC-06.11\nTìm trong thư viện âm thanh" as UC11
     usecase "UC-06.11a\nTải nhạc / SFX lên" as UC11a
@@ -37,7 +37,7 @@ rectangle "M06 Trình chỉnh sửa & xuất video" {
     usecase "UC-06.11c\nGợi ý SFX theo đoạn văn" as UC11c
     usecase "UC-06.12\nTrộn âm & chuẩn hóa loudness" as UC12
     usecase "UC-06.13\nXem trước" as UC13
-    usecase "UC-06.14\nLịch sử phiên bản & khôi phục" as UC14
+    usecase "UC-06.14\nXem lịch sử & khôi phục\nphiên bản timeline" as UC14
     usecase "UC-06.15\nĐồng bộ khi tư liệu thay đổi" as UC15
     usecase "UC-06.16\nXuất video MP4" as UC16
     usecase "UC-06.16a\nKiểm tra điều kiện\n& độ phủ 100%" as UC16a
@@ -75,4 +75,10 @@ UC16 <.. UC16b : <<extend>>
 UC11b --> MUS
 UC11c --> MUS
 UC16 --> RW
+note right of UC6
+  Nhánh *a: bật/tắt vùng an toàn và lưới căn chỉnh (chỉ khi chỉnh sửa, không vào video xuất)
+end note
+note right of UC8
+  Có preset dựng sẵn (hằng số dùng chung, không lưu DB)
+end note
 @enduml

@@ -300,6 +300,7 @@ package "Thế giới truyện" #FFF8E8 {
         story_date : text
         summary : text
         order_index : int
+        chrono_index : int
     }
     entity relationships {
         * id : uuid <<PK>>

@@ -13,6 +13,15 @@ participant "Object Storage" as S3
 
 == Mở trình chỉnh sửa ==
 Editor -> Web : Mở trình chỉnh sửa chương 1
+Web -> API : POST /timelines {scope: CHAPTER, chapterId} (tạo hoặc lấy)
+alt chưa có timeline (UC-06.01a)
+    API -> DB : chương READY_TO_EDIT?
+    alt chưa sẵn sàng
+        API --> Web : 422 PRECONDITION_FAILED_BUSINESS
+    else sẵn sàng
+        API -> DB : TimelineBuilder: tracks Video / Thuyết minh (khóa) / Phụ đề /\nNhạc nền / SFX / Overlay; mỗi shot 1 item IMAGE + 1 item NARRATION;\nphụ đề từ word_timings; Ken Burns luân phiên, crossfade 0,5 s
+    end
+end
 Web -> API : GET /timelines/{tl} (ETag v1)
 API -> DB : tracks + items (ảnh, thuyết minh khóa, phụ đề)
 API --> Web : timeline
@@ -23,9 +32,9 @@ Editor -> Web : Ken Burns, chuyển cảnh, màu cho các clip ảnh
 Editor -> Web : Tìm "calm piano" trong thư viện, kéo vào track Nhạc nền
 Web -> API : GET /audio-assets?kind=MUSIC&q=calm piano
 Editor -> Web : Kéo SFX "pháo hoa" vào track SFX tại 01:42
-Web -> Web : Áp thao tác vào store cục bộ (undo/redo)
+Web -> Web : NarrationGuard (cùng bộ luật với server, BR-24) kiểm tra trước,\nrồi áp thao tác vào store cục bộ (undo/redo)
 Web -> API : POST /timelines/{tl}:apply-ops {ifMatch: v1, ops[]} (debounce)
-API -> API : Kiểm tra BR-24 / IC-10\n(thuyết minh đủ, đúng thứ tự, không cắt;\nảnh phủ khoảng đọc)
+API -> API : UC-06.02a: kiểm tra BR-24 / IC-10 trên toàn lô\n(thuyết minh đủ, đúng thứ tự, không cắt / trim / đổi tốc độ;\nảnh phủ khoảng đọc)
 alt hợp lệ
     API -> DB : ghi items; version v2
     API --> Web : 200 ETag v2
@@ -35,21 +44,42 @@ else vi phạm (vd. xóa clip thuyết minh)
 else xung đột version
     API --> Web : 409 → xử lý như UC-02.10
 end
-opt AI âm thanh (tùy chọn, tốn credit)
-    Editor -> Web : "Gợi ý SFX" / "Sinh nhạc"
-    Web -> API : POST :suggest-sfx / audio-assets:generate
-    API --> Web : đề xuất → Editor duyệt → ADD_ITEM
+opt Tải nhạc / SFX của tôi (UC-06.11a)
+    Editor -> Web : Chọn file MP3 / WAV / M4A, tích "Tôi có quyền sử dụng"
+    Web -> API : POST /audio-assets (licenseConfirmed: true)
+    API -> API : Kiểm MIME thật, ≤ 30 MB, ≤ 15 phút, quét malware
+    API -> DB : audio_assets(USER_UPLOAD) + job PROCESS_AUDIO_UPLOAD (waveform)
+    API --> Web : 202 → SSE asset.updated khi xong
+end
+opt Gợi ý SFX bằng AI (UC-06.11c, miễn phí, có giới hạn tần suất)
+    Editor -> Web : "Gợi ý SFX"
+    Web -> API : POST /timelines/{tl}:suggest-sfx
+    API -> DB : job SUGGEST_SFX → sfx_suggestions(PROPOSED)
+    API --> Web : danh sách đề xuất {shotId, atMs, query}
+    loop mỗi gợi ý
+        Editor -> Web : Chèn hoặc bỏ
+        Web -> API : apply-ops ADD_ITEM (chèn → ACCEPTED) / bỏ → REJECTED
+    end
+end
+opt Sinh nhạc / SFX bằng AI (UC-06.11b, tốn credit)
+    Editor -> Web : "Sinh bằng AI" (mô tả, thời lượng)
+    Web -> API : POST /projects/{pid}/audio-assets:generate
+    API --> Web : 202 (HOLD credit) → nghe thử → lưu audio_assets(AI_GENERATED)
 end
 
 == Xuất & tải ==
 Editor -> Web : Xuất video 1080p
-Web -> API : GET /timelines/{tl}/readiness
-API -> DB : độ phủ, ảnh DONE, thuyết minh VERIFIED/ACCEPTED, IC-10
+Web -> API : GET /timelines/{tl}/readiness (UC-06.16a)
+API -> DB : độ phủ, ảnh DONE, thuyết minh VERIFIED/ACCEPTED (không OUTDATED), IC-10
 alt chưa đạt
     API --> Web : 422 {needsReview[], outdated[], violations[]}
 else đạt (độ phủ 9895/9895)
-    Web -> API : POST /timelines/{tl}/renders {resolution: 1080p}
-    API -> DB : renders(QUEUED, timeline_snapshot v2, coverage)
+    opt chia thành phần (UC-06.16b)
+        Editor -> Web : Chọn chia theo chương hoặc tối đa N phút
+        Web -> API : (kèm splitBy, maxMinutes) → cắt ở ranh giới shot
+    end
+    Web -> API : POST /timelines/{tl}/renders {resolution: 1080p, splitBy?, maxMinutes?}
+    API -> DB : renders(QUEUED, timeline_snapshot v2, coverage)\n(nhiều phần: cùng render_group_id, part_no)
     API --> Web : 202
     R -> S3 : tải ảnh, audio thuyết minh, nhạc, SFX, font
     R -> R : Dựng khung hình (Ken Burns, chuyển cảnh, overlay,\nmàu, phụ đề nguyên văn) theo đoạn song song

@@ -29,12 +29,12 @@ rectangle "M03 Bản thảo & chương" {
     usecase "UC-03.06\nDời ranh giới chương" as UC6
     usecase "UC-03.07\nThêm / xóa / đổi tên chương" as UC7
     usecase "UC-03.08\nSắp xếp lại chương" as UC8
-    usecase "UC-03.09\nTái cấu trúc nguyên tử\n(kiểm tra version, OUTDATED tư liệu)" as UC9
+    usecase "UC-03.09\nTái cấu trúc nguyên tử" as UC9
     usecase "UC-03.10\nTìm & thay thế" as UC10
     usecase "UC-03.10a\nXem trước số kết quả" as UC10a
     usecase "UC-03.11\nLưu Archive" as UC11
     usecase "UC-03.12\nXem / sao chép / xóa Archive" as UC12
-    usecase "UC-03.13\nGhi chú (Notes)" as UC13
+    usecase "UC-03.13\nQuản lý ghi chú (Notes)" as UC13
     usecase "UC-03.13a\nGắn ghi chú vào chương / shot" as UC13a
     usecase "UC-03.14\nXem & khôi phục phiên bản chương" as UC14
 }

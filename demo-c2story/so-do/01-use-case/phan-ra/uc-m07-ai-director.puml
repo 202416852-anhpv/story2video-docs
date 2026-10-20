@@ -22,9 +22,9 @@ rectangle "M07 AI Director" {
     usecase "UC-07.01\nRa lệnh bằng chat" as UC1
     usecase "UC-07.01a\nHỏi lại khi lệnh mơ hồ" as UC1a
     usecase "UC-07.01b\nXác nhận thao tác tốn phí" as UC1b
-    usecase "UC-07.01c\nTừ chối sửa / tóm tắt văn bản\n(BR-19, BR-21)" as UC1c
-    usecase "UC-07.01d\nDirector viết nội dung hộ\n(prompt, caption, Visual Rule)" as UC1d
-    usecase "UC-07.02\nChạy chế độ tự động\n(đến bản nháp timeline)" as UC2
+    usecase "UC-07.01c\nTừ chối sửa / tóm tắt văn\nbản" as UC1c
+    usecase "UC-07.01d\nViết nội dung hộ người dùng" as UC1d
+    usecase "UC-07.02\nChạy chế độ tự động" as UC2
     usecase "UC-07.02a\nLập & cập nhật kế hoạch bước" as UC2a
     usecase "UC-07.03\nChọn style (điểm duyệt)" as UC3
     usecase "UC-07.04\nDuyệt cast (điểm duyệt)" as UC4

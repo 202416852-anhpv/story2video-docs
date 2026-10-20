@@ -24,10 +24,10 @@ Editor -|> User
 
 rectangle "M02 Quản lý dự án & cộng tác" {
     usecase "UC-02.01\nXem danh sách dự án" as UC1
-    usecase "UC-02.02\nImport truyện\n(giữ nguyên văn)" as UC2
-    usecase "UC-02.02a\nKiểm tra & chuẩn hóa kỹ thuật\n(NFC, xuống dòng)" as UC2a
+    usecase "UC-02.02\nNhập truyện giữ nguyên văn\n(Import)" as UC2
+    usecase "UC-02.02a\nKiểm tra & chuẩn hóa kỹ\nthuật" as UC2a
     usecase "UC-02.03\nTạo dự án trống" as UC3
-    usecase "UC-02.04\nCài đặt dự án\n(style, model, ngôn ngữ,\nthời lượng mỗi ảnh, tỷ lệ khung hình)" as UC4
+    usecase "UC-02.04\nCài đặt dự án" as UC4
     usecase "UC-02.05\nXóa dự án" as UC5
     usecase "UC-02.06\nTạo / thu hồi link mời" as UC6
     usecase "UC-02.07\nQuản lý thành viên" as UC7
@@ -53,4 +53,8 @@ Editor --> UC10
 UC2 ..> UC2a : <<include>>
 UC10 <.. UC10a : <<extend>>
 UC10 <.. UC10b : <<extend>>
+note right of UC1
+  Nhánh 2c: tìm theo tiêu đề, lọc In Progress / Done
+  (trạng thái suy ra từ trạng thái chương)
+end note
 @enduml

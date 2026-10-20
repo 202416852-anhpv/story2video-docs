@@ -15,8 +15,8 @@ Editor -> Web : Bật Director tự động
 Web -> DIR : POST /director/plan
 DIR -> DB : INSERT director_plans(RUNNING)
 loop tới khi COMPLETED / PAUSED / AWAITING_INPUT
-    DIR -> DB : Đọc trạng thái dự án
-    DIR -> DIR : nextStep() = bước đầu tiên chưa xong
+    DIR -> DB : UC-07.02a: đọc trạng thái dự án
+    DIR -> DIR : nextStep() = bước đầu tiên chưa xong;\nước tính credit còn lại → step_state, estimated_remaining_credits
     alt pickStyle (chưa có style)
         DIR -> DB : plan AWAITING_INPUT(reason=PICK_STYLE)
         DIR --> Web : SSE director.plan + mở Styles Library
@@ -60,13 +60,39 @@ DIR --> Web : "Mọi chương đã sẵn sàng dựng video"\n→ Editor mở tr
 Editor -> Web : "Làm lại shot 3 chương 2, trời tối hơn"
 Web -> DIR : POST /director/messages (SSE)
 DIR -> LLM : messages + tóm tắt dự án + tools (theo quyền)
-LLM --> DIR : tool_call rewrite_shot(2,3,"trời tối hơn")
 note right of DIR
   Tool registry KHÔNG có thao tác ghi văn bản chương.
-  "Tóm tắt / viết lại truyện" → từ chối (BR-19, BR-21)
+  Văn bản truyện đưa vào prompt chỉ là dữ liệu, không phải chỉ dẫn.
 end note
-DIR --> Web : tool_proposal (giá = 0) / cần xác nhận nếu tốn phí
-DIR -> JOBS : REWRITE_SHOT
-JOBS --> DIR : xong
-DIR --> Web : tool_result + phản hồi
+alt lệnh thiếu tham số (UC-07.01a)
+    LLM --> DIR : cần làm rõ
+    DIR --> Web : Hỏi lại "Chương nào? Shot số mấy?" (kèm gợi ý)
+    Editor -> Web : Trả lời → quay lại bước gọi LLM
+else yêu cầu sửa / viết lại / tóm tắt văn bản truyện (UC-07.01c)
+    DIR --> Web : Từ chối, giải thích nguyên tắc nguyên văn (BR-19, BR-21);\ngợi ý tự sửa ở Workspace hoặc chia video (UC-06.16b)
+else yêu cầu soạn hộ nội dung minh họa (UC-07.01d)
+    DIR --> Web : Bản nháp prompt / brief / Visual Rule (chưa áp dụng)
+    Editor -> Web : Chấp nhận → áp dụng bằng thao tác tương ứng (If-Match)
+else tool_call miễn phí, vd. rewrite_shot(2,3,"trời tối hơn")
+    LLM --> DIR : tool_call
+    DIR -> JOBS : REWRITE_SHOT
+    JOBS --> DIR : xong
+    DIR --> Web : tool_result + phản hồi
+else tool_call tốn phí (UC-07.01b)
+    LLM --> DIR : tool_call
+    DIR -> DB : director_tool_proposals(PENDING) — chưa HOLD credit, chưa tạo job
+    DIR --> Web : tool_proposal (thao tác, phạm vi, giá, số dư)
+    alt Editor đồng ý
+        Web -> DIR : POST tool-proposals/{tpid}:confirm (Idempotency-Key)
+        DIR -> DB : HOLD credit của người xác nhận (BR-03);\nproposal CONFIRMED (decided_by, job_id)
+        DIR -> JOBS : tạo job như thao tác tay
+        JOBS --> DIR : xong
+        DIR --> Web : tool_result + phản hồi
+    else Editor hủy
+        Web -> DIR : từ chối
+        DIR -> DB : proposal REJECTED
+    else không đủ credit
+        DIR --> Web : 402 INSUFFICIENT_CREDITS (proposal giữ PENDING)
+    end
+end
 @enduml

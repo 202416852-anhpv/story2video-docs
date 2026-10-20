@@ -1,0 +1,20 @@
+@startuml State_ToolProposal
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Trạng thái đề xuất thao tác tốn phí của Director (UC-07.01b)
+
+[*] --> PENDING : Director đề xuất tool tốn phí\n(chưa HOLD credit, chưa tạo job)
+PENDING --> CONFIRMED : Editor bấm Đồng ý (:confirm)\nHOLD credit người xác nhận + tạo job
+PENDING --> REJECTED : Editor bấm Hủy
+PENDING --> EXPIRED : quá hạn, chưa quyết định
+CONFIRMED --> [*]
+REJECTED --> [*]
+EXPIRED --> [*]
+
+note right of PENDING
+  Không đủ credit khi xác nhận → 402,
+  đề xuất giữ PENDING.
+  Giá đổi từ lúc đề xuất → tính lại
+  và yêu cầu xác nhận lại.
+end note
+@enduml

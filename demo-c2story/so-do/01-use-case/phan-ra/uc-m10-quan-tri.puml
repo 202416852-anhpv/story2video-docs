@@ -30,7 +30,7 @@ rectangle "M10 Quản trị" {
     usecase "UC-10.07b\nHoàn credit thủ công" as UC7b
     usecase "UC-10.08\nĐiều chỉnh credit người dùng" as UC8
     usecase "UC-10.09\nGhi audit log" as UC9
-    usecase "UC-10.10\nXem báo cáo\n(credit, chi phí AI, biên lợi nhuận)" as UC10
+    usecase "UC-10.10\nXem báo cáo" as UC10
 }
 rectangle "Payment Gateway" as PAY
 

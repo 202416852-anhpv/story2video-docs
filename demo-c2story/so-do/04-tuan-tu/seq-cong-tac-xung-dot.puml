@@ -32,11 +32,18 @@ API -> A : SSE chapter.updated {v4, lastEditedBy: B}
 A -> API : PATCH C1, If-Match "3"
 API -> DB : UPDATE ... WHERE version=3 → 0 rows
 API --> A : 409 VERSION_CONFLICT {current v4, by B}
-alt A chọn "Lưu bản của tôi thành nháp"
-    A -> API : POST /archives {source: CONFLICT, content}
-    API --> A : 201
+alt A chọn "Lưu bản của tôi thành nháp" (UC-02.10a)
+    alt đối tượng là chương
+        A -> API : POST /archives {source: CONFLICT,\nname: "Conflict draft — C1 — <thời gian>", content}
+    else đối tượng là timeline
+        A -> API : POST /timelines/{tlid}/versions {name}
+    end
+    API --> A : 201 (bản lưu bất biến, BR-10)
     A -> API : GET C1 (v4)
-else A chọn "Tải bản của họ"
+    API --> A : ETag "4"
+else A chọn "Tải bản của họ" (UC-02.10b)
+    A -> A : Xác nhận bỏ thay đổi chưa lưu
     A -> API : GET C1 (v4)
+    API --> A : ETag "4"
 end
 @enduml

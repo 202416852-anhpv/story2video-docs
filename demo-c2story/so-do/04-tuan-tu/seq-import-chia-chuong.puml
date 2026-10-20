@@ -3,7 +3,7 @@
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 autonumber
-title UC-02.02 + UC-03.03: Import truyện và chia chương bằng AI
+title UC-02.02 + UC-03.03 + UC-03.01b: Nhập truyện, chia chương bằng AI và nhập lại
 actor Editor
 participant "Web App" as Web
 participant "API Server" as API
@@ -14,11 +14,16 @@ participant "AI Gateway" as GW
 participant "LLM Provider" as LLM
 
 == Import ==
-Editor -> Web : Dán văn bản, đặt tiêu đề, chọn "Giữ nguyên văn"
+Editor -> Web : Dán văn bản hoặc tải file (.txt / .md / .docx), đặt tiêu đề, chọn "Giữ nguyên văn"
 Web -> API : POST /projects:import
-API -> DB : BEGIN; INSERT projects, project_members(OWNER),\nsource_texts, chapters(#1, v1); COMMIT
-API --> Web : 201 {projectId}
-Web -> Web : Mở Studio ?v=source
+API -> API : UC-02.02a: kiểm MIME thật, ≤ 2 MB, ≤ 500.000 ký tự;\ntrích văn bản; chuẩn hóa NFC + xuống dòng + bỏ ký tự điều khiển\n(KHÔNG đổi chữ); ghi normalization_log; tính sha256
+alt không đạt kiểm tra
+    API --> Web : 400 VALIDATION_ERROR (lý do cụ thể), giữ nguyên form
+else đạt
+    API -> DB : BEGIN; INSERT projects, project_members(OWNER),\nsource_texts, chapters(#1, v1); COMMIT
+    API --> Web : 201 {projectId, sourceSha256}
+    Web -> Web : Mở Studio ?v=source
+end
 
 == Gợi ý chia chương ==
 Editor -> Web : "Suggest chapter splits"
@@ -50,5 +55,17 @@ else sai version
 else chương đang khóa
     API -> DB : ROLLBACK
     API --> Web : 423 RESOURCE_LOCKED
+end
+
+== Nhập lại văn bản (Re-import, UC-03.01b) ==
+Editor -> Web : "Re-import" (xem cảnh báo hậu quả, nên lưu Archive trước)
+Web -> API : PUT /projects/{pid}/source (văn bản mới)
+API -> API : UC-02.02a (kiểm tra + chuẩn hóa)
+alt có chương đang bị khóa bởi job
+    API --> Web : 423 RESOURCE_LOCKED
+else không bị khóa
+    API -> DB : BEGIN; INSERT source_texts; thay các chương bằng Chapter #1 mới;\nmọi tư liệu + timeline của chương cũ → OUTDATED; COMMIT
+    API --> Web : 200
+    API --> Web : SSE chapters.restructured
 end
 @enduml
