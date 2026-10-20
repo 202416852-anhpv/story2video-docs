@@ -68,9 +68,32 @@
 
 ### UC-09.03a Thanh toán qua checkout
 <a id="uc-0903a"></a>
-- **Loại:** include. **Tác nhân phụ:** Payment Gateway.
-- **Các bước:** (1) tạo Checkout Session (`client_reference_id = userId`, price id theo cấu hình); (2) chuyển hướng tới trang thanh toán của cổng; (3) User thanh toán; (4) cổng chuyển về `success_url` hoặc `cancel_url`.
-- **Kết quả:** cổng phát webhook cho UC-09.08. Hủy thanh toán thì không có thay đổi nào.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-09.02 và UC-09.03 |
+| Tác nhân | User / Payment Gateway (Stripe Checkout) |
+| Mô tả | Đưa User sang trang thanh toán của cổng để trả tiền; ứng dụng không bao giờ nhận hay lưu thông tin thẻ |
+| Tiền điều kiện | Đã đăng nhập; gói hoặc credit pack được chọn còn hoạt động |
+| Hậu điều kiện | **Thành công:** User hoàn tất thanh toán trên cổng và cổng phát webhook cho UC-09.08. **Tối thiểu:** hủy hoặc thất bại thì không có thay đổi nào về gói hay credit |
+| Kích hoạt | UC-09.02 bước 2; UC-09.03 bước 2 |
+| Truy vết | ADR-08; FR-BIL-02, FR-BIL-03; NFR-SEC-07; API 2.8 `POST /billing/checkout-sessions` |
+
+**Luồng chính**
+1. Client gọi `POST /billing/checkout-sessions` với `{planCode, cycle}` hoặc `{packCode}`.
+2. Hệ thống kiểm tra gói hoặc pack còn `active`, tạo (nếu chưa có) khách hàng ở cổng và lưu `users.gateway_customer_id`.
+3. Hệ thống tạo Checkout Session với `client_reference_id = userId`, mã giá lấy từ `plans.gateway_price_ids` hoặc `credit_packs.gateway_price_id`, cùng `success_url` và `cancel_url`.
+4. API trả `{ url }`; client chuyển hướng trình duyệt tới trang thanh toán của cổng.
+5. User thanh toán; cổng chuyển về `success_url` (Dashboard hiện "Đang xử lý thanh toán").
+6. Cổng phát webhook; UC-09.08 cập nhật gói và credit.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Mã gói hoặc pack không tồn tại hoặc đã ngừng bán: `404` hoặc `422`.
+- **2b.** Đăng ký gói mới khi đã có gói trả phí đang hoạt động: chặn, hướng tới UC-09.04.
+- **4a.** Cổng không phản hồi: báo lỗi, không tạo dữ liệu nào.
+- **5a.** User hủy: cổng chuyển về `cancel_url` (Pricing); không có thay đổi.
+- **5b.** Thanh toán thất bại tại cổng: User ở lại trang của cổng để thử lại.
+- **6a.** Webhook đến chậm: không cấp credit trước khi webhook xử lý xong (UC-09.02 nhánh 3a).
 
 ---
 
@@ -184,6 +207,29 @@
 
 ### UC-09.08a Cập nhật gói & nạp credit (ledger)
 <a id="uc-0908a"></a>
-- **Loại:** include.
-- **Các bước theo loại event:** `checkout.session.completed` / `invoice.paid` → Subscription `ACTIVE`, EXPIRE credit gói cũ, GRANT credit kỳ mới; pack → PURCHASE vào bucket PACK; `invoice.payment_failed` → `PAST_DUE`, gửi email; `customer.subscription.deleted` → `CANCELED`, EXPIRE credit gói; refund/chargeback → ADJUST âm (CR-07).
-- **Kết quả:** gói và ví khớp với cổng; mọi thay đổi có bút toán ledger.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-09.08 (bước 4) |
+| Tác nhân | Hệ thống |
+| Mô tả | Biến mỗi sự kiện thanh toán thành thay đổi đúng ở gói, thanh toán và ví credit, với đầy đủ bút toán ledger |
+| Tiền điều kiện | Event mới đã qua kiểm tra chữ ký và chống trùng (UC-09.08 bước 2–3) |
+| Hậu điều kiện | **Thành công:** `subscriptions`, `payments` và ví credit khớp với cổng; mọi thay đổi credit có bút toán ledger. **Tối thiểu:** lỗi thì rollback toàn bộ để cổng gửi lại |
+| Kích hoạt | UC-09.08 bước 4 |
+| Truy vết | FR-BIL-09; CR-01..08; IC-06, IC-07; `so-do/06-trang-thai/state-subscription.puml` |
+
+**Luồng chính**
+1. Hệ thống xác định người dùng và đối tượng từ `client_reference_id`, `gateway_subscription_id` hoặc `gateway_customer_id` của event.
+2. Hệ thống xử lý trong **một giao dịch** theo loại event (các nhánh 2a–2g).
+3. Hệ thống ghi `payments` (đúng một trong `plan_id` hoặc `credit_pack_id`) và các bút toán `credit_ledger_entries` kèm `payment_id`.
+4. Hệ thống cập nhật `credit_balances` cùng giao dịch và phát sự kiện realtime để Dashboard làm mới.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** `checkout.session.completed` hoặc `invoice.paid` (gói): Subscription `ACTIVE`; EXPIRE phần `SUBSCRIPTION` còn lại (trừ phần đang held); GRANT credit kỳ mới (CR-06).
+- **2b.** `checkout.session.completed` (credit pack): PURCHASE vào bucket `PACK` (không hết hạn).
+- **2c.** `invoice.payment_failed`: Subscription `PAST_DUE`, gửi email nhắc.
+- **2d.** `customer.subscription.deleted`: Subscription `CANCELED`, EXPIRE credit gói.
+- **2e.** Refund hoặc chargeback: ADJUST âm; nếu số dư âm thì khóa thao tác tốn phí đến khi bù (CR-07).
+- **2f.** Loại event không hỗ trợ: chỉ ghi `payment_events`, không đổi dữ liệu khác, trả `200`.
+- **2g.** Event đến sai thứ tự (ví dụ `invoice.paid` trước `checkout.session.completed`): xử lý theo `gateway_subscription_id` để kết quả cuối giống nhau [ĐX].
+- ***a.** Lỗi xử lý: rollback; UC-09.08 trả `500` để cổng gửi lại.

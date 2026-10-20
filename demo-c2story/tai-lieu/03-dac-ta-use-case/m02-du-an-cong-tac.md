@@ -22,13 +22,14 @@
 3. User chọn một dự án; hệ thống mở Studio ở màn hình của bước hiện tại.
 
 **Luồng thay thế / ngoại lệ**
+- **2c.** User nhập từ khóa vào ô tìm hoặc chọn bộ lọc trạng thái: hệ thống lọc theo tiêu đề (không phân biệt hoa thường, dấu) và trạng thái *In Progress* / *Done* (suy ra từ trạng thái chương, FR-PRJ-01); danh sách phân trang. Không có kết quả: hiện "Không tìm thấy dự án".
 - **2a.** Chưa có dự án nào: hiện trạng thái trống với hai nút "Import truyện" (UC-02.02) và "Tạo dự án trống" (UC-02.03).
 - **2b.** Dự án đang chờ xóa (soft delete): không hiển thị.
 
 ---
 
 <a id="uc-0202"></a>
-## UC-02.02 Import truyện (giữ nguyên văn)
+## UC-02.02 Nhập truyện giữ nguyên văn (Import)
 
 | Mục | Nội dung |
 |---|---|
@@ -55,9 +56,29 @@
 
 ### UC-02.02a Kiểm tra & chuẩn hóa kỹ thuật
 <a id="uc-0202a"></a>
-- **Loại:** include (bước 2).
-- **Các bước:** (1) kiểm tra MIME thật và kích thước; (2) trích văn bản thuần; (3) chuẩn hóa Unicode NFC, thống nhất xuống dòng về `\n`, bỏ ký tự điều khiển vô hình; (4) ghi `normalization_log`; (5) tính `sha256`.
-- **Kết quả:** văn bản sạch về kỹ thuật, **không đổi chữ**.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-02.02 (bước 2); cũng được UC-03.01b dùng ở bước 3 |
+| Tác nhân | Hệ thống |
+| Mô tả | Kiểm tra file hoặc văn bản đưa vào và chuẩn hóa ở mức kỹ thuật, **không đổi một chữ nào** (BR-19, BR-21) |
+| Tiền điều kiện | Có văn bản dán hoặc file .txt, .md, .docx |
+| Hậu điều kiện | **Thành công:** có văn bản sạch về kỹ thuật kèm `char_count`, `sha256`, `normalization_log`. **Tối thiểu:** không lưu gì khi kiểm tra thất bại |
+| Kích hoạt | UC-02.02 bước 2; UC-03.01b bước 3 |
+| Truy vết | FR-PRJ-02, FR-PRJ-03; BR-19, BR-21; NFR-SEC-10, NFR-INT-05; 08 §5 |
+
+**Luồng chính**
+1. Hệ thống kiểm tra MIME thật (không tin phần mở rộng), kích thước file ≤ 2 MB, số ký tự ≤ 500.000.
+2. Hệ thống trích văn bản thuần: .txt và .md giữ nguyên nội dung (không bỏ ký hiệu markdown); .docx chỉ lấy chữ, bỏ định dạng, bảng và hình.
+3. Hệ thống chuẩn hóa Unicode NFC, thống nhất ký tự xuống dòng về `\n`, bỏ ký tự điều khiển vô hình.
+4. Hệ thống ghi `normalization_log`: loại biến đổi và số lần (không ghi lại nội dung văn bản).
+5. Hệ thống tính `sha256` của văn bản đã chuẩn hóa và trả về số ký tự, số đoạn cho bản xem trước.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Sai định dạng, MIME không khớp phần mở rộng, file hỏng hoặc có mật khẩu: báo lỗi cụ thể, giữ nguyên form.
+- **1b.** Vượt 2 MB hoặc 500.000 ký tự: báo lỗi và nêu giới hạn.
+- **2a.** Không giải mã được sang UTF-8: báo lỗi, không đoán bảng mã.
+- **3a.** Văn bản không đổi sau chuẩn hóa: `normalization_log` ghi 0 biến đổi (round-trip giống byte, NFR-INT-05).
 
 ---
 
@@ -244,15 +265,51 @@
 
 ### UC-02.10a Lưu bản của tôi thành nháp
 <a id="uc-0210a"></a>
-- **Loại:** extend (bước 4).
-- **Các bước:** hệ thống tạo Archive nguồn `CONFLICT` tên "Conflict draft — <đối tượng> — <thời gian>" chứa bản của A; với timeline thì tạo `timeline_versions` có tên. Sau đó tải bản `n+1`.
-- **Kết quả:** bản của A được lưu an toàn; A làm việc tiếp trên bản mới nhất.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-02.10 (điểm mở rộng: bước 4) |
+| Tác nhân | Editor A (người lưu sau) |
+| Mô tả | A giữ lại bản của mình dưới dạng bản nháp bất biến rồi chuyển sang làm việc trên bản mới nhất của B |
+| Tiền điều kiện | API vừa trả `409 VERSION_CONFLICT` cho A; hộp thoại xung đột đang hiển thị |
+| Hậu điều kiện | **Thành công:** bản của A được lưu bất biến; A đang làm việc trên bản `n+1`. **Tối thiểu:** nếu không lưu được bản nháp thì A không mất thay đổi chưa lưu |
+| Kích hoạt | A chọn "Lưu bản của tôi" trong hộp thoại xung đột UC-02.10 bước 4 |
+| Truy vết | FR-PRJ-11, FR-EDT-18; BR-05, BR-10; D-03; UC-03.12, UC-06.14 |
+
+**Luồng chính**
+1. Hệ thống tạo bản lưu từ nội dung A đang soạn. Chương: tạo Archive `source = CONFLICT`, tên `Conflict draft — <đối tượng> — <thời gian>`. Timeline: tạo `timeline_versions` có tên. Đối tượng khác (vd. shot): lưu các trường A đã sửa dạng văn bản trong Archive [ĐX].
+2. Hệ thống xác nhận bản lưu đã ghi thành công (bất biến, BR-10).
+3. Hệ thống tải bản `n+1` của đối tượng (kèm `ETag` mới) và hiển thị cho A.
+4. Giao diện báo "Đã lưu bản của bạn vào Archives" kèm đường dẫn tới UC-03.12.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Không ghi được bản lưu: không tải bản `n+1`, giữ nguyên nội dung A đang soạn, báo lỗi để A thử lại hoặc chọn UC-02.10b.
+- **3a.** Trong lúc đó đối tượng lại đổi (`n+2`): tải bản mới nhất, không lặp lại hộp thoại xung đột.
+- **3b.** Đối tượng đã bị xóa hoặc A đã bị xóa khỏi dự án: bản lưu vẫn còn nếu A còn quyền xem; nếu không, báo `404`.
 
 ### UC-02.10b Tải bản của người khác
 <a id="uc-0210b"></a>
-- **Loại:** extend (bước 4).
-- **Các bước:** A xác nhận bỏ thay đổi chưa lưu; hệ thống nạp bản `n+1`.
-- **Kết quả:** A làm việc trên bản mới nhất; thay đổi chưa lưu của A bị bỏ theo lựa chọn của A.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-02.10 (điểm mở rộng: bước 4) |
+| Tác nhân | Editor A (người lưu sau) |
+| Mô tả | A bỏ thay đổi chưa lưu của mình và làm việc tiếp trên bản mới nhất của B |
+| Tiền điều kiện | API vừa trả `409 VERSION_CONFLICT` cho A; hộp thoại xung đột đang hiển thị |
+| Hậu điều kiện | **Thành công:** A đang làm việc trên bản `n+1`; thay đổi chưa lưu của A bị bỏ theo lựa chọn của A. **Tối thiểu:** không bỏ gì nếu A chưa xác nhận |
+| Kích hoạt | A chọn "Dùng bản của người khác" trong hộp thoại xung đột UC-02.10 bước 4 |
+| Truy vết | FR-PRJ-11; BR-05 |
+
+**Luồng chính**
+1. Giao diện nêu rõ số thay đổi chưa lưu sẽ mất và yêu cầu A xác nhận.
+2. A xác nhận.
+3. Hệ thống tải bản `n+1` (kèm `ETag` mới) và thay nội dung đang soạn của A.
+4. Giao diện xóa trạng thái "chưa lưu" và hiển thị tên người sửa cuối.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** A không xác nhận: quay lại hộp thoại UC-02.10 bước 4, không đổi gì.
+- **3a.** Trong lúc đó đối tượng lại đổi (`n+2`): tải bản mới nhất.
+- **3b.** Đối tượng đã bị xóa: báo `404`, đóng màn hình soạn.
 
 ---
 

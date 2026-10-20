@@ -16,7 +16,7 @@
 | BR-10 | Archive là bất biến. | M03 | QS |
 | BR-11 | Chương chỉ "Sẵn sàng dựng" khi mọi shot của storyboard hiện hành có ảnh `DONE` và thuyết minh `VERIFIED`/`ACCEPTED`. | M05 | ĐX |
 | BR-12 | Một chương bị khóa khi đang tái cấu trúc hoặc đang có job thuyết minh chạy trên nó; khóa tự hết khi thao tác kết thúc. | M03 | QS |
-| BR-14 | Ảnh tham chiếu tải lên với cờ "use exact" không bao giờ bị AI vẽ lại, kể cả khi chạy "Regenerate all". | M04 | QS |
+| BR-14 | Ảnh tham chiếu tải lên với cờ "use exact" không bao giờ bị AI vẽ lại, kể cả khi chạy "Regenerate all". Tương tự, shot có ảnh hiện hành là `UPLOAD` không bị thay bởi sinh ảnh hàng loạt (UC-05.07, UC-05.07c); chỉ thay khi Editor chủ động sinh/sửa ảnh của shot đó. | M04/M05 | QS + ĐX |
 | BR-15 | Mỗi lần sinh lại ảnh hoặc clip tạo phiên bản mới; phiên bản cũ giữ 90 ngày. | M05/M06 | ĐX |
 | BR-16 | Gỡ tài sản khỏi dự án không xóa ảnh đã sinh của shot; shot giữ `raw_name` và chuyển sang "chưa liên kết". | M04 | SL |
 | BR-17 | Xóa thành viên thì job đang chạy của người đó vẫn hoàn tất, nhưng người đó không xem được kết quả. | M02 | ĐX |

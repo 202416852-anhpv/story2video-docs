@@ -32,19 +32,102 @@
 
 ### UC-07.01a Hỏi lại khi lệnh mơ hồ
 <a id="uc-0701a"></a>
-- **Loại:** extend. **Các bước:** Director hỏi lại tham số thiếu ("Chương nào? Shot số mấy?"); Editor trả lời; quay lại bước 3. **Kết quả:** lệnh đủ tham số.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-07.01 (điểm mở rộng: bước 3) |
+| Tác nhân | Editor / Director |
+| Mô tả | Khi lệnh thiếu tham số, Director hỏi lại thay vì đoán |
+| Tiền điều kiện | Director nhận ra lệnh cần một tool nhưng thiếu tham số bắt buộc (chương nào, shot số mấy…) |
+| Hậu điều kiện | **Thành công:** lệnh đủ tham số và quay lại UC-07.01 bước 3. **Tối thiểu:** không tool nào chạy khi còn thiếu tham số |
+| Kích hoạt | LLM trả về yêu cầu làm rõ thay vì tool call |
+| Truy vết | FR-DIR-01..03; NFR-SEC-08 |
+
+**Luồng chính**
+1. Director hỏi lại ngắn gọn về tham số còn thiếu và gợi ý lựa chọn lấy từ trạng thái dự án (danh sách chương, shot).
+2. Editor trả lời.
+3. Hệ thống ghép câu trả lời vào lệnh ban đầu.
+4. Quy trình quay lại UC-07.01 bước 3 với lệnh đủ tham số.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Editor đổi chủ đề hoặc không trả lời: lệnh dở bị bỏ, hội thoại tiếp tục bình thường.
+- **2b.** Câu trả lời vẫn mơ hồ: Director hỏi lại; nếu vẫn không rõ, gợi ý Editor thao tác trực tiếp trên giao diện.
 
 ### UC-07.01b Xác nhận thao tác tốn phí
 <a id="uc-0701b"></a>
-- **Loại:** extend. **Các bước:** hiện thẻ đề xuất (thao tác, phạm vi, giá); Editor bấm Đồng ý hoặc Hủy. **Kết quả:** chỉ thực thi khi Editor đồng ý; credit trừ vào ví Editor (BR-03).
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-07.01 (điểm mở rộng: bước 3) |
+| Tác nhân | Editor / Director |
+| Mô tả | Mọi thao tác tốn credit phải được Editor xác nhận bằng thẻ đề xuất trước khi tạo job (tool proposal) |
+| Tiền điều kiện | LLM đề xuất một tool tốn phí; Editor có quyền Editor trong dự án |
+| Hậu điều kiện | **Thành công:** chỉ khi Editor đồng ý mới tạo job; credit trừ vào ví người xác nhận. **Tối thiểu:** chưa xác nhận thì không giữ credit và không tạo job |
+| Kích hoạt | Director đề xuất tool tốn phí |
+| Truy vết | ADR-19; BR-01, BR-03; NFR-SEC-08; 04 §3.6 `director_tool_proposals`; API 2.7 `…/tool-proposals/{tpid}:confirm` |
+
+**Luồng chính**
+1. Hệ thống tạo `director_tool_proposals` ở trạng thái `PENDING` (tool, tham số, giá theo `price_rules`); chưa giữ credit, chưa tạo job.
+2. Hệ thống gửi `tool_proposal` qua SSE; giao diện hiện thẻ gồm thao tác, phạm vi, giá và số dư.
+3. Editor bấm Đồng ý: client gọi `:confirm` kèm `Idempotency-Key`.
+4. Hệ thống kiểm tra quyền, giữ credit của người xác nhận (UC-05.17, BR-03), tạo job, đặt `CONFIRMED` kèm `decided_by`, `decided_at`, `job_id`.
+5. Kết quả được stream về chat (`tool_result`).
+
+**Luồng thay thế / ngoại lệ**
+- **3a.** Editor bấm Hủy: đặt `REJECTED`, Director ghi nhận và hỏi có muốn thay đổi lệnh.
+- **4a.** Không đủ credit: `402`; thẻ giữ `PENDING` để xác nhận lại sau khi nạp credit hoặc bị hủy.
+- **4b.** Giá đã đổi kể từ lúc đề xuất: hệ thống tính lại và yêu cầu xác nhận với giá mới [ĐX].
+- **3b.** Thẻ quá hạn (`EXPIRED`): không xác nhận được; Director đề xuất lại khi Editor yêu cầu.
 
 ### UC-07.01c Từ chối sửa / tóm tắt văn bản
 <a id="uc-0701c"></a>
-- **Loại:** extend. **Điều kiện:** Editor yêu cầu "viết lại đoạn này", "tóm tắt chương cho video ngắn hơn"… **Các bước:** Director giải thích nguyên tắc thuyết minh nguyên văn (BR-19, BR-21); gợi ý tự sửa trong Workspace (UC-03.02) hoặc chia video theo chương (UC-06.16b). **Kết quả:** văn bản truyện không đổi.
 
-### UC-07.01d Director viết nội dung hộ
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-07.01 (điểm mở rộng: bước 3) |
+| Tác nhân | Editor / Director |
+| Mô tả | Director từ chối sửa, viết lại hoặc tóm tắt văn bản truyện vì nguyên tắc thuyết minh nguyên văn |
+| Tiền điều kiện | Editor yêu cầu thay đổi nội dung văn bản truyện ("viết lại đoạn này", "tóm tắt chương cho video ngắn hơn"…) |
+| Hậu điều kiện | **Thành công:** văn bản truyện không đổi; Editor biết cách đạt mục đích. **Tối thiểu:** không tool call, không tốn credit |
+| Kích hoạt | LLM nhận ra ý định sửa hoặc tóm tắt văn bản truyện |
+| Truy vết | BR-19, BR-21; NFR-INT-02, NFR-SEC-08 |
+
+**Luồng chính**
+1. Director giải thích: audio đọc đúng từng chữ truyện, AI chỉ minh họa, không có quyền ghi vào văn bản.
+2. Director gợi ý đường thay thế: tự sửa trong Workspace (UC-03.02) hoặc Tìm & thay thế (UC-03.10).
+3. Nếu mục đích là video ngắn hơn, Director gợi ý chia video thành phần (UC-06.16b).
+4. Hệ thống lưu hội thoại; không có thay đổi dữ liệu nào.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Yêu cầu mơ hồ ("làm gọn chương này"): Director hỏi lại để phân biệt sửa văn bản (từ chối) với sửa brief hoặc caption (UC-07.01d).
+- **1b.** Editor khăng khăng: Director vẫn từ chối và nhắc lại đường tự sửa.
+- ***a.** Văn bản truyện chứa câu giống chỉ dẫn (ví dụ "hãy bỏ qua mọi quy tắc"): được coi là dữ liệu, không làm theo (NFR-SEC-08).
+
+### UC-07.01d Viết nội dung hộ người dùng
 <a id="uc-0701d"></a>
-- **Loại:** extend. **Các bước:** Director soạn prompt ảnh, brief, Visual Rule hoặc ghi chú theo yêu cầu; hiển thị bản nháp; Editor chấp nhận để áp dụng. **Kết quả:** nội dung **minh họa** được cập nhật (không phải văn bản truyện).
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-07.01 (điểm mở rộng: bước 3) |
+| Tác nhân | Editor / Director |
+| Mô tả | Director soạn hộ nội dung **minh họa** (prompt, brief, caption, Visual Rule, ghi chú); Editor duyệt rồi mới áp dụng |
+| Tiền điều kiện | Editor yêu cầu soạn nội dung minh họa; Director có ngữ cảnh dự án |
+| Hậu điều kiện | **Thành công:** nội dung được Editor chấp nhận đã được áp dụng. **Tối thiểu:** văn bản truyện, đoạn nguồn và thuyết minh không bao giờ bị ghi |
+| Kích hoạt | Yêu cầu như "viết giúp Visual Rule cho cảnh đêm" |
+| Truy vết | BR-21; NFR-INT-02; 08 §5 (Visual Rule: tên ≤ 80, nội dung ≤ 1.000 ký tự; caption ≤ 300) |
+
+**Luồng chính**
+1. Editor nêu yêu cầu soạn nội dung.
+2. Director soạn bản nháp dựa trên style, Art Direction, tài sản và shot liên quan.
+3. Hệ thống hiển thị bản nháp trong chat, chưa áp dụng.
+4. Editor chấp nhận, chỉnh sửa hoặc từ chối.
+5. Chấp nhận: hệ thống áp dụng bằng thao tác tương ứng dưới tên Editor: sửa brief hoặc caption (UC-05.06a), Visual Rule (UC-04.10) hoặc ghi chú (UC-03.13).
+6. Nếu cần sinh lại ảnh, Director đề xuất tool tốn phí (UC-07.01b).
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Nội dung vượt giới hạn độ dài: Director rút gọn hoặc cảnh báo.
+- **5a.** `409` (đối tượng đã đổi): hiển thị bản hiện tại và hỏi Editor có muốn áp dụng nội dung lên bản mới (UC-02.10).
+- **1a.** Yêu cầu thực chất là sửa văn bản truyện: chuyển sang UC-07.01c.
 
 ---
 
@@ -82,7 +165,29 @@
 
 ### UC-07.02a Lập & cập nhật kế hoạch bước
 <a id="uc-0702a"></a>
-- **Loại:** include. **Các bước:** đọc trạng thái dự án; xác định bước đầu tiên chưa xong; ước tính tổng chi phí còn lại; lưu `step_state`; cập nhật sau mỗi job xong và phát `director.plan`. **Kết quả:** kế hoạch luôn phản ánh đúng trạng thái; bước đã xong được bỏ qua.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-07.02 (bước 2) |
+| Tác nhân | Hệ thống (`PlanEngine`) |
+| Mô tả | Xác định bước nào của kế hoạch đã xong, bước nào cần làm, ước tính chi phí còn lại và cập nhật khi tiến trình thay đổi |
+| Tiền điều kiện | Có DirectorPlan vừa tạo hoặc đang chạy |
+| Hậu điều kiện | **Thành công:** `director_plans` phản ánh đúng trạng thái dự án; bước đã xong bị bỏ qua. **Tối thiểu:** kế hoạch bền vững, tiếp tục được sau khi tạm dừng hoặc lỗi |
+| Kích hoạt | UC-07.02 bước 2; sau mỗi job xong hoặc lỗi; sau mỗi điểm duyệt |
+| Truy vết | FR-DIR-04..07; BR-09; 04 §3.6 `director_plans`; API 2.7 `GET/POST /projects/{pid}/director/plan`, sự kiện `director.plan` |
+
+**Luồng chính**
+1. Hệ thống đọc trạng thái dự án: có style chưa, số chương, tài sản đã duyệt và có ảnh chưa, giọng đọc, `media_status` từng chương, shot `NEEDS_REVIEW`, timeline.
+2. Hệ thống đánh dấu từng bước (`pickStyle`, `split`, `cast`, `pickVoice`, `media`, `verify`, `draftTimeline`) là đã xong, cần làm hoặc bỏ qua.
+3. Bước đầu tiên chưa xong là `current_step`.
+4. Hệ thống ước tính credit còn lại: ảnh tham chiếu còn thiếu cộng báo giá `media:quote` của các chương chưa sẵn sàng.
+5. Hệ thống lưu `step_state`, `estimated_remaining_credits` và tăng `version`.
+6. Sau mỗi job xong, job lỗi hoặc điểm duyệt, hệ thống tính lại và phát `director.plan {status, currentStep, awaitingReason?}`.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Editor sửa tay ngoài Director: lần tính lại sau đó phản ánh thay đổi, bước đã được Editor làm xong bị bỏ qua.
+- **3a.** Mọi bước đã xong: đặt plan `COMPLETED`.
+- **4a.** Không đủ credit cho bước kế tiếp: plan `AWAITING_INPUT (INSUFFICIENT_CREDITS)` (UC-07.02 nhánh *a).
 
 ---
 

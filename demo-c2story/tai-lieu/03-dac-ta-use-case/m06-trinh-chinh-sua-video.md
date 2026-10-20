@@ -30,9 +30,30 @@
 
 ### UC-06.01a Dựng bản nháp timeline từ tư liệu
 <a id="uc-0601a"></a>
-- **Loại:** include.
-- **Các bước:** (1) tạo các track: Video, Thuyết minh (khóa), Phụ đề, Nhạc nền, SFX, Overlay; (2) với mỗi shot theo thứ tự: item `IMAGE` và item `NARRATION`, thời lượng = audio + đệm 0,3 s / 0,5 s; (3) phụ đề dựng từ `word_timings` (nguyên văn); (4) mặc định Ken Burns luân phiên, crossfade 0,5 s, khung hình theo dự án; (5) với dự án nhiều chương: thêm clip tiêu đề chương (UC-06.07) nếu bật.
-- **Kết quả:** timeline `DRAFT` thỏa IC-10; nhạc nền và SFX để trống.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-06.01 (bước 2) |
+| Tác nhân | Hệ thống (`TimelineBuilder`) |
+| Mô tả | Tự dựng bản nháp timeline từ ảnh, thuyết minh và phụ đề của các shot, để Editor chỉ phải chỉnh chứ không dựng từ đầu |
+| Tiền điều kiện | Phạm vi (chương hoặc cả dự án) chưa có timeline; mọi shot hiện hành có ảnh `DONE` và thuyết minh `VERIFIED` hoặc `ACCEPTED` (chương "Sẵn sàng dựng") |
+| Hậu điều kiện | **Thành công:** timeline `DRAFT` thỏa IC-10, `version = 1`; nhạc nền và SFX để trống. **Tối thiểu:** lỗi thì không tạo timeline dở dang |
+| Kích hoạt | UC-06.01 bước 2; hoặc chương chuyển `READY_TO_EDIT` (`chapter.media-ready`) |
+| Truy vết | FR-EDT-01..03; IC-10, IC-12; BR-24, BR-25; API 2.6 `POST /projects/{pid}/timelines` |
+
+**Luồng chính**
+1. Hệ thống tạo `timelines` với `aspect_ratio` theo dự án, `framing` mặc định và `subtitle_style` mặc định.
+2. Hệ thống tạo các track: Video, Thuyết minh (khóa, `locked = true`), Phụ đề, Nhạc nền, SFX, Overlay.
+3. Với mỗi shot theo thứ tự: tạo item `IMAGE` (ảnh hiện hành) và item `NARRATION` (thuyết minh hiện hành); thời lượng ảnh bằng thời lượng audio cộng đệm 0,3 s / 0,5 s.
+4. Hệ thống dựng phụ đề từ `word_timings` và đoạn nguồn gốc, luôn nguyên văn (BR-22).
+5. Hệ thống đặt mặc định Ken Burns luân phiên, chuyển cảnh crossfade 0,5 s.
+6. Với dự án nhiều chương: thêm clip tiêu đề chương (UC-06.07) nếu tùy chọn này bật.
+7. Hệ thống lưu timeline, kiểm tra IC-10 và phát `timeline.updated`.
+
+**Luồng thay thế / ngoại lệ**
+- **0a.** Phạm vi đã có timeline: `POST /timelines` trả timeline sẵn có, không dựng lại.
+- **0b.** Chương chưa "Sẵn sàng dựng": `422 PRECONDITION_FAILED_BUSINESS`, liệt kê shot còn thiếu [ĐX].
+- **7a.** IC-10 không thỏa sau khi dựng (lỗi lập trình): không lưu, cảnh báo P1.
 
 ---
 
@@ -60,11 +81,32 @@
 - **4b.** `409`: UC-02.10 (bản của người lưu sau được lưu thành phiên bản timeline có tên).
 - **\*a.** Mất mạng: thao tác giữ trong hàng đợi cục bộ, đồng bộ khi có mạng; hiện trạng thái "Chưa lưu".
 
-### UC-06.02a Kiểm tra khóa thuyết minh (BR-24)
+### UC-06.02a Kiểm tra khóa thuyết minh
 <a id="uc-0602a"></a>
-- **Loại:** include (client và server).
-- **Các bước:** từ chối thao tác nếu: cắt, trim, xóa, đổi thứ tự, đổi tốc độ clip `NARRATION`; hai clip thuyết minh chồng nhau; clip ảnh của shot kết thúc trước khi thuyết minh của shot đó đọc xong; xóa track Thuyết minh. Cho phép: dời thời điểm clip thuyết minh (chèn khoảng lặng, kéo theo các clip phía sau), chỉnh âm lượng/keyframe âm lượng.
-- **Kết quả:** timeline luôn thỏa IC-10; độ phủ văn bản không bao giờ giảm.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-06.02 |
+| Tác nhân | Hệ thống (`NarrationGuard` ở client và `OpsApplier` ở server) |
+| Mô tả | Bảo vệ track thuyết minh khỏi mọi thao tác làm thay đổi nội dung đọc; một bộ luật dùng chung cho client và server |
+| Tiền điều kiện | Có thao tác (hoặc lô thao tác) sắp áp lên timeline |
+| Hậu điều kiện | **Thành công:** timeline luôn thỏa IC-10; độ phủ văn bản không bao giờ giảm. **Tối thiểu:** thao tác vi phạm không được áp dụng một phần nào |
+| Kích hoạt | Mỗi thao tác của Editor trên timeline (UC-06.02) và mỗi lần `apply-ops` |
+| Truy vết | BR-24, BR-25; IC-10, IC-12; ADR-16; NFR-INT-01; API 2.6 `POST …/timelines/{tlid}:apply-ops` |
+
+**Luồng chính**
+1. `NarrationGuard` ở client kiểm tra thao tác bằng bộ luật trong package TypeScript dùng chung (`@studio/timeline-rules`) trước khi áp vào `TimelineStore`.
+2. Thao tác hợp lệ được `OpsBatcher` gom và gửi `apply-ops` kèm `ifMatch`.
+3. `OpsApplier` ở server chạy lại **cùng** bộ luật trên toàn lô.
+4. Toàn lô hợp lệ: áp dụng nguyên tử, tăng `version`, phát `timeline.updated`.
+5. Có thao tác vi phạm: server từ chối cả lô, trả `422 NARRATION_LOCKED` kèm `opIndex`; client hoàn tác thao tác đó và hiện lý do.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Bị **cấm** với clip `NARRATION`: cắt, trim, xóa, đổi thứ tự, đổi tốc độ; hai clip chồng nhau.
+- **1b.** Bị cấm: để clip ảnh của một shot kết thúc trước khi thuyết minh của shot đó đọc xong (BR-25); xóa track Thuyết minh (IC-12).
+- **1c.** Được **cho phép**: dời thời điểm clip thuyết minh (chèn khoảng lặng, kéo theo các clip phía sau); chỉnh âm lượng và keyframe âm lượng.
+- **3a.** Client và server cho kết quả khác nhau (phiên bản bộ luật lệch): server là chuẩn; client nhận `422` và hiển thị như trên.
+- **4a.** `409 VERSION_CONFLICT` (người khác vừa sửa timeline): xử lý theo UC-02.10.
 
 ---
 
@@ -91,7 +133,7 @@
 ---
 
 <a id="uc-0604"></a>
-## UC-06.04 Hiệu ứng Ken Burns & điểm tập trung
+## UC-06.04 Đặt hiệu ứng Ken Burns & điểm tập trung
 
 | Mục | Nội dung |
 |---|---|
@@ -113,7 +155,7 @@
 ---
 
 <a id="uc-0605"></a>
-## UC-06.05 Chuyển cảnh
+## UC-06.05 Đặt chuyển cảnh
 
 | Mục | Nội dung |
 |---|---|
@@ -135,7 +177,7 @@
 ---
 
 <a id="uc-0606"></a>
-## UC-06.06 Khung hình & tinh chỉnh màu
+## UC-06.06 Chọn khung hình & tinh chỉnh màu
 
 | Mục | Nội dung |
 |---|---|
@@ -151,10 +193,13 @@
 2. Editor chỉnh độ sáng, tương phản, bão hòa, nhiệt độ màu hoặc chọn bộ lọc màu; áp cho clip đã chọn hoặc toàn video.
 3. Hệ thống lưu; preview cập nhật.
 
+**Luồng thay thế / ngoại lệ**
+- **\*a.** Editor bật "Vùng an toàn" hoặc "Lưới căn chỉnh" trên preview để đặt phụ đề, overlay. Chỉ là lớp hỗ trợ khi chỉnh sửa, **không được vẽ vào video xuất**.
+
 ---
 
 <a id="uc-0607"></a>
-## UC-06.07 Overlay chữ / logo, clip tiêu đề & kết
+## UC-06.07 Thêm overlay chữ / logo, clip tiêu đề & kết
 
 | Mục | Nội dung |
 |---|---|
@@ -177,7 +222,7 @@
 ---
 
 <a id="uc-0608"></a>
-## UC-06.08 Kiểu phụ đề
+## UC-06.08 Định kiểu phụ đề
 
 | Mục | Nội dung |
 |---|---|
@@ -189,7 +234,7 @@
 | Truy vết | FR-EDT-11; BR-22 |
 
 **Luồng chính**
-1. Editor bật phụ đề, chọn kiểu cả câu hoặc karaoke (tô sáng từng từ).
+1. Editor bật phụ đề, chọn kiểu cả câu hoặc karaoke (tô sáng từng từ). Có thể áp một **mẫu preset** dựng sẵn (hằng số dùng chung, không lưu DB) làm điểm xuất phát; hệ thống chỉ sao chép giá trị vào `subtitle_style`, nên đổi preset sau này không ảnh hưởng timeline cũ.
 2. Editor chọn font, cỡ, màu, nền, vị trí trong vùng an toàn theo tỷ lệ khung hình.
 3. Hệ thống lưu; preview hiển thị phụ đề đồng bộ.
 
@@ -267,15 +312,82 @@
 
 ### UC-06.11a Tải nhạc / SFX lên
 <a id="uc-0611a"></a>
-- **Loại:** extend. **Các bước:** chọn file MP3/WAV/M4A (≤ 30 MB, ≤ 15 phút), chọn loại, đánh dấu "Tôi có quyền sử dụng" (bắt buộc), hệ thống kiểm tra định dạng, tạo waveform. **Kết quả:** `audio_assets` thuộc thư viện của tôi (`license = USER_UPLOAD`).
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-06.11 (điểm mở rộng: kết quả tìm không phù hợp) |
+| Tác nhân | Editor |
+| Mô tả | Tải nhạc hoặc SFX của riêng mình lên thư viện cá nhân để dùng trong timeline |
+| Tiền điều kiện | Đã đăng nhập; file là MP3, WAV hoặc M4A |
+| Hậu điều kiện | **Thành công:** có `audio_assets` thuộc thư viện của tôi (`license = USER_UPLOAD`, `owner_user_id` = Editor). **Tối thiểu:** file không đạt thì không lưu gì |
+| Kích hoạt | Bấm "Tải lên" trong tab Âm thanh |
+| Truy vết | FR-EDT-12; BR-26; IC-15; NFR-SEC-10; 08 §5; API 2.6 `POST /audio-assets` |
+
+**Luồng chính**
+1. Editor chọn file MP3, WAV hoặc M4A (≤ 30 MB, ≤ 15 phút), chọn loại Nhạc hoặc SFX và nhập tên.
+2. Editor đánh dấu "Tôi có quyền sử dụng" (bắt buộc); hệ thống gửi `licenseConfirmed: true`.
+3. Hệ thống kiểm tra MIME thật, kích thước, quét malware.
+4. Hệ thống tạo job `PROCESS_AUDIO_UPLOAD` (Media Processing Worker): đo thời lượng và tạo waveform.
+5. Xong job, tài sản hiện trong "thư viện của tôi", nghe thử và kéo vào timeline được (UC-06.09, UC-06.10). Không tốn credit.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Không đánh dấu quyền sử dụng: từ chối, không tải lên.
+- **3a.** Sai định dạng, MIME không khớp, vượt 30 MB hoặc 15 phút, hoặc phát hiện malware: báo lý do cụ thể.
+- **4a.** File hỏng, không đọc được thời lượng: job `FAILED`, tài sản không xuất hiện, báo lỗi.
+- ***a.** Chủ sở hữu xóa được tài sản của mình (`DELETE /audio-assets/{aid}`); tài sản của người khác không bao giờ xuất hiện trong kết quả tìm kiếm.
 
 ### UC-06.11b Sinh nhạc / SFX bằng AI
 <a id="uc-0611b"></a>
-- **Loại:** extend (C). **Tác nhân phụ:** Music/SFX Provider. **Các bước:** mô tả ("tiếng mưa nhẹ ngoài cửa sổ"), chọn thời lượng; hệ thống hiện giá (MUSIC_AI 2 / SFX_AI 1 credit), giữ credit (UC-05.17), sinh, nghe thử, lưu. **Kết quả:** `audio_assets` (`license = AI_GENERATED`).
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-06.11 (tùy chọn *Could*) |
+| Tác nhân | Editor / Music và SFX Provider |
+| Mô tả | Sinh nhạc nền hoặc hiệu ứng âm thanh bằng AI từ một mô tả |
+| Tiền điều kiện | Đã đăng nhập; đủ credit; provider có quyền thương mại (BR-26) |
+| Hậu điều kiện | **Thành công:** có `audio_assets` (`license = AI_GENERATED`) trong thư viện của tôi; credit được trừ. **Tối thiểu:** lỗi thì hoàn credit |
+| Kích hoạt | Bấm "Sinh bằng AI" trong tab Âm thanh |
+| Truy vết | FR-EDT-12; BR-01, BR-02, BR-26; 08 §3.3 (`MUSIC_AI` 2 credit mỗi bài ≤ 3 phút, `SFX_AI` 1 credit mỗi hiệu ứng ≤ 10 giây); API 2.6 `POST /projects/{pid}/audio-assets:generate` |
+
+**Luồng chính**
+1. Editor chọn loại (Nhạc hoặc SFX), nhập mô tả (ví dụ "tiếng mưa nhẹ ngoài cửa sổ") và thời lượng.
+2. Hệ thống hiển thị giá và Editor xác nhận; hệ thống giữ credit (UC-05.17) và tạo job `GENERATE_MUSIC` hoặc `GENERATE_SFX`.
+3. Worker chạy moderation đầu vào rồi gọi provider; kết quả qua moderation đầu ra.
+4. Hệ thống lưu `audio_assets` (`AI_GENERATED`), CAPTURE credit và cho Editor nghe thử.
+5. Editor kéo tài sản vào timeline hoặc bỏ đi.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Thời lượng vượt giới hạn (nhạc 3 phút, SFX 10 giây): chặn.
+- **2a.** Không đủ credit: `402`.
+- **3a.** Lỗi provider sau retry hoặc vi phạm chính sách: job `FAILED`, RELEASE credit, không lưu đầu ra (BR-18).
+- ***a.** Chức năng *Could*: bật/tắt theo cấu hình provider (UC-10.03).
 
 ### UC-06.11c Gợi ý SFX theo đoạn văn
 <a id="uc-0611c"></a>
-- **Loại:** extend UC-06.10 (C). **Tác nhân phụ:** LLM. **Các bước:** AI đọc đoạn nguồn từng shot, đề xuất danh sách `{shot, thời điểm theo word_timings, từ khóa SFX}`; hệ thống tìm SFX phù hợp trong thư viện; Editor duyệt từng mục (chèn / bỏ). **Kết quả:** các SFX được duyệt chèn vào track SFX; không có gì tự chèn khi chưa duyệt.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-06.10 (tùy chọn *Could*) |
+| Tác nhân | Editor / LLM |
+| Mô tả | AI đọc đoạn văn của từng shot và gợi ý chỗ nên chèn SFX; Editor duyệt từng gợi ý, không có gì tự chèn |
+| Tiền điều kiện | Timeline đang mở; thư viện SFX có dữ liệu |
+| Hậu điều kiện | **Thành công:** các gợi ý được Editor chấp nhận trở thành item `AUDIO` trên track SFX. **Tối thiểu:** không gợi ý nào được chèn khi chưa duyệt |
+| Kích hoạt | Bấm "Gợi ý SFX" trong tab SFX |
+| Truy vết | FR-EDT-14; BR-21; 08 §3.3 (`SFX_SUGGEST`, 0 credit, có giới hạn tần suất); 04 §3.5 `sfx_suggestions`; API 2.6 `POST …/timelines/{tlid}:suggest-sfx` |
+
+**Luồng chính**
+1. Editor bấm "Gợi ý SFX".
+2. Hệ thống tạo job `SUGGEST_SFX` (miễn phí, có giới hạn tần suất).
+3. LLM đọc đoạn nguồn từng shot (chỉ đọc) và đề xuất `{shot, thời điểm theo word_timings, từ khóa}`.
+4. Hệ thống tìm SFX phù hợp với từ khóa trong thư viện và lưu `sfx_suggestions` ở trạng thái `PROPOSED`.
+5. Hệ thống hiển thị danh sách có nút nghe thử; Editor chấp nhận hoặc bỏ từng mục.
+6. Chấp nhận: hệ thống thêm item `AUDIO` vào track SFX qua `apply-ops` (UC-06.02) và đặt `ACCEPTED`. Bỏ: đặt `REJECTED`.
+
+**Luồng thay thế / ngoại lệ**
+- **3a.** LLM không đề xuất gì: báo "Không có gợi ý".
+- **4a.** Không có SFX phù hợp trong thư viện: hiện từ khóa và gợi ý tải lên (UC-06.11a) hoặc sinh bằng AI (UC-06.11b).
+- **6a.** Timeline hoặc storyboard đã đổi sau khi gợi ý: thời điểm có thể lệch; hệ thống cảnh báo và đánh dấu gợi ý lỗi thời.
+- **2a.** Vượt giới hạn tần suất: `429`.
 
 ---
 
@@ -322,7 +434,7 @@
 ---
 
 <a id="uc-0614"></a>
-## UC-06.14 Lịch sử phiên bản & khôi phục
+## UC-06.14 Xem lịch sử & khôi phục phiên bản timeline
 
 | Mục | Nội dung |
 |---|---|
@@ -397,13 +509,53 @@
 
 ### UC-06.16a Kiểm tra điều kiện & độ phủ 100%
 <a id="uc-0616a"></a>
-- **Loại:** include.
-- **Các bước:** kiểm tra (1) mọi shot có ảnh `DONE`; (2) mọi shot có thuyết minh `VERIFIED`/`ACCEPTED`, không `OUTDATED`; (3) timeline thỏa IC-10/BR-24; (4) tổng ký tự các đoạn nguồn có clip thuyết minh = tổng ký tự chương (100%).
-- **Kết quả:** báo cáo `{coverage: covered/total, missingImages, needsReview, outdated, violations}`; chỉ cho xuất khi mọi mục đạt.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-06.16 (bước 2) |
+| Tác nhân | Hệ thống (`ReadinessChecker`) |
+| Mô tả | Kiểm tra timeline đã đủ điều kiện xuất chưa, nhất là độ phủ văn bản 100% |
+| Tiền điều kiện | Timeline đang mở |
+| Hậu điều kiện | **Thành công:** có báo cáo điều kiện; chỉ cho xuất khi mọi mục đạt. **Tối thiểu:** không thay đổi dữ liệu |
+| Kích hoạt | UC-06.16 bước 2; mỗi lần Editor mở hộp thoại xuất |
+| Truy vết | BR-11, BR-23, BR-24; IC-10, IC-11; NFR-INT-01; API 2.6 `GET …/timelines/{tlid}/readiness` |
+
+**Luồng chính**
+1. Hệ thống kiểm tra mọi shot hiện hành có ảnh `DONE`.
+2. Hệ thống kiểm tra mọi shot có thuyết minh `VERIFIED` hoặc `ACCEPTED`, không có `OUTDATED`.
+3. Hệ thống kiểm tra timeline thỏa IC-10 và BR-24.
+4. Hệ thống kiểm tra tổng ký tự các đoạn nguồn có clip thuyết minh bằng tổng ký tự chương (100%).
+5. Hệ thống trả `{ coverage: {covered, total}, missingImages[], needsReview[], outdated[], violations[] }`.
+6. Giao diện hiển thị kết quả; mục không đạt có vị trí trên timeline và nút nhảy tới.
+
+**Luồng thay thế / ngoại lệ**
+- **5a.** Bất kỳ mục nào không đạt: nút "Xuất" bị vô hiệu hóa; nếu vẫn gọi tạo render thì `422` (IC-11).
+- ***a.** Phạm vi cả dự án: độ phủ tính trên tổng ký tự của mọi chương trong timeline.
 
 ### UC-06.16b Chia video thành phần
 <a id="uc-0616b"></a>
-- **Loại:** extend. **Các bước:** chọn chia theo chương hoặc theo thời lượng tối đa (vd. 10 phút); hệ thống cắt tại ranh giới shot gần nhất, xuất nhiều Render. **Kết quả:** các file MP4 nối lại đủ 100% truyện.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-06.16 |
+| Tác nhân | Editor / Render Worker |
+| Mô tả | Xuất video thành nhiều file nhỏ (theo chương hoặc theo thời lượng tối đa), cắt ở ranh giới shot để không mất lời đọc |
+| Tiền điều kiện | Timeline thỏa UC-06.16a |
+| Hậu điều kiện | **Thành công:** nhiều Render cùng `render_group_id`, mỗi phần có `part_no`; ghép lại đủ 100% truyện. **Tối thiểu:** không cắt giữa một shot |
+| Kích hoạt | Chọn "Chia thành phần" trong hộp thoại xuất |
+| Truy vết | FR-EDT-23; BR-23; IC-11; 04 §3.5 `renders`; API 2.6 `POST …/renders {splitBy, maxMinutes}` |
+
+**Luồng chính**
+1. Editor chọn chia theo chương hoặc theo thời lượng tối đa (nhập số phút).
+2. Hệ thống tính điểm cắt: theo chương là ranh giới chương; theo thời lượng là ranh giới shot gần nhất mà phần không vượt quá số phút tối đa.
+3. Hệ thống hiển thị danh sách phần (tên, thời lượng, phạm vi shot); Editor xác nhận.
+4. Hệ thống tạo `render_group_id` và mỗi phần một Render (`part_no`) với `timeline_snapshot`; các phần được xếp hàng render theo giới hạn số render đồng thời của gói (NFR-SCAL-03).
+5. Mỗi phần có MP4 và SRT/VTT riêng; phụ đề căn theo thời gian của phần đó.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Một shot dài hơn số phút tối đa: shot đó không bị cắt, phần chứa nó vượt giới hạn; hệ thống cảnh báo.
+- **4a.** Một phần lỗi: chỉ phần đó `FAILED`, các phần khác giữ nguyên; Editor render lại riêng phần lỗi [ĐX].
+- **4b.** Editor hủy: các phần chưa xong chuyển `CANCELLED`.
 
 ---
 

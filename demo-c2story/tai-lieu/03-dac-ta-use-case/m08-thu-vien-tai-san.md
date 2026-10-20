@@ -26,7 +26,25 @@
 
 ### UC-08.01a Lọc & tìm kiếm
 <a id="uc-0801a"></a>
-- **Loại:** extend. **Các bước:** lọc All / My Created / From Projects; tìm theo tên hoặc bí danh; sắp xếp Recent. **Kết quả:** danh sách thu hẹp.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-08.01 |
+| Tác nhân | User |
+| Mô tả | Thu hẹp danh sách tài sản trong thư viện cá nhân bằng bộ lọc, tìm kiếm và sắp xếp |
+| Tiền điều kiện | Đang xem một tab của thư viện (Characters, Locations, Items) |
+| Hậu điều kiện | **Thành công:** danh sách chỉ gồm tài sản thỏa điều kiện. **Tối thiểu:** không thay đổi dữ liệu |
+| Kích hoạt | Chọn bộ lọc hoặc nhập từ khóa |
+| Truy vết | FR-LIB-01; D-08; API 2.4 `GET /library-assets` |
+
+**Luồng chính**
+1. User chọn một trong ba bộ lọc: All, My Created (tạo trực tiếp ở thư viện), From Projects (lưu từ dự án, UC-08.04).
+2. User nhập từ khóa; hệ thống tìm theo tên hoặc bí danh.
+3. User chọn sắp xếp (mặc định Recent: mới cập nhật trước).
+4. Hệ thống trả danh sách theo trang (cursor), không gồm tài sản đã xóa mềm, và cập nhật số lượng trên tab.
+
+**Luồng thay thế / ngoại lệ**
+- **4a.** Không có kết quả: hiện "Không tìm thấy tài sản" và gợi ý xóa bộ lọc.
 
 ---
 
@@ -51,7 +69,27 @@
 
 ### UC-08.02a Sinh ảnh tham chiếu
 <a id="uc-0802a"></a>
-- **Loại:** include. **Các bước:** User chọn style cho ảnh tham chiếu (vì tài sản thư viện không thuộc dự án nào); hệ thống hiện giá 1 credit, giữ credit (UC-05.17), sinh ảnh, lưu. **Kết quả:** tài sản có ảnh; lỗi thì hoàn credit.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-08.02 (bước 3) |
+| Tác nhân | User / Image Provider |
+| Mô tả | Sinh ảnh tham chiếu cho tài sản thư viện; vì tài sản thư viện không thuộc dự án nào nên User tự chọn style |
+| Tiền điều kiện | Tài sản có mô tả; đủ credit (1 credit) |
+| Hậu điều kiện | **Thành công:** tài sản có ảnh tham chiếu theo style đã chọn; credit được trừ. **Tối thiểu:** lỗi thì hoàn credit |
+| Kích hoạt | UC-08.02 bước 3 |
+| Truy vết | FR-LIB-03; BR-01, BR-02, BR-18; 08 §3.2 (`ASSET_REFERENCE_IMAGE`, 1 credit); API 2.4 `GET /styles` |
+
+**Luồng chính**
+1. User chọn một style từ danh mục (`GET /styles`).
+2. Hệ thống hiển thị giá 1 credit; User xác nhận; hệ thống giữ credit (UC-05.17) và tạo job `GENERATE_ASSET_IMAGE`.
+3. Worker ghép prompt từ style, mô tả và facts của tài sản (không có Art Direction hay Visual Rules vì không có dự án).
+4. Sau moderation hai chiều, hệ thống lưu ảnh làm ảnh tham chiếu, ghi `style_id`, CAPTURE credit.
+5. Giao diện hiển thị ảnh; User có thể sinh lại hoặc chấp nhận.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Không đủ credit: `402`; User có thể lưu tài sản không ảnh hoặc tải ảnh lên.
+- **4a.** Lỗi sau retry hoặc vi phạm chính sách: RELEASE credit, báo lý do; tài sản chưa có ảnh.
 
 ---
 

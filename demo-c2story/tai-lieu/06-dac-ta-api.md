@@ -70,7 +70,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 
 | Method | Path | Quyền | Job | Mô tả |
 |---|---|---|---|---|
-| GET | `/projects` | U | | Danh sách dự án (owner + editor) |
+| GET | `/projects?q=&status=IN_PROGRESS\|DONE` | U | | Danh sách dự án (owner + editor); `q` tìm theo tiêu đề (không phân biệt hoa thường, dấu); `status` suy ra từ trạng thái chương (FR-PRJ-01) |
 | POST | `/projects` | U | | Tạo dự án trống |
 | POST | `/projects:import` | U | | Import (multipart hoặc JSON `{title, text, styleId, aspectRatio}`), luôn giữ nguyên văn; trả `sourceSha256` |
 | GET | `/projects/{pid}` | E | | Chi tiết + tóm tắt tiến độ (dùng cho Map) |
@@ -116,7 +116,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | POST | `/projects/{pid}/story-assets/{sid}/image` | E | | Tải ảnh lên (`useExact`) |
 | POST | `/projects/{pid}/story-assets/{sid}:save-to-library` | E | | Lưu vào thư viện cá nhân |
 | PUT | `/projects/{pid}/art-direction` | E | | Art direction |
-| GET | `/projects/{pid}/timeline` · `/relationships` | E | | Đọc |
+| GET | `/projects/{pid}/timeline?order=narrative\|chronological` · `/relationships` | E | | Đọc. `order` mặc định `narrative` (`order_index`); `chronological` sắp theo `chrono_index`, mốc NULL xếp cuối |
 | POST | `/projects/{pid}/story-meta:analyze` | E | ✓ | Re-analyse timeline + relationships |
 | CRUD | `/projects/{pid}/visual-rules[/{rid}]` | E | | Visual Rules |
 | CRUD | `/projects/{pid}/chapters/{cid}/rules[/{id}]` | E | | Chapter rules |
@@ -152,6 +152,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | POST | `…/shots/{shid}:rewrite` | E | ✓ | AI viết lại brief `{note}` |
 | POST | `…/shots/{shid}:generate-image` | E | ✓ | Sinh ảnh |
 | POST | `…/storyboards/{did}:generate-images` | E | ✓ | Sinh mọi ảnh thiếu |
+| POST | `…/shots/{shid}/illustrations:upload` | E | | Thay ảnh bằng ảnh tự tải lên (multipart; PNG/JPEG/WebP ≤ 10 MB, cạnh ngắn ≥ 512 px; NFR-SEC-10). Tạo Illustration `UPLOAD` mới làm hiện hành, miễn phí, không tạo job |
 | POST | `…/shots/{shid}/illustrations/{iid}:edit` | E | ✓ | `{instruction, mask?}` |
 | POST | `…/shots/{shid}/illustrations/{iid}:make-current` | E | | Khôi phục phiên bản |
 | POST | `…/storyboards/{did}:auto-link-assets` | E | | Tự khớp tên với tài sản |

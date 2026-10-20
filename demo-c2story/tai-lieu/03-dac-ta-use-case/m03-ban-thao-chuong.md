@@ -24,13 +24,54 @@
 
 ### UC-03.01a Sao chép toàn văn
 <a id="uc-0301a"></a>
-- **Loại:** extend. **Các bước:** bấm "Copy text"; hệ thống ghép toàn văn (có tiêu đề chương) vào clipboard. **Kết quả:** văn bản trong clipboard.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-03.01 |
+| Tác nhân | Editor |
+| Mô tả | Sao chép toàn bộ văn bản truyện vào clipboard |
+| Tiền điều kiện | Dự án có văn bản; đang ở màn hình Write (`?v=source`) |
+| Hậu điều kiện | **Thành công:** clipboard chứa toàn văn. **Tối thiểu:** không thay đổi dữ liệu dự án |
+| Kích hoạt | Bấm "Copy text" ở UC-03.01 bước 3 |
+| Truy vết | FR-MAN-01; API 2.3 `GET /projects/{pid}/source` |
+
+**Luồng chính**
+1. Editor bấm "Copy text".
+2. Hệ thống ghép tiêu đề và nội dung từng chương theo `order_index`, mỗi chương cách nhau một dòng trống [ĐX].
+3. Hệ thống ghi chuỗi vào clipboard của trình duyệt.
+4. Giao diện báo "Đã sao chép N ký tự".
+
+**Luồng thay thế / ngoại lệ**
+- **3a.** Trình duyệt chặn quyền clipboard: hiện hộp văn bản đã chọn sẵn toàn bộ để Editor tự sao chép.
+- **2a.** Dữ liệu chương chưa tải đủ ở client: tải từ `GET /source` rồi mới ghép.
 
 ### UC-03.01b Nhập lại (Re-import)
 <a id="uc-0301b"></a>
-- **Loại:** extend. **Điều kiện:** Editor muốn thay toàn bộ văn bản.
-- **Các bước:** (1) hệ thống gợi ý lưu Archive trước (UC-03.11); (2) Editor dán hoặc tải file mới; (3) chuẩn hóa như UC-02.02a; (4) tạo SourceText mới, thay chương thành một Chapter #1 mới; (5) mọi tư liệu và timeline của các chương cũ chuyển `OUTDATED`.
-- **Kết quả:** dự án có văn bản mới; bản cũ còn trong Archive.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-03.01 |
+| Tác nhân | Editor |
+| Mô tả | Thay toàn bộ văn bản truyện bằng một bản mới; bản cũ vẫn còn trong Archive nếu Editor lưu |
+| Tiền điều kiện | Dự án có văn bản; không chương nào đang bị khóa bởi job (BR-12) |
+| Hậu điều kiện | **Thành công:** dự án có SourceText mới và đúng một Chapter #1 chứa toàn văn mới; tư liệu và timeline của các chương cũ chuyển `OUTDATED`. **Tối thiểu:** lỗi thì rollback, văn bản cũ giữ nguyên |
+| Kích hoạt | Bấm "Re-import" ở UC-03.01 |
+| Truy vết | FR-PRJ-02, FR-PRJ-03; BR-06, BR-12, BR-19, BR-21; API 2.3 `PUT /projects/{pid}/source` |
+
+**Luồng chính**
+1. Editor chọn "Re-import". Hệ thống cảnh báo hậu quả (mọi storyboard, ảnh, thuyết minh và timeline của các chương hiện có sẽ `OUTDATED`) và gợi ý lưu Archive trước (UC-03.11).
+2. Editor dán văn bản hoặc tải file mới (.txt, .md, .docx).
+3. Hệ thống thực hiện **UC-02.02a** và hiển thị bản xem trước (số ký tự, số đoạn).
+4. Editor xác nhận đã hiểu hậu quả.
+5. Trong **một giao dịch**, hệ thống tạo SourceText mới, thay các chương hiện có bằng một Chapter #1 chứa toàn văn mới, cập nhật `projects.current_source_id`.
+6. Hệ thống đánh dấu mọi tư liệu và timeline của các chương cũ là `OUTDATED`, phát `chapters.restructured`.
+7. Hệ thống mở màn hình Write và gợi ý bước "Chia chương" (UC-03.03).
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Có chương đang bị khóa bởi job: `423 RESOURCE_LOCKED`, nêu job đang chạy.
+- **3a.** File không đạt UC-02.02a: báo lỗi, giữ nguyên văn bản hiện tại.
+- **5a.** Dự án đã thay đổi (phiên bản khác) trong lúc Editor xem trước: `409`, yêu cầu tải lại rồi làm lại [ĐX].
+- **5b.** Lỗi ghi dữ liệu: rollback toàn bộ, giữ nội dung đã nhập trên form.
 
 ---
 
@@ -249,7 +290,27 @@
 
 ### UC-03.10a Xem trước số kết quả
 <a id="uc-0310a"></a>
-- **Loại:** include. **Các bước:** gọi `POST :find-replace {dryRun: true}`; hiển thị số kết quả theo chương và ngữ cảnh từng kết quả. **Kết quả:** danh sách kết quả, chưa thay đổi dữ liệu.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-03.10 (bước 2) |
+| Tác nhân | Hệ thống |
+| Mô tả | Đếm và liệt kê các kết quả khớp của "Tìm & thay thế" mà **chưa thay đổi dữ liệu** |
+| Tiền điều kiện | Editor đã nhập chuỗi tìm (không rỗng) |
+| Hậu điều kiện | **Thành công:** danh sách kết quả theo chương, mỗi kết quả kèm ngữ cảnh. **Tối thiểu:** dữ liệu không đổi |
+| Kích hoạt | UC-03.10 bước 2 (mỗi lần Editor đổi chuỗi tìm) |
+| Truy vết | FR-MAN-07; BR-12, BR-21; API 2.3 `POST /projects/{pid}:find-replace` với `dryRun: true` |
+
+**Luồng chính**
+1. Hệ thống gọi `POST :find-replace {find, replace, dryRun: true}`. Khớp chính xác, phân biệt hoa thường.
+2. Hệ thống duyệt tiêu đề và nội dung của mọi chương **không bị khóa**; chương đang bị khóa (BR-12) được bỏ qua và liệt kê riêng.
+3. Hệ thống trả tổng số kết quả, số kết quả theo chương, và với mỗi kết quả: vị trí và đoạn trích ngữ cảnh quanh vị trí đó.
+4. Giao diện hiển thị danh sách có hộp chọn cho từng kết quả (mặc định chọn hết) để UC-03.10 bước 3 dùng.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Chuỗi tìm rỗng: `400 VALIDATION_ERROR`, không tìm.
+- **3a.** Không có kết quả: báo "No matches in editable chapters" (UC-03.10 nhánh 2a).
+- **3b.** Rất nhiều kết quả: trả theo trang (cursor), tổng số vẫn hiển thị đầy đủ.
 
 ---
 
@@ -290,7 +351,7 @@
 ---
 
 <a id="uc-0313"></a>
-## UC-03.13 Ghi chú (Notes)
+## UC-03.13 Quản lý ghi chú (Notes)
 
 | Mục | Nội dung |
 |---|---|
@@ -308,7 +369,27 @@
 
 ### UC-03.13a Gắn ghi chú vào chương / shot
 <a id="uc-0313a"></a>
-- **Loại:** extend. **Các bước:** chọn chương hoặc shot đích khi tạo ghi chú. **Kết quả:** ghi chú hiện cạnh đối tượng trong Workspace/Storyboard.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-03.13 |
+| Tác nhân | Editor |
+| Mô tả | Gắn một ghi chú với một chương hoặc một shot cụ thể thay vì để ở cấp dự án |
+| Tiền điều kiện | Editor đang tạo hoặc sửa ghi chú của chính mình trong panel Notes |
+| Hậu điều kiện | **Thành công:** ghi chú có `target_type` (`CHAPTER` hoặc `SHOT`) và `target_id`; hiện cạnh đối tượng đích. **Tối thiểu:** không gắn được thì ghi chú vẫn lưu ở cấp dự án |
+| Kích hoạt | Editor chọn "Gắn vào…" khi tạo hoặc sửa ghi chú |
+| Truy vết | FR-MAN-09; 04 §3.2 `notes`; API 2.3 `/projects/{pid}/notes` |
+
+**Luồng chính**
+1. Editor chọn loại đích: Dự án (mặc định), Chương hoặc Shot.
+2. Chương: Editor chọn từ danh sách chương. Shot: Editor chọn chương, rồi chọn shot trong storyboard hiện hành của chương đó.
+3. Editor lưu ghi chú; hệ thống ghi `target_type`, `target_id`.
+4. Ghi chú hiển thị trong panel Notes (kèm nhãn đích) và dưới dạng biểu tượng cạnh chương trong Workspace hoặc cạnh shot trong Storyboard; thành viên khác thấy qua đồng bộ.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Chương chưa có storyboard hiện hành: chỉ cho chọn đích Dự án hoặc Chương.
+- **4a.** Đích về sau bị xóa (chương bị xóa, shot bị gộp hoặc xóa): ghi chú vẫn còn trong panel Notes với nhãn "đích đã bị xóa" [ĐX].
+- ***a.** Chỉ tác giả được sửa hoặc xóa ghi chú của mình; ghi chú của Director (`author_kind = DIRECTOR`) chỉ đọc.
 
 ---
 

@@ -31,9 +31,29 @@
 
 ### UC-04.01a Duyệt tài sản đề xuất
 <a id="uc-0401a"></a>
-- **Loại:** include (bước 4).
-- **Các bước:** Editor bỏ chọn mục không cần, sửa tên/loại, gộp mục trùng (bí danh của nhau), rồi bấm "Thêm vào dự án".
-- **Kết quả:** danh sách tài sản cuối cùng do Editor quyết định.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-04.01 (bước 4) |
+| Tác nhân | Editor |
+| Mô tả | Editor quyết định tài sản nào được tạo từ danh sách AI đề xuất; AI không tự tạo gì |
+| Tiền điều kiện | Job `ANALYZE_ASSETS` đã trả danh sách đề xuất (UC-04.01 bước 2–3) |
+| Hậu điều kiện | **Thành công:** có danh sách tài sản cuối cùng do Editor chốt. **Tối thiểu:** nếu Editor đóng mà không xác nhận thì không tạo tài sản nào |
+| Kích hoạt | UC-04.01 bước 4 |
+| Truy vết | FR-WLD-01; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10, ≤ 200 Story Assets) |
+
+**Luồng chính**
+1. Hệ thống hiển thị "Recommended assets" nhóm theo Characters, Locations, Props; mỗi mục có tên, bí danh, mô tả ngoại hình, facts và các chương xuất hiện; mục trùng với tài sản đã có được gắn nhãn.
+2. Editor bỏ chọn mục không cần.
+3. Editor sửa tên hoặc loại của mục nếu cần.
+4. Editor gộp các mục trùng: tên của mục này trở thành bí danh của mục kia.
+5. Editor bấm "Thêm vào dự án"; hệ thống trả danh sách đã chốt cho UC-04.01 bước 5.
+
+**Luồng thay thế / ngoại lệ**
+- **4a.** Mục trùng với tài sản đã có: mặc định bỏ chọn; Editor có thể chọn "gộp vào tài sản hiện có" (thêm tên mới thành bí danh).
+- **5a.** Tên rỗng hoặc dài hơn 80 ký tự, hoặc bí danh vượt 10 mục: báo lỗi tại mục đó, không cho xác nhận.
+- **5b.** Tổng số tài sản sau khi thêm vượt 200: chặn và yêu cầu bỏ bớt.
+- ***a.** Editor đóng hộp thoại: không tạo gì; có thể mở lại danh sách đề xuất bằng cách phân tích lại.
 
 ---
 
@@ -56,23 +76,128 @@
 
 ### UC-04.02a Tạo nhân vật / địa điểm / đạo cụ
 <a id="uc-0402a"></a>
-- **Loại:** extend. **Các bước:** (1) chọn loại; (2) nhập tên, bí danh, mô tả ngoại hình, facts; (3) chọn sinh ảnh (UC-04.03, include) hoặc tải ảnh (UC-04.04). **Kết quả:** StoryAsset mới.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-04.02 |
+| Tác nhân | Editor / Image Provider (khi chọn sinh ảnh) |
+| Mô tả | Tạo mới một nhân vật, địa điểm hoặc đạo cụ thủ công |
+| Tiền điều kiện | Là thành viên dự án; dự án có dưới 200 Story Assets |
+| Hậu điều kiện | **Thành công:** có StoryAsset mới (`kind` = `CHARACTER`, `LOCATION` hoặc `PROP`, `version = 1`). **Tối thiểu:** tạo tài sản không phụ thuộc việc có ảnh hay không |
+| Kích hoạt | Bấm "New character / location / prop" |
+| Truy vết | FR-WLD-02, FR-WLD-03; BR-14; 08 §5; API 2.4 `POST /projects/{pid}/story-assets` |
+
+**Luồng chính**
+1. Editor chọn loại tài sản.
+2. Editor nhập tên (1–80 ký tự), bí danh (≤ 10), mô tả ngoại hình, facts bất biến.
+3. Editor chọn một trong ba cách có ảnh tham chiếu: sinh bằng AI (**UC-04.03**, include, tốn 1 credit); tải ảnh lên (**UC-04.04**, dùng nguyên bản); hoặc bỏ qua.
+4. Hệ thống lưu StoryAsset và hiển thị trong nhóm tương ứng.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Tên trùng với tên hoặc bí danh của tài sản khác: cảnh báo vì sẽ gây khớp mơ hồ ở UC-05.06f; Editor có thể vẫn tạo.
+- **3a.** Chọn sinh ảnh nhưng không đủ credit: `402`; tài sản vẫn được tạo, chưa có ảnh.
+- **3b.** Sinh ảnh lỗi: hoàn credit (UC-04.03 nhánh 4a); tài sản vẫn được tạo.
+- **4a.** Đã có 200 tài sản: chặn tạo thêm.
 
 ### UC-04.02b Tạo nhóm nhân vật
 <a id="uc-0402b"></a>
-- **Loại:** extend. **Các bước:** đặt tên nhóm, chọn ≥ 2 nhân vật thành viên, tùy chọn sinh ảnh nhóm. **Kết quả:** StoryAsset loại `GROUP`.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-04.02 |
+| Tác nhân | Editor / Image Provider (khi chọn sinh ảnh nhóm) |
+| Mô tả | Gom nhiều nhân vật thành một nhóm (vd. gia đình, băng nhóm) để dùng như một thực thể trong shot |
+| Tiền điều kiện | Dự án có ít nhất 2 nhân vật (`CHARACTER`) |
+| Hậu điều kiện | **Thành công:** có StoryAsset `kind = GROUP` với ≥ 2 thành viên. **Tối thiểu:** không tạo nhóm vi phạm IC-13 |
+| Kích hoạt | Bấm "New group" |
+| Truy vết | FR-WLD-02; IC-13; 04 §3.3 `story_asset_group_members` |
+
+**Luồng chính**
+1. Editor đặt tên nhóm (1–80 ký tự).
+2. Editor chọn các nhân vật thành viên (tối thiểu 2).
+3. Editor có thể chọn sinh ảnh nhóm (UC-04.03, tốn 1 credit).
+4. Hệ thống lưu StoryAsset `GROUP` và các dòng `story_asset_group_members`.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Chọn dưới 2 thành viên, thành viên không phải `CHARACTER`, thành viên thuộc dự án khác hoặc chọn chính nhóm: từ chối (IC-13).
+- **3a.** Không đủ credit hoặc sinh ảnh lỗi: nhóm vẫn được tạo, chưa có ảnh.
+- ***a.** Sau này thành viên bị gỡ khỏi dự án (UC-04.02d) và nhóm còn dưới 2 thành viên: hệ thống cảnh báo Editor bổ sung hoặc xóa nhóm [ĐX].
 
 ### UC-04.02c Thêm từ thư viện cá nhân
 <a id="uc-0402c"></a>
-- **Loại:** extend. **Các bước:** mở thư viện (M08), chọn tài sản; hệ thống tạo StoryAsset dùng chung ảnh gốc (`source_library_asset_id`). **Kết quả:** tài sản có trong dự án, không tốn credit; sửa trong dự án không ảnh hưởng thư viện (FR-LIB-05).
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-04.02 |
+| Tác nhân | Editor |
+| Mô tả | Đưa tài sản từ thư viện cá nhân (M08) vào dự án mà không tốn credit |
+| Tiền điều kiện | Editor có thư viện cá nhân; dự án có dưới 200 Story Assets |
+| Hậu điều kiện | **Thành công:** có StoryAsset mới trỏ `source_library_asset_id` và dùng chung ảnh gốc. **Tối thiểu:** thư viện không bị đổi |
+| Kích hoạt | Bấm "Add from library" |
+| Truy vết | FR-WLD-02, FR-LIB-05; UC-08.05; API 2.4 `POST /projects/{pid}/story-assets` với `{libraryAssetId}` |
+
+**Luồng chính**
+1. Hệ thống mở thư viện (UC-08.01) trong chế độ chọn; Editor tìm, lọc (UC-08.01a) và chọn một hoặc nhiều tài sản.
+2. Editor bấm "Add to project".
+3. Hệ thống tạo StoryAsset cho mỗi tài sản đã chọn: sao chép loại, tên, bí danh, mô tả, facts, cờ `use_exact_image`; dùng chung file ảnh tham chiếu (không nhân bản file).
+4. Hệ thống không tốn credit; tài sản xuất hiện ngay trong Story Assets.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Thư viện trống: gợi ý tạo tài sản ở thư viện (UC-08.02) hoặc lưu từ dự án (UC-08.04).
+- **3a.** Tài sản đó đã có trong dự án (cùng `source_library_asset_id`): báo và không thêm bản trùng [ĐX].
+- **3b.** Ảnh thư viện khác style dự án: cảnh báo và gợi ý "Regenerate" (UC-04.03, tốn 1 credit) [ĐX].
+- **3c.** Vượt 200 tài sản: chặn phần vượt.
+- ***a.** Sửa tài sản trong dự án **không** đổi bản ở thư viện và ngược lại (FR-LIB-05).
 
 ### UC-04.02d Gỡ khỏi dự án
 <a id="uc-0402d"></a>
-- **Loại:** extend. **Các bước:** chọn "Remove from project", xác nhận. **Kết quả:** tài sản bị gỡ; shot đang tham chiếu giữ `raw_name` và chuyển "chưa liên kết" (BR-16); ảnh shot đã sinh không đổi.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-04.02 |
+| Tác nhân | Editor |
+| Mô tả | Gỡ một tài sản khỏi dự án mà không làm hỏng các shot và ảnh đã sinh |
+| Tiền điều kiện | Tài sản thuộc dự án |
+| Hậu điều kiện | **Thành công:** StoryAsset bị gỡ; các shot từng tham chiếu giữ `raw_name` và chuyển "chưa liên kết"; ảnh shot đã sinh không đổi. **Tối thiểu:** không xóa gì khi Editor chưa xác nhận |
+| Kích hoạt | Chọn "Remove from project" |
+| Truy vết | BR-16; 04 §3.3, §3.4 (`shot_asset_refs.story_asset_id` cho phép NULL); API 2.4 `DELETE /projects/{pid}/story-assets/{sid}` |
+
+**Luồng chính**
+1. Editor chọn "Remove from project".
+2. Hệ thống hiển thị số shot đang tham chiếu tài sản, các nhóm chứa nó và các quan hệ liên quan; yêu cầu xác nhận.
+3. Editor xác nhận.
+4. Hệ thống xóa StoryAsset khỏi dự án trong một giao dịch: đặt `shot_asset_refs.story_asset_id = NULL` (giữ `raw_name`), gỡ khỏi các nhóm, xóa các quan hệ (`relationships`) có tài sản này [ĐX].
+5. Hệ thống không động tới ảnh shot đã sinh và không xóa tài sản gốc ở thư viện cá nhân.
+
+**Luồng thay thế / ngoại lệ**
+- **3a.** Editor hủy: không đổi gì.
+- **4a.** `409`: tài sản vừa được người khác sửa; tải lại và xác nhận lại (UC-02.10).
+- ***a.** Về sau thêm lại tài sản cùng tên: UC-05.06f có thể tự khớp lại các tham chiếu "chưa liên kết".
 
 ### UC-04.02e Quản lý bí danh & facts
 <a id="uc-0402e"></a>
-- **Loại:** extend. **Các bước:** thêm/xóa bí danh (≤ 10), sửa facts bất biến (vd. "tóc đen ngang vai"). **Kết quả:** prompt các lần sinh sau dùng facts mới; storyboard khớp tên theo bí danh mới.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-04.02 |
+| Tác nhân | Editor |
+| Mô tả | Chỉnh bí danh (để khớp tên trong shot) và facts bất biến (đưa vào prompt sinh ảnh) |
+| Tiền điều kiện | Tài sản thuộc dự án |
+| Hậu điều kiện | **Thành công:** `aliases` và `facts` được cập nhật. **Tối thiểu:** ảnh đã sinh không bị đổi |
+| Kích hoạt | Mở chi tiết tài sản, sửa mục Bí danh hoặc Facts |
+| Truy vết | FR-WLD-02; BR-08; 08 §5 (bí danh ≤ 10); API 2.4 `PATCH /projects/{pid}/story-assets/{sid}` (If-Match) |
+
+**Luồng chính**
+1. Editor thêm hoặc xóa bí danh (tối đa 10).
+2. Editor sửa facts bất biến, mỗi fact là một đặc điểm cố định (vd. "tóc đen ngang vai").
+3. Editor lưu; hệ thống ghi kèm `If-Match` và tăng `version`.
+4. Lần sinh ảnh sau dùng facts mới trong prompt (UC-04.03, UC-05.09); storyboard và UC-05.06f khớp tên theo bí danh mới.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Bí danh trùng tên hoặc bí danh của tài sản khác trong dự án: cảnh báo khớp mơ hồ.
+- **1b.** Vượt 10 bí danh hoặc tên dài hơn 80 ký tự: báo lỗi.
+- **3a.** `409`: tài sản vừa được người khác sửa; xử lý theo UC-02.10.
+- **4a.** Sau khi sửa facts, hệ thống gợi ý "Regenerate" kèm giá thay vì tự sinh lại (UC-04.03).
 
 ---
 
@@ -102,7 +227,30 @@
 
 ### UC-04.03a Sinh lại tất cả (Regenerate all)
 <a id="uc-0403a"></a>
-- **Loại:** extend. **Điều kiện:** sau khi đổi style/Art Direction. **Các bước:** hệ thống đếm tài sản (bỏ qua tài sản "use exact"), hiện tổng giá, Editor xác nhận, tạo job hàng loạt. **Kết quả:** mọi tài sản có ảnh theo style mới.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-04.03 |
+| Tác nhân | Editor / Image Provider |
+| Mô tả | Sinh lại ảnh tham chiếu của mọi tài sản sau khi đổi style hoặc Art Direction, bỏ qua tài sản dùng ảnh nguyên bản |
+| Tiền điều kiện | Dự án có style; có ít nhất một tài sản không dùng "use exact"; đủ credit cho toàn bộ |
+| Hậu điều kiện | **Thành công:** mọi tài sản đủ điều kiện có `asset_images` mới theo style mới. **Tối thiểu:** tài sản "use exact" không bao giờ bị vẽ lại; job lỗi được hoàn credit phần của nó |
+| Kích hoạt | Bấm "Regenerate all" (thường sau khi đổi style, UC-04.05, hoặc Art Direction, UC-04.06) |
+| Truy vết | BR-01, BR-02, BR-14, BR-15; CR-05; API 2.4 `POST /projects/{pid}/story-assets:regenerate-all` |
+
+**Luồng chính**
+1. Editor bấm "Regenerate all".
+2. Hệ thống đếm các tài sản đủ điều kiện (bỏ tài sản có `use_exact_image = true`) và hiển thị tổng giá (1 credit mỗi tài sản).
+3. Editor xác nhận.
+4. Hệ thống giữ toàn bộ credit trước (CR-05) và tạo job hàng loạt, mỗi tài sản một job con.
+5. Mỗi job con chạy như UC-04.03 bước 3–4 và CAPTURE hoặc RELEASE phần của nó.
+6. Tiến độ gửi qua SSE (`job.updated`, `asset.updated`); khi xong, mọi tài sản đủ điều kiện có ảnh theo style mới. Ảnh cũ được giữ như phiên bản trước.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Không có tài sản nào đủ điều kiện: báo "Không có tài sản cần sinh lại", không tạo job.
+- **4a.** Không đủ credit: `402` kèm số còn thiếu; gợi ý nạp credit (UC-09.03) hoặc sinh lại từng tài sản.
+- **5a.** Một số job con lỗi sau retry: RELEASE phần của chúng, liệt kê tài sản lỗi và cho phép thử lại riêng từng cái.
+- ***a.** Đổi style sau khi đã có ảnh **không** tự sinh lại; hệ thống chỉ gợi ý hành động này kèm giá.
 
 ---
 
@@ -186,6 +334,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Chưa có dữ liệu: hiện nút "Phân tích" (UC-04.09).
+- **2b.** Editor đổi chế độ xem: "Theo mạch truyện" (thứ tự chương, mặc định) hoặc "Theo thứ tự thời gian" (sắp theo nhãn ngày/mùa, dùng cho truyện có hồi tưởng). Hệ thống sắp theo `chrono_index`; mốc chưa có (NULL) xếp cuối nhóm "Chưa xác định".
 
 ---
 
@@ -224,7 +373,7 @@
 
 **Luồng chính**
 1. Editor bấm "Re-analyse".
-2. Hệ thống tạo job `STORY_META`; LLM trả mốc thời gian theo chương và cặp quan hệ (theo tên/bí danh tài sản).
+2. Hệ thống tạo job `STORY_META`; LLM trả mốc thời gian theo chương (kèm thứ hạng thời gian trong truyện, lưu `chrono_index`) và cặp quan hệ (theo tên/bí danh tài sản).
 3. Hệ thống thay dữ liệu cũ, hiển thị kết quả.
 
 **Luồng thay thế / ngoại lệ**

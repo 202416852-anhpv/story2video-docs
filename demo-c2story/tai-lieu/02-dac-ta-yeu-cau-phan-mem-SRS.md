@@ -48,7 +48,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 
 | Mã | Yêu cầu | Ưu tiên | Nguồn |
 |---|---|---|---|
-| FR-PRJ-01 | Trang Projects liệt kê dự án mà User là Owner hoặc Editor, gồm tiêu đề, số chương, style, trạng thái (In Progress / Done), ngày cập nhật; Owner có nút xóa. | M | QS |
+| FR-PRJ-01 | Trang Projects liệt kê dự án mà User là Owner hoặc Editor, gồm tiêu đề, số chương, style, trạng thái (In Progress / Done), ngày cập nhật; Owner có nút xóa. Trạng thái **suy ra, không lưu cột**: *Done* khi dự án có ≥ 1 chương và mọi chương `EXPORTED`, ngược lại *In Progress*. Có ô tìm theo tiêu đề (không phân biệt hoa thường, dấu) và lọc theo trạng thái; danh sách phân trang. | M | QS + ĐX |
 | FR-PRJ-02 | "Import your story": dán văn bản hoặc tải file .txt/.md/.docx (≤ 2 MB, ≤ 500.000 ký tự). | M | QS |
 | FR-PRJ-03 | Import **luôn giữ nguyên văn**. Hệ thống chỉ chuẩn hóa kỹ thuật không làm đổi chữ: chuẩn Unicode NFC, thống nhất ký tự xuống dòng, bỏ ký tự điều khiển vô hình. Không có tùy chọn AI viết lại (BR-19, BR-21). *Khác với hệ thống tham chiếu.* | M | ĐX |
 | FR-PRJ-04 | Tạo dự án trống rồi viết trực tiếp trong Workspace. | S | QS |
@@ -89,7 +89,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-WLD-05 | Thêm tài sản có sẵn từ thư viện cá nhân (M08); gỡ khỏi Story Assets / khỏi dự án; xóa vĩnh viễn khỏi thư viện (xác nhận 2 bước). | M | QS |
 | FR-WLD-06 | Set style cho dự án; "Regenerate all (n)" sinh lại mọi ảnh tham chiếu theo style hiện tại (hiện tổng giá trước khi chạy). | M | QS |
 | FR-WLD-07 | Art direction: văn bản phong cách bổ sung lên style dự án, áp cho mọi tài sản và mọi ảnh. | M | QS |
-| FR-WLD-08 | Story timeline: AI gán cho mỗi chương nhãn ngày, mùa và tóm tắt; hiển thị theo tỷ lệ thời gian; Re-analyse. Director dùng dữ liệu này để dựng bối cảnh cảnh. | S | QS |
+| FR-WLD-08 | Story timeline: AI gán cho mỗi chương nhãn ngày, mùa và tóm tắt; hiển thị theo tỷ lệ thời gian; Re-analyse. Hai chế độ xem: **theo mạch truyện** (thứ tự chương) và **theo thứ tự thời gian** (theo nhãn ngày/mùa, cho truyện có hồi tưởng). Director dùng dữ liệu này để dựng bối cảnh cảnh. | S | QS + ĐX |
 | FR-WLD-09 | Relationship graph: AI trích cặp nhân vật, nhãn quan hệ và diễn biến; hiển thị dạng đồ thị; Re-analyse. | S | QS |
 | FR-WLD-10 | Visual Rules: tạo, sửa, xóa luật (tên, nội dung, phạm vi toàn dự án hoặc chương); áp theo BR-08. | S | QS |
 | FR-WLD-11 | Project Assets (hộp thoại quản trị đầy đủ): thêm, gỡ, bí danh, nhóm; xuất ZIP ảnh tài sản. | S | QS |
@@ -128,7 +128,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | Mã | Yêu cầu | Ưu tiên | Nguồn |
 |---|---|---|---|
 | FR-BOK-09 | Sinh ảnh cho một shot hoặc mọi shot; trạng thái từng ảnh (pending, generating, done, failed); Regenerate. | M | QS |
-| FR-BOK-10 | Sửa ảnh: Describe→Edit (mô tả thay đổi), Fix a spot (tô vùng + mô tả), Retry khi lỗi; lưu lịch sử phiên bản ảnh để khôi phục. | M | QS |
+| FR-BOK-10 | Sửa ảnh: Describe→Edit (mô tả thay đổi), Fix a spot (tô vùng + mô tả), Retry khi lỗi; lưu lịch sử phiên bản ảnh để khôi phục. Ngoài ra có thể **thay ảnh shot bằng ảnh tự tải lên** (không tốn credit, tạo phiên bản ảnh mới, không bị sinh hàng loạt ghi đè, BR-14). | M | QS + ĐX |
 | FR-BOK-13 | Lưới ảnh theo chương và shot; lối tắt "Sinh lại" và "Sửa ảnh". | M | QS (điều chỉnh) |
 | FR-BOK-16 | Tải ZIP ảnh minh họa theo chương hoặc cả dự án. | S | QS (điều chỉnh) |
 
@@ -168,10 +168,10 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 |---|---|---|---|
 | FR-EDT-06 | **Hiệu ứng chuyển động ảnh (Ken Burns):** none, zoom in/out, pan bốn hướng; cường độ; điểm tập trung chọn trên ảnh; nhiều pha cho clip dài; keyframe vị trí/tỷ lệ (nâng cao). | M | ĐX |
 | FR-EDT-07 | **Chuyển cảnh** giữa hai clip ảnh: cut, fade, crossfade, fade-to-black/white, slide, wipe, zoom; thời lượng 0–1,5 s; kéo thả từ thư viện chuyển cảnh; áp hàng loạt. Chuyển cảnh không làm thay đổi vị trí clip thuyết minh. | M | ĐX |
-| FR-EDT-08 | **Khung hình:** ảnh lệch tỷ lệ video thì crop (theo điểm tập trung), fit (viền màu) hoặc nền mờ; tỷ lệ video 16:9 / 9:16 / 1:1 theo dự án. | M | ĐX |
+| FR-EDT-08 | **Khung hình:** ảnh lệch tỷ lệ video thì crop (theo điểm tập trung), fit (viền màu) hoặc nền mờ; tỷ lệ video 16:9 / 9:16 / 1:1 theo dự án. Preview có công tắc bật/tắt **vùng an toàn và lưới căn chỉnh** (chỉ hiển thị khi chỉnh sửa, không vẽ vào video xuất). | M | ĐX |
 | FR-EDT-09 | **Tinh chỉnh hình ảnh:** độ sáng, tương phản, bão hòa, nhiệt độ màu, bộ lọc màu (preset); áp cho một clip, nhiều clip hoặc toàn video. | S | ĐX |
 | FR-EDT-10 | **Overlay chữ:** nội dung, font (hỗ trợ tiếng Việt), cỡ, màu, viền/bóng, vị trí, hiệu ứng xuất hiện/biến mất; overlay hình (logo, watermark). | S | ĐX |
-| FR-EDT-11 | **Phụ đề:** bật/tắt; luôn hiển thị **nguyên văn** (BR-22), ngắt dòng theo timestamp alignment (≤ 2 dòng, ≤ 42 ký tự/dòng); kiểu cả câu hoặc karaoke; font, cỡ, màu, nền, vị trí trong vùng an toàn. Nội dung phụ đề **không sửa được** trong trình chỉnh sửa, chỉ sửa kiểu. | M | ĐX |
+| FR-EDT-11 | **Phụ đề:** bật/tắt; luôn hiển thị **nguyên văn** (BR-22), ngắt dòng theo timestamp alignment (≤ 2 dòng, ≤ 42 ký tự/dòng); kiểu cả câu hoặc karaoke; font, cỡ, màu, nền, vị trí trong vùng an toàn; có **mẫu preset** dựng sẵn (hằng số trong package TS dùng chung, không lưu DB) để áp một lần rồi tinh chỉnh tiếp; áp preset chỉ sao chép giá trị vào `subtitle_style`. Nội dung phụ đề **không sửa được** trong trình chỉnh sửa, chỉ sửa kiểu. | M | ĐX |
 
 #### 2.6.3 Âm thanh: nhạc nền & SFX
 

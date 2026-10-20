@@ -85,7 +85,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `asset_images` | id PK, story_asset_id FK, media_id FK, style_id FK?, prompt_snapshot, job_id FK? | Lịch sử ảnh tham chiếu. UC-04.03 |
 | `visual_rules` | id PK, project_id FK, name, instruction, scope (`PROJECT`/`CHAPTER`), chapter_id FK?, active, order_index | BR-08. UC-04.10 |
 | `chapter_rules` | id PK, chapter_id FK, instruction, order_index | UC-05.04 |
-| `timeline_events` | id PK, project_id FK, chapter_id FK, day_label, season, story_date, summary, order_index | Dòng thời gian **truyện** (khác `timelines` của video). UC-04.07, UC-04.09 |
+| `timeline_events` | id PK, project_id FK, chapter_id FK, day_label, season, story_date, summary, order_index, chrono_index | Dòng thời gian **truyện** (khác `timelines` của video). `order_index` = thứ tự theo mạch truyện; `chrono_index` = thứ hạng theo thời gian trong truyện do AI gán khi phân tích (`story_date` là text tự do, không dùng để sắp xếp); NULL = chưa xác định. UC-04.07, UC-04.09 |
 | `relationships` | id PK, project_id FK, asset_a_id FK, asset_b_id FK, label, dynamic, from_chapter_id FK? | UC-04.08, UC-04.09 |
 
 ### 3.4 Sinh tư liệu: storyboard, ảnh, thuyết minh — `erd-4-sinh-tu-lieu`
@@ -95,7 +95,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `storyboard_drafts` | id PK, chapter_id FK, project_id FK, name, kind (`INITIAL`/`RESPLIT_MORE`/`RESPLIT_FEWER`/`DUPLICATE`), boundary_fixes, created_by FK? | `boundary_fixes` = số ranh giới validator đã sửa (cảnh báo > 20%). UC-05.01..03 |
 | `shots` | id PK, draft_id FK, project_id FK, order_index, title, focus, time_of_day, story_date, brief, caption, **source_start, source_end, source_hash**, current_illustration_id FK?, current_narration_id FK?, version | IC-08. UC-05.01, UC-05.06 |
 | `shot_asset_refs` | id PK, shot_id FK, story_asset_id FK?, raw_name, role (`CAST`/`ITEM`/`LOCATION`) | `story_asset_id` NULL = chưa liên kết (BR-16). UC-05.06b, UC-05.06f |
-| `illustrations` | id PK, shot_id FK, media_id FK?, status, edit_kind (`GENERATE`/`EDIT`/`INPAINT`/`RETRY`), instruction?, mask_media_id FK?, prompt_snapshot, shot_version, parent_illustration_id FK?, job_id FK? | `shot_version` < `shots.version` = "brief đã đổi". UC-05.09, UC-05.10 |
+| `illustrations` | id PK, shot_id FK, media_id FK?, status, edit_kind (`GENERATE`/`EDIT`/`INPAINT`/`RETRY`/`UPLOAD`), instruction?, mask_media_id FK?, prompt_snapshot, shot_version, parent_illustration_id FK?, job_id FK? | `shot_version` < `shots.version` = "brief đã đổi" (bản `UPLOAD` đặt `shot_version = shots.version`, `prompt_snapshot`/`job_id` rỗng, `status = DONE`). UC-05.09, UC-05.10 |
 | `narration_settings` | project_id PK/FK, language, voice_id FK?, speed, pitch, sentence_pause_ms, paragraph_pause_ms, wer_threshold (mặc định 0,03), multi_voice | 1–1 với project. UC-05.11 |
 | `voices` | id PK, provider_id FK, code, name, language, gender, sample_media_id FK?, min_plan_code?, sample_wer?, enabled | Cấu hình. UC-05.11a, UC-10.05 |
 | `pronunciation_entries` | id PK, project_id FK, written, spoken, kind (`ALIAS`/`PHONEME`), case_sensitive | Chỉ ảnh hưởng audio. UC-05.12 |

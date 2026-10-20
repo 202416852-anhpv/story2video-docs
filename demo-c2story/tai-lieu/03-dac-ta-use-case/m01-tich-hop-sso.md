@@ -35,21 +35,76 @@
 
 ### UC-01.01a Xác thực ID token
 <a id="uc-0101a"></a>
-- **Loại:** include (bước 5).
-- **Các bước:** (1) kiểm tra `state`; (2) đổi `code` + `code_verifier` lấy token tại `token_endpoint`; (3) lấy JWKS (có cache, tự làm mới khi gặp `kid` lạ); (4) kiểm tra chữ ký, `iss`, `aud`, `exp`, `iat`, `nonce`.
-- **Kết quả:** claims hợp lệ (`sub`, `email`, `name`, `picture`, `locale`, `roles`) hoặc lỗi xác thực.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-01.01 (bước 5) |
+| Tác nhân | Hệ thống (BFF) / SSO có sẵn (`token_endpoint`, `jwks_uri`) |
+| Mô tả | Đổi authorization code lấy token và xác thực ID token trước khi tin bất kỳ claim nào |
+| Tiền điều kiện | Có `code` và `state` ở callback; phiên đăng nhập tạm (UC-01.01 bước 2) còn lưu `state`, `nonce`, `code_verifier`, `returnTo` |
+| Hậu điều kiện | **Thành công:** claims hợp lệ (`sub`, `email`, `name`, `picture`, `locale`, `roles`) được chuyển cho UC-01.01b. **Tối thiểu:** không dùng code hoặc token chưa xác thực; mọi lỗi được ghi log bảo mật; không tạo phiên |
+| Kích hoạt | SSO chuyển trình duyệt về `/auth/callback?code&state` |
+| Truy vết | FR-AUTH-01..04; NFR-SEC-02; API 2.1 `/auth/callback` |
+
+**Luồng chính**
+1. Hệ thống so `state` ở callback với `state` đã lưu trong phiên đăng nhập tạm, rồi xóa giá trị này (chỉ dùng một lần).
+2. Hệ thống gửi `code` cùng `code_verifier` (PKCE) tới `token_endpoint` của SSO và nhận token.
+3. Hệ thống lấy JWKS từ `jwks_uri` (có cache; tự làm mới khi gặp `kid` chưa biết).
+4. Hệ thống kiểm tra chữ ký, `iss`, `aud` (= `client_id`), `exp`, `iat` và `nonce` khớp với giá trị đã lưu.
+5. Hệ thống trả claims đã xác thực cho UC-01.01b.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** `state` thiếu, không khớp hoặc đã dùng: từ chối, ghi log bảo mật, không gọi SSO (UC-01.01 nhánh 5a).
+- **2a.** `token_endpoint` trả lỗi (code hết hạn hoặc đã dùng) hoặc quá 10 s không phản hồi: dừng, báo "Đăng nhập không thành công, hãy thử lại".
+- **3a.** Không tải được JWKS và chưa có cache: dừng; **không** bỏ qua bước kiểm tra chữ ký.
+- **4a.** Bất kỳ kiểm tra nào ở bước 4 thất bại: từ chối, ghi log, không lưu token.
 
 ### UC-01.01b Tạo / đồng bộ hồ sơ cục bộ (JIT)
 <a id="uc-0101b"></a>
-- **Loại:** include (bước 6).
-- **Các bước:** (1) tìm `users` theo `sso_subject = sub`; (2) chưa có thì tạo hồ sơ mới, tạo ví credit với bucket rỗng, cấp gói Free; (3) có rồi thì cập nhật email, tên, avatar và vai trò Admin theo claim `roles` (FR-AUTH-07); (4) cập nhật `last_login_at`.
-- **Kết quả:** hồ sơ cục bộ đồng bộ với SSO; không lưu mật khẩu.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-01.01 (bước 6) |
+| Tác nhân | Hệ thống |
+| Mô tả | Tạo hồ sơ cục bộ ở lần đăng nhập đầu (JIT) hoặc đồng bộ hồ sơ theo claims ở các lần sau; không bao giờ lưu mật khẩu |
+| Tiền điều kiện | Claims đã xác thực từ UC-01.01a |
+| Hậu điều kiện | **Thành công:** có đúng một `users` ứng với `sso_subject = sub`, dữ liệu khớp claims; người dùng mới có ví credit (các bucket rỗng) và gói Free. **Tối thiểu:** lỗi ghi dữ liệu thì rollback, không tạo phiên |
+| Kích hoạt | UC-01.01 bước 6 |
+| Truy vết | FR-AUTH-07; D-08; API 2.1 `/auth/callback`, `/me` |
+
+**Luồng chính**
+1. Hệ thống tìm `users` theo `sso_subject = sub`.
+2. Chưa có: trong một giao dịch, tạo `users`, tạo ví credit (`credit_balances` với bucket rỗng) và cấp gói Free.
+3. Đã có: cập nhật `email`, `display_name`, `avatar_url` theo claims; `locale` chỉ lấy từ claim khi người dùng chưa tự đổi trong ứng dụng [ĐX].
+4. Đặt `role = ADMIN` nếu claim `roles` chứa vai trò quản trị, ngược lại `USER` (FR-AUTH-07).
+5. Cập nhật `last_login_at` và trả hồ sơ cho UC-01.01 bước 7.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Hai callback đồng thời cho cùng `sub`: ràng buộc duy nhất của `sso_subject` bảo đảm chỉ một bản ghi; giao dịch thua thực hiện lại bước 1 và đi theo nhánh "đã có".
+- **3a.** `users.status = LOCKED`: trả về cho UC-01.01 nhánh 6a (không tạo phiên).
+- ***a.** Lỗi ghi dữ liệu: rollback toàn bộ (kể cả ví và gói Free), báo lỗi chung, người dùng có thể đăng nhập lại.
 
 ### UC-01.01c Quay về trang đã yêu cầu
 <a id="uc-0101c"></a>
-- **Loại:** include (bước 8).
-- **Các bước:** đọc `returnTo` đã lưu; nếu là đường dẫn nội bộ hợp lệ thì chuyển tới đó, ngược lại về `/projects`.
-- **Kết quả:** người dùng tiếp tục đúng tác vụ (vd. chấp nhận lời mời dự án, UC-02.08). Chặn open redirect.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-01.01 (bước 8) |
+| Tác nhân | Hệ thống |
+| Mô tả | Đưa người dùng về đúng trang họ yêu cầu trước khi đăng nhập, đồng thời chặn open redirect |
+| Tiền điều kiện | Phiên ứng dụng vừa được tạo; có thể có `returnTo` đã lưu ở UC-01.01 bước 2 |
+| Hậu điều kiện | **Thành công:** người dùng ở trang đã yêu cầu hoặc `/projects`. **Tối thiểu:** không bao giờ chuyển hướng ra ngoài miền ứng dụng |
+| Kích hoạt | UC-01.01 bước 8 |
+| Truy vết | NFR-SEC-02 (`returnTo` chỉ cho phép đường dẫn nội bộ); API 2.1 `/auth/login` |
+
+**Luồng chính**
+1. Hệ thống đọc `returnTo` đã lưu và xóa khỏi phiên đăng nhập tạm.
+2. Hệ thống kiểm tra lại `returnTo` (đã kiểm tra một lần ở lúc lưu): phải bắt đầu bằng một dấu `/`, không bắt đầu bằng `//`, không chứa scheme, host hoặc `\`.
+3. Hợp lệ: trả `302` tới `returnTo` (vd. `/invites/{token}` để chấp nhận lời mời, UC-02.08).
+4. Không hợp lệ hoặc không có: trả `302` tới `/projects`.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** `returnTo` trỏ tới trang người dùng không còn quyền truy cập: trang đích tự hiển thị lỗi `404` (không tiết lộ sự tồn tại), người dùng dùng điều hướng bình thường.
 
 ---
 
@@ -75,11 +130,30 @@
 **Luồng thay thế / ngoại lệ**
 - **3a.** SSO không có `end_session_endpoint`: chỉ đăng xuất cục bộ, hiện ghi chú "Bạn vẫn đăng nhập ở các ứng dụng khác dùng chung SSO".
 
-### UC-01.02a Kết thúc phiên SSO (RP-initiated logout)
+### UC-01.02a Kết thúc phiên SSO
 <a id="uc-0102a"></a>
-- **Loại:** include (bước 3).
-- **Các bước:** dựng URL `end_session_endpoint?id_token_hint&post_logout_redirect_uri`; chuyển hướng trình duyệt.
-- **Kết quả:** phiên SSO kết thúc; người dùng về trang chủ.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | include của UC-01.02 (bước 3) |
+| Tác nhân | Hệ thống / SSO có sẵn |
+| Mô tả | Báo cho SSO kết thúc phiên (RP-initiated logout) để người dùng không còn đăng nhập ở SSO sau khi đăng xuất khỏi ứng dụng |
+| Tiền điều kiện | Phiên ứng dụng vừa bị thu hồi (UC-01.02 bước 2); còn `id_token_hint` đã mã hóa của phiên đó |
+| Hậu điều kiện | **Thành công:** phiên SSO kết thúc; trình duyệt về trang chủ. **Tối thiểu:** token đã lưu bị xóa dù SSO có lỗi |
+| Kích hoạt | UC-01.02 bước 3 |
+| Truy vết | FR-AUTH-05; API 2.1 `POST /auth/logout` |
+
+**Luồng chính**
+1. Hệ thống giải mã `id_token_hint` của phiên vừa thu hồi, rồi xóa mọi token đã lưu của phiên.
+2. Hệ thống lấy `end_session_endpoint` từ metadata (discovery) của SSO.
+3. Hệ thống dựng URL `end_session_endpoint?id_token_hint=…&post_logout_redirect_uri=…` (địa chỉ trang chủ đã đăng ký với SSO).
+4. API trả `{ logoutUrl }`; client chuyển hướng trình duyệt tới URL này.
+5. SSO kết thúc phiên và chuyển về trang chủ ứng dụng.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** SSO không có `end_session_endpoint`: chỉ đăng xuất cục bộ, hiện ghi chú "Bạn vẫn đăng nhập ở các ứng dụng khác dùng chung SSO" (UC-01.02 nhánh 3a).
+- **3a.** Không còn `id_token_hint` (hết hạn hoặc mất): vẫn gọi `end_session_endpoint` không kèm hint; SSO có thể hỏi xác nhận đăng xuất.
+- **5a.** SSO báo lỗi hoặc không phản hồi: người dùng vẫn ở trạng thái đã đăng xuất khỏi ứng dụng; không thử lại tự động.
 
 ---
 

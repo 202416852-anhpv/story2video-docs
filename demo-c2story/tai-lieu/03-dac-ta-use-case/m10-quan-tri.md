@@ -156,11 +156,54 @@
 
 ### UC-10.07a Chạy lại job
 <a id="uc-1007a"></a>
-- **Loại:** extend. **Các bước:** chọn job `FAILED`, bấm "Retry"; hệ thống tạo job mới cùng tham số (idempotency key mới), credit tính như thao tác thường **hoặc** miễn phí nếu Admin chọn "Do lỗi hệ thống". **Kết quả:** job mới vào hàng đợi; ghi audit log.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-10.07 |
+| Tác nhân | Admin |
+| Mô tả | Chạy lại một job đã lỗi với cùng tham số, có thể miễn phí khi lỗi do hệ thống |
+| Tiền điều kiện | Là Admin; job ở trạng thái `FAILED` |
+| Hậu điều kiện | **Thành công:** có job mới vào hàng đợi; hành động được ghi audit log. **Tối thiểu:** job gốc và bút toán của nó không bị sửa |
+| Kích hoạt | Bấm "Retry" trong chi tiết job |
+| Truy vết | FR-ADM-04; BR-18; CR-08; UC-10.09; API 2.9 `/admin/jobs:retry` |
+
+**Luồng chính**
+1. Admin mở job `FAILED` (UC-10.07 bước 3) và bấm "Retry".
+2. Admin chọn cách tính credit: như thao tác thường (trừ ví người dùng) hoặc miễn phí vì "Do lỗi hệ thống", kèm lý do.
+3. Hệ thống tạo job mới cùng loại, đối tượng và tham số, với `Idempotency-Key` mới.
+4. Chế độ thường: hệ thống giữ credit của người dùng (UC-05.17). Chế độ miễn phí: không giữ credit.
+5. Hệ thống thực hiện UC-10.09 (audit) trong cùng giao dịch và đưa job vào hàng đợi.
+
+**Luồng thay thế / ngoại lệ**
+- **1a.** Job không ở `FAILED`: ẩn nút Retry.
+- **2a.** Job gốc lỗi do `CONTENT_POLICY`: cảnh báo nội dung đã bị moderation chặn; chạy lại có thể lỗi lại (BR-18) [ĐX].
+- **4a.** Chế độ thường nhưng người dùng không đủ credit: `402`; Admin chuyển sang miễn phí hoặc hủy.
+- **3a.** Đối tượng đích đã đổi (chương đã sửa, shot đã xóa, `source_hash` lệch): job mới kết thúc `OUTDATED` hoặc bị từ chối `422`.
 
 ### UC-10.07b Hoàn credit thủ công
 <a id="uc-1007b"></a>
-- **Loại:** extend; include UC-10.09. **Các bước:** chọn job đã CAPTURE nhưng kết quả hỏng; nhập lý do; hệ thống ghi ADJUST dương vào đúng bucket. **Kết quả:** người dùng được hoàn credit; có audit log.
+
+| Mục | Nội dung |
+|---|---|
+| Loại | extend của UC-10.07; include UC-10.09 |
+| Tác nhân | Admin |
+| Mô tả | Hoàn credit cho một job đã trừ credit nhưng kết quả hỏng |
+| Tiền điều kiện | Là Admin; job đã CAPTURE credit |
+| Hậu điều kiện | **Thành công:** ledger có bút toán ADJUST dương vào đúng bucket; người dùng được hoàn credit; có audit log. **Tối thiểu:** không hoàn nhiều hơn số đã trừ |
+| Kích hoạt | Bấm "Hoàn credit" trong chi tiết job |
+| Truy vết | FR-ADM-04, FR-ADM-05; CR-04, CR-08; UC-10.09; API 2.9 `/admin/jobs:refund` |
+
+**Luồng chính**
+1. Admin mở job đã CAPTURE (UC-10.07 bước 3) và bấm "Hoàn credit".
+2. Admin nhập số credit (mặc định bằng `credit_cost`, không vượt số đã trừ) và **lý do bắt buộc**.
+3. Hệ thống ghi `credit_ledger_entries` ADJUST dương vào đúng bucket đã bị trừ, kèm `reason`, `actor_id`, `job_id`.
+4. Hệ thống cập nhật `credit_balances` cùng giao dịch và thực hiện UC-10.09.
+5. Hệ thống thông báo cho người dùng.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Tổng số đã hoàn cho job này cộng số mới vượt số đã trừ: chặn để không hoàn trùng [ĐX].
+- **3a.** Bucket gốc đã hết hạn: Admin chọn bucket thay thế (ví dụ `BONUS` kèm hạn dùng) [ĐX].
+- **4a.** Không ghi được audit: rollback cả hoàn credit (UC-10.09 nhánh 2a).
 
 ---
 
