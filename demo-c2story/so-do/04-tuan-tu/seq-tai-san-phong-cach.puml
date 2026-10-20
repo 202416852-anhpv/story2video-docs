@@ -1,22 +1,20 @@
 @startuml Seq_TaiSanPhongCach
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include _style-tuan-tu.iuml
 autonumber
 '@sau-mvp
 title UC-04.02 (+04.02b, 04.02d, 04.02e) + UC-04.05 + UC-04.06 + UC-04.10:\nQuản lý Story Assets (nhóm, sửa, gỡ), style dự án, Art Direction, Visual Rules; BR-08, BR-14, BR-16; IC-13
 '@/sau-mvp
 '@mvp title UC-04.02 (+04.02b, 04.02d, 04.02e) + UC-04.05 + UC-04.06 + UC-04.10 (MVP):\nQuản lý Story Assets (nhóm, sửa, gỡ), style dự án, Art Direction, Visual Rules; BR-08, BR-14, BR-16; IC-13
 
-actor Editor
-participant "Web App" as Web
-box "API Server - module world (M04)" #F5F5F5
-participant "StoryAssetService" as AS
-participant "ProjectService" as PS
-participant "VisualRuleService" as VR
+actor Editor $NGUOI_DUNG
+participant "Web App" as Web $GIAO_DIEN
+box "API Server - module world (M04)" $BOX_API
+participant "StoryAssetService" as AS $API
+participant "ProjectService" as PS $API
+participant "VisualRuleService" as VR $API
 end box
-database PostgreSQL as DB
+database PostgreSQL as DB $DU_LIEU
 
 == Story Assets (UC-04.02) ==
 Editor -> Web : Mở ?v=assets

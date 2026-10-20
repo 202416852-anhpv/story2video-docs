@@ -1,37 +1,35 @@
 @startuml Seq_ChinhSuaXuatVideo
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include _style-tuan-tu.iuml
 autonumber
 '@sau-mvp
 title UC-06.01 (+06.01a) + UC-06.02 (+06.02a) + UC-06.03..06.11 (+06.11a) + UC-06.13 + UC-06.15 + UC-06.16 (+06.16a, 06.16b) + UC-06.17:\nMở, chỉnh sửa timeline chương với thuyết minh khóa, âm thanh, đồng bộ tư liệu, xuất chương / cả dự án, tải video; BR-24, BR-27; IC-10, IC-11; ADR-13, ADR-16; QĐ-140, QĐ-141
 '@/sau-mvp
 '@mvp title UC-06.01 (+06.01a) + UC-06.02 (+06.02a) + UC-06.03..06.06 + UC-06.08..06.11 (+06.11a) + UC-06.13 + UC-06.15 + UC-06.16 (+06.16a) + UC-06.17 (MVP):\nMở, chỉnh sửa timeline chương với thuyết minh khóa, âm thanh, đồng bộ tư liệu, xuất chương / cả dự án, tải video; BR-24, BR-27; IC-10, IC-11; ADR-13, ADR-16; QĐ-140, QĐ-141
 
-actor Editor
-box "Web App — trình chỉnh sửa" #F5F5F5
-participant "TimelineView\n+ panels" as UI
-participant "TimelineStore\n(Zustand + immer)" as STORE
-participant "NarrationGuard\n(@studio/timeline-rules)" as NGc
-participant "OpsBatcher" as OB
-participant "PreviewPlayer\n(Remotion Player,\nStoryVideo)" as PV
+actor Editor $NGUOI_DUNG
+box "Web App — trình chỉnh sửa" $BOX_GIAO_DIEN
+participant "TimelineView\n+ panels" as UI $GIAO_DIEN
+participant "NarrationGuard\n(@studio/timeline-rules)" as NGc $GIAO_DIEN
+participant "TimelineStore\n(Zustand + immer)" as STORE $GIAO_DIEN
+participant "PreviewPlayer\n(Remotion Player,\nStoryVideo)" as PV $GIAO_DIEN
+participant "OpsBatcher" as OB $GIAO_DIEN
 end box
-box "API Server — module editor" #F5F5F5
-participant "TimelineController" as TC
-participant "TimelineBuilder" as TB
-participant "OpsApplier\n+ NarrationGuard" as OA
-participant "AudioAssetService" as AU
-participant "MediaSync" as MS
-participant "ReadinessChecker" as RC
-participant "RenderService" as RS
-participant "Realtime (SSE)" as RT
+box "API Server — module editor" $BOX_API
+participant "TimelineController" as TC $API
+participant "RenderService" as RS $API
+participant "ReadinessChecker" as RC $API
+participant "TimelineBuilder" as TB $API
+participant "OpsApplier\n+ NarrationGuard" as OA $API
+participant "AudioAssetService" as AU $API
+participant "Realtime (SSE)" as RT $API
+participant "MediaSync" as MS $API
 end box
-database PostgreSQL as DB
-queue "Redis / BullMQ" as Q
-participant "Media Processing\n(FFmpeg, ClamAV)" as MP
-participant "Render Worker\n(Remotion + FFmpeg)" as RW
-participant "Object Storage" as S3
+database PostgreSQL as DB $DU_LIEU
+queue "Redis / BullMQ" as Q $DU_LIEU
+participant "Object Storage" as S3 $DU_LIEU
+participant "Render Worker\n(Remotion + FFmpeg)" as RW $WORKER
+participant "Media Processing\n(FFmpeg, ClamAV)" as MP $WORKER
 
 == Mở trình chỉnh sửa (UC-06.01, UC-06.01a) ==
 Editor -> UI : Mở trình chỉnh sửa chương 1

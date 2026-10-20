@@ -14,7 +14,7 @@
 | Tiền điều kiện | — |
 | Hậu điều kiện | **Thành công:** hiển thị giá hiện hành từ cấu hình |
 | Kích hoạt | Mở `/pricing` |
-| Truy vết | FR-BIL-01; BR-01, BR-27, BR-28; 08 §3; API 2.8 `GET /pricing`; seq-thanh-toan |
+| Truy vết | FR-BIL-01; BR-01, BR-27, BR-28; 08 §3; API 2.8 `GET /pricing`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -65,7 +65,7 @@
 | Hậu điều kiện | **Thành công:** `wallets.available_micro` và `topup_total_micro` tăng đúng số tiền; sổ cái có bút toán `TOPUP`; tài khoản ở trạng thái "Đã nạp tiền" (BR-27). **Tối thiểu:** không cộng tiền khi chưa có webhook xác nhận |
 | Kích hoạt | Bấm "Nạp tiền" trên Pricing, Dashboard, hoặc từ thông báo thiếu số dư (`402`) hay vượt giới hạn Free (`403 FREE_LIMIT_REACHED`) |
 | Quan hệ | include UC-09.03a |
-| Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions`; seq-thanh-toan |
+| Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
@@ -145,7 +145,7 @@
 | Tiền điều kiện | Đã đăng nhập |
 | Hậu điều kiện | **Thành công:** số liệu khớp `wallets` và sổ cái |
 | Kích hoạt | Badge số dư ở thanh trên, hoặc Dashboard |
-| Truy vết | FR-BIL-05, FR-BIL-12; BR-27; API 2.8 `GET /me/wallet`; seq-thanh-toan |
+| Truy vết | FR-BIL-05, FR-BIL-12; BR-27; API 2.8 `GET /me/wallet`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Giai đoạn | P2 |
 
 **Luồng chính**
@@ -168,7 +168,7 @@
 | Tiền điều kiện | Đã đăng nhập |
 | Hậu điều kiện | **Thành công:** hiển thị các bút toán (append-only) |
 | Kích hoạt | "Lịch sử chi tiêu" |
-| Truy vết | FR-BIL-06, 08; API 2.8 `GET /me/wallet/ledger`; seq-thanh-toan |
+| Truy vết | FR-BIL-06, 08; API 2.8 `GET /me/wallet/ledger`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -189,7 +189,7 @@
 | Hậu điều kiện | **Thành công:** mỗi event xử lý đúng một lần. **Tối thiểu:** event trùng hoặc sai chữ ký không làm thay đổi dữ liệu |
 | Kích hoạt | `POST /webhooks/stripe` |
 | Quan hệ | include UC-09.08a |
-| Truy vết | FR-BIL-09; NFR-SEC-07; IC-07; seq-thanh-toan |
+| Truy vết | FR-BIL-09; NFR-SEC-07; IC-07; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Giai đoạn | P3 ✂1 |
 
 **Luồng chính**

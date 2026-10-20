@@ -1,0 +1,65 @@
+@startuml Act_M09_ViThanhToan_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+!include ../../05-hoat-dong/_style-hoat-dong.iuml
+title M09 Ví & thanh toán (MVP): xem ví, nạp tiền sandbox qua Stripe, webhook ghi sổ cái, lịch sử chi tiêu\nUC-09.01, 09.03 (+09.03a), 09.05, 09.06, 09.08 (+09.08a); BR-01, BR-27; WR-01..WR-05
+
+|$LAN_NGUOI_DUNG|Người dùng|
+start
+:Mở Pricing / Dashboard (UC-09.01, 09.05);
+|$LAN_HE_THONG|Hệ thống|
+:Hiện cách tính giá (chi phí thực × 110%),\nsố dư khả dụng, tiền đang giữ,\ntrạng thái Free / Đã nạp tiền, hạn mức Free đã dùng;
+|Người dùng|
+:Chọn $2 / $5 / $10 / số khác (UC-09.03);
+|Hệ thống|
+if (Số tiền trong $1–$100?) then (không)
+  $LOI:400 VALIDATION_ERROR;
+  stop
+endif
+:Tạo khách hàng Stripe nếu chưa có;\nghi payments (TOPUP, PENDING);
+|$LAN_NGOAI|Stripe|
+:Tạo phiên Checkout (sandbox);
+if (Stripe phản hồi?) then (không)
+  |Hệ thống|
+  $LOI:Báo lỗi, gợi ý thử lại;\npayments PENDING rồi hết hạn;
+  stop
+endif
+|Người dùng|
+:Thanh toán bằng thẻ thử trên trang Stripe;
+if (Hủy?) then (có)
+  :Quay lại, không đổi gì;
+  stop
+endif
+:Về Dashboard: "Đang xử lý thanh toán"\n(chưa cộng tiền trước khi có webhook);
+|Stripe|
+repeat
+  :Gửi webhook checkout.session.completed;
+  |Hệ thống|
+  if (Chữ ký đúng và trong 5 phút? (UC-09.08a)) then (không)
+    $LOI:Ghi audit SECURITY; trả 400;
+    stop
+  endif
+  if (Sự kiện đã xử lý (gateway_event_id)?) then (có)
+    :Trả 200, bỏ qua (idempotent);
+    stop
+  endif
+  partition "Một giao dịch (UC-09.08)" {
+    :payments PENDING → SUCCEEDED;
+    $TIEN:Ví: available += x; topup_total += x;\nsổ cái TOPUP (+x);
+    :Đánh dấu sự kiện đã xử lý;
+  }
+  backward:Stripe gửi lại sau;
+  |Stripe|
+repeat while (Lỗi xử lý (ROLLBACK, trả 500)?) is (có) not (không)
+|Hệ thống|
+$XONG:Trả 200; phát wallet.updated;
+if (Lần nạp đầu tiên?) then (có)
+  :Tài khoản "Đã nạp tiền":\nbỏ giới hạn Free (BR-27), không watermark;
+else (không)
+endif
+|Người dùng|
+:Thấy số dư mới;
+:Xem lịch sử chi tiêu (UC-09.06): TRIAL_GRANT, TOPUP,\nHOLD, CAPTURE, RELEASE; chi phí thực + phí 10% từng job;
+stop
+caption Giữ / trừ / hoàn tiền khi dùng thao tác AI: act-giu-tru-tien. Phương án ✂1 (QĐ-116): bỏ nạp tiền sandbox, Admin cộng tiền bằng CLI (cùng WalletService).
+@enduml

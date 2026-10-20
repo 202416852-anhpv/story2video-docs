@@ -1,0 +1,93 @@
+@startuml Act_M04_TheGioiTruyen
+!theme plain
+!include _style-hoat-dong.iuml
+'@sau-mvp
+title M04 Thế giới truyện: phân tích tài sản, duyệt, style & Art Direction, ảnh tham chiếu, timeline truyện và quan hệ\nUC-04.01 (+04.01a), 04.02 (+04.02a..e), 04.03 (+04.03a), 04.04..04.10; BR-08, BR-14; IC-13, IC-19; QĐ-142, QĐ-143
+'@/sau-mvp
+'@mvp title M04 Thế giới truyện (MVP): phân tích tài sản, duyệt, style & Art Direction, ảnh tham chiếu, timeline truyện và quan hệ\nUC-04.01 (+04.01a), 04.02 (+04.02a, b, d, e), 04.03 (+04.03a), 04.04..04.10; BR-08, BR-14; IC-13, IC-19; QĐ-142, QĐ-143
+
+|$LAN_NGUOI_DUNG|Người dùng|
+start
+:Mở Story Assets, bấm "Analyze" (UC-04.01);
+|$LAN_HE_THONG|Hệ thống|
+:Báo giá theo số chương;
+|Người dùng|
+if (Xác nhận?) then (không)
+  stop
+endif
+|Hệ thống|
+$TIEN:Giữ tiền + chỗ trong trần ngày\n(act-giu-tru-tien);
+if (Đủ số dư và còn trần ngày?) then (không)
+  $LOI:402 / 503, không tạo job;
+  stop
+endif
+|$LAN_AI|Dịch vụ AI|
+repeat
+  $GOI_AI:Map: trích nhân vật, địa điểm, đạo cụ\ncủa một chương (lô chương nếu truyện dài);
+  |Hệ thống|
+  :Báo tiến độ i / n;
+  |Dịch vụ AI|
+repeat while (Còn chương?) is (có) not (không)
+$GOI_AI:Reduce: hợp nhất, gộp bí danh,\nghi chương xuất hiện;
+|Hệ thống|
+:Chỉ giữ tài sản **lặp lại**;\nđánh dấu mục trùng tài sản đã có;\n**không tự tạo tài sản** (AI chỉ đề xuất);
+$TIEN:Trừ chi phí thực × 1,10, hoàn phần dư;
+if (Có tài sản lặp lại?) then (không)
+  :"No recurring cast or places to design";
+  stop
+endif
+|Người dùng|
+:Duyệt đề xuất (UC-04.01a): bỏ chọn, sửa tên / loại,\ngộp mục trùng (tên → bí danh);
+:Thêm tay, tạo nhóm nhân vật, sửa, gỡ tài sản\n(UC-04.02a, b, d, e);
+|Hệ thống|
+if (Tên 1–80 ký tự, ≤ 10 bí danh, ≤ 200 tài sản,\nnhóm ≥ 2 nhân vật (IC-13)?) then (không)
+  $LOI:400 / 422, giữ dữ liệu đã nhập;
+  stop
+endif
+$XONG:Lưu story_assets\n(sửa facts / mô tả là ghi đè, QĐ-142);
+|Người dùng|
+:Chọn style (UC-04.05), nhập Art Direction (UC-04.06),\nđặt Visual Rules dự án / chương (UC-04.10);
+|Người dùng|
+if (Chuẩn bị ảnh tham chiếu? (UC-04.03, 04.04)) then (có)
+  if (Dùng ảnh tải lên nguyên bản? (UC-04.04)) then (có)
+    |Hệ thống|
+    :Kiểm MIME, ≤ 10 MB, cạnh ≥ 512 px,\nquét malware, bỏ EXIF;
+    $XONG:Đặt ảnh hiện hành, use exact = true\n(miễn phí, không bao giờ vẽ lại, BR-14);
+  else (sinh ảnh tham chiếu)
+    |Hệ thống|
+    :Báo giá một tài sản hoặc "Regenerate all"\n(bỏ qua tài sản use exact, UC-04.03a);
+    $TIEN:Một giao dịch: mỗi tài sản một job, HOLD riêng;\nthiếu tiền → không tạo job nào;
+    |Dịch vụ AI|
+    $GOI_AI:Mỗi tài sản (song song theo queue):\nprompt BR-08 Style → Art Direction → Visual Rules\n→ mô tả + facts; sinh ảnh;
+    |Hệ thống|
+    if (Sinh ảnh thành công?) then (có)
+      $TIEN:Lưu ảnh, đặt hiện hành; trừ thực, hoàn dư;
+    else (lỗi / CONTENT_POLICY)
+      $LOI:Hoàn tiền phần của job; giữ ảnh cũ;\ngợi ý sửa mô tả;
+    endif
+  endif
+else (để sau)
+endif
+|Người dùng|
+if (Phân tích dòng thời gian và quan hệ?) then (có)
+  :"Re-analyse" dòng thời gian và quan hệ (UC-04.09);
+  |Hệ thống|
+  $TIEN:Báo giá, xác nhận, giữ tiền;
+  |Dịch vụ AI|
+  $GOI_AI:Mỗi chương: sự kiện (ngày, mùa, thứ tự thời gian)\nvà quan hệ (cặp, nhãn, chương bắt đầu);
+  |Hệ thống|
+  :Ánh xạ tên / bí danh → tài sản;\ntên không khớp → bỏ cạnh, liệt kê;
+  :Hợp nhất theo thứ tự chương: nhãn đổi\n→ giai đoạn quan hệ mới (QĐ-143, IC-19);
+  $XONG:Thay timeline_events, relationships; quyết toán;
+  |Người dùng|
+  :Xem timeline (mạch truyện / thời gian, UC-04.07),\nđồ thị quan hệ theo chương (UC-04.08);
+else (để sau)
+endif
+|Hệ thống|
+$XONG:Thế giới truyện sẵn sàng cho storyboard\nvà sinh ảnh shot (M05);
+note right: Hai nhóm việc trên độc lập,\nlàm theo thứ tự bất kỳ và lặp lại khi cần
+stop
+'@sau-mvp
+caption Sau MVP: thêm từ thư viện cá nhân (UC-04.02c, M08), xuất ZIP ảnh tài sản (UC-04.11), giai đoạn ngoại hình story_asset_variants (FR-WLD-13).
+'@/sau-mvp
+@enduml

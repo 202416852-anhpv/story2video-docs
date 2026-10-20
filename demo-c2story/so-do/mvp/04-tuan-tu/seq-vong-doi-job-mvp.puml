@@ -1,36 +1,34 @@
 @startuml Seq_VongDoiJob_MVP
 ' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
 autonumber
 title Khung chung (MVP): vòng đời một thao tác AI tốn phí (UC-05.17 + mọi UC tạo job)\nBR-01, BR-02, BR-29, BR-32; ADR-23, 25, 29; WR-05, WR-09; QĐ-132..134
 
-actor Editor
-participant "Web App" as Web
-box "API Server" #F5F5F5
-participant "Middleware\n(authz, idempotency,\nrate-limit)" as MW
-participant "<Module>Controller\n→ <Module>Service" as SVC
-participant "PriceEstimator\n(AI Gateway)" as PE
-participant "JobService\n(platform/jobs)" as JOBS
-participant "BudgetGuard" as BG
-participant "WalletService\n(billing)" as WAL
-participant "Realtime\n(SSE)" as RT
+actor Editor $NGUOI_DUNG
+participant "Web App" as Web $GIAO_DIEN
+box "API Server" $BOX_API
+participant "Middleware\n(authz, idempotency,\nrate-limit)" as MW $API
+participant "<Module>Controller\n→ <Module>Service" as SVC $API
+participant "PriceEstimator\n(AI Gateway)" as PE $AI_GATEWAY
+participant "Realtime\n(SSE)" as RT $API
+participant "JobService\n(platform/jobs)" as JOBS $API
+participant "BudgetGuard" as BG $API
+participant "WalletService\n(billing)" as WAL $API
 end box
-database PostgreSQL as DB
-queue "Redis\n(BullMQ, Pub/Sub,\nrate limit)" as R
-box "Worker" #F5F5F5
-participant "JobRunner" as RUN
-participant "<Type>Handler" as H
+database PostgreSQL as DB $DU_LIEU
+queue "Redis\n(BullMQ, Pub/Sub,\nrate limit)" as R $DU_LIEU
+box "Worker" $BOX_WORKER
+participant "JobRunner" as RUN $WORKER
+participant "<Type>Handler" as H $WORKER
 end box
-box "AI Gateway (thư viện)" #FFFFFF
-participant "ProviderRouter" as PR
-participant "Adapter" as AD
-participant "UsageMeter" as UM
+participant "Reconciler\n(job lặp)" as REC $WORKER
+box "AI Gateway (thư viện)" $BOX_AI_GATEWAY
+participant "ProviderRouter" as PR $AI_GATEWAY
+participant "UsageMeter" as UM $AI_GATEWAY
+participant "Adapter" as AD $AI_GATEWAY
 end box
-participant "Provider\n(Gemini / TTS Server /\nWhisperX)" as P
-participant "Reconciler\n(job lặp)" as REC
+participant "Provider\n(Gemini / TTS Server /\nWhisperX)" as P $BEN_NGOAI
 
 == 1. Báo giá (không gọi provider) ==
 Editor -> Web : Mở hộp xác nhận thao tác tốn phí

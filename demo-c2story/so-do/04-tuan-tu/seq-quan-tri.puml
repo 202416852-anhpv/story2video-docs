@@ -1,27 +1,25 @@
 @startuml Seq_QuanTri
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include _style-tuan-tu.iuml
 autonumber
 '@sau-mvp
 title UC-10.01 + UC-10.03 + UC-10.04 + UC-10.05 + UC-10.09 + UC-10.11 + UC-10.12:\nBảng giá, provider & mô hình AI, style, giọng đọc, audit log, danh sách mời beta, trần chi tiêu AI ngày; BR-01, BR-29, BR-30; IC-18
 '@/sau-mvp
 '@mvp title UC-10.01 + UC-10.03 + UC-10.04 + UC-10.05 + UC-10.09 + UC-10.11 + UC-10.12 (MVP):\nQuản trị bằng file seed và CLI (không có trang /admin): bảng giá, provider, style, giọng, mời beta, trần chi tiêu ngày; BR-01, BR-29, BR-30; IC-18
 
-actor Admin
-participant "CLI\n(pnpm seed,\npnpm admin:invites)" as CLI
+actor Admin $NGUOI_DUNG
+participant "CLI\n(pnpm seed,\npnpm admin:invites)" as CLI $GIAO_DIEN
 '@sau-mvp
-participant "Web App\n(/admin, sau MVP)" as Web
+participant "Web App\n(/admin, sau MVP)" as Web $GIAO_DIEN
 '@/sau-mvp
-box "API Server" #F5F5F5
-participant "AdminService\n(seed loader)" as AS
-participant "AuditLogger" as AUD
+box "API Server" $BOX_API
+participant "AdminService\n(seed loader)" as AS $API
+participant "AuditLogger" as AUD $API
 end box
-participant "AI Gateway\n(ProviderRouter)" as GW
-participant "Scheduler" as SCH
-database PostgreSQL as DB
-participant "Email service" as MAIL
+database PostgreSQL as DB $DU_LIEU
+participant "Scheduler" as SCH $WORKER
+participant "AI Gateway\n(ProviderRouter)" as GW $AI_GATEWAY
+participant "Email service" as MAIL $BEN_NGOAI
 
 == Nạp cấu hình từ file seed (UC-10.01, 10.03, 10.04, 10.05) ==
 Admin -> CLI : sửa seed/price-rules.yaml | ai-providers.yaml |\nstyles.yaml | voices.yaml; chạy pnpm seed

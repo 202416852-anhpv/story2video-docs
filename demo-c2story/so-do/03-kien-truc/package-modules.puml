@@ -1,0 +1,116 @@
+@startuml Package_Modules
+' Sơ đồ gói (UML package diagram) mức thiết kế: module của API Server, platform, thư viện dùng chung và phụ thuộc giữa chúng (05 §5).
+' Dòng giữa '@sau-mvp và '@/sau-mvp chỉ có ở bản đầy đủ; bản MVP sinh tự động bởi so-do/tools/gen_mvp.py.
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam packageStyle folder
+skinparam nodesep 50
+skinparam ranksep 70
+skinparam ArrowColor #455A64
+skinparam package {
+    BorderColor #546E7A
+    FontStyle bold
+}
+'@sau-mvp
+title Sơ đồ gói: module API Server, platform, thư viện dùng chung (05 §5)
+'@/sau-mvp
+'@mvp title Sơ đồ gói: module API Server, platform, thư viện dùng chung (05 §5) (MVP)
+
+package "Next.js: Workspace, Storyboard,\ntrình chỉnh sửa, Remotion Player" as web #E3F2FD
+
+package "API Server + Worker (NestJS, src/)" as api {
+    package "modules" as modules #E8F5E9 {
+        package "M01: SSO, phiên, mời,\nJIT hồ sơ, đồng ý" as auth
+        package "M02: dự án, import,\ncài đặt, Map" as projects
+        package "M03: chương, tái cấu trúc,\ndời ranh giới shot" as manuscript
+        package "M04: tài sản, Visual Rules,\ntimeline truyện, quan hệ" as world
+        package "media (M05: Sinh tư liệu)" as media {
+            package "storyboard, shot" as storyboard
+            package "ảnh shot" as illustration
+            package "thuyết minh,\ntừ điển phát âm" as narration
+        }
+        package "M06: timeline, sync,\nkiểm tra, render" as editor
+        package "M09: ví, sổ cái,\nnạp tiền, Free" as billing
+        package "M10: seed, mời,\ntrần chi tiêu ngày" as admin
+'@sau-mvp
+        package "M07 (sau MVP):\nAI Director" as director #DDDDDD
+        package "M08 (sau MVP):\nthư viện tài sản" as library #DDDDDD
+'@/sau-mvp
+    }
+    package "platform" as platform #FFF3E0 {
+        package "JobService, BudgetGuard,\nJobRunner, Reconciler" as jobs
+        package "policy theo vai trò" as authz
+        package "Idempotency-Key,\nrate limit" as idempotency
+        package "SSE, Redis Pub/Sub" as realtime
+        package "audit_logs" as audit
+        package "presigned URL,\nmedia_files" as storage
+'@sau-mvp
+        package "sau MVP: outbox_events" as outbox #DDDDDD
+'@/sau-mvp
+        package "thư viện 05 §7: ProviderRouter,\nPort/Adapter, PriceEstimator…" as ai_gateway #F3E5F5
+    }
+}
+
+package "@studio/timeline-rules:\nbộ luật BR-24 dùng chung" as timeline_rules #ECEFF1
+
+' Web App dùng chung bộ luật BR-24 với server
+web ..> timeline_rules : <<import>>
+editor ..> timeline_rules : <<import>>
+web ..> api : HTTPS /api, SSE
+
+' Phụ thuộc giữa module nghiệp vụ (chỉ qua service công khai)
+auth ..> billing : openWallet, grantTrial
+projects ..> manuscript : createFromSource,\nreplaceSource
+projects ..> billing : FreeLimitGuard
+manuscript ..> media : dời ranh giới shot
+manuscript ..> editor : MediaSync.onShotsChanged
+manuscript ..> billing : FreeLimitGuard
+media ..> manuscript
+media ..> world : tài sản, Visual Rules,\nquan hệ hiệu lực
+media ..> editor : createDraftTimeline
+editor ..> media : đọc shot, ảnh, thuyết minh;\nnghe sự kiện nội bộ
+editor ..> billing : FreeLimitGuard (render)
+'@sau-mvp
+director ..> projects
+director ..> manuscript : chỉ đọc
+director ..> world
+director ..> media
+director ..> editor
+library ..> world : sao chép thành StoryAsset
+'@/sau-mvp
+
+' Phụ thuộc vào platform
+manuscript ..> jobs
+world ..> jobs
+media ..> jobs
+editor ..> jobs
+projects ..> jobs : cancelAll
+billing ..> jobs : hiện thực WalletPort
+manuscript ..> ai_gateway : SentenceSegmenter,\nCoverageValidator
+world ..> ai_gateway
+media ..> ai_gateway
+admin ..> ai_gateway : kiểm tra kết nối provider
+admin ..> audit
+jobs ..> ai_gateway : PriceEstimator, UsageMeter
+jobs ..> realtime : job.updated
+'@sau-mvp
+jobs ..> outbox
+director ..> ai_gateway
+director ..> jobs
+'@/sau-mvp
+
+note bottom of platform
+  **Quy tắc phụ thuộc** (05 §5)
+  • Module chỉ gọi nhau qua service công khai,
+    không đọc bảng của module khác.
+  • platform không phụ thuộc module nghiệp vụ:
+    jobs khai báo **WalletPort**, billing hiện thực
+    (đảo phụ thuộc, QĐ-144).
+  • Mọi module dùng authz, idempotency, realtime,
+    audit, storage (không vẽ mũi tên).
+  • Chỉ manuscript được ghi văn bản truyện (NFR-INT-02).
+  • Hai cặp hai chiều được phép: manuscript ↔ media,
+    media ↔ editor (lint kiến trúc chỉ cho đúng hai cặp này);
+    media đọc văn bản chương qua ManuscriptService.
+end note
+@enduml

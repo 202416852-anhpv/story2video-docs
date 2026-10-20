@@ -1,0 +1,82 @@
+@startuml Act_M05_SinhTuLieu
+!theme plain
+!include _style-hoat-dong.iuml
+'@sau-mvp
+title M05 Sinh tư liệu: cài đặt thuyết minh, storyboard, ảnh shot và thuyết minh nguyên văn, nghe & sinh lại\nUC-05.01 (+05.01a), 05.06, 05.07 (+05.07a..c), 05.09, 05.11..05.14, 05.17, 05.18; BR-11, BR-12, BR-19..BR-22, BR-34; WR-05
+'@/sau-mvp
+'@mvp title M05 Sinh tư liệu (MVP): cài đặt thuyết minh, storyboard, ảnh shot và thuyết minh nguyên văn, nghe & sinh lại\nUC-05.01 (+05.01a), 05.06, 05.07 (+05.07a..c), 05.09, 05.11..05.13, 05.17, 05.18; BR-11, BR-12, BR-19..BR-22, BR-34; WR-05
+
+|$LAN_NGUOI_DUNG|Người dùng|
+start
+:Cài đặt thuyết minh (UC-05.11): ngôn ngữ, giọng,\nmột tốc độ đọc cho cả dự án (QĐ-140), quy tắc ký hiệu;
+if (Cần sửa cách đọc từ? (UC-05.12)) then (có)
+  :Thêm mục từ điển phát âm (ALIAS);\nnghe thử đồng bộ, miễn phí;
+else (không)
+endif
+if (Muốn tự dựng và biên tập storyboard trước?) then (có)
+  :Tạo bản nháp storyboard (UC-05.01), biên tập shot:\nbrief, cast, tách / gộp shot (UC-05.06);
+  note right: Cùng luồng storyboard bên dưới,\ntính phí riêng cho từng thao tác AI
+else (không)
+endif
+repeat
+  |Người dùng|
+  :Chọn chương, bấm "Sinh tư liệu"\nhoặc "Sinh lại phần thiếu / lỗi / đã đánh dấu" (UC-05.07c);
+  |$LAN_HE_THONG|Hệ thống|
+  :Báo **một** giá ước tính tối đa: storyboard (nếu thiếu)\n+ số ảnh × đơn giá + số ký tự × đơn giá TTS, gồm phí 10%;
+  |Người dùng|
+  if (Xác nhận?) then (không)
+    stop
+  endif
+  |Hệ thống|
+  partition "Một giao dịch (UC-05.17, WR-05)" {
+    $TIEN:Giữ tiền **một lần** ở job cha\n+ chỗ trong trần ngày;
+    :Khóa chương (BR-12);
+  }
+  if (Đủ số dư, còn trần ngày, chương không bị khóa?) then (không)
+    $LOI:402 / 503 / 423; không tạo job;
+    stop
+  endif
+  if (Chương đã có storyboard hiện hành?) then (chưa)
+    :Dựng storyboard tự động (UC-05.07a → UC-05.01):\ntách câu tất định, đánh số câu (12 §1);
+    |$LAN_AI|Dịch vụ AI|
+    $GOI_AI:LLM chia shot theo chỉ số câu\n(không chép lại văn bản), brief 7 trường;
+    |Hệ thống|
+    :Kiểm phủ kín (UC-05.01a): nối các đoạn nguồn\nbằng đúng văn bản chương; sửa ranh giới (BR-20);
+    if (Storyboard hợp lệ?) then (không, sau 2 lần gọi lại)
+      $LOI:Chương NEEDS_ATTENTION;\nquyết toán, mở khóa;
+      stop
+    endif
+    :Đặt bản nháp hiện hành (BR-07);\nánh xạ tên → tài sản;
+  else (có)
+  endif
+  fork
+    $GOI_AI:Mỗi shot: sinh ảnh (UC-05.09)\nprompt BR-08 + ảnh tham chiếu cast / location / item;
+  fork again
+    :Mỗi shot: cắt đúng đoạn nguồn + kiểm hash (UC-05.13a);\nchuẩn hóa phát âm, không đổi chữ (UC-05.13b);
+    $GOI_AI:TTS đọc nguyên văn;\ncăn timestamp từng từ (WhisperX);
+'@sau-mvp
+    :Sau MVP: STT + WER → VERIFIED | NEEDS_REVIEW (UC-05.13c);
+'@/sau-mvp
+  end fork
+  partition "Kết thúc job cha: một giao dịch" {
+    if (Mọi shot có ảnh DONE và thuyết minh DONE?) then (có)
+      $XONG:Chương "Sẵn sàng dựng" (READY_TO_EDIT);\ndựng timeline nháp (UC-06.01a);
+    else (không)
+      $LOI:Chương "Cần xử lý" (NEEDS_ATTENTION);\nliệt kê shot lỗi;
+    endif
+    $TIEN:CAPTURE min(Σ chi phí con thành công × 1,10, số giữ);\nRELEASE phần còn lại; mở khóa chương;
+  }
+  |Người dùng|
+  :Xem tiến độ theo shot (UC-05.07b), media bin (UC-05.08);
+  :Nghe thuyết minh (tô sáng từng từ),\nđánh dấu shot cần sinh lại (UC-05.18, không bắt buộc);
+'@sau-mvp
+  :Sau MVP: duyệt shot NEEDS_REVIEW,\nchấp nhận thủ công (UC-05.14, 05.14a);
+'@/sau-mvp
+repeat while (Còn ảnh / thuyết minh lỗi, thiếu\nhoặc shot đã đánh dấu cần sinh lại?) is (có) not (không)
+|Hệ thống|
+$XONG:Chương sẵn sàng cho trình chỉnh sửa (M06);
+stop
+'@sau-mvp
+caption Sau MVP: Chapter rules (UC-05.04), chỉ đạo lại cả chương (UC-05.05), gán giọng theo nhân vật (UC-05.15), tải ZIP ảnh (UC-05.16).
+'@/sau-mvp
+@enduml

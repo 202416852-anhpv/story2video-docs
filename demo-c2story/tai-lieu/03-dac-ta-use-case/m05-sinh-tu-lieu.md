@@ -20,7 +20,7 @@
 | Hậu điều kiện | **Thành công:** StoryboardDraft có N shot, `concat(đoạn nguồn) == chapter.content`; nếu là bản đầu tiên thì đặt làm hiện hành. **Tối thiểu:** không lưu bản nháp vi phạm phủ kín |
 | Kích hoạt | "Create storyboard draft", hoặc tự động trong UC-05.07 |
 | Quan hệ | include UC-05.01a |
-| Truy vết | FR-BOK-01, 01a, 05; BR-20; ADR-11; seq-storyboard-sinh-anh |
+| Truy vết | FR-BOK-01, 01a, 05; BR-01, BR-20; 08 §3.2 (`STORYBOARD_DRAFT`); ADR-11; seq-storyboard-sinh-anh, act-m05-sinh-tu-lieu |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -233,7 +233,7 @@
 | Hậu điều kiện | **Thành công:** shot cập nhật (If-Match); phủ kín vẫn 100% |
 | Kích hoạt | Chọn một shot trong Storyboard |
 | Quan hệ | được mở rộng bởi UC-05.06a, UC-05.06b, UC-05.06c, UC-05.06e, UC-05.06f |
-| Truy vết | FR-BOK-01b, 05, 06 |
+| Truy vết | FR-BOK-01b, 05, 06; act-m05-sinh-tu-lieu |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -392,7 +392,7 @@
 | Hậu điều kiện | **Thành công:** mọi shot có ảnh `DONE` và thuyết minh `DONE`; chương "Sẵn sàng dựng"; có bản nháp timeline (UC-06.01a). **Tối thiểu:** phần thành công được giữ; tiền giữ cho phần lỗi được hoàn |
 | Kích hoạt | Bấm "Sinh tư liệu" |
 | Quan hệ | include UC-05.07a, UC-05.09, UC-05.13, UC-05.17; được mở rộng bởi UC-05.07b, UC-05.07c |
-| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu |
+| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
 | Giai đoạn | P2 |
 
 **Luồng chính**
@@ -433,8 +433,8 @@
 5. Hệ thống trả số shot thực tế cho UC-05.07 để fan-out job con; tiền đã giữ không đổi (UC-05.07 nhánh 4a, WR-05).
 
 **Luồng thay thế / ngoại lệ**
-- **3a.** Job lỗi sau retry (UC-05.01 nhánh 3a): chương `NEEDS_ATTENTION`, không sinh ảnh và thuyết minh cho chương này; các chương khác trong cùng lượt vẫn chạy.
 - **1a.** Chương đang bị khóa: `423 RESOURCE_LOCKED`.
+- **3a.** Job lỗi sau retry (UC-05.01 nhánh 3a): chương `NEEDS_ATTENTION`, không sinh ảnh và thuyết minh cho chương này; các chương khác trong cùng lượt vẫn chạy.
 
 ### UC-05.07b Xem tiến độ theo shot
 <a id="uc-0507b"></a>
@@ -500,7 +500,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** hiển thị tư liệu và trạng thái |
 | Kích hoạt | Mở "Tư liệu" |
-| Truy vết | FR-MED-03; FR-BOK-13; seq-sinh-tu-lieu |
+| Truy vết | FR-MED-03; FR-BOK-13; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -521,7 +521,7 @@
 | Hậu điều kiện | **Thành công:** Illustration phiên bản mới `DONE`, đặt làm hiện hành; tiền trừ. **Tối thiểu:** lỗi thì hoàn tiền |
 | Kích hoạt | "Generate" trên shot, hoặc UC-05.07 |
 | Quan hệ | được include bởi UC-05.07; include UC-05.17 |
-| Truy vết | FR-BOK-09; BR-08; seq-storyboard-sinh-anh |
+| Truy vết | FR-BOK-09; BR-08; seq-storyboard-sinh-anh, act-m05-sinh-tu-lieu |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -622,7 +622,7 @@
 | Hậu điều kiện | **Thành công:** `narration_settings` cập nhật; áp cho các lần sinh sau |
 | Kích hoạt | Mở "Cài đặt thuyết minh", hoặc điểm duyệt UC-07.05 |
 | Quan hệ | được mở rộng bởi UC-05.11a |
-| Truy vết | FR-NAR-01, 03; BR-19; 08 §6; API 2.5 `PUT …/narration-settings`; seq-thuyet-minh-nguyen-van |
+| Truy vết | FR-NAR-01, 03; BR-19; 08 §6; API 2.5 `PUT …/narration-settings`; seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
 | Giai đoạn | P2 |
 
 **Luồng chính**
@@ -673,7 +673,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** `pronunciation_entries` cập nhật; dùng ở lần sinh thuyết minh sau |
 | Kích hoạt | Mở "Từ điển phát âm" hoặc từ một shot đang nghe ở UC-05.18 |
-| Truy vết | FR-NAR-04; BR-19. Vị trí ✂6 trong thứ tự cắt giảm (QĐ-05, QĐ-80); seq-thuyet-minh-nguyen-van |
+| Truy vết | FR-NAR-04; BR-19. Vị trí ✂6 trong thứ tự cắt giảm (QĐ-05, QĐ-80); seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
 | Giai đoạn | P2 ✂6 |
 
 **Luồng chính**
@@ -698,7 +698,7 @@
 | Hậu điều kiện | **Thành công:** Narration `DONE` kèm `word_timings`; cờ "cần sinh lại" (nếu có) được xóa. **Tối thiểu:** không có audio nào sinh từ văn bản khác đoạn nguồn; lỗi thì hoàn tiền |
 | Kích hoạt | UC-05.07, hoặc "Sinh lại thuyết minh" trên shot |
 | Quan hệ | include UC-05.13a, UC-05.13b, UC-05.17; include UC-05.13c khi bật kiểm chứng ASR (sau MVP) |
-| Truy vết | FR-NAR-02, 03, 06; BR-19, BR-22, BR-34; ADR-12; seq-thuyet-minh-nguyen-van |
+| Truy vết | FR-NAR-02, 03, 06; BR-19, BR-22, BR-34; ADR-12; seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
 | Giai đoạn | P2 |
 
 **Luồng chính**
@@ -810,7 +810,7 @@
 | Hậu điều kiện | **Thành công:** shot thành `VERIFIED` (sau khi sinh lại) hoặc `ACCEPTED` |
 | Kích hoạt | Mở shot từ danh sách "Cần xử lý" hoặc điểm duyệt UC-07.06 |
 | Quan hệ | được mở rộng bởi UC-05.14a |
-| Truy vết | FR-NAR-07; BR-23; seq-thuyet-minh-nguyen-van |
+| Truy vết | FR-NAR-07; BR-23; seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -903,7 +903,7 @@
 | Tiền điều kiện | Có giá theo `price_rules` hiệu lực |
 | Hậu điều kiện | **Thành công:** sổ cái có đúng một HOLD cho mỗi job; khi job kết thúc, CAPTURE + RELEASE bằng số đã HOLD và CAPTURE ≤ HOLD (IC-05). **Tối thiểu:** không bao giờ trừ tiền cho job thất bại; không bao giờ trừ quá số đã giữ |
 | Kích hoạt | Tạo job tốn phí |
-| Truy vết | FR-BIL-11; BR-01, BR-02, BR-03, BR-29; WR-01..05; IC-04, IC-05; act-giu-tru-tien; seq-vong-doi-job |
+| Truy vết | FR-BIL-11; BR-01, BR-02, BR-03, BR-29; WR-01..05; IC-04, IC-05; act-giu-tru-tien; seq-vong-doi-job, act-m05-sinh-tu-lieu |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -936,7 +936,7 @@
 | Tiền điều kiện | Shot có thuyết minh `DONE` |
 | Hậu điều kiện | **Thành công:** `narrations.flagged_at` được đặt hoặc xóa theo lựa chọn. **Tối thiểu:** không đổi audio, không tốn phí |
 | Kích hoạt | Bấm "Nghe" trên shot ở bảng tiến độ, media bin hoặc storyboard |
-| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu |
+| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
 | Giai đoạn | P2 |
 
 **Luồng chính**

@@ -1,0 +1,92 @@
+@startuml Act_M03_BanThaoChuong
+!theme plain
+!include _style-hoat-dong.iuml
+'@sau-mvp
+title M03 Bản thảo & chương: nhập truyện, gợi ý chia chương bằng AI, tái cấu trúc nguyên tử, nhập lại\nUC-02.02 (+02.02a), UC-03.01b, UC-03.03..03.09; BR-12, BR-20, BR-27; ADR-26; NFR-INT-02
+'@/sau-mvp
+'@mvp title M03 Bản thảo & chương (MVP): nhập truyện, gợi ý chia chương bằng AI, tái cấu trúc nguyên tử, nhập lại\nUC-02.02 (+02.02a), UC-03.01b, UC-03.03..03.09; BR-12, BR-20, BR-27; ADR-26; NFR-INT-02
+
+|$LAN_NGUOI_DUNG|Người dùng|
+start
+:Dán văn bản hoặc tải .txt / .md / .docx;\nchọn tiêu đề, style, khung hình;
+|$LAN_HE_THONG|Hệ thống|
+if (Tài khoản Free đã có 1 dự án? (BR-27)) then (có)
+  $LOI:403 FREE_LIMIT_REACHED;\ngợi ý nạp tiền;
+  stop
+endif
+partition "Kiểm tra & chuẩn hóa kỹ thuật (UC-02.02a)" {
+  :Kiểm MIME thật, ≤ 2 MB;\n.docx chỉ lấy đoạn văn;
+  :NFC, CRLF → LF, bỏ ký tự điều khiển;\n**không đổi chữ**; ghi nhật ký chuẩn hóa;
+  if (≤ 500.000 ký tự UTF-16?) then (không)
+    $LOI:400 VALIDATION_ERROR;\ngiữ form để sửa;
+    stop
+  endif
+}
+:Một giao dịch: tạo dự án, lưu toàn văn (sha256),\nChương 1 = toàn văn;
+note right: Chỉ manuscript được ghi văn bản truyện (NFR-INT-02)
+|Người dùng|
+:Xem văn bản gốc, soạn trong Workspace (UC-03.01, 03.02);
+if (Dùng AI gợi ý điểm chia chương? (UC-03.03)) then (có)
+  |Hệ thống|
+  :Báo giá ước tính;
+  |Người dùng|
+  if (Xác nhận?) then (không)
+  else (có)
+    |Hệ thống|
+    $TIEN:Giữ tiền + chỗ trong trần ngày\n(act-giu-tru-tien);
+    |$LAN_AI|Dịch vụ AI|
+    $GOI_AI:LLM nhận các đoạn đánh số,\ntrả [{startParagraph, title}];
+    |Hệ thống|
+    if (Đúng schema, tăng dần, trong phạm vi?) then (không)
+      $LOI:Gọi lại kèm thông báo lỗi (≤ 2 lần);\nvẫn sai → job FAILED, hoàn tiền;
+    else (có)
+      $TIEN:Trừ chi phí thực × 1,10, hoàn phần dư;
+      :Đánh dấu điểm chia đề xuất trên văn bản;
+    endif
+  endif
+else (không)
+endif
+|Người dùng|
+:Chấp nhận / bỏ bớt gợi ý, hoặc thao tác tay:\nchia, gộp, dời ranh giới, thêm, xóa, đổi tên,\nsắp xếp chương (UC-03.04..03.08);
+|Hệ thống|
+partition "Tái cấu trúc nguyên tử: một giao dịch (UC-03.09)" {
+  :Khóa các chương liên quan (theo thứ tự id);
+  if (Free và tổng chương sau thao tác > 3?) then (có)
+    $LOI:ROLLBACK; 403 FREE_LIMIT_REACHED;
+    stop
+  elseif (Phiên bản chương đã đổi?) then (có)
+    $LOI:ROLLBACK; 409 VERSION_CONFLICT\n→ tải lại;
+    stop
+  elseif (Chương đang bị job khóa? (BR-12)) then (có)
+    $LOI:ROLLBACK; 423 RESOURCE_LOCKED;
+    stop
+  else (hợp lệ)
+    :Áp thao tác trên offset UTF-16 (ADR-26);
+    if (Nối các chương == văn bản cũ?) then (không)
+      $LOI:ROLLBACK; 500, cảnh báo P1\n(lỗi lập trình);
+      stop
+    endif
+    :Ghi chương, thứ tự, version + 1;
+    :Shot bị ảnh hưởng → thuyết minh OUTDATED;\nclip timeline gắn cờ đồng bộ;
+  endif
+}
+$XONG:Trả danh sách chương và shot lỗi thời;\nphát chapters.restructured;
+|Người dùng|
+if (Nhập lại toàn văn mới? (UC-03.01b)) then (có)
+  :Xem cảnh báo hậu quả, xác nhận;
+  |Hệ thống|
+  if (Có chương đang bị khóa hoặc dự án đã đổi?) then (có)
+    $LOI:423 / 409, không đổi gì;
+    stop
+  endif
+  :Kiểm tra & chuẩn hóa như UC-02.02a;
+  :Lưu toàn văn mới; xóa mềm chương cũ;\nChương 1 = toàn văn mới;\nstoryboard, ảnh, thuyết minh, timeline cũ → OUTDATED;
+  $XONG:Mở Write, gợi ý chia chương lại;
+else (không)
+endif
+|Hệ thống|
+stop
+'@sau-mvp
+caption Sau MVP: lưu Archive (UC-03.11, 03.12), tìm & thay thế (UC-03.10), ghi chú (UC-03.13), phiên bản chương (UC-03.14); xung đột cộng tác 409 → UC-02.10.
+'@/sau-mvp
+@enduml

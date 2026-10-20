@@ -1,0 +1,65 @@
+' Kiểu chung cho mọi sơ đồ tuần tự: màu theo tầng kiến trúc + chú giải.
+' Dùng: !include _style-tuan-tu.iuml (bản MVP do gen_mvp.py đổi thành ../../04-tuan-tu/_style-tuan-tu.iuml).
+' Thứ tự cột nên theo tầng từ trái sang phải: Người dùng → Giao diện → API → Dữ liệu → Worker → AI Gateway → Dịch vụ ngoài.
+
+' Màu participant theo tầng
+!$NGUOI_DUNG = "#FFF8E1"
+!$GIAO_DIEN = "#E3F2FD"
+!$API = "#E8F5E9"
+!$DU_LIEU = "#ECEFF1"
+!$WORKER = "#FFF3E0"
+!$AI_GATEWAY = "#F3E5F5"
+!$BEN_NGOAI = "#FCE4EC"
+
+' Màu nền box (nhạt hơn participant cùng tầng)
+!$BOX_GIAO_DIEN = "#F5FAFF"
+!$BOX_API = "#F6FBF6"
+!$BOX_WORKER = "#FFFAF3"
+!$BOX_AI_GATEWAY = "#FBF6FC"
+!$BOX_BEN_NGOAI = "#FFF7FA"
+
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 12
+skinparam BoxPadding 8
+
+skinparam sequence {
+    ArrowColor #37474F
+    ' Lifeline nhạt để nhãn thông điệp băng qua vẫn đọc được
+    LifeLineBorderColor #B0BEC5
+    LifeLineBackgroundColor #FFFFFF
+    ParticipantBorderColor #546E7A
+    ActorBorderColor #8D6E63
+    ActorBackgroundColor $NGUOI_DUNG
+    BoxBorderColor #B0BEC5
+    BoxFontColor #455A64
+    BoxFontStyle bold
+    ' Chỉ tô nhãn alt/opt/loop/par; thân khung để trong suốt nên không che mũi tên bên trong
+    GroupBorderColor #5C6BC0
+    GroupBackgroundColor #E8EAF6
+    GroupHeaderFontColor #283593
+    GroupFontColor #3949AB
+    DividerBackgroundColor #455A64
+    DividerBorderColor #455A64
+    DividerFontColor #FFFFFF
+    ReferenceBorderColor #00897B
+    ReferenceHeaderBackgroundColor #B2DFDB
+    ReferenceBackgroundColor #F0FAF9
+}
+skinparam database {
+    BackgroundColor $DU_LIEU
+    BorderColor #546E7A
+}
+skinparam queue {
+    BackgroundColor $DU_LIEU
+    BorderColor #546E7A
+}
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #F9A825
+}
+
+legend bottom right
+    |<$NGUOI_DUNG> Người dùng |<$GIAO_DIEN> Giao diện |<$API> API Server |<$DU_LIEU> Dữ liệu, hàng đợi |<$WORKER> Worker |<$AI_GATEWAY> AI Gateway |<$BEN_NGOAI> Dịch vụ ngoài, model AI |
+endlegend

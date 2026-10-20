@@ -1,0 +1,95 @@
+@startuml Act_M06_ChinhSuaXuatVideo
+!theme plain
+!include _style-hoat-dong.iuml
+'@sau-mvp
+title M06 Trình chỉnh sửa video: mở timeline, chỉnh sửa với track thuyết minh khóa, đồng bộ tư liệu, kiểm tra, render, tải xuống\nUC-06.01 (+06.01a), 06.02 (+06.02a), 06.03..06.11, 06.13, 06.15, 06.16 (+06.16a, 06.16b), 06.17; BR-24, BR-26, BR-27, BR-32, BR-34; IC-10, IC-11; QĐ-140, QĐ-141
+'@/sau-mvp
+'@mvp title M06 Trình chỉnh sửa video (MVP): mở timeline, chỉnh sửa với track thuyết minh khóa, đồng bộ tư liệu, kiểm tra, render, tải xuống\nUC-06.01 (+06.01a), 06.02 (+06.02a), 06.03..06.06, 06.08..06.11, 06.13, 06.15, 06.16 (+06.16a), 06.17; BR-24, BR-26, BR-27, BR-32, BR-34; IC-10, IC-11; QĐ-140, QĐ-141
+
+|$LAN_NGUOI_DUNG|Người dùng|
+start
+if (Xuất cả dự án không qua trình chỉnh sửa? (UC-06.16 nhánh 1b)) then (không)
+  :Mở trình chỉnh sửa một chương (UC-06.01);
+  |$LAN_HE_THONG|Hệ thống|
+  if (Chương đã có timeline?) then (chưa)
+    if (Chương "Sẵn sàng dựng"?) then (chưa)
+      $LOI:422 PRECONDITION_FAILED_BUSINESS;\ngợi ý "Sinh tư liệu" (M05);
+      stop
+    endif
+    :Dựng timeline nháp (UC-06.01a): mỗi shot\n1 clip ảnh + 1 clip thuyết minh, phụ đề nguyên văn;
+  else (có)
+  endif
+  :Tải timeline; preview dùng chung component\nvới Render Worker (UC-06.13, ADR-13);
+note right
+  Trong suốt phiên chỉnh sửa: tư liệu đổi ở M05
+  (ảnh mới, thuyết minh mới, shot thêm / bớt)
+  → MediaSync thay clip, giữ hiệu ứng người dùng
+  đã chỉnh, dời clip phía sau (UC-06.15)
+end note
+  repeat
+    |Người dùng|
+    :Chỉnh sửa (miễn phí): Ken Burns, chuyển cảnh, màu,\nphụ đề, track, nhạc nền / SFX tải lên (UC-06.03..06.11),\ndời clip thuyết minh, âm lượng;
+    if (Thao tác cắt / trim / xóa / đảo thứ tự\nclip thuyết minh? (BR-24)) then (có)
+      $LOI:Từ chối ngay trên trình duyệt, giải thích\n(không có tốc độ từng clip, QĐ-140);
+    else (không)
+      :Áp tại chỗ; undo / redo ≥ 100 bước;
+      |Hệ thống|
+      :Gom thao tác 1–2 s, gửi cả lô kèm phiên bản;
+      if (Phiên bản khớp và cả lô qua BR-24, IC-10?) then (có)
+        $XONG:Lưu lô, phiên bản + 1;
+      else (không)
+        $LOI:409 → tải lại / 422 NARRATION_LOCKED\n→ hoàn tác thao tác vi phạm;
+      endif
+    endif
+    |Người dùng|
+  repeat while (Tiếp tục chỉnh sửa?) is (có) not (xuất video)
+  :Bấm "Xuất video" (UC-06.16);
+  |Hệ thống|
+  :Kiểm tra sẵn sàng (UC-06.16a): độ phủ thuyết minh,\nảnh đủ, thuyết minh DONE, không OUTDATED, IC-10;\ncảnh báo shot đã đánh dấu (BR-34);
+else (có, QĐ-141)
+  |Hệ thống|
+  :Mỗi chương theo thứ tự: chưa có timeline thì dựng nháp;\nkiểm tra sẵn sàng từng chương;
+endif
+if (Mọi mục đạt?) then (không)
+  $LOI:Nút "Xuất" vô hiệu; danh sách lỗi\ncó nút nhảy tới vị trí;
+  stop
+endif
+|Người dùng|
+:Chọn 720p / 1080p (Free chỉ 720p), xác nhận;
+'@sau-mvp
+if (Chia thành phần? (UC-06.16b, sau MVP)) then (có)
+  :Theo chương hoặc tối đa N phút,\ncắt ở ranh giới shot;
+else (không)
+endif
+'@/sau-mvp
+|Hệ thống|
+:Kiểm lại sẵn sàng (chống điều kiện đua, IC-11);
+if (Free: còn lượt và phút trong tháng, đúng độ phân giải?\n(BR-27)) then (không)
+  $LOI:403 FREE_LIMIT_REACHED;\ngợi ý nạp tiền (M09);
+  stop
+elseif (Đã có render đang chạy? (BR-32)) then (có)
+  $LOI:429, chờ render trước xong;
+  stop
+else (hợp lệ)
+  :Chụp timeline_snapshot (12 §3), kiểm JSON Schema;\nxuất cả dự án: ghép snapshot từng chương nối tiếp;
+  :Tạo render (QUEUED), job RENDER_TIMELINE (miễn phí);
+endif
+|$LAN_WORKER|Render Worker|
+:Remotion dựng khung hình một lượt: Ken Burns,\nchuyển cảnh, phụ đề nguyên văn, watermark (Free);
+:FFmpeg trộn thuyết minh + nhạc + SFX, ducking,\nloudnorm −14 LUFS; mã hóa H.264 / AAC;
+if (Thành công (sau tối đa 1 lần thử lại)?) then (có)
+  $XONG:Lưu MP4, SRT, VTT, audio thuyết minh;\nrender READY; Free: cộng lượt + phút;
+  |Người dùng|
+  :Tải MP4 / SRT / VTT / audio\nqua link ký 15 phút (UC-06.17);
+  stop
+else (không)
+  |Render Worker|
+  $LOI:Render FAILED kèm mã lỗi;
+  |Người dùng|
+  :Xem lỗi, xuất lại;
+  stop
+endif
+'@sau-mvp
+caption Sau MVP: overlay chữ / logo, clip tiêu đề & kết (UC-06.07), thư viện âm thanh hệ thống, lịch sử phiên bản timeline,\nchia video thành phần (UC-06.16b), xử lý xung đột cộng tác (UC-02.10)
+'@/sau-mvp
+@enduml

@@ -1,0 +1,43 @@
+' Kiểu chung cho sơ đồ hoạt động theo nhóm chức năng (UML activity diagram, mức nghiệp vụ).
+' Dùng: !include _style-hoat-dong.iuml (bản MVP do gen_mvp.py đổi thành ../../05-hoat-dong/_style-hoat-dong.iuml).
+' Ký hiệu UML: ● nút đầu; ◉ kết thúc hoạt động (stop); ◇ quyết định / hợp nhất; thanh đậm = rẽ / hợp song song (fork / join).
+
+' Màu làn (cùng bảng màu theo tầng với sơ đồ tuần tự)
+!$LAN_NGUOI_DUNG = "#FFF8E1"
+!$LAN_HE_THONG = "#E8F5E9"
+!$LAN_WORKER = "#FFF3E0"
+!$LAN_AI = "#F3E5F5"
+!$LAN_NGOAI = "#FCE4EC"
+
+' Màu hành động
+!$LOI = "#FFCDD2"
+!$TIEN = "#FFE0B2"
+!$GOI_AI = "#E1BEE7"
+!$XONG = "#C8E6C9"
+
+skinparam defaultFontName "Segoe UI"
+skinparam SwimlaneWidth same
+skinparam SwimlaneTitleFontStyle bold
+skinparam SwimlaneBorderColor #90A4AE
+skinparam ArrowColor #455A64
+skinparam activity {
+    BackgroundColor #FFFFFF
+    BorderColor #546E7A
+    DiamondBackgroundColor #FFFDE7
+    DiamondBorderColor #F9A825
+    StartColor #37474F
+    EndColor #37474F
+    BarColor #37474F
+}
+skinparam partition {
+    BorderColor #78909C
+    FontStyle bold
+}
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #F9A825
+}
+
+legend bottom right
+    |<$LOI> Từ chối / lỗi |<$TIEN> Giữ, trừ, hoàn tiền |<$GOI_AI> Gọi dịch vụ AI |<$XONG> Kết quả thành công |
+endlegend

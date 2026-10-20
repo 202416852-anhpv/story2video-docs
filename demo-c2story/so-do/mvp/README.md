@@ -7,7 +7,7 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 | Loại | Cách làm |
 |---|---|
 | Use case phân rã, ERD, mô hình miền | **Sinh tự động**, không sửa tay. Sửa sơ đồ đầy đủ (hoặc dòng "Giai đoạn" của use case trong `tai-lieu/03-dac-ta-use-case/`, đánh dấu `*(sau MVP)*` của bảng trong `tai-lieu/04`), rồi chạy trong `demo-c2story/`: `python3 so-do/tools/gen_mvp.py && python3 so-do/tools/split_erd.py` |
-| Tuần tự (`04-tuan-tu/*-mvp`) | **Sinh tự động** bởi `gen_mvp.py` từ bản đầy đủ: dòng giữa `'@sau-mvp` và `'@/sau-mvp` chỉ có ở bản đầy đủ; dòng bắt đầu bằng `'@mvp ` chỉ có ở bản MVP |
+| Tuần tự (`04-tuan-tu/*-mvp`); gói, lớp thiết kế (`03-kien-truc/package-modules-mvp`, `class-*-mvp`); hoạt động theo nhóm (`05-hoat-dong/act-m*-mvp`) | **Sinh tự động** bởi `gen_mvp.py` từ bản đầy đủ: dòng giữa `'@sau-mvp` và `'@/sau-mvp` chỉ có ở bản đầy đủ; dòng bắt đầu bằng `'@mvp ` chỉ có ở bản MVP |
 | Còn lại | Viết tay; sửa cùng lúc với bản đầy đủ tương ứng |
 
 ## Danh mục
@@ -17,9 +17,9 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 | `01-use-case/` | `uc-tong-quan-mvp`, `uc-studio-chi-tiet-mvp` | Không có M07, M08; chỉ Owner; ghi chú thứ tự cắt giảm ✂ |
 | `01-use-case/phan-ra/` | `uc-m01..m06, m09, m10-*-mvp` (sinh tự động) | Chỉ còn 104/165 use case thuộc MVP; M07, M08 không có bản MVP |
 | `02-du-lieu/` | `erd-mvp` (42/55 bảng), `domain-class-mvp` (sinh tự động) | Bỏ gói đăng ký, thư viện, Director, archive, notes, chapter rules, đa giọng, lịch sử timeline |
-| `03-kien-truc/` | `c4-context-mvp`, `c4-container-mvp`, `c4-component-api-mvp`, `c4-component-editor-mvp`, `deployment-mvp` | Không có Director, thư viện, gói; quản trị bằng CLI/seed; triển khai một máy ảo staging |
+| `03-kien-truc/` | `c4-context-mvp`, `c4-container-mvp`, `c4-component-api-mvp`, `c4-component-editor-mvp`, `deployment-mvp`; `package-modules-mvp`, `class-job-vi-mvp`, `class-ai-gateway-mvp` (sinh tự động) | Không có Director, thư viện, gói; quản trị bằng CLI/seed; triển khai một máy ảo staging; không outbox, semaphore theo người dùng, `VbeeTtsAdapter`, `ModerationFilter` |
 | `04-tuan-tu/` | 13 sơ đồ `seq-*-mvp` (sinh tự động): `vong-doi-job`, `dang-nhap-sso`, `quan-ly-du-an`, `import-chia-chuong`, `doi-ranh-gioi-shot`, `the-gioi-truyen`, `tai-san-phong-cach`, `storyboard-sinh-anh`, `sinh-tu-lieu`, `thuyet-minh-nguyen-van`, `chinh-sua-xuat-video`, `thanh-toan`, `quan-tri` | Không back-channel logout; chỉ nạp tiền (không gói); không kiểm chứng WER từng shot (thay bằng nghe & đánh dấu); không lịch sử timeline, chia video, thư viện âm thanh; không outbox, chapter rules, xử lý xung đột cộng tác (409 → tải lại); quản trị bằng seed/CLI |
-| `05-hoat-dong/` | `act-quy-trinh-project-mvp` | Không Director, Archive; bước tham gia beta |
+| `05-hoat-dong/` | `act-quy-trinh-project-mvp`; `act-m01..m09-*-mvp` (6 sơ đồ theo nhóm chức năng, sinh tự động) | Không Director, Archive; bước tham gia beta; bỏ bước và chú thích sau MVP (back-channel logout, WER, chia video thành phần, gói đăng ký…) |
 | `06-trang-thai/` | `state-narration-render-mvp`, `state-chapter-media-mvp` | Thuyết minh chỉ có `DONE`, không `VERIFIED` / `NEEDS_REVIEW` / `ACCEPTED` |
 
 ## Sơ đồ dùng chung (MVP giống bản đầy đủ)

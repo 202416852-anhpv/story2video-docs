@@ -15,7 +15,7 @@
 | Hậu điều kiện | **Thành công:** hiển thị văn bản và các điểm chia |
 | Kích hoạt | Mở `?v=source` |
 | Quan hệ | được mở rộng bởi UC-03.01a, UC-03.01b |
-| Truy vết | FR-MAN-01; seq-quan-ly-du-an |
+| Truy vết | FR-MAN-01; seq-quan-ly-du-an, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -89,7 +89,7 @@
 | Hậu điều kiện | **Thành công:** chương được lưu với version mới; `chapter_versions` có snapshot; thuyết minh của shot có đoạn nguồn bị đổi chuyển `OUTDATED` (BR-06) |
 | Kích hoạt | Mở `?v=workspace` và gõ |
 | Quan hệ | được mở rộng bởi UC-03.02a, UC-03.04, UC-03.05, UC-03.06 |
-| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot |
+| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -152,7 +152,7 @@
 | Hậu điều kiện | **Thành công:** danh sách chương mới được ghi nguyên tử qua UC-03.09. **Tối thiểu:** văn bản không đổi |
 | Kích hoạt | Bấm "Suggest chapter splits" |
 | Quan hệ | include UC-03.09 |
-| Truy vết | FR-MAN-04; BR-01, BR-21, BR-27; 08 §3.2 (`SUGGEST_SPLITS`); seq-import-chia-chuong |
+| Truy vết | FR-MAN-04; BR-01, BR-21, BR-27; 08 §3.2 (`SUGGEST_SPLITS`); seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -181,7 +181,7 @@
 | Hậu điều kiện | **Thành công:** hai chương liền nhau, nối lại bằng đúng chương cũ |
 | Kích hoạt | Bấm "Split here" hoặc đặt con trỏ rồi chọn "Chia tại đây" |
 | Quan hệ | extend UC-03.02; include UC-03.09 |
-| Truy vết | FR-MAN-03; BR-27; seq-import-chia-chuong |
+| Truy vết | FR-MAN-03; BR-27; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -206,7 +206,7 @@
 | Hậu điều kiện | **Thành công:** chương k−1 chứa văn bản của cả hai; chương k bị xóa |
 | Kích hoạt | "Merge into previous" trên chương k |
 | Quan hệ | extend UC-03.02; include UC-03.09 |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -229,7 +229,7 @@
 | Hậu điều kiện | **Thành công:** hai chương liền kề thay đổi độ dài, tổng văn bản không đổi |
 | Kích hoạt | "Move where this chapter begins" ◀ ▶ |
 | Quan hệ | extend UC-03.02; include UC-03.09 |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -251,7 +251,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** danh sách chương cập nhật; `order_index` liên tục |
 | Kích hoạt | "Add chapter", "Delete chapter", sửa tiêu đề |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -277,7 +277,7 @@
 | Hậu điều kiện | **Thành công:** thứ tự mới được ghi nguyên tử; timeline cấp dự án đổi thứ tự khối chương tương ứng |
 | Kích hoạt | Kéo thả ở thanh bên |
 | Quan hệ | include UC-03.09 |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -297,7 +297,7 @@
 | Tiền điều kiện | Có danh sách thao tác kèm `ifMatch` từng chương |
 | Hậu điều kiện | **Thành công:** danh sách chương mới ghi trọn vẹn; tư liệu của shot bị ảnh hưởng chuyển `OUTDATED`. **Tối thiểu:** lỗi bất kỳ thì rollback toàn bộ, không đổi gì |
 | Kích hoạt | `POST /chapters:restructure` |
-| Truy vết | FR-MAN-06; IC-02; BR-05, BR-06, BR-12; seq-import-chia-chuong |
+| Truy vết | FR-MAN-06; IC-02; BR-05, BR-06, BR-12; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**

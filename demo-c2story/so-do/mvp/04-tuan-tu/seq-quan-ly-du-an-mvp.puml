@@ -1,23 +1,21 @@
 @startuml Seq_QuanLyDuAn_MVP
 ' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
 autonumber
 title UC-01.03 (+01.05) + UC-01.04 + UC-02.01 + UC-02.04 + UC-02.05 + UC-02.09 + UC-03.01 (+03.01a) (MVP):\nDashboard, ngôn ngữ giao diện, danh sách / cài đặt / xóa dự án, bản đồ quy trình, xem và sao chép văn bản gốc; BR-04, BR-27
 
-actor Editor
-participant "Web App" as Web
-box "API Server" #F5F5F5
-participant "Middleware\n(authz)" as MW
-participant "AccountController\n(/me)" as ME
-participant "ProjectService" as PS
-participant "WalletService" as WAL
-participant "JobService" as JOBS
+actor Editor $NGUOI_DUNG
+participant "Web App" as Web $GIAO_DIEN
+box "API Server" $BOX_API
+participant "Middleware\n(authz)" as MW $API
+participant "AccountController\n(/me)" as ME $API
+participant "ProjectService" as PS $API
+participant "WalletService" as WAL $API
+participant "JobService" as JOBS $API
 end box
-database PostgreSQL as DB
-participant "SSO có sẵn" as SSO
+database PostgreSQL as DB $DU_LIEU
+participant "SSO có sẵn" as SSO $BEN_NGOAI
 
 == Dashboard (UC-01.03, extend UC-01.05) ==
 Editor -> Web : Mở /dashboard

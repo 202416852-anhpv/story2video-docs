@@ -1,14 +1,13 @@
 @startuml Seq_CongTac_XungDot
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
+!include _style-tuan-tu.iuml
 autonumber
 title UC-02.06 + UC-02.10: Mời cộng tác và xử lý xung đột khi lưu (sau MVP)
-actor Owner
-actor "Editor A" as A
-actor "Editor B" as B
-participant "API" as API
-database PostgreSQL as DB
+actor Owner $NGUOI_DUNG
+actor "Editor A" as A $NGUOI_DUNG
+actor "Editor B" as B $NGUOI_DUNG
+participant "API" as API $API
+database PostgreSQL as DB $DU_LIEU
 
 == Mời ==
 Owner -> API : POST /projects/{pid}/invite-link

@@ -1,29 +1,27 @@
 @startuml Seq_Import_ChiaChuong_MVP
 ' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
 autonumber
 title UC-02.02 (+02.02a) + UC-02.03 + UC-03.03 + UC-03.04..03.09 + UC-03.01b (MVP): Nhập truyện giữ nguyên văn,\ngợi ý chia chương bằng AI, tái cấu trúc chương nguyên tử, nhập lại; BR-12, BR-27, AG-00, NFR-INT-02
 
-actor Editor
-participant "Web App\n(Workspace)" as Web
-box "API Server" #F5F5F5
-participant "ProjectsController\n→ ImportService" as IMP
-participant "TextExtractor\n+ TextNormalizer" as NORM
-participant "FreeLimitGuard\n(billing)" as FREE
-participant "ManuscriptService\n(manuscript)" as MS
-participant "RestructureService\n(manuscript)" as RS
-participant "JobService" as JOBS
-participant "Realtime (SSE)" as RT
+actor Editor $NGUOI_DUNG
+participant "Web App\n(Workspace)" as Web $GIAO_DIEN
+box "API Server" $BOX_API
+participant "ProjectsController\n→ ImportService" as IMP $API
+participant "TextExtractor\n+ TextNormalizer" as NORM $API
+participant "ManuscriptService\n(manuscript)" as MS $API
+participant "JobService" as JOBS $API
+participant "FreeLimitGuard\n(billing)" as FREE $API
+participant "Realtime (SSE)" as RT $API
+participant "RestructureService\n(manuscript)" as RS $API
 end box
-database PostgreSQL as DB
-box "Worker" #F5F5F5
-participant "SuggestSplitsHandler" as H
+database PostgreSQL as DB $DU_LIEU
+box "Worker" $BOX_WORKER
+participant "SuggestSplitsHandler" as H $WORKER
 end box
-participant "AI Gateway\n(ContextBuilder,\nProviderRouter, Adapter)" as GW
-participant "Google Gemini\n(Flash)" as LLM
+participant "AI Gateway\n(ContextBuilder,\nProviderRouter, Adapter)" as GW $AI_GATEWAY
+participant "Google Gemini\n(Flash)" as LLM $BEN_NGOAI
 
 == Nhập truyện (UC-02.02, UC-02.02a) hoặc tạo dự án trống (UC-02.03) ==
 Editor -> Web : Dán văn bản / tải .txt .md .docx; tiêu đề, style, khung hình

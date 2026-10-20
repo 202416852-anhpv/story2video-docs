@@ -1,0 +1,248 @@
+@startuml Class_AI_Gateway
+' Sơ đồ lớp mức thiết kế: AI Gateway (05 §7; 12 §1, §2; seq-vong-doi-job §4, seq-storyboard-sinh-anh, seq-thuyet-minh-nguyen-van).
+' Mẫu ports & adapters: handler chỉ biết Port; adapter thật hoặc mock chọn bằng cấu hình (NFR-MNT-02).
+' Dòng giữa '@sau-mvp và '@/sau-mvp chỉ có ở bản đầy đủ; bản MVP sinh tự động bởi so-do/tools/gen_mvp.py.
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam classAttributeIconSize 0
+skinparam nodesep 35
+skinparam ranksep 55
+skinparam ArrowColor #455A64
+skinparam class {
+    BorderColor #546E7A
+}
+hide empty members
+left to right direction
+'@sau-mvp
+title Sơ đồ lớp thiết kế: AI Gateway (ports & adapters)
+'@/sau-mvp
+'@mvp title Sơ đồ lớp thiết kế: AI Gateway (ports & adapters) (MVP)
+
+package "Chuẩn bị đầu vào (hàm thuần, tất định)" #FBF6FC {
+    class ContextBuilder {
+        +chapterContext(chapterId): StoryContext
+        +storyboardContext(chapterId): StoryContext
+    }
+    note right of ContextBuilder
+      Chương, tài sản (tên, bí danh, facts),
+      timeline truyện, quan hệ hiệu lực ở chương
+      (QĐ-143), Visual Rules. Văn bản truyện bọc
+      trong khối dữ liệu (NFR-SEC-08)
+    end note
+
+    class SentenceSegmenter {
+        +version: string
+        +segment(content: string): Sentence[]
+    }
+    class CoverageValidator {
+        +validate(shots: ShotRange[], sentences: Sentence[], content: string): CoverageResult
+    }
+    note right of CoverageValidator
+      Câu → [sourceStart, sourceEnd); sửa ranh giới;
+      concat == content (IC-08, BR-20)
+    end note
+
+    class PromptCompiler {
+        -ablation: AblationFlags
+        +compileShotPrompt(shotId): CompiledPrompt
+        +compileAssetPrompt(assetId): CompiledPrompt
+    }
+    note right of PromptCompiler
+      Thứ tự BR-08: Style → Art Direction → Visual Rules
+      dự án → chương → Shot brief → mô tả + facts.
+      Lưu prompt_snapshot
+    end note
+
+    class SpeechNormalizer {
+        +normalize(text, symbolRules, entries, settings): NormalizedSpeech
+    }
+    class WerScorer {
+        +score(reference: string, hypothesis: string): WerResult
+    }
+'@sau-mvp
+    class ModerationFilter #DDDDDD {
+        +check(kind, payload): ModerationResult
+    }
+'@/sau-mvp
+}
+
+package "Gọi provider" #F7EFF9 {
+    class ProviderRouter {
+        +call(kind: TaskKind, request, ctx: CallContext): ProviderResult
+        +testConnection(providerId): boolean
+        -pick(kind: TaskKind, ctx: CallContext): ModelChoice
+        -classify(error): ProviderError
+    }
+    note right of ProviderRouter
+      Gọi adapter **một lần** mỗi lần thử, timeout theo loại;
+      thử lại ở mức job (QĐ-133). Fallback chỉ cho LLM, sang
+      mô hình Gemini có unit_cost ≤ mô hình đã báo giá
+      (QĐ-124, 125). Ảnh ghim theo dự án, TTS ghim theo giọng.
+    end note
+
+    class CallContext {
+        jobId: uuid?
+        attempt: int
+        quotedModel: string?
+        idempotencyKey: string?
+    }
+
+    class ProviderError {
+        code: string
+        retryable: boolean
+        contentPolicy: boolean
+    }
+
+    class UsageMeter {
+        +record(usage: UsageRecord): void
+        +sumCost(jobId, attempt?): bigint
+    }
+    class UsageRecord {
+        provider: string
+        model: string
+        unit: TOKENS | IMAGES | SECONDS | CHARS
+        quantity: number
+        costUsd: decimal
+        latencyMs: int
+        requestId: string
+        attempt: int
+        promptVersion: string?
+        seed: int?
+        succeeded: boolean
+    }
+
+    class PriceEstimator {
+        +estimateMax(operation, input): Quote
+    }
+}
+
+package "Ports" #FFFFFF {
+    interface LlmPort <<interface>> {
+        +complete(req: LlmRequest): LlmResult
+    }
+    interface ImagePort <<interface>> {
+        +generate(req: ImageRequest): MediaRef
+        +edit(req: ImageEditRequest): MediaRef
+    }
+    interface TtsPort <<interface>> {
+        +speak(req: TtsRequest): TtsResult
+    }
+    interface AlignerPort <<interface>> {
+        +align(audio: MediaRef, text: string, language): WordTiming[]
+    }
+    interface SttPort <<interface>> {
+        +transcribe(audio: MediaRef, language, hint?): string
+    }
+}
+
+package "Adapters" #FCE4EC {
+    abstract class ProviderAdapter {
+        #usage: UsageMeter
+        #record(unit, quantity, costUsd, ctx: CallContext, succeeded): void
+    }
+    class GeminiLlmAdapter
+    class GeminiImageAdapter
+    class SelfHostedTtsAdapter {
+        -splitAtPauses(r: string, map: NormalizationMap): string[]
+        -applyTempo(audio, speed): audio
+    }
+    note right of SelfHostedTtsAdapter
+      Gửi R dạng chữ thuần, chèn khoảng lặng PAUSE;
+      model không hỗ trợ tốc độ → FFmpeg atempo
+      trước khi căn timestamp (ADR-30, QĐ-140)
+    end note
+    class WhisperXAlignerAdapter
+'@sau-mvp
+    class VbeeTtsAdapter #DDDDDD
+'@/sau-mvp
+    class "Mock*Adapter" as MockAdapter {
+        fixture, không gọi mạng
+    }
+}
+
+package "Kiểu dữ liệu" #FAFAFA {
+    class Sentence {
+        index: int
+        start: int
+        end: int
+    }
+    class CoverageResult {
+        shots: ShotRange[]
+        boundaryFixes: int
+    }
+    class NormalizedSpeech {
+        r: string
+        ssml: string
+        map: NormalizationMap
+    }
+    class NormalizationMap {
+        segments: (IDENTITY | DROP | EXPAND | ALIAS | PAUSE)[]
+        +toSource(rOffset): int
+    }
+    class WordTiming {
+        word: string
+        startMs: int
+        endMs: int
+        sourceStart: int
+        sourceEnd: int
+    }
+    class CompiledPrompt {
+        text: string
+        references: MediaRef[]
+        snapshot: json
+    }
+}
+
+' Quan hệ bên trong gateway
+ProviderRouter ..> CallContext
+ProviderRouter ..> ProviderError : phân loại lỗi
+ProviderRouter --> LlmPort
+ProviderRouter --> ImagePort
+ProviderRouter --> TtsPort
+ProviderRouter --> AlignerPort
+ProviderRouter --> SttPort
+GeminiLlmAdapter ..|> LlmPort
+GeminiImageAdapter ..|> ImagePort
+SelfHostedTtsAdapter ..|> TtsPort
+WhisperXAlignerAdapter ..|> AlignerPort
+WhisperXAlignerAdapter ..|> SttPort
+MockAdapter ..|> LlmPort
+MockAdapter ..|> ImagePort
+MockAdapter ..|> TtsPort
+MockAdapter ..|> AlignerPort
+ProviderAdapter --> UsageMeter : record mọi lần gọi,\nkể cả lỗi
+ProviderAdapter <|-- GeminiLlmAdapter
+ProviderAdapter <|-- GeminiImageAdapter
+ProviderAdapter <|-- SelfHostedTtsAdapter
+ProviderAdapter <|-- WhisperXAlignerAdapter
+UsageMeter ..> UsageRecord
+PriceEstimator ..> UsageMeter : số trừ thực = Σ cost × 1,10
+'@sau-mvp
+VbeeTtsAdapter ..|> TtsPort
+ProviderAdapter <|-- VbeeTtsAdapter
+ModerationFilter ..> ProviderRouter : sau MVP
+'@/sau-mvp
+
+SentenceSegmenter ..> Sentence
+CoverageValidator ..> Sentence
+CoverageValidator ..> CoverageResult
+SpeechNormalizer ..> NormalizedSpeech
+NormalizedSpeech *-- NormalizationMap
+AlignerPort ..> WordTiming
+WordTiming ..> NormalizationMap : ánh xạ về văn bản gốc (12 §2)
+PromptCompiler ..> CompiledPrompt
+WerScorer ..> SpeechNormalizer : chuẩn hóa hai phía
+
+' Handler dùng gateway (chi tiết lớp handler: class-job-vi)
+class StoryboardDraftHandler
+class ShotImageHandler
+class NarrateSegmentHandler
+StoryboardDraftHandler --> ContextBuilder
+StoryboardDraftHandler --> SentenceSegmenter
+StoryboardDraftHandler --> CoverageValidator
+StoryboardDraftHandler --> ProviderRouter : LLM
+ShotImageHandler --> PromptCompiler
+ShotImageHandler --> ProviderRouter : IMAGE
+NarrateSegmentHandler --> SpeechNormalizer
+NarrateSegmentHandler --> ProviderRouter : TTS, ALIGN
+@enduml

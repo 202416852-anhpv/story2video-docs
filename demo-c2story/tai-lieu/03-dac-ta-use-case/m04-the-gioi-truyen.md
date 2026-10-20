@@ -15,7 +15,7 @@
 | Hậu điều kiện | **Thành công:** danh sách đề xuất được duyệt, tài sản được tạo. **Tối thiểu:** không tạo tài sản khi Editor chưa duyệt |
 | Kích hoạt | Bấm "Analyze" trong Story Assets |
 | Quan hệ | extend UC-04.02; include UC-04.01a, UC-05.17 |
-| Truy vết | FR-WLD-01; BR-01, BR-02; 08 §3.2 (`ANALYZE_ASSETS`); seq-the-gioi-truyen |
+| Truy vết | FR-WLD-01; BR-01, BR-02; 08 §3.2 (`ANALYZE_ASSETS`); seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -71,7 +71,7 @@
 | Hậu điều kiện | **Thành công:** Story Assets phản ánh đúng thế giới truyện |
 | Kích hoạt | Mở `?v=assets` |
 | Quan hệ | được mở rộng bởi UC-04.01, UC-04.02a..e |
-| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -228,7 +228,7 @@
 | Hậu điều kiện | **Thành công:** `asset_images` mới, đặt làm ảnh hiện hành; tiền bị trừ. **Tối thiểu:** lỗi thì hoàn tiền |
 | Kích hoạt | "Generate" / "Regenerate" trên tài sản |
 | Quan hệ | được include bởi UC-04.02a; được mở rộng bởi UC-04.03a |
-| Truy vết | FR-WLD-03; BR-01, BR-02, BR-08, BR-14; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-03; BR-01, BR-02, BR-08, BR-14; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -283,7 +283,7 @@
 | Hậu điều kiện | **Thành công:** tài sản có `use_exact_image = true` |
 | Kích hoạt | "Use this exact image" khi tạo/sửa tài sản |
 | Quan hệ | extend UC-04.02a, UC-04.02e |
-| Truy vết | FR-WLD-04; BR-14; NFR-SEC-10; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-04; BR-14; NFR-SEC-10; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -306,7 +306,7 @@
 | Tiền điều kiện | Là Owner (đổi) hoặc dự án chưa có style (lần đầu, Editor được chọn) |
 | Hậu điều kiện | **Thành công:** `projects.style_id` cập nhật |
 | Kích hoạt | "Set style" hoặc điểm duyệt UC-07.03 |
-| Truy vết | FR-WLD-06; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-06; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -326,7 +326,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** `projects.art_direction` cập nhật; áp cho mọi lần sinh ảnh sau |
 | Kích hoạt | Ô "Art direction" trong Story Assets |
-| Truy vết | FR-WLD-07; BR-08; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-07; BR-08; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -346,7 +346,7 @@
 | Hậu điều kiện | **Thành công:** hiển thị timeline truyện theo tỷ lệ thời gian |
 | Kích hoạt | Mở `?v=timeline` |
 | Quan hệ | được mở rộng bởi UC-04.09 |
-| Truy vết | FR-WLD-08; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-08; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Giai đoạn | P2 ✂5 |
 
 **Luồng chính**
@@ -371,7 +371,7 @@
 | Hậu điều kiện | **Thành công:** hiển thị đồ thị |
 | Kích hoạt | Mở `?v=relationships` |
 | Quan hệ | được mở rộng bởi UC-04.09 |
-| Truy vết | FR-WLD-09; IC-14, IC-19; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-09; IC-14, IC-19; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Giai đoạn | P2 ✂4 |
 
 **Luồng chính**
@@ -396,7 +396,7 @@
 | Hậu điều kiện | **Thành công:** `timeline_events` và `relationships` được thay mới |
 | Kích hoạt | "Re-analyse" |
 | Quan hệ | extend UC-04.07, UC-04.08 |
-| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; IC-19; 08 §3.2 (`STORY_META`); seq-the-gioi-truyen |
+| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; IC-19; 08 §3.2 (`STORY_META`); seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Giai đoạn | P2 ✂4 ✂5 |
 
 **Luồng chính**
@@ -420,7 +420,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** luật được áp vào prompt các lần sinh ảnh sau theo thứ tự BR-08 |
 | Kích hoạt | Mở `?v=visual-rules` |
-| Truy vết | FR-WLD-10; BR-08; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-10; BR-08; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**

@@ -81,7 +81,7 @@ Bảng trên là thiết kế đầy đủ. MVP (3 người, 20 giờ/tuần) d�
 
 ## 5. Cấu trúc API Server (C4 Level 3)
 
-Sơ đồ: `../so-do/03-kien-truc/c4-component-api.puml`.
+Sơ đồ: `../so-do/03-kien-truc/c4-component-api.puml`; sơ đồ gói (UML) `../so-do/03-kien-truc/package-modules.puml` vẽ phụ thuộc giữa các module.
 
 ```
 src/
@@ -107,11 +107,11 @@ src/
     ai-gateway/  (thư viện, §7)
 ```
 
-**Quy tắc phụ thuộc:** module chỉ gọi nhau qua service interface công khai, không đọc bảng của module khác; `platform/*` không phụ thuộc module nghiệp vụ. Kiểm tra bằng lint kiến trúc (vd. `dependency-cruiser`). Riêng NFR-INT-02: không module nào ngoài `manuscript` được ghi `chapters.content` / `source_texts`.
+**Quy tắc phụ thuộc:** module chỉ gọi nhau qua service interface công khai, không đọc bảng của module khác; `platform/*` không phụ thuộc module nghiệp vụ: `platform/jobs` khai báo `WalletPort`, `billing` hiện thực (QĐ-144). Phụ thuộc hai chiều chỉ được phép ở `manuscript` ↔ `media` và `media` ↔ `editor`. Kiểm tra bằng lint kiến trúc (vd. `dependency-cruiser`). Riêng NFR-INT-02: không module nào ngoài `manuscript` được ghi `chapters.content` / `source_texts`.
 
 ### 5.1 Thành phần theo module
 
-Tên dưới đây là tên dùng trong sơ đồ tuần tự (`../so-do/04-tuan-tu/`) và là gợi ý tên lớp NestJS. Controller chỉ nhận request, kiểm tra schema và gọi service; nghiệp vụ nằm ở service.
+Tên dưới đây là tên dùng trong sơ đồ tuần tự (`../so-do/04-tuan-tu/`) và là gợi ý tên lớp NestJS. Sơ đồ lớp mức thiết kế của phần lõi: `../so-do/03-kien-truc/class-job-vi.puml` (job, ngân sách ngày, ví, handler) và `class-ai-gateway.puml` (§7). Controller chỉ nhận request, kiểm tra schema và gọi service; nghiệp vụ nằm ở service.
 
 | Module | Thành phần | Trách nhiệm | Sơ đồ |
 |---|---|---|---|
@@ -240,7 +240,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-component-editor.puml`, `../so-do/04-tuan-t
 
 ## 7. AI Gateway (C4 Level 3)
 
-Sơ đồ: `../so-do/03-kien-truc/c4-component-ai.puml`.
+Sơ đồ: `../so-do/03-kien-truc/c4-component-ai.puml`; sơ đồ lớp mức thiết kế (ports & adapters): `../so-do/03-kien-truc/class-ai-gateway.puml`.
 
 ### 7.1 Thành phần
 

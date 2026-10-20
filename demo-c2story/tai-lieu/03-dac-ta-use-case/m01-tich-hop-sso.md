@@ -16,7 +16,7 @@
 | Hậu điều kiện | **Thành công:** có phiên ứng dụng (cookie httpOnly); `users` tồn tại, đồng bộ với claims và đã đồng ý xử lý dữ liệu; người dùng ở trang đã yêu cầu. **Tối thiểu:** không tạo phiên khi xác thực thất bại hoặc email chưa được mời; mọi lỗi bảo mật được ghi log |
 | Kích hoạt | Bấm "Đăng nhập" hoặc truy cập trang yêu cầu đăng nhập (vd. link mời) |
 | Quan hệ | include UC-01.01a, UC-01.01b, UC-01.01c, UC-01.01d |
-| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12; BR-30, BR-31; NFR-SEC-02; seq-dang-nhap-sso |
+| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12; BR-30, BR-31; NFR-SEC-02; seq-dang-nhap-sso, act-m01-dang-nhap |
 | Giai đoạn | P0 |
 
 **Luồng chính**
@@ -158,7 +158,7 @@
 | Hậu điều kiện | **Thành công:** phiên ứng dụng bị thu hồi, token đã lưu bị xóa, phiên SSO kết thúc. **Tối thiểu:** phiên ứng dụng luôn bị thu hồi kể cả khi SSO lỗi |
 | Kích hoạt | Bấm "Đăng xuất" |
 | Quan hệ | include UC-01.02a |
-| Truy vết | FR-AUTH-05; seq-dang-nhap-sso |
+| Truy vết | FR-AUTH-05; seq-dang-nhap-sso, act-m01-dang-nhap |
 | Giai đoạn | P0 |
 
 **Luồng chính**

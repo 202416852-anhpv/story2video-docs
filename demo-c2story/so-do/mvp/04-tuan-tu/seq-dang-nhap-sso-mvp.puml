@@ -1,27 +1,25 @@
 @startuml Seq_DangNhapSSO_MVP
 ' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
 autonumber
 title UC-01.01 (+01.01a..d) + UC-01.02 (+01.02a) (MVP): Đăng nhập, đồng ý dữ liệu, đăng xuất qua SSO - closed beta\nOIDC + PKCE, mẫu BFF; IdentityProviderPort (ADR-20); BR-28, BR-30, BR-31
 
-actor "Người dùng\n(trình duyệt)" as U
-participant "Web App" as Web
-box "API Server — module auth" #F5F5F5
-participant "AuthController" as AC
-participant "LoginStateStore" as LS
-participant "IdentityProviderPort\n(OidcAdapter |\nOAuth2UserinfoAdapter)" as IDP
-participant "UserProvisioning\n(JIT)" as JIT
-participant "InviteService" as INV
-participant "WalletService\n(billing)" as WAL
-participant "SessionService" as SES
-participant "ConsentService" as CON
+actor "Người dùng\n(trình duyệt)" as U $NGUOI_DUNG
+participant "Web App" as Web $GIAO_DIEN
+box "API Server — module auth" $BOX_API
+participant "AuthController" as AC $API
+participant "ConsentService" as CON $API
+participant "LoginStateStore" as LS $API
+participant "IdentityProviderPort\n(OidcAdapter |\nOAuth2UserinfoAdapter)" as IDP $API
+participant "SessionService" as SES $API
+participant "InviteService" as INV $API
+participant "UserProvisioning\n(JIT)" as JIT $API
+participant "WalletService\n(billing)" as WAL $API
 end box
-database PostgreSQL as DB
-queue Redis as R
-participant "SSO\n(Keycloak / SSO Vbee)" as SSO
+database PostgreSQL as DB $DU_LIEU
+queue Redis as R $DU_LIEU
+participant "SSO\n(Keycloak / SSO Vbee)" as SSO $BEN_NGOAI
 
 == Đăng nhập (UC-01.01) ==
 U -> Web : Mở trang cần đăng nhập

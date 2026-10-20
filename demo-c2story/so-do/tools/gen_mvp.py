@@ -138,10 +138,12 @@ def domain():
     print('domain-class-mvp.puml bỏ', len(POST_CLASSES), 'lớp sau MVP')
 
 
-def sequences():
-    """Sơ đồ tuần tự: dòng giữa '@sau-mvp và '@/sau-mvp chỉ ở bản đầy đủ; dòng "'@mvp …" chỉ ở bản MVP."""
-    d = path('so-do', '04-tuan-tu')
+def marked(folder):
+    """Sơ đồ có đánh dấu (tuần tự; gói, lớp thiết kế): dòng giữa '@sau-mvp và '@/sau-mvp chỉ ở bản đầy đủ; dòng "'@mvp …" chỉ ở bản MVP."""
+    d = path('so-do', folder)
     for name in sorted(os.listdir(d)):
+        if not name.endswith('.puml'):
+            continue
         src = open(os.path.join(d, name), encoding='utf-8').read()
         if "'@sau-mvp" not in src and "'@mvp " not in src:
             continue
@@ -156,7 +158,8 @@ def sequences():
             elif not skip:
                 out.append(l)
         mvp = re.sub(r'@startuml (\w+)', r"@startuml \1_MVP\n' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay", '\n'.join(out), count=1)
-        open(path('so-do', 'mvp', '04-tuan-tu', name.replace('.puml', '-mvp.puml')), 'w', encoding='utf-8').write(mvp)
+        mvp = mvp.replace('!include _style-', '!include ../../' + folder + '/_style-')
+        open(path('so-do', 'mvp', folder, name.replace('.puml', '-mvp.puml')), 'w', encoding='utf-8').write(mvp)
         print(name, '→ bản MVP')
 
 
@@ -164,4 +167,6 @@ if __name__ == '__main__':
     use_cases(uc_phases())
     erd(post_mvp_tables())
     domain()
-    sequences()
+    marked('03-kien-truc')
+    marked('04-tuan-tu')
+    marked('05-hoat-dong')

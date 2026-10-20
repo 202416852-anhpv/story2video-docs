@@ -1,25 +1,23 @@
 @startuml Seq_ThanhToan
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include _style-tuan-tu.iuml
 autonumber
 '@sau-mvp
 title UC-09.01 + UC-09.03 (+09.03a) + UC-09.05 + UC-09.06 + UC-09.08 (+09.08a); UC-09.02, 09.04 (sau MVP)\nXem giá, nạp tiền qua Stripe sandbox, webhook ghi sổ cái, xem số dư và lịch sử chi tiêu; WR-01..04, BR-27
 '@/sau-mvp
 '@mvp title UC-09.01 + UC-09.03 (+09.03a) + UC-09.05 + UC-09.06 + UC-09.08 (+09.08a) (MVP)\nXem giá, nạp tiền qua Stripe sandbox, webhook ghi sổ cái, xem số dư và lịch sử chi tiêu; WR-01..04, BR-27
-actor User
-participant "Web App" as Web
-box "API Server — module billing" #F5F5F5
-participant "BillingController" as BC
-participant "TopupService" as TS
-participant "PaymentGatewayPort\n(StripeAdapter)" as PG
-participant "WebhookController\n+ SignatureVerifier" as WH
-participant "WalletService" as WAL
-participant "Realtime (SSE)" as RT
+actor User $NGUOI_DUNG
+participant "Web App" as Web $GIAO_DIEN
+box "API Server — module billing" $BOX_API
+participant "BillingController" as BC $API
+participant "WalletService" as WAL $API
+participant "TopupService" as TS $API
+participant "Realtime (SSE)" as RT $API
+participant "PaymentGatewayPort\n(StripeAdapter)" as PG $API
+participant "WebhookController\n+ SignatureVerifier" as WH $API
 end box
-database PostgreSQL as DB
-participant "Stripe\n(test mode)" as ST
+database PostgreSQL as DB $DU_LIEU
+participant "Stripe\n(test mode)" as ST $BEN_NGOAI
 
 == Xem bảng giá và ví (UC-09.01, UC-09.05) ==
 User -> Web : Mở Pricing / Dashboard

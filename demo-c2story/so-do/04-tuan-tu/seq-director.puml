@@ -1,15 +1,14 @@
 @startuml Seq_Director
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
+!include _style-tuan-tu.iuml
 autonumber
 title UC-07.02: AI Director tự động (bước 2 → 4, dựng bản nháp timeline) (sau MVP)
-actor Editor
-participant "Web App" as Web
-participant "API / Director module" as DIR
-database PostgreSQL as DB
-participant "Job pipeline\n(như thao tác tay)" as JOBS
-participant "LLM" as LLM
+actor Editor $NGUOI_DUNG
+participant "Web App" as Web $GIAO_DIEN
+participant "API / Director module" as DIR $API
+database PostgreSQL as DB $DU_LIEU
+participant "Job pipeline\n(như thao tác tay)" as JOBS $WORKER
+participant "LLM" as LLM $BEN_NGOAI
 
 Editor -> Web : Bật Director tự động
 Web -> DIR : POST /director/plan

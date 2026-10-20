@@ -1,29 +1,27 @@
 @startuml Seq_DoiRanhGioiShot
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include _style-tuan-tu.iuml
 autonumber
 '@sau-mvp
 title UC-03.02 + UC-03.02a (include UC-05.01a, UC-05.06e) + UC-06.15: Dời ranh giới shot trong Workspace,\nviết lại 2 brief, thuyết minh OUTDATED, đồng bộ timeline; BR-05, BR-12, BR-20, BR-33; IC-08, IC-09
 '@/sau-mvp
 '@mvp title UC-03.02 + UC-03.02a (include UC-05.01a, UC-05.06e) + UC-06.15 (MVP): Dời ranh giới shot trong Workspace,\nviết lại 2 brief, thuyết minh OUTDATED, đồng bộ timeline; BR-05, BR-12, BR-20, BR-33; IC-08, IC-09
 
-actor Editor
-participant "Web App\n(Workspace)" as Web
-box "API Server" #F5F5F5
-participant "StoryboardController\n→ BoundaryService\n(manuscript → media)" as BS
-participant "CoverageValidator\n(AI Gateway)" as CV
-participant "PriceEstimator" as PE
-participant "JobService" as JOBS
-participant "editor.MediaSync" as MSYNC
-participant "Realtime (SSE)" as RT
+actor Editor $NGUOI_DUNG
+participant "Web App\n(Workspace)" as Web $GIAO_DIEN
+box "API Server" $BOX_API
+participant "StoryboardController\n→ BoundaryService\n(manuscript → media)" as BS $API
+participant "CoverageValidator\n(AI Gateway)" as CV $AI_GATEWAY
+participant "PriceEstimator" as PE $API
+participant "JobService" as JOBS $API
+participant "editor.MediaSync" as MSYNC $API
+participant "Realtime (SSE)" as RT $API
 end box
-database PostgreSQL as DB
-box "Worker" #F5F5F5
-participant "RewriteShotHandler" as HR
+database PostgreSQL as DB $DU_LIEU
+box "Worker" $BOX_WORKER
+participant "RewriteShotHandler" as HR $WORKER
 end box
-participant "AI Gateway\n+ Google Gemini (Flash)" as GW
+participant "AI Gateway\n+ Google Gemini (Flash)" as GW $AI_GATEWAY
 
 == Hiện vạch ranh giới trên văn bản ==
 Editor -> Web : Mở chương trong Workspace

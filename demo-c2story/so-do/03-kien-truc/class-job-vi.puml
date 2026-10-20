@@ -1,0 +1,294 @@
+@startuml Class_Job_Vi
+' Sơ đồ lớp mức thiết kế: vòng đời job tốn phí và ví (05 §5.1, §6.1, §6.2; seq-vong-doi-job, seq-sinh-tu-lieu).
+' Tên lớp và phương thức trùng với sơ đồ tuần tự. Kiểu tiền: micro-USD (bigint).
+' Dòng giữa '@sau-mvp và '@/sau-mvp chỉ có ở bản đầy đủ; bản MVP sinh tự động bởi so-do/tools/gen_mvp.py.
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam classAttributeIconSize 0
+skinparam nodesep 40
+skinparam ranksep 55
+skinparam ArrowColor #455A64
+skinparam class {
+    BorderColor #546E7A
+}
+hide empty members
+left to right direction
+'@sau-mvp
+title Sơ đồ lớp thiết kế: Job & ví (platform/jobs, billing)
+'@/sau-mvp
+'@mvp title Sơ đồ lớp thiết kế: Job & ví (platform/jobs, billing) (MVP)
+
+package "platform/jobs" #FFF8EE {
+    class JobService {
+        -budget: BudgetGuard
+        -wallet: WalletPort
+        -queue: JobQueue
+        +createPaidJob(type: JobType, target: TargetRef, xCostMicro, heldMicro, params): Job
+        +createChildJob(parent: Job, type: JobType, target: TargetRef, params): Job
+        +createFreeJob(type: JobType, target: TargetRef, params): Job
+        +cancelAll(projectId): number
+        +get(jobId): Job
+    }
+    note right of JobService
+      createPaidJob trong **một giao dịch** (ADR-25):
+      budget.reserve → wallet.hold → INSERT jobs;
+      thứ tự khóa: ngân sách ngày → ví.
+      Enqueue sau commit (MVP, ADR-23).
+      Job con của Flow: held = 0, không HOLD (WR-05).
+    end note
+
+    class BudgetGuard {
+        +reserve(day, xCostMicro): void
+        +settle(day, xCostMicro, actualCostMicro): void
+    }
+    note bottom of BudgetGuard
+      reserve: UPDATE daily_ai_budgets … WHERE
+      spent + reserved + x ≤ cap; 0 dòng → BudgetExceeded (IC-18)
+    end note
+
+    interface WalletPort <<interface>> {
+        +hold(userId, amountMicro, jobId): void
+        +capture(jobId, amountMicro): void
+        +release(jobId, amountMicro): void
+    }
+
+    interface JobQueue <<interface>> {
+        +enqueue(job: Job): void
+        +enqueueFlow(parent: Job, children: Job[]): void
+    }
+    class BullMqJobQueue
+
+    class JobRunner {
+        -handlers: Map<JobType, JobHandler>
+        +process(bullJobId): void
+        -claim(jobId): Job | null
+        -heartbeat(jobId): void
+    }
+    note right of JobRunner
+      claim: UPDATE jobs SET RUNNING, attempts + 1
+      WHERE status IN (QUEUED, RETRYING) (ADR-29).
+      Heartbeat 30 s; commit DB rồi mới ack BullMQ.
+    end note
+
+    interface JobHandler <<interface>> {
+        +type: JobType
+        +handle(job: Job): void
+    }
+
+    abstract class AbstractJobHandler {
+        #router: ProviderRouter
+        #wallet: WalletPort
+        #budget: BudgetGuard
+        #usage: UsageMeter
+        +handle(job: Job): void
+        #{abstract} execute(job: Job): HandlerResult
+        #{abstract} persist(job: Job, result: HandlerResult): void
+        #settleSuccess(job: Job): void
+        #settleFailure(job: Job, error: ProviderError): void
+        #isRetryable(error: ProviderError): boolean
+    }
+    note right of AbstractJobHandler
+      Template method: handle = execute → persist + settle
+      trong một giao dịch. Lỗi tạm thời và attempts < 3
+      → RETRYING, ném lỗi để BullMQ thử lại (QĐ-133).
+      settleSuccess (job gốc): wallet.capture(min(Σ cost × 1,10, held)),
+      phần dư release; budget.settle. Job con chỉ ghi kết quả
+      và heartbeat của cha.
+    end note
+
+    class Reconciler {
+        +requeueStale(): void
+        +failDeadJobs(): void
+        +reconcileDaily(): void
+    }
+    note bottom of Reconciler
+      requeueStale: mỗi 1 phút (QUEUED > 1 phút).
+      failDeadJobs: mỗi 5 phút (heartbeat > 10 phút;
+      quyết toán, mở khóa chương).
+      reconcileDaily: Σ sổ cái = số dư ví;
+      spent = Σ ai_usage_records.
+    end note
+
+    class Job {
+        id: uuid
+        type: JobType
+        status: JobStatus
+        userId: uuid
+        projectId: uuid?
+        target: TargetRef
+        params: json
+        heldMicro: bigint
+        chargedMicro: bigint?
+        budgetDay: date?
+        budgetReservedMicro: bigint?
+        attempts: int
+        parentJobId: uuid?
+        idempotencyKey: string
+        heartbeatAt: timestamp?
+        +isRoot(): boolean
+    }
+
+    enum JobStatus {
+        QUEUED
+        RUNNING
+        RETRYING
+        SUCCEEDED
+        FAILED
+        CANCELLED
+    }
+
+    class DailyAiBudget {
+        day: date
+        capMicro: bigint
+        reservedMicro: bigint
+        spentMicro: bigint
+        alert80SentAt: timestamp?
+        alert100SentAt: timestamp?
+    }
+'@sau-mvp
+
+    class OutboxWriter #DDDDDD {
+        +write(event, tx): void
+    }
+    class UserSemaphore #DDDDDD {
+        +acquire(userId, queue): boolean
+        +release(userId, queue): void
+    }
+'@/sau-mvp
+}
+
+package "Handler theo loại job (thuộc module nghiệp vụ, chạy ở worker)" #FFFDF7 {
+    class MediaOrchestrator
+    class StoryboardDraftHandler
+    class RewriteShotHandler
+    class ShotImageHandler
+    class NarrateSegmentHandler
+    class SuggestSplitsHandler
+    class AnalyzeAssetsHandler
+    class AssetImageHandler
+    class StoryMetaHandler
+}
+
+package "billing" #F3FAF3 {
+    class WalletService {
+        +openWallet(userId): Wallet
+        +grantTrial(userId, amountMicro): void
+        +balance(userId): WalletBalance
+        +summary(userId): WalletSummary
+        +creditTopup(paymentId, amountMicro): void
+        +hold(userId, amountMicro, jobId): void
+        +capture(jobId, amountMicro): void
+        +release(jobId, amountMicro): void
+    }
+    note right of WalletService
+      Lớp **duy nhất** ghi wallets và
+      wallet_ledger_entries (append-only).
+      hold: SELECT wallets FOR UPDATE;
+      thiếu tiền → InsufficientBalance (402).
+    end note
+
+    class FreeLimitGuard {
+        +canCreateProject(user): boolean
+        +checkChapterLimit(projectId, totalChapters): void
+        +checkRenderLimit(user, durationSec, resolution): void
+    }
+
+    class Wallet {
+        userId: uuid
+        availableMicro: bigint
+        heldMicro: bigint
+        topupTotalMicro: bigint
+        +isPaid(): boolean
+    }
+
+    class LedgerEntry {
+        userId: uuid
+        entryType: LedgerType
+        amountMicro: bigint
+        jobId: uuid?
+        paymentId: uuid?
+    }
+
+    enum LedgerType {
+        TRIAL_GRANT
+        TOPUP
+        HOLD
+        CAPTURE
+        RELEASE
+'@sau-mvp
+        ADJUST (sau MVP)
+        REFUND (sau MVP)
+'@/sau-mvp
+    }
+}
+
+package "platform/ai-gateway (chi tiết: class-ai-gateway)" #FAF5FB {
+    class PriceEstimator {
+        +estimateMax(operation, input): Quote
+    }
+    class Quote {
+        xCostMicro: bigint
+        heldMicro: bigint
+        breakdown: QuoteLine[]
+    }
+    class ProviderRouter
+    class UsageMeter {
+        +record(usage: UsageRecord): void
+        +sumCost(jobId, attempt?): bigint
+    }
+}
+
+class "<Module>Service" as ModuleService {
+    +quote(params): Quote
+    +create(params): Job
+}
+note left of ModuleService
+  Service của module nghiệp vụ
+  (MediaGenerationService, ShotService,
+  AssetService…; 05 §5.1)
+end note
+
+' Tạo job
+ModuleService --> PriceEstimator : estimateMax
+ModuleService --> JobService : createPaidJob
+ModuleService ..> FreeLimitGuard
+PriceEstimator ..> Quote
+JobService --> BudgetGuard
+JobService --> WalletPort
+JobService --> JobQueue
+JobService ..> Job : tạo
+BullMqJobQueue ..|> JobQueue
+WalletService ..|> WalletPort
+BudgetGuard ..> DailyAiBudget
+WalletService "1" --> "*" Wallet
+Wallet "1" *-- "*" LedgerEntry
+LedgerEntry --> LedgerType
+Job --> JobStatus
+Job "0..1" o-- "*" Job : parentJobId
+
+' Chạy job
+JobRunner o-- "*" JobHandler : theo JobType
+JobRunner ..> Job : claim, heartbeat
+AbstractJobHandler ..|> JobHandler
+AbstractJobHandler --> WalletPort
+AbstractJobHandler --> BudgetGuard
+AbstractJobHandler --> ProviderRouter
+AbstractJobHandler --> UsageMeter
+AbstractJobHandler <|-- MediaOrchestrator
+AbstractJobHandler <|-- StoryboardDraftHandler
+AbstractJobHandler <|-- RewriteShotHandler
+AbstractJobHandler <|-- ShotImageHandler
+AbstractJobHandler <|-- NarrateSegmentHandler
+AbstractJobHandler <|-- SuggestSplitsHandler
+AbstractJobHandler <|-- AnalyzeAssetsHandler
+AbstractJobHandler <|-- AssetImageHandler
+AbstractJobHandler <|-- StoryMetaHandler
+MediaOrchestrator ..> JobService : createChildJob (Flow)
+Reconciler --> WalletPort
+Reconciler --> BudgetGuard
+Reconciler --> JobQueue
+'@sau-mvp
+JobService ..> OutboxWriter : sau MVP
+JobRunner ..> UserSemaphore : sau MVP (ADR-28)
+'@/sau-mvp
+@enduml

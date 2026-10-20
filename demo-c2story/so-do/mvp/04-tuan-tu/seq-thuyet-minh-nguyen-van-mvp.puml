@@ -1,35 +1,33 @@
 @startuml Seq_ThuyetMinhNguyenVan_MVP
 ' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
 autonumber
 title UC-05.11 (+05.11a) + UC-05.12 + UC-05.13 (+05.13a, 05.13b) (MVP): Cài đặt giọng, nghe thử đồng bộ,\ntừ điển phát âm, sinh thuyết minh nguyên văn bằng TTS tự host; BR-18, BR-19, BR-22; ADR-26, ADR-30; QĐ-121..123, QĐ-131, QĐ-140
 
-actor Editor
-participant "Web App" as Web
-box "API Server — module media/narration" #F5F5F5
-participant "NarrationController\n→ NarrationService" as NS
-participant "PronunciationService" as PS
-participant "JobService\n+ WalletService" as JOBS
-participant "Realtime (SSE)" as RT
+actor Editor $NGUOI_DUNG
+participant "Web App" as Web $GIAO_DIEN
+box "API Server — module media/narration" $BOX_API
+participant "NarrationController\n→ NarrationService" as NS $API
+participant "PronunciationService" as PS $API
+participant "JobService\n+ WalletService" as JOBS $API
+participant "Realtime (SSE)" as RT $API
 end box
-database PostgreSQL as DB
-box "Worker" #F5F5F5
-participant "NarrateSegmentHandler" as W
+database PostgreSQL as DB $DU_LIEU
+box "Worker" $BOX_WORKER
+participant "NarrateSegmentHandler" as W $WORKER
 end box
-box "AI Gateway" #FFFFFF
-participant "SpeechNormalizer" as N
-participant "TtsPort\n(SelfHostedTtsAdapter)" as TA
-participant "AlignerPort / SttPort\n(WhisperXAlignerAdapter)" as AA
-participant "UsageMeter" as UM
+box "AI Gateway" $BOX_AI_GATEWAY
+participant "SpeechNormalizer" as N $AI_GATEWAY
+participant "TtsPort\n(SelfHostedTtsAdapter)" as TA $AI_GATEWAY
+participant "AlignerPort / SttPort\n(WhisperXAlignerAdapter)" as AA $AI_GATEWAY
+participant "UsageMeter" as UM $AI_GATEWAY
 end box
-box "Máy GPU của nhóm" #EEF5FF
-participant "TTS Server\n(model tự host)" as TTS
-participant "Alignment Worker\n(WhisperX)" as AL
+box "Máy GPU của nhóm" $BOX_BEN_NGOAI
+participant "TTS Server\n(model tự host)" as TTS $BEN_NGOAI
+participant "Alignment Worker\n(WhisperX)" as AL $BEN_NGOAI
 end box
-participant "Object Storage" as S3
+participant "Object Storage" as S3 $DU_LIEU
 
 == Cài đặt thuyết minh (UC-05.11) và nghe mẫu giọng (UC-05.11a) ==
 Editor -> Web : Chọn ngôn ngữ, giọng, tốc độ, nghỉ câu / đoạn,\nbật / tắt quy tắc ký hiệu SYM-01..05

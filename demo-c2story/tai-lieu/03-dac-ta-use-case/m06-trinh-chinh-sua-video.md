@@ -18,7 +18,7 @@
 | Hậu điều kiện | **Thành công:** timeline được tải kèm ETag; preview sẵn sàng |
 | Kích hoạt | "Mở trình chỉnh sửa" từ chương, Tư liệu, Map hoặc thông báo `chapter.media-ready` |
 | Quan hệ | include UC-06.01a; được mở rộng bởi UC-06.15 |
-| Truy vết | FR-EDT-01, 02; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-01, 02; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -71,7 +71,7 @@
 | Hậu điều kiện | **Thành công:** thay đổi được lưu tự động (version tăng) và thỏa BR-24. **Tối thiểu:** thao tác vi phạm bị hoàn tác, không làm hỏng timeline |
 | Kích hoạt | Thao tác chuột/bàn phím trên timeline |
 | Quan hệ | include UC-06.02a |
-| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -126,7 +126,7 @@
 | Tiền điều kiện | Timeline đang mở |
 | Hậu điều kiện | **Thành công:** cấu trúc track cập nhật |
 | Kích hoạt | Menu của track |
-| Truy vết | FR-EDT-02, 15; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-02, 15; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -149,7 +149,7 @@
 | Tiền điều kiện | Có clip ảnh |
 | Hậu điều kiện | **Thành công:** thuộc tính `motion` cập nhật; preview phản ánh ngay |
 | Kích hoạt | Chọn clip ảnh → bảng "Chuyển động" |
-| Truy vết | FR-EDT-06; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-06; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -172,7 +172,7 @@
 | Tiền điều kiện | Có ≥ 2 clip ảnh liền kề |
 | Hậu điều kiện | **Thành công:** `transition_in` cập nhật; vị trí clip thuyết minh không đổi |
 | Kích hoạt | Kéo chuyển cảnh từ thư viện vào mối nối, hoặc chọn mối nối |
-| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 (nâng cao ✂3) |
 
 **Luồng chính**
@@ -195,7 +195,7 @@
 | Tiền điều kiện | Có clip ảnh |
 | Hậu điều kiện | **Thành công:** `framing` (timeline) và `color` (clip) cập nhật |
 | Kích hoạt | Bảng "Khung hình" / "Màu" |
-| Truy vết | FR-EDT-08, 09; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-08, 09; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -218,7 +218,7 @@
 | Tiền điều kiện | Timeline đang mở |
 | Hậu điều kiện | **Thành công:** item `TITLE`/`TEXT`/`LOGO` được thêm trên track Overlay |
 | Kích hoạt | "Thêm chữ" / "Thêm logo" / "Clip tiêu đề" |
-| Truy vết | FR-EDT-05, 10; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-05, 10; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -242,7 +242,7 @@
 | Tiền điều kiện | Có clip thuyết minh có `word_timings` |
 | Hậu điều kiện | **Thành công:** `subtitle_style` cập nhật |
 | Kích hoạt | Bảng "Phụ đề" |
-| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 (preset ✂3) |
 
 **Luồng chính**
@@ -267,7 +267,7 @@
 | Hậu điều kiện | **Thành công:** item `AUDIO` trên track Nhạc nền; ducking bắt buộc khi chồng thuyết minh |
 | Kích hoạt | Kéo nhạc từ "Âm thanh của tôi" vào track Nhạc nền |
 | Quan hệ | include UC-06.11 |
-| Truy vết | FR-EDT-13; BR-25, BR-26; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-13; BR-25, BR-26; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -293,7 +293,7 @@
 | Hậu điều kiện | **Thành công:** item `AUDIO` trên track SFX |
 | Kích hoạt | Kéo SFX vào track SFX |
 | Quan hệ | include UC-06.11 |
-| Truy vết | FR-EDT-14; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-14; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -315,7 +315,7 @@
 | Hậu điều kiện | **Thành công:** danh sách kết quả, nghe thử được |
 | Kích hoạt | Mở tab "Âm thanh" |
 | Quan hệ | được include bởi UC-06.09, UC-06.10; được mở rộng bởi UC-06.11a |
-| Truy vết | FR-EDT-12, 27; BR-26; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-12, 27; BR-26; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -386,7 +386,7 @@
 | Tiền điều kiện | Timeline đang mở |
 | Hậu điều kiện | **Thành công:** hình, thuyết minh, nhạc, SFX, phụ đề đồng bộ (lệch ≤ 100 ms) |
 | Kích hoạt | Play, scrub, nhảy tới clip |
-| Truy vết | FR-EDT-17; NFR-PERF-11, 13; ADR-13; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-17; NFR-PERF-11, 13; ADR-13; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 ✂9 |
 
 **Luồng chính**
@@ -434,7 +434,7 @@
 | Hậu điều kiện | **Thành công:** clip trỏ tới tư liệu mới; IC-10 thỏa; clip bị ảnh hưởng được đánh dấu |
 | Kích hoạt | Mở trình chỉnh sửa (UC-06.01), sự kiện `narration.updated`/`illustration.ready`, đổi bản nháp hiện hành |
 | Quan hệ | extend UC-06.01 |
-| Truy vết | FR-EDT-19; BR-33; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-19; BR-33; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -460,7 +460,7 @@
 | Hậu điều kiện | **Thành công:** Render phiên bản mới `READY`, đặt làm bản chính, có MP4 + SRT/VTT; với tài khoản Free, lượt render và phút video của tháng được cộng. **Tối thiểu:** lỗi thì Render `FAILED`, không ảnh hưởng timeline, không tính lượt |
 | Kích hoạt | Bấm "Xuất video" trong trình chỉnh sửa chương; hoặc "Xuất cả dự án" ở danh sách Renders / Map |
 | Quan hệ | include UC-06.16a; được mở rộng bởi UC-06.16b |
-| Truy vết | FR-EDT-21..24, 28; FR-BIL-12; BR-23, BR-27; QĐ-141; API 2.6 `POST /projects/{pid}/renders`; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-21..24, 28; FR-BIL-12; BR-23, BR-27; QĐ-141; API 2.6 `POST /projects/{pid}/renders`; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -547,7 +547,7 @@
 | Tiền điều kiện | Có Render `READY` |
 | Hậu điều kiện | **Thành công:** file được tải qua link ký có thời hạn 15 phút |
 | Kích hoạt | "Tải xuống" ở thông báo hoặc danh sách Renders |
-| Truy vết | FR-EDT-24, 25; NFR-SEC-05; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-24, 25; NFR-SEC-05; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**

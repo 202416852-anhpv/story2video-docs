@@ -1,0 +1,77 @@
+@startuml Act_M01_DangNhap_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+!include ../../05-hoat-dong/_style-hoat-dong.iuml
+title M01 Tích hợp SSO (MVP): đăng nhập, tham gia beta, đồng ý xử lý dữ liệu, đăng xuất\nUC-01.01 (+01.01a..d), UC-01.02 (+01.02a); BR-28, BR-30, BR-31
+
+|$LAN_NGUOI_DUNG|Người dùng|
+start
+:Mở trang cần đăng nhập;
+|$LAN_HE_THONG|Hệ thống|
+:Tạo state, nonce, PKCE;\nghi nhớ trang muốn quay về;
+|$LAN_NGOAI|SSO|
+:Hiện trang đăng nhập SSO;
+|Người dùng|
+:Đăng nhập / đăng ký / MFA trên SSO;
+|SSO|
+:Chuyển về ứng dụng kèm mã ủy quyền;
+|Hệ thống|
+if (state hợp lệ và chưa dùng? (UC-01.01a)) then (không)
+  $LOI:Ghi audit SECURITY;\n"Đăng nhập không thành công";
+  stop
+endif
+:Đổi mã lấy token;\nxác thực id_token / lấy userinfo;
+if (SSO phản hồi và claims hợp lệ?) then (không)
+  $LOI:Trang lỗi thân thiện, gợi ý thử lại;
+  stop
+endif
+if (Đã có hồ sơ (theo sso_subject)?) then (có)
+  :Đồng bộ email, tên, ảnh, vai trò;
+else (chưa)
+  if (Email trong danh sách mời\nvà đã xác minh? (BR-30)) then (không)
+    $LOI:403 NOT_INVITED\n"Bạn chưa được mời tham gia beta";
+    stop
+  endif
+  partition "Một giao dịch (UC-01.01b, JIT)" {
+    :Tạo hồ sơ (chưa đồng ý);
+    $TIEN:Mở ví, cộng $2 dùng thử\n(TRIAL_GRANT, BR-28);
+    :Đánh dấu lời mời đã dùng;
+  }
+endif
+if (Tài khoản bị khóa?) then (có)
+  $LOI:"Tài khoản bị khóa", không tạo phiên;
+  stop
+endif
+:Tạo phiên (cookie HttpOnly);\nkiểm tra trang quay về an toàn (UC-01.01c);
+if (Cần đồng ý phiên bản thông báo hiện hành? (BR-31)) then (có)
+  |Người dùng|
+  :Đọc thông báo: dữ liệu, mục đích,\nbên nhận (Google Gemini), thời hạn xóa;
+  if (Đồng ý? (UC-01.01d)) then (không)
+    |Hệ thống|
+    :Đăng xuất; giữ hồ sơ và ví;
+    stop
+  else (có)
+    |Hệ thống|
+    :Lưu consented_at, consent_version;
+  endif
+endif
+$XONG:Chuyển tới trang đã yêu cầu;
+|Người dùng|
+:Làm việc trong Studio;
+note right
+  Mỗi yêu cầu: kiểm tra phiên;
+  token sắp hết hạn → làm mới qua SSO;
+  SSO từ chối → khóa phiên, đăng nhập lại.
+end note
+:Bấm "Đăng xuất" (UC-01.02);
+|Hệ thống|
+:Thu hồi phiên, xóa cookie;
+if (SSO có end_session_endpoint? (UC-01.02a)) then (không)
+  :Chỉ đăng xuất cục bộ;\nbáo "vẫn đăng nhập ở ứng dụng khác";
+else (có)
+  |SSO|
+  :Kết thúc phiên SSO;\nvề trang chủ;
+endif
+|Hệ thống|
+stop
+@enduml

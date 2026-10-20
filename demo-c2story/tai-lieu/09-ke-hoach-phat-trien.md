@@ -371,8 +371,8 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-01.01 Đăng nhập qua SSO | P0 | FR-AUTH-01..04, 06, 07, 11, 12, 13; FR-BIL-10 | — | seq-dang-nhap-sso | E2E-sso-login-logout, IT-id-token-validation, IT-invite-gate, IT-consent-required, IT-trial-grant, IT-vbee-adapter |
-| UC-01.02 Đăng xuất | P0 | FR-AUTH-05 | — | seq-dang-nhap-sso | E2E-sso-login-logout |
+| UC-01.01 Đăng nhập qua SSO | P0 | FR-AUTH-01..04, 06, 07, 11, 12, 13; FR-BIL-10 | — | act-m01-dang-nhap, seq-dang-nhap-sso | E2E-sso-login-logout, IT-id-token-validation, IT-invite-gate, IT-consent-required, IT-trial-grant, IT-vbee-adapter |
+| UC-01.02 Đăng xuất | P0 | FR-AUTH-05 | — | act-m01-dang-nhap, seq-dang-nhap-sso | E2E-sso-login-logout |
 | UC-01.03 Xem Dashboard | P2 | FR-AUTH-09; FR-BIL-05, 12 | BO-05 | seq-quan-ly-du-an | IT-dashboard-summary |
 | UC-01.04 Đổi ngôn ngữ giao diện | P3 | FR-AUTH-08 | — | seq-quan-ly-du-an | IT-locale-preference |
 | UC-01.05 Mở trang quản lý tài khoản SSO | P2 | FR-AUTH-09 | — | seq-quan-ly-du-an | E2E-sso-login-logout |
@@ -384,7 +384,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
 | UC-02.01 Xem danh sách dự án | P1 | FR-PRJ-01 | — | seq-quan-ly-du-an | IT-project-list-filter |
-| UC-02.02 Nhập truyện giữ nguyên văn (Import) | P1 | FR-PRJ-02, 03; FR-BIL-12 | BO-01, BO-03 | seq-import-chia-chuong | IT-PRJ-import, IT-free-limits |
+| UC-02.02 Nhập truyện giữ nguyên văn (Import) | P1 | FR-PRJ-02, 03; FR-BIL-12 | BO-01, BO-03 | act-m03-ban-thao-chuong, seq-import-chia-chuong | IT-PRJ-import, IT-free-limits |
 | UC-02.03 Tạo dự án trống | P1 | FR-PRJ-04; FR-BIL-12 | BO-01 | seq-import-chia-chuong | IT-project-list-filter, IT-free-limits |
 | UC-02.04 Cài đặt dự án | P1 | FR-PRJ-07 | BO-02 | seq-quan-ly-du-an | IT-project-settings-authz |
 | UC-02.05 Xóa dự án | P1 | FR-PRJ-01 | — | seq-quan-ly-du-an | IT-project-delete |
@@ -399,15 +399,15 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-03.01 Xem văn bản gốc | P1 | FR-MAN-01; FR-PRJ-02, 03 | BO-03 | seq-import-chia-chuong, seq-quan-ly-du-an | IT-PRJ-import |
-| UC-03.02 Soạn thảo trong Workspace | P1 | FR-MAN-02, 11; FR-BOK-01b; FR-NAR-09 | BO-03 | act-phu-kin-van-ban, seq-doi-ranh-gioi-shot | IT-chapter-save-optimistic-lock, IT-move-shot-boundary, PBT-coverage-validator |
-| UC-03.03 Gợi ý chia chương bằng AI | P1 | FR-MAN-04; FR-BIL-12 | BO-01 | seq-import-chia-chuong | IT-split-suggest-schema |
-| UC-03.04 Chia chương tại vị trí | P1 | FR-MAN-03; FR-BIL-12 | BO-01 | seq-import-chia-chuong | PBT-chapter-text-preserved, IT-free-limits |
-| UC-03.05 Gộp chương vào chương trước | P1 | FR-MAN-05 | BO-01 | seq-import-chia-chuong | PBT-chapter-text-preserved |
-| UC-03.06 Dời ranh giới chương | P1 | FR-MAN-05 | BO-01 | seq-import-chia-chuong | PBT-chapter-text-preserved |
-| UC-03.07 Thêm / xóa / đổi tên chương | P1 | FR-MAN-05; FR-BIL-12 | BO-01 | seq-import-chia-chuong | IT-restructure-atomic, IT-free-limits |
-| UC-03.08 Sắp xếp lại chương | P1 | FR-MAN-05 | BO-01 | seq-import-chia-chuong | IT-restructure-atomic |
-| UC-03.09 Tái cấu trúc nguyên tử | P1 | FR-MAN-06 | BO-01, BO-03 | seq-import-chia-chuong | IT-restructure-atomic, PBT-chapter-text-preserved |
+| UC-03.01 Xem văn bản gốc | P1 | FR-MAN-01; FR-PRJ-02, 03 | BO-03 | act-m03-ban-thao-chuong, seq-import-chia-chuong, seq-quan-ly-du-an | IT-PRJ-import |
+| UC-03.02 Soạn thảo trong Workspace | P1 | FR-MAN-02, 11; FR-BOK-01b; FR-NAR-09 | BO-03 | act-m03-ban-thao-chuong, act-phu-kin-van-ban, seq-doi-ranh-gioi-shot | IT-chapter-save-optimistic-lock, IT-move-shot-boundary, PBT-coverage-validator |
+| UC-03.03 Gợi ý chia chương bằng AI | P1 | FR-MAN-04; FR-BIL-12 | BO-01 | act-m03-ban-thao-chuong, seq-import-chia-chuong | IT-split-suggest-schema |
+| UC-03.04 Chia chương tại vị trí | P1 | FR-MAN-03; FR-BIL-12 | BO-01 | act-m03-ban-thao-chuong, seq-import-chia-chuong | PBT-chapter-text-preserved, IT-free-limits |
+| UC-03.05 Gộp chương vào chương trước | P1 | FR-MAN-05 | BO-01 | act-m03-ban-thao-chuong, seq-import-chia-chuong | PBT-chapter-text-preserved |
+| UC-03.06 Dời ranh giới chương | P1 | FR-MAN-05 | BO-01 | act-m03-ban-thao-chuong, seq-import-chia-chuong | PBT-chapter-text-preserved |
+| UC-03.07 Thêm / xóa / đổi tên chương | P1 | FR-MAN-05; FR-BIL-12 | BO-01 | act-m03-ban-thao-chuong, seq-import-chia-chuong | IT-restructure-atomic, IT-free-limits |
+| UC-03.08 Sắp xếp lại chương | P1 | FR-MAN-05 | BO-01 | act-m03-ban-thao-chuong, seq-import-chia-chuong | IT-restructure-atomic |
+| UC-03.09 Tái cấu trúc nguyên tử | P1 | FR-MAN-06 | BO-01, BO-03 | act-m03-ban-thao-chuong, seq-import-chia-chuong | IT-restructure-atomic, PBT-chapter-text-preserved |
 | UC-03.10 Tìm & thay thế | Sau | FR-MAN-07 | BO-03 | — | IT-find-replace |
 | UC-03.11 Lưu Archive | Sau | FR-MAN-08 | BO-03 | — | IT-archive-immutable |
 | UC-03.12 Xem / sao chép / xóa Archive | Sau | FR-MAN-08 | BO-03 | — | IT-archive-immutable |
@@ -418,62 +418,62 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-04.01 Phân tích tài sản bằng AI | P1 | FR-WLD-01 | BO-01, BO-02 | seq-the-gioi-truyen | IT-analyze-assets, EVAL-asset-extraction |
-| UC-04.02 Quản lý Story Assets | P1 | FR-WLD-02, 03, 05, 11, 12, 13; FR-LIB-05 | BO-02 | seq-the-gioi-truyen, seq-tai-san-phong-cach | IT-story-asset-crud |
-| UC-04.03 Sinh ảnh tham chiếu | P1 | FR-WLD-03 | BO-02, BO-06 | seq-the-gioi-truyen | EVAL-consistency, IT-wallet-refund |
-| UC-04.04 Dùng ảnh tải lên nguyên bản | P1 | FR-WLD-04 | BO-02 | seq-the-gioi-truyen | IT-exact-image-upload |
-| UC-04.05 Chọn style dự án | P1 | FR-WLD-06 | BO-02 | seq-tai-san-phong-cach | IT-regenerate-all |
-| UC-04.06 Thiết lập Art Direction | P1 | FR-WLD-07 | BO-02 | seq-tai-san-phong-cach | UT-prompt-compiler-order |
-| UC-04.07 Xem dòng thời gian truyện | P2 ✂5 | FR-WLD-08 | BO-02 | seq-the-gioi-truyen | IT-story-timeline |
-| UC-04.08 Xem đồ thị quan hệ | P2 ✂4 | FR-WLD-09 | BO-02 | seq-the-gioi-truyen | IT-relationship-graph, UT-relationship-at-chapter |
-| UC-04.09 Phân tích lại (Re-analyse) | P2 ✂4 ✂5 | FR-WLD-08, 09 | BO-02 | seq-the-gioi-truyen | IT-story-timeline, IT-relationship-graph, UT-relationship-at-chapter |
-| UC-04.10 Quản lý Visual Rules | P1 | FR-WLD-10 | BO-02 | seq-tai-san-phong-cach | UT-prompt-compiler-order |
+| UC-04.01 Phân tích tài sản bằng AI | P1 | FR-WLD-01 | BO-01, BO-02 | act-m04-the-gioi-truyen, seq-the-gioi-truyen | IT-analyze-assets, EVAL-asset-extraction |
+| UC-04.02 Quản lý Story Assets | P1 | FR-WLD-02, 03, 05, 11, 12, 13; FR-LIB-05 | BO-02 | act-m04-the-gioi-truyen, seq-the-gioi-truyen, seq-tai-san-phong-cach | IT-story-asset-crud |
+| UC-04.03 Sinh ảnh tham chiếu | P1 | FR-WLD-03 | BO-02, BO-06 | act-m04-the-gioi-truyen, seq-the-gioi-truyen | EVAL-consistency, IT-wallet-refund |
+| UC-04.04 Dùng ảnh tải lên nguyên bản | P1 | FR-WLD-04 | BO-02 | act-m04-the-gioi-truyen, seq-the-gioi-truyen | IT-exact-image-upload |
+| UC-04.05 Chọn style dự án | P1 | FR-WLD-06 | BO-02 | act-m04-the-gioi-truyen, seq-tai-san-phong-cach | IT-regenerate-all |
+| UC-04.06 Thiết lập Art Direction | P1 | FR-WLD-07 | BO-02 | act-m04-the-gioi-truyen, seq-tai-san-phong-cach | UT-prompt-compiler-order |
+| UC-04.07 Xem dòng thời gian truyện | P2 ✂5 | FR-WLD-08 | BO-02 | act-m04-the-gioi-truyen, seq-the-gioi-truyen | IT-story-timeline |
+| UC-04.08 Xem đồ thị quan hệ | P2 ✂4 | FR-WLD-09 | BO-02 | act-m04-the-gioi-truyen, seq-the-gioi-truyen | IT-relationship-graph, UT-relationship-at-chapter |
+| UC-04.09 Phân tích lại (Re-analyse) | P2 ✂4 ✂5 | FR-WLD-08, 09 | BO-02 | act-m04-the-gioi-truyen, seq-the-gioi-truyen | IT-story-timeline, IT-relationship-graph, UT-relationship-at-chapter |
+| UC-04.10 Quản lý Visual Rules | P1 | FR-WLD-10 | BO-02 | act-m04-the-gioi-truyen, seq-tai-san-phong-cach | UT-prompt-compiler-order |
 | UC-04.11 Xuất ZIP ảnh tài sản | Sau | FR-WLD-11 | — | — | IT-asset-zip-export |
 
 ### 4.5 M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-05.01 Tạo bản nháp storyboard | P1 | FR-BOK-01, 01a, 05 | BO-01, BO-03 | act-phu-kin-van-ban, seq-storyboard-sinh-anh | IT-storyboard-schema, PBT-coverage-validator, UT-sentence-segmenter, PBT-segmenter-coverage, EVAL-segmenter-golden |
+| UC-05.01 Tạo bản nháp storyboard | P1 | FR-BOK-01, 01a, 05 | BO-01, BO-03 | act-m05-sinh-tu-lieu, act-phu-kin-van-ban, seq-storyboard-sinh-anh | IT-storyboard-schema, PBT-coverage-validator, UT-sentence-segmenter, PBT-segmenter-coverage, EVAL-segmenter-golden |
 | UC-05.02 Quản lý bản nháp | Sau | FR-BOK-02 | BO-03 | seq-storyboard-sinh-anh | IT-storyboard-schema |
 | UC-05.03 Chia lại shot (nhiều / ít hơn) | P1 | FR-BOK-03 | BO-01 | seq-storyboard-sinh-anh | IT-redirect-preserves-source, PBT-coverage-validator |
 | UC-05.04 Thiết lập Chapter rules | Sau | FR-BOK-04 | BO-02 | — | UT-prompt-compiler-order |
 | UC-05.05 Chỉ đạo lại cả chương (Re-direct) | Sau | FR-BOK-07 | BO-01 | — | IT-redirect-preserves-source |
-| UC-05.06 Biên tập shot | P1 | FR-BOK-05, 06, 08; FR-NAR-09 | BO-02, BO-03 | seq-storyboard-sinh-anh | PBT-coverage-validator, IT-auto-link-assets |
-| UC-05.07 Sinh tư liệu chương | P2 | FR-BOK-01; FR-MED-01..05; FR-BIL-11 | BO-01, BO-06 | seq-sinh-tu-lieu, seq-storyboard-sinh-anh | E2E-generate-media-chapter, IT-quote-total, IT-daily-budget-cap, IT-flow-settlement, IT-chapter-lock-release, EVAL-cost-per-minute |
-| UC-05.08 Xem Tư liệu dự án (media bin) | P1 | FR-BOK-13; FR-MED-03 | BO-01 | seq-sinh-tu-lieu | E2E-generate-media-chapter |
-| UC-05.09 Sinh ảnh shot | P1 | FR-BOK-09 | BO-02 | seq-storyboard-sinh-anh | E2E-shot-image, IT-wallet-refund, EVAL-consistency, EVAL-refusal-rate |
+| UC-05.06 Biên tập shot | P1 | FR-BOK-05, 06, 08; FR-NAR-09 | BO-02, BO-03 | act-m05-sinh-tu-lieu, seq-storyboard-sinh-anh | PBT-coverage-validator, IT-auto-link-assets |
+| UC-05.07 Sinh tư liệu chương | P2 | FR-BOK-01; FR-MED-01..05; FR-BIL-11 | BO-01, BO-06 | act-m05-sinh-tu-lieu, seq-sinh-tu-lieu, seq-storyboard-sinh-anh | E2E-generate-media-chapter, IT-quote-total, IT-daily-budget-cap, IT-flow-settlement, IT-chapter-lock-release, EVAL-cost-per-minute |
+| UC-05.08 Xem Tư liệu dự án (media bin) | P1 | FR-BOK-13; FR-MED-03 | BO-01 | act-m05-sinh-tu-lieu, seq-sinh-tu-lieu | E2E-generate-media-chapter |
+| UC-05.09 Sinh ảnh shot | P1 | FR-BOK-09 | BO-02 | act-m05-sinh-tu-lieu, seq-storyboard-sinh-anh | E2E-shot-image, IT-wallet-refund, EVAL-consistency, EVAL-refusal-rate |
 | UC-05.10 Sửa ảnh | P1 | FR-BOK-10 | BO-02 | seq-storyboard-sinh-anh | E2E-shot-image |
-| UC-05.11 Cài đặt thuyết minh | P2 | FR-NAR-01, 03 | BO-04 | seq-thuyet-minh-nguyen-van | IT-narration-settings, IT-symbol-rules |
-| UC-05.12 Quản lý từ điển phát âm | P2 ✂6 | FR-NAR-04 | BO-04 | seq-thuyet-minh-nguyen-van | IT-pronunciation-dictionary |
-| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden, EVAL-alignment, BENCH-tts, UT-normalization-map, PBT-normalization-map, UT-timing-map |
-| UC-05.14 Duyệt shot cần xem lại (NEEDS_REVIEW) | Sau | FR-NAR-07 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van, state-narration-render | E2E-needs-review |
+| UC-05.11 Cài đặt thuyết minh | P2 | FR-NAR-01, 03 | BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van | IT-narration-settings, IT-symbol-rules |
+| UC-05.12 Quản lý từ điển phát âm | P2 ✂6 | FR-NAR-04 | BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van | IT-pronunciation-dictionary |
+| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden, EVAL-alignment, BENCH-tts, UT-normalization-map, PBT-normalization-map, UT-timing-map |
+| UC-05.14 Duyệt shot cần xem lại (NEEDS_REVIEW) | Sau | FR-NAR-07 | BO-03, BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van, state-narration-render | E2E-needs-review |
 | UC-05.15 Gán giọng theo nhân vật | Sau | FR-NAR-05 | BO-04 | — | IT-multi-voice |
 | UC-05.16 Tải ZIP ảnh | Sau | FR-BOK-16 | — | — | IT-asset-zip-export |
-| UC-05.17 Giữ / trừ / hoàn tiền | P1 | FR-BIL-11 | BO-06 | act-giu-tru-tien, seq-vong-doi-job | PBT-wallet-ledger, IT-wallet-refund, IT-daily-budget-cap, IT-daily-budget-concurrency, IT-job-redelivery |
-| UC-05.18 Nghe & đánh dấu cần sinh lại | P2 | FR-NAR-08 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van, state-narration-render, seq-sinh-tu-lieu | E2E-listen-flag, IT-render-readiness |
+| UC-05.17 Giữ / trừ / hoàn tiền | P1 | FR-BIL-11 | BO-06 | act-m05-sinh-tu-lieu, act-giu-tru-tien, seq-vong-doi-job | PBT-wallet-ledger, IT-wallet-refund, IT-daily-budget-cap, IT-daily-budget-concurrency, IT-job-redelivery |
+| UC-05.18 Nghe & đánh dấu cần sinh lại | P2 | FR-NAR-08 | BO-03, BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van, state-narration-render, seq-sinh-tu-lieu | E2E-listen-flag, IT-render-readiness |
 
 ### 4.6 M06 — Trình chỉnh sửa & xuất video
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-06.01 Mở trình chỉnh sửa | P3 | FR-EDT-01..03 | BO-01 | seq-chinh-sua-xuat-video, seq-sinh-tu-lieu | IT-media-sync |
-| UC-06.02 Thao tác timeline | P3 | FR-EDT-03, 04, 18, 20 | BO-01, BO-03 | seq-chinh-sua-xuat-video | UT-timeline-ops, UT-narration-track-locked |
-| UC-06.03 Quản lý track | P3 | FR-EDT-02, 15 | BO-01 | seq-chinh-sua-xuat-video | UT-timeline-ops |
-| UC-06.04 Đặt hiệu ứng Ken Burns & điểm tập trung | P3 | FR-EDT-06 | BO-01 | seq-chinh-sua-xuat-video | UT-visual-effects |
-| UC-06.05 Đặt chuyển cảnh | P3 (nâng cao ✂3) | FR-EDT-07 | BO-01 | seq-chinh-sua-xuat-video | UT-visual-effects |
-| UC-06.06 Chọn khung hình & tinh chỉnh màu | P3 | FR-EDT-08, 09 | BO-01 | seq-chinh-sua-xuat-video | UT-visual-effects |
-| UC-06.07 Thêm overlay chữ / logo, clip tiêu đề & kết | Sau | FR-EDT-05, 10 | BO-01 | seq-chinh-sua-xuat-video | UT-overlay-title |
-| UC-06.08 Định kiểu phụ đề | P3 (preset ✂3) | FR-EDT-11 | BO-03 | seq-chinh-sua-xuat-video | IT-subtitle-verbatim |
-| UC-06.09 Thêm nhạc nền | P3 | FR-EDT-13 | BO-01 | seq-chinh-sua-xuat-video | E2E-editor-sfx-music |
-| UC-06.10 Thêm SFX | P3 | FR-EDT-14 | BO-01 | seq-chinh-sua-xuat-video | E2E-editor-sfx-music |
-| UC-06.11 Tìm trong thư viện âm thanh | P3 | FR-EDT-12, 14, 27 | BO-01 | seq-chinh-sua-xuat-video | E2E-editor-sfx-music, IT-audio-upload |
+| UC-06.01 Mở trình chỉnh sửa | P3 | FR-EDT-01..03 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video, seq-sinh-tu-lieu | IT-media-sync |
+| UC-06.02 Thao tác timeline | P3 | FR-EDT-03, 04, 18, 20 | BO-01, BO-03 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | UT-timeline-ops, UT-narration-track-locked |
+| UC-06.03 Quản lý track | P3 | FR-EDT-02, 15 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | UT-timeline-ops |
+| UC-06.04 Đặt hiệu ứng Ken Burns & điểm tập trung | P3 | FR-EDT-06 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | UT-visual-effects |
+| UC-06.05 Đặt chuyển cảnh | P3 (nâng cao ✂3) | FR-EDT-07 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | UT-visual-effects |
+| UC-06.06 Chọn khung hình & tinh chỉnh màu | P3 | FR-EDT-08, 09 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | UT-visual-effects |
+| UC-06.07 Thêm overlay chữ / logo, clip tiêu đề & kết | Sau | FR-EDT-05, 10 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | UT-overlay-title |
+| UC-06.08 Định kiểu phụ đề | P3 (preset ✂3) | FR-EDT-11 | BO-03 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | IT-subtitle-verbatim |
+| UC-06.09 Thêm nhạc nền | P3 | FR-EDT-13 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | E2E-editor-sfx-music |
+| UC-06.10 Thêm SFX | P3 | FR-EDT-14 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | E2E-editor-sfx-music |
+| UC-06.11 Tìm trong thư viện âm thanh | P3 | FR-EDT-12, 14, 27 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | E2E-editor-sfx-music, IT-audio-upload |
 | UC-06.12 Trộn âm & chuẩn hóa loudness | Sau | FR-EDT-15 | BO-01 | — | IT-loudness-normalize |
-| UC-06.13 Xem trước | P3 ✂9 | FR-EDT-17 | BO-01 | seq-chinh-sua-xuat-video | E2E-preview-sync |
+| UC-06.13 Xem trước | P3 ✂9 | FR-EDT-17 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | E2E-preview-sync |
 | UC-06.14 Xem lịch sử & khôi phục phiên bản timeline | Sau | FR-EDT-18 | — | — | IT-timeline-autosave |
-| UC-06.15 Đồng bộ khi tư liệu thay đổi | P3 | FR-EDT-19 | BO-03 | seq-chinh-sua-xuat-video | IT-media-sync |
-| UC-06.16 Xuất video MP4 | P3 | FR-EDT-21..24, 26, 28; FR-BIL-12 | BO-03, BO-06 | seq-chinh-sua-xuat-video | IT-render-readiness, IT-subtitle-verbatim, IT-free-render-quota, BENCH-render, UT-snapshot-schema, IT-project-render |
-| UC-06.17 Tải MP4 / SRT / audio | P3 | FR-EDT-24, 25 | BO-01 | seq-chinh-sua-xuat-video | IT-render-download |
+| UC-06.15 Đồng bộ khi tư liệu thay đổi | P3 | FR-EDT-19 | BO-03 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | IT-media-sync |
+| UC-06.16 Xuất video MP4 | P3 | FR-EDT-21..24, 26, 28; FR-BIL-12 | BO-03, BO-06 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | IT-render-readiness, IT-subtitle-verbatim, IT-free-render-quota, BENCH-render, UT-snapshot-schema, IT-project-render |
+| UC-06.17 Tải MP4 / SRT / audio | P3 | FR-EDT-24, 25 | BO-01 | act-m06-chinh-sua-xuat-video, seq-chinh-sua-xuat-video | IT-render-download |
 
 ### 4.7 M07 — AI Director
 
@@ -502,13 +502,13 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-09.01 Xem bảng giá | P3 | FR-BIL-01 | BO-05 | seq-thanh-toan | IT-pricing-page |
+| UC-09.01 Xem bảng giá | P3 | FR-BIL-01 | BO-05 | act-m09-vi-thanh-toan, seq-thanh-toan | IT-pricing-page |
 | UC-09.02 Đăng ký gói | Sau | FR-BIL-02 | BO-05 | seq-thanh-toan, state-subscription | IT-webhook-idempotent |
-| UC-09.03 Nạp tiền vào ví | P3 ✂1 | FR-BIL-03 | BO-05 | seq-thanh-toan | E2E-topup-sandbox, IT-webhook-idempotent |
+| UC-09.03 Nạp tiền vào ví | P3 ✂1 | FR-BIL-03 | BO-05 | act-m09-vi-thanh-toan, seq-thanh-toan | E2E-topup-sandbox, IT-webhook-idempotent |
 | UC-09.04 Quản lý thanh toán | Sau | FR-BIL-04 | BO-05 | seq-thanh-toan | IT-webhook-idempotent |
-| UC-09.05 Xem số dư ví | P2 | FR-BIL-05, 12 | BO-05 | seq-thanh-toan | IT-wallet-balance |
-| UC-09.06 Xem lịch sử chi tiêu | P3 | FR-BIL-06, 08 | BO-05, BO-06 | seq-thanh-toan | IT-spend-history, REC-ledger |
-| UC-09.08 Xử lý webhook thanh toán | P3 ✂1 | FR-BIL-09 | BO-05 | seq-thanh-toan | IT-webhook-idempotent, REC-ledger |
+| UC-09.05 Xem số dư ví | P2 | FR-BIL-05, 12 | BO-05 | act-m09-vi-thanh-toan, seq-thanh-toan | IT-wallet-balance |
+| UC-09.06 Xem lịch sử chi tiêu | P3 | FR-BIL-06, 08 | BO-05, BO-06 | act-m09-vi-thanh-toan, seq-thanh-toan | IT-spend-history, REC-ledger |
+| UC-09.08 Xử lý webhook thanh toán | P3 ✂1 | FR-BIL-09 | BO-05 | act-m09-vi-thanh-toan, seq-thanh-toan | IT-webhook-idempotent, REC-ledger |
 
 ### 4.10 M10 — Quản trị
 

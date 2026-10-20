@@ -40,7 +40,7 @@
 | Hậu điều kiện | **Thành công:** có Project, ProjectMember(OWNER), SourceText (kèm `sha256`), Chapter #1 chứa toàn văn. **Tối thiểu:** không tạo dự án dở dang khi lỗi |
 | Kích hoạt | Bấm "Import your story" |
 | Quan hệ | include UC-02.02a |
-| Truy vết | FR-PRJ-02, FR-PRJ-03; FR-BIL-12; BR-19, BR-21, BR-27; seq-import-chia-chuong |
+| Truy vết | FR-PRJ-02, FR-PRJ-03; FR-BIL-12; BR-19, BR-21, BR-27; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**

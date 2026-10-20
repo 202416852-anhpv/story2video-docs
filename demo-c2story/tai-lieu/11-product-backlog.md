@@ -26,7 +26,7 @@
 | Mô tả | Người dùng đăng nhập vào ứng dụng bằng tài khoản SSO có sẵn, nhận phiên làm việc và hồ sơ cục bộ |
 | Use case | [UC-01.01](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0101) · M01 — Tích hợp SSO & hồ sơ |
 | Giai đoạn | P0 |
-| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12; BR-30, BR-31; NFR-SEC-02; seq-dang-nhap-sso |
+| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12; BR-30, BR-31; NFR-SEC-02; seq-dang-nhap-sso, act-m01-dang-nhap |
 | Story point | |
 
 ```gherkin
@@ -220,7 +220,7 @@ Feature: UC-01.01c Quay về trang đã yêu cầu
 | Mô tả | Kết thúc phiên ứng dụng và phiên SSO |
 | Use case | [UC-01.02](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0102) · M01 — Tích hợp SSO & hồ sơ |
 | Giai đoạn | P0 |
-| Truy vết | FR-AUTH-05; seq-dang-nhap-sso |
+| Truy vết | FR-AUTH-05; seq-dang-nhap-sso, act-m01-dang-nhap |
 | Story point | |
 
 ```gherkin
@@ -372,7 +372,7 @@ Feature: UC-02.01 Xem danh sách dự án
 | Mô tả | Bước 1 của luồng chính: đưa văn bản truyện vào hệ thống để tạo dự án, giữ nguyên từng chữ |
 | Use case | [UC-02.02](03-dac-ta-use-case/m02-du-an-cong-tac.md#uc-0202) · M02 — Quản lý dự án & cộng tác |
 | Giai đoạn | P1 |
-| Truy vết | FR-PRJ-02, FR-PRJ-03; FR-BIL-12; BR-19, BR-21, BR-27; seq-import-chia-chuong |
+| Truy vết | FR-PRJ-02, FR-PRJ-03; FR-BIL-12; BR-19, BR-21, BR-27; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -566,7 +566,7 @@ Feature: UC-02.05 Xóa dự án
 | Mô tả | Xem toàn văn đã import, kèm số ký tự, số chương và ranh giới chương hiện tại |
 | Use case | [UC-03.01](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0301) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-01; seq-quan-ly-du-an |
+| Truy vết | FR-MAN-01; seq-quan-ly-du-an, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -589,7 +589,7 @@ Feature: UC-03.01 Xem văn bản gốc
 | Mô tả | Viết và sửa văn bản mọi chương trong một trình soạn thảo cuộn liền mạch |
 | Use case | [UC-03.02](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0302) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot |
+| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -633,7 +633,7 @@ Feature: UC-03.02 Soạn thảo trong Workspace
 | Mô tả | AI đề xuất vị trí chia chương và tiêu đề; Editor duyệt rồi áp dụng |
 | Use case | [UC-03.03](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0303) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-04; BR-01, BR-21, BR-27; 08 §3.2 (`SUGGEST_SPLITS`); seq-import-chia-chuong |
+| Truy vết | FR-MAN-04; BR-01, BR-21, BR-27; 08 §3.2 (`SUGGEST_SPLITS`); seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -678,7 +678,7 @@ Feature: UC-03.03 Gợi ý chia chương bằng AI
 | Mô tả | Chia một chương thành hai tại vị trí giữa hai đoạn văn |
 | Use case | [UC-03.04](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0304) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-03; BR-27; seq-import-chia-chuong |
+| Truy vết | FR-MAN-03; BR-27; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -710,7 +710,7 @@ Feature: UC-03.04 Chia chương tại vị trí
 | Mô tả | Nối chương k vào cuối chương k−1 |
 | Use case | [UC-03.05](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0305) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -736,7 +736,7 @@ Feature: UC-03.05 Gộp chương vào chương trước
 | Mô tả | Dời điểm bắt đầu của chương lên hoặc xuống từng đoạn văn |
 | Use case | [UC-03.06](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0306) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -762,7 +762,7 @@ Feature: UC-03.06 Dời ranh giới chương
 | Mô tả | Thêm chương trống (cuối hoặc chèn giữa), xóa chương, đổi tiêu đề |
 | Use case | [UC-03.07](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0307) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -800,7 +800,7 @@ Feature: UC-03.07 Thêm / xóa / đổi tên chương
 | Mô tả | Đổi thứ tự chương bằng kéo thả hoặc chọn vị trí |
 | Use case | [UC-03.08](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0308) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-05; seq-import-chia-chuong |
+| Truy vết | FR-MAN-05; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -822,7 +822,7 @@ Feature: UC-03.08 Sắp xếp lại chương
 | Mô tả | Áp một hoặc nhiều thao tác chia, gộp, dời ranh giới, sắp xếp trong một giao dịch |
 | Use case | [UC-03.09](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0309) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-06; IC-02; BR-05, BR-06, BR-12; seq-import-chia-chuong |
+| Truy vết | FR-MAN-06; IC-02; BR-05, BR-06, BR-12; seq-import-chia-chuong, act-m03-ban-thao-chuong |
 | Story point | |
 
 ```gherkin
@@ -862,7 +862,7 @@ Feature: UC-03.09 Tái cấu trúc nguyên tử
 | Mô tả | AI đọc mọi chương, đề xuất nhân vật, địa điểm, đạo cụ lặp lại kèm mô tả và facts |
 | Use case | [UC-04.01](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0401) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-01; BR-01, BR-02; 08 §3.2 (`ANALYZE_ASSETS`); seq-the-gioi-truyen |
+| Truy vết | FR-WLD-01; BR-01, BR-02; 08 §3.2 (`ANALYZE_ASSETS`); seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -951,7 +951,7 @@ Feature: UC-04.01a Duyệt tài sản đề xuất
 | Mô tả | Xem và quản lý nhân vật, địa điểm, đạo cụ, nhóm của dự án |
 | Use case | [UC-04.02](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0402) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -1167,7 +1167,7 @@ Feature: UC-04.02e Chỉnh sửa tài sản
 | Mô tả | Sinh ảnh chuẩn cho tài sản theo style + Art Direction để giữ nhất quán |
 | Use case | [UC-04.03](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0403) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-03; BR-01, BR-02, BR-08, BR-14; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-03; BR-01, BR-02, BR-08, BR-14; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -1246,7 +1246,7 @@ Feature: UC-04.03a Sinh lại tất cả (Regenerate all)
 | Mô tả | Dùng ảnh người dùng tải lên làm ảnh tham chiếu, không cho AI vẽ lại |
 | Use case | [UC-04.04](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0404) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-04; BR-14; NFR-SEC-10; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-04; BR-14; NFR-SEC-10; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -1274,7 +1274,7 @@ Feature: UC-04.04 Dùng ảnh tải lên nguyên bản
 | Mô tả | Chọn phong cách nghệ thuật từ danh mục |
 | Use case | [UC-04.05](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0405) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-06; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-06; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -1297,7 +1297,7 @@ Feature: UC-04.05 Chọn style dự án
 | Mô tả | Viết chỉ dẫn phong cách bổ sung lên style của dự án |
 | Use case | [UC-04.06](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0406) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-07; BR-08; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-07; BR-08; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -1319,7 +1319,7 @@ Feature: UC-04.06 Thiết lập Art Direction
 | Mô tả | Tạo, sửa, bật/tắt, xóa luật hình ảnh áp toàn dự án hoặc theo chương |
 | Use case | [UC-04.10](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0410) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-10; BR-08; seq-tai-san-phong-cach |
+| Truy vết | FR-WLD-10; BR-08; seq-tai-san-phong-cach, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -1346,7 +1346,7 @@ Feature: UC-04.10 Quản lý Visual Rules
 | Mô tả | Chia toàn bộ văn bản chương thành các shot liên tục; mỗi shot = 1 ảnh + 1 đoạn văn nguồn |
 | Use case | [UC-05.01](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0501) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P1 |
-| Truy vết | FR-BOK-01, 01a, 05; BR-20; ADR-11; seq-storyboard-sinh-anh |
+| Truy vết | FR-BOK-01, 01a, 05; BR-01, BR-20; 08 §3.2 (`STORYBOARD_DRAFT`); ADR-11; seq-storyboard-sinh-anh, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -1496,7 +1496,7 @@ Feature: UC-05.03 Chia lại shot (nhiều / ít hơn)
 | Mô tả | Chỉnh nội dung minh họa và cấu trúc của từng shot |
 | Use case | [UC-05.06](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0506) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P1 |
-| Truy vết | FR-BOK-01b, 05, 06 |
+| Truy vết | FR-BOK-01b, 05, 06; act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -1741,7 +1741,7 @@ Feature: UC-05.06f Tự khớp tên với tài sản
 | Mô tả | Xem toàn bộ ảnh và thuyết minh theo chương → shot; đầu vào của trình chỉnh sửa |
 | Use case | [UC-05.08](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0508) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P1 |
-| Truy vết | FR-MED-03; FR-BOK-13; seq-sinh-tu-lieu |
+| Truy vết | FR-MED-03; FR-BOK-13; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -1764,7 +1764,7 @@ Feature: UC-05.08 Xem Tư liệu dự án (media bin)
 | Mô tả | Sinh ảnh minh họa cho một shot, giữ nhất quán nhân vật bằng ảnh tham chiếu |
 | Use case | [UC-05.09](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0509) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P1 |
-| Truy vết | FR-BOK-09; BR-08; seq-storyboard-sinh-anh |
+| Truy vết | FR-BOK-09; BR-08; seq-storyboard-sinh-anh, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -1900,7 +1900,7 @@ Feature: UC-05.10c Khôi phục phiên bản ảnh
 | Mô tả | Bảo đảm tiền chính xác cho mọi job AI: giữ giá ước tính tối đa khi tạo job, trừ chi phí thực × 110% khi thành công và hoàn phần dư, hoàn toàn bộ khi thất bại |
 | Use case | [UC-05.17](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0517) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P1 |
-| Truy vết | FR-BIL-11; BR-01, BR-02, BR-03, BR-29; WR-01..05; IC-04, IC-05; act-giu-tru-tien; seq-vong-doi-job |
+| Truy vết | FR-BIL-11; BR-01, BR-02, BR-03, BR-29; WR-01..05; IC-04, IC-05; act-giu-tru-tien; seq-vong-doi-job, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -2351,7 +2351,7 @@ Feature: UC-03.02a Dời ranh giới shot
 | Mô tả | Xem dòng thời gian (ngày, mùa, tóm tắt) theo chương do AI dựng |
 | Use case | [UC-04.07](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0407) · M04 — Thế giới truyện |
 | Giai đoạn | P2 ✂5 |
-| Truy vết | FR-WLD-08; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-08; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -2384,7 +2384,7 @@ Feature: UC-04.07 Xem dòng thời gian truyện
 | Mô tả | Xem đồ thị quan hệ giữa các nhân vật và diễn biến; quan hệ thay đổi theo giai đoạn truyện (QĐ-143) |
 | Use case | [UC-04.08](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0408) · M04 — Thế giới truyện |
 | Giai đoạn | P2 ✂4 |
-| Truy vết | FR-WLD-09; IC-14, IC-19; seq-the-gioi-truyen |
+| Truy vết | FR-WLD-09; IC-14, IC-19; seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -2413,7 +2413,7 @@ Feature: UC-04.08 Xem đồ thị quan hệ
 | Mô tả | Dựng lại Timeline và Relationships sau khi văn bản hoặc tài sản thay đổi |
 | Use case | [UC-04.09](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0409) · M04 — Thế giới truyện |
 | Giai đoạn | P2 ✂4 ✂5 |
-| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; IC-19; 08 §3.2 (`STORY_META`); seq-the-gioi-truyen |
+| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; IC-19; 08 §3.2 (`STORY_META`); seq-the-gioi-truyen, act-m04-the-gioi-truyen |
 | Story point | |
 
 ```gherkin
@@ -2442,7 +2442,7 @@ Feature: UC-04.09 Phân tích lại (Re-analyse)
 | Mô tả | Bước 4 của luồng: một thao tác sinh ảnh + thuyết minh nguyên văn cho mọi shot của một hoặc nhiều chương |
 | Use case | [UC-05.07](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0507) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 |
-| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu |
+| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -2509,14 +2509,14 @@ Feature: UC-05.07a Dựng storyboard tự động
     And Hệ thống trả số shot thực tế cho UC-05.07 để fan-out job con; tiền đã giữ không đổi (UC-05.07 nhánh 4a, WR-05)
     Then chương có một bản nháp hiện hành gồm N shot phủ kín 100%
 
+  Scenario: 1a Chương đang bị khóa
+    When Chương đang bị khóa
+    Then 423 RESOURCE_LOCKED
+
   Scenario: 3a Job lỗi sau retry (UC-05.01 nhánh 3a)
     Given luồng chính đã tới bước 3
     When Job lỗi sau retry (UC-05.01 nhánh 3a)
     Then chương NEEDS_ATTENTION, không sinh ảnh và thuyết minh cho chương này; các chương khác trong cùng lượt vẫn chạy
-
-  Scenario: 1a Chương đang bị khóa
-    When Chương đang bị khóa
-    Then 423 RESOURCE_LOCKED
 ```
 
 #### ST-05-07b Xem tiến độ theo shot
@@ -2606,7 +2606,7 @@ Feature: UC-05.07c Sinh lại phần thiếu / lỗi
 | Mô tả | Chọn ngôn ngữ, giọng đọc, tốc độ, cao độ, khoảng nghỉ, quy tắc đọc ký hiệu trình bày |
 | Use case | [UC-05.11](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0511) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 |
-| Truy vết | FR-NAR-01, 03; BR-19; 08 §6; API 2.5 `PUT …/narration-settings`; seq-thuyet-minh-nguyen-van |
+| Truy vết | FR-NAR-01, 03; BR-19; 08 §6; API 2.5 `PUT …/narration-settings`; seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -2682,7 +2682,7 @@ Feature: UC-05.11a Nghe thử giọng
 | Mô tả | Khai báo cách đọc tên riêng, từ mượn, từ Hán Việt; chỉ ảnh hưởng audio, không đổi chữ |
 | Use case | [UC-05.12](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0512) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 ✂6 |
-| Truy vết | FR-NAR-04; BR-19. Vị trí ✂6 trong thứ tự cắt giảm (QĐ-05, QĐ-80); seq-thuyet-minh-nguyen-van |
+| Truy vết | FR-NAR-04; BR-19. Vị trí ✂6 trong thứ tự cắt giảm (QĐ-05, QĐ-80); seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -2713,7 +2713,7 @@ Feature: UC-05.12 Quản lý từ điển phát âm
 | Mô tả | Tạo audio đọc đúng từng chữ đoạn nguồn của shot, kèm timestamp từng từ để dựng phụ đề |
 | Use case | [UC-05.13](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0513) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 |
-| Truy vết | FR-NAR-02, 03, 06; BR-19, BR-22, BR-34; ADR-12; seq-thuyet-minh-nguyen-van |
+| Truy vết | FR-NAR-02, 03, 06; BR-19, BR-22, BR-34; ADR-12; seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -2836,7 +2836,7 @@ Feature: UC-05.13b Chuẩn hóa phát âm (SSML)
 | Mô tả | Kiểm chứng lời đọc thủ công: nghe thuyết minh từng shot, đánh dấu shot đọc sai để sinh lại sau. Không bắt buộc nghe hết mới được xuất video |
 | Use case | [UC-05.18](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0518) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 |
-| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu |
+| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
 | Story point | |
 
 ```gherkin
@@ -2875,7 +2875,7 @@ Feature: UC-05.18 Nghe & đánh dấu cần sinh lại
 | Mô tả | Xem số dư khả dụng, phần đang giữ cho job đang chạy, trạng thái tài khoản và phần Free đã dùng trong tháng |
 | Use case | [UC-09.05](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0905) · M09 — Ví & thanh toán |
 | Giai đoạn | P2 |
-| Truy vết | FR-BIL-05, FR-BIL-12; BR-27; API 2.8 `GET /me/wallet`; seq-thanh-toan |
+| Truy vết | FR-BIL-05, FR-BIL-12; BR-27; API 2.8 `GET /me/wallet`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Story point | |
 
 ```gherkin
@@ -2995,7 +2995,7 @@ Feature: UC-02.09 Xem bản đồ quy trình (Map)
 | Mô tả | Mở timeline của một chương để dựng video (timeline cả dự án: sau MVP; cả dự án xuất thẳng ở UC-06.16, QĐ-141) |
 | Use case | [UC-06.01](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0601) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-01, 02; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-01, 02; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3063,7 +3063,7 @@ Feature: UC-06.01a Dựng bản nháp timeline từ tư liệu
 | Mô tả | Kéo thả, di chuyển, cắt (split), trim, nhân bản, xóa clip; zoom, snap, phím tắt, undo/redo |
 | Use case | [UC-06.02](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0602) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3152,7 +3152,7 @@ Feature: UC-06.02a Kiểm tra khóa thuyết minh
 | Mô tả | Thêm, đổi tên, sắp xếp, ẩn, tắt tiếng, solo, xóa track |
 | Use case | [UC-06.03](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0603) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-02, 15; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-02, 15; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3182,7 +3182,7 @@ Feature: UC-06.03 Quản lý track
 | Mô tả | Đặt chuyển động cho clip ảnh: none, zoom in/out, pan bốn hướng, cường độ, điểm tập trung, nhiều pha; keyframe (nâng cao) sau MVP |
 | Use case | [UC-06.04](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0604) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-06; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-06; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3210,7 +3210,7 @@ Feature: UC-06.04 Đặt hiệu ứng Ken Burns & điểm tập trung
 | Mô tả | Đặt kiểu và thời lượng chuyển cảnh giữa hai clip ảnh |
 | Use case | [UC-06.05](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0605) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 (nâng cao ✂3) |
-| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3238,7 +3238,7 @@ Feature: UC-06.05 Đặt chuyển cảnh
 | Mô tả | Chọn cách khớp ảnh với khung video; chỉnh màu sau MVP (FR-EDT-09, mức C) |
 | Use case | [UC-06.06](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0606) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-08, 09; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-08, 09; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3265,7 +3265,7 @@ Feature: UC-06.06 Chọn khung hình & tinh chỉnh màu
 | Mô tả | Bật/tắt và định kiểu phụ đề; nội dung luôn nguyên văn, không sửa được |
 | Use case | [UC-06.08](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0608) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 (preset ✂3) |
-| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3296,7 +3296,7 @@ Feature: UC-06.08 Định kiểu phụ đề
 | Mô tả | Đặt một hoặc nhiều đoạn nhạc nền, fade, âm lượng, ducking dưới thuyết minh |
 | Use case | [UC-06.09](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0609) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-13; BR-25, BR-26; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-13; BR-25, BR-26; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3330,7 +3330,7 @@ Feature: UC-06.09 Thêm nhạc nền
 | Mô tả | Đặt hiệu ứng âm thanh (mưa, bước chân, pháo hoa…) tại thời điểm cụ thể |
 | Use case | [UC-06.10](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0610) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-14; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-14; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3354,7 +3354,7 @@ Feature: UC-06.10 Thêm SFX
 | Mô tả | Tìm nhạc nền / SFX trong "Âm thanh của tôi" (file đã tải lên). Thư viện hệ thống CC0/CC-BY: sau MVP |
 | Use case | [UC-06.11](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0611) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-12, 27; BR-26; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-12, 27; BR-26; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3421,7 +3421,7 @@ Feature: UC-06.11a Tải nhạc / SFX lên
 | Mô tả | Phát video theo thời gian thực trong trình duyệt, không cần render |
 | Use case | [UC-06.13](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0613) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 ✂9 |
-| Truy vết | FR-EDT-17; NFR-PERF-11, 13; ADR-13; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-17; NFR-PERF-11, 13; ADR-13; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3454,7 +3454,7 @@ Feature: UC-06.13 Xem trước
 | Mô tả | Cập nhật clip khi ảnh/thuyết minh được sinh lại hoặc storyboard thay đổi, giữ chỉnh sửa của người dùng |
 | Use case | [UC-06.15](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0615) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-19; BR-33; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-19; BR-33; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3484,7 +3484,7 @@ Feature: UC-06.15 Đồng bộ khi tư liệu thay đổi
 | Mô tả | Bước 6: render timeline thành MP4 kèm phụ đề |
 | Use case | [UC-06.16](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0616) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-21..24, 28; FR-BIL-12; BR-23, BR-27; QĐ-141; API 2.6 `POST /projects/{pid}/renders`; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-21..24, 28; FR-BIL-12; BR-23, BR-27; QĐ-141; API 2.6 `POST /projects/{pid}/renders`; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3585,7 +3585,7 @@ Feature: UC-06.16a Kiểm tra điều kiện & độ phủ 100%
 | Mô tả | Tải video và các file kèm theo về máy |
 | Use case | [UC-06.17](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0617) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-24, 25; NFR-SEC-05; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-24, 25; NFR-SEC-05; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3622,7 +3622,7 @@ Feature: UC-06.17 Tải MP4 / SRT / audio
 | Mô tả | Xem cách tính giá, đơn giá tham khảo từng thao tác, giới hạn tài khoản Free và quyền lợi khi đã nạp tiền, FAQ |
 | Use case | [UC-09.01](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0901) · M09 — Ví & thanh toán |
 | Giai đoạn | P3 |
-| Truy vết | FR-BIL-01; BR-01, BR-27, BR-28; 08 §3; API 2.8 `GET /pricing`; seq-thanh-toan |
+| Truy vết | FR-BIL-01; BR-01, BR-27, BR-28; 08 §3; API 2.8 `GET /pricing`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Story point | |
 
 ```gherkin
@@ -3648,7 +3648,7 @@ Feature: UC-09.01 Xem bảng giá
 | Mô tả | Nạp một số tiền USD vào ví để dùng cho các thao tác AI; lần nạp đầu chuyển tài khoản sang "Đã nạp tiền" |
 | Use case | [UC-09.03](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0903) · M09 — Ví & thanh toán |
 | Giai đoạn | P3 ✂1 |
-| Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions`; seq-thanh-toan |
+| Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Story point | |
 
 ```gherkin
@@ -3723,7 +3723,7 @@ Feature: UC-09.03a Thanh toán qua checkout
 | Mô tả | Xem sổ cái ví, lọc theo dự án và loại thao tác, thấy rõ chi phí thực và phí 10% |
 | Use case | [UC-09.06](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0906) · M09 — Ví & thanh toán |
 | Giai đoạn | P3 |
-| Truy vết | FR-BIL-06, 08; API 2.8 `GET /me/wallet/ledger`; seq-thanh-toan |
+| Truy vết | FR-BIL-06, 08; API 2.8 `GET /me/wallet/ledger`; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Story point | |
 
 ```gherkin
@@ -3746,7 +3746,7 @@ Feature: UC-09.06 Xem lịch sử chi tiêu
 | Mô tả | Nhận sự kiện thanh toán và cập nhật ví (và gói, sau MVP) một cách idempotent |
 | Use case | [UC-09.08](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0908) · M09 — Ví & thanh toán |
 | Giai đoạn | P3 ✂1 |
-| Truy vết | FR-BIL-09; NFR-SEC-07; IC-07; seq-thanh-toan |
+| Truy vết | FR-BIL-09; NFR-SEC-07; IC-07; seq-thanh-toan, act-m09-vi-thanh-toan |
 | Story point | |
 
 ```gherkin

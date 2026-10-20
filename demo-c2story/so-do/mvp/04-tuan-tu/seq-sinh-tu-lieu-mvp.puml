@@ -1,29 +1,27 @@
 @startuml Seq_SinhTuLieu_MVP
 ' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
-skinparam defaultFontName "Segoe UI"
-skinparam sequenceMessageAlign left
-skinparam responseMessageBelowArrow true
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
 autonumber
 title UC-05.07 (+05.07a, 05.07b, 05.07c) + UC-05.08 + UC-05.18 + UC-06.01a (MVP): Sinh tư liệu chương (ảnh + thuyết minh nguyên văn),\ntheo dõi tiến độ, sinh lại có chọn lọc, dựng timeline nháp; BullMQ Flow (ADR-15); BR-11, BR-12, BR-14, BR-34; WR-05
 
-actor Editor
-participant "Web App\n(bảng tiến độ,\nmedia bin)" as Web
-box "API Server" #F5F5F5
-participant "MediaController\n→ MediaGenerationService" as MG
-participant "PriceEstimator" as PE
-participant "JobService" as JOBS
-participant "Realtime (SSE)" as RT
+actor Editor $NGUOI_DUNG
+participant "Web App\n(bảng tiến độ,\nmedia bin)" as Web $GIAO_DIEN
+box "API Server" $BOX_API
+participant "MediaController\n→ MediaGenerationService" as MG $API
+participant "PriceEstimator" as PE $API
+participant "Realtime (SSE)" as RT $API
+participant "JobService" as JOBS $API
+participant "editor.TimelineBuilder" as TB $API
 end box
-database PostgreSQL as DB
-queue "Redis / BullMQ\n(Flow cha–con)" as Q
-box "Worker" #F5F5F5
-participant "MediaOrchestrator\n(GENERATE_MEDIA_CHAPTER)" as ORC
-participant "StoryboardDraftHandler" as SB
-participant "ShotImageHandler" as IMG
-participant "NarrateSegmentHandler\n(+ VERIFY_NARRATION)" as NAR
+database PostgreSQL as DB $DU_LIEU
+queue "Redis / BullMQ\n(Flow cha–con)" as Q $DU_LIEU
+box "Worker" $BOX_WORKER
+participant "MediaOrchestrator\n(GENERATE_MEDIA_CHAPTER)" as ORC $WORKER
+participant "StoryboardDraftHandler" as SB $WORKER
+participant "ShotImageHandler" as IMG $WORKER
+participant "NarrateSegmentHandler\n(+ VERIFY_NARRATION)" as NAR $WORKER
 end box
-participant "editor.TimelineBuilder" as TB
 
 == Báo giá (UC-05.07 bước 2, UC-05.07c bước 3) ==
 Editor -> Web : Chọn chương, "Sinh tư liệu" | "Sinh lại phần thiếu / lỗi"\n(only: MISSING | FAILED | OUTDATED | FLAGGED | ALL; parts: IMAGE, NARRATION)
