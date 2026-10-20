@@ -14,11 +14,11 @@ skinparam rectangle {
     BorderColor #37474F
 }
 left to right direction
-title M05b - Sinh tư liệu: ảnh + thuyết minh nguyên văn
+title M05b - Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn - phần ảnh + thuyết minh
 
 actor "Editor" as Editor
 
-rectangle "M05 Sinh tư liệu" {
+rectangle "M05 Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn\n(phần ảnh + thuyết minh)" {
     usecase "UC-05.07\nSinh tư liệu chương" as UC1
     usecase "UC-05.07a\nDựng storyboard tự động" as UC1a
     usecase "UC-05.07b\nXem tiến độ theo shot" as UC1b

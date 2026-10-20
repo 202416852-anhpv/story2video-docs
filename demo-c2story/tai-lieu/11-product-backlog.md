@@ -334,7 +334,7 @@ Feature: UC-01.01d Đồng ý xử lý dữ liệu cá nhân
 | Mô tả | Xem các dự án mình sở hữu hoặc tham gia để mở tiếp |
 | Use case | [UC-02.01](03-dac-ta-use-case/m02-du-an-cong-tac.md#uc-0201) · M02 — Quản lý dự án & cộng tác |
 | Giai đoạn | P1 |
-| Truy vết | FR-PRJ-01 |
+| Truy vết | FR-PRJ-01; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -491,7 +491,7 @@ Feature: UC-02.03 Tạo dự án trống
 | Mô tả | Đổi style, mô hình ảnh, ngôn ngữ, thời lượng mục tiêu mỗi ảnh, tỷ lệ khung hình, hiển thị |
 | Use case | [UC-02.04](03-dac-ta-use-case/m02-du-an-cong-tac.md#uc-0204) · M02 — Quản lý dự án & cộng tác |
 | Giai đoạn | P1 |
-| Truy vết | FR-PRJ-07; BR-04 |
+| Truy vết | FR-PRJ-07; BR-04; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -533,7 +533,7 @@ Feature: UC-02.04 Cài đặt dự án
 | Mô tả | Xóa dự án và toàn bộ dữ liệu liên quan |
 | Use case | [UC-02.05](03-dac-ta-use-case/m02-du-an-cong-tac.md#uc-0205) · M02 — Quản lý dự án & cộng tác |
 | Giai đoạn | P1 |
-| Truy vết | FR-PRJ-01; BR-04; 04 §5 |
+| Truy vết | FR-PRJ-01; BR-04; 04 §5; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -566,7 +566,7 @@ Feature: UC-02.05 Xóa dự án
 | Mô tả | Xem toàn văn đã import, kèm số ký tự, số chương và ranh giới chương hiện tại |
 | Use case | [UC-03.01](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0301) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-01 |
+| Truy vết | FR-MAN-01; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -951,7 +951,7 @@ Feature: UC-04.01a Duyệt tài sản đề xuất
 | Mô tả | Xem và quản lý nhân vật, địa điểm, đạo cụ, nhóm của dự án |
 | Use case | [UC-04.02](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0402) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11 |
+| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11; seq-tai-san-phong-cach |
 | Story point | |
 
 ```gherkin
@@ -1017,7 +1017,7 @@ Feature: UC-04.02a Tạo nhân vật / địa điểm / đạo cụ
 | Mô tả | Gom nhiều nhân vật thành một nhóm (vd. gia đình, băng nhóm) để dùng như một thực thể trong shot |
 | Use case | [UC-04.02b](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0402b) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-02; IC-13; 04 §3.3 `story_asset_group_members` |
+| Truy vết | FR-WLD-02; IC-13; 04 §3.3 `story_asset_group_members`; seq-tai-san-phong-cach |
 | Story point | |
 
 ```gherkin
@@ -1055,7 +1055,7 @@ Feature: UC-04.02b Tạo nhóm nhân vật
 | Mô tả | Gỡ một tài sản khỏi dự án mà không làm hỏng các shot và ảnh đã sinh |
 | Use case | [UC-04.02d](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0402d) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | BR-16; 04 §3.3, §3.4 (`shot_asset_refs.story_asset_id` cho phép NULL); API 2.4 `DELETE /projects/{pid}/story-assets/{sid}` |
+| Truy vết | BR-16; 04 §3.3, §3.4 (`shot_asset_refs.story_asset_id` cho phép NULL); API 2.4 `DELETE /projects/{pid}/story-assets/{sid}`; seq-tai-san-phong-cach |
 | Story point | |
 
 ```gherkin
@@ -1094,7 +1094,7 @@ Feature: UC-04.02d Gỡ khỏi dự án
 | Mô tả | Sửa tại chỗ một nhân vật, địa điểm, đạo cụ hoặc nhóm: tên, bí danh (để khớp tên trong shot), mô tả ngoại hình, facts bất biến (đưa vào prompt sinh ảnh), thành viên nhóm, ảnh tham chiếu. Sửa không phải tạo lại: giữ nguyên định danh nên mọi tham chiếu shot, nhóm, quan hệ vẫn còn |
 | Use case | [UC-04.02e](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0402e) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-02; BR-08, BR-14; IC-13; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10); API 2.4 `PATCH /projects/{pid}/story-assets/{sid}` (If-Match) |
+| Truy vết | FR-WLD-02; BR-08, BR-14; IC-13; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10); API 2.4 `PATCH /projects/{pid}/story-assets/{sid}` (If-Match); seq-tai-san-phong-cach |
 | Story point | |
 
 ```gherkin
@@ -1269,7 +1269,7 @@ Feature: UC-04.04 Dùng ảnh tải lên nguyên bản
 | Mô tả | Chọn phong cách nghệ thuật từ danh mục |
 | Use case | [UC-04.05](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0405) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-06 |
+| Truy vết | FR-WLD-06; seq-tai-san-phong-cach |
 | Story point | |
 
 ```gherkin
@@ -1292,7 +1292,7 @@ Feature: UC-04.05 Chọn style dự án
 | Mô tả | Viết chỉ dẫn phong cách bổ sung lên style của dự án |
 | Use case | [UC-04.06](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0406) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-07; BR-08 |
+| Truy vết | FR-WLD-07; BR-08; seq-tai-san-phong-cach |
 | Story point | |
 
 ```gherkin
@@ -1314,7 +1314,7 @@ Feature: UC-04.06 Thiết lập Art Direction
 | Mô tả | Tạo, sửa, bật/tắt, xóa luật hình ảnh áp toàn dự án hoặc theo chương |
 | Use case | [UC-04.10](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0410) · M04 — Thế giới truyện |
 | Giai đoạn | P1 |
-| Truy vết | FR-WLD-10; BR-08 |
+| Truy vết | FR-WLD-10; BR-08; seq-tai-san-phong-cach |
 | Story point | |
 
 ```gherkin
@@ -1956,7 +1956,7 @@ Feature: UC-05.17 Giữ / trừ / hoàn tiền
 | Mô tả | Đặt công thức giá cho từng loại thao tác AI (storyboard, ảnh, sửa ảnh, TTS…): hệ số trên chi phí thực (mặc định 1,10), đơn giá provider và giới hạn đầu ra dùng để ước tính |
 | Use case | [UC-10.01](03-dac-ta-use-case/m10-quan-tri.md#uc-1001) · M10 — Quản trị |
 | Giai đoạn | P1 |
-| Truy vết | FR-ADM-01; BR-01; 08 §3 |
+| Truy vết | FR-ADM-01; BR-01; 08 §3; seq-quan-tri |
 | Story point | |
 
 ```gherkin
@@ -1984,7 +1984,7 @@ Feature: UC-10.01 Cấu hình bảng giá
 | Mô tả | Bật/tắt provider (LLM, Image, TTS, STT, Aligner), chọn adapter thật hay mock, thứ tự ưu tiên, mô hình cho người dùng chọn, chi phí đơn vị |
 | Use case | [UC-10.03](03-dac-ta-use-case/m10-quan-tri.md#uc-1003) · M10 — Quản trị |
 | Giai đoạn | P1 |
-| Truy vết | FR-ADM-03; ADR-03, ADR-30; QĐ-119..125; 13 §11.3 |
+| Truy vết | FR-ADM-03; ADR-03, ADR-30; QĐ-119..125; 13 §11.3; seq-quan-tri |
 | Story point | |
 
 ```gherkin
@@ -2018,7 +2018,7 @@ Feature: UC-10.03 Quản lý provider & mô hình AI
 | Mô tả | Thêm/sửa/ẩn style nghệ thuật (tên, mô tả, đoạn prompt, ảnh mẫu) |
 | Use case | [UC-10.04](03-dac-ta-use-case/m10-quan-tri.md#uc-1004) · M10 — Quản trị |
 | Giai đoạn | P1 |
-| Truy vết | FR-ADM-03 |
+| Truy vết | FR-ADM-03; seq-quan-tri |
 | Story point | |
 
 ```gherkin
@@ -2040,7 +2040,7 @@ Feature: UC-10.04 Quản lý danh mục style
 | Mô tả | Quản lý giọng TTS cho người dùng chọn (ngôn ngữ, giới tính, audio mẫu); giọng được chọn ở P0 theo WER trên golden set |
 | Use case | [UC-10.05](03-dac-ta-use-case/m10-quan-tri.md#uc-1005) · M10 — Quản trị |
 | Giai đoạn | P1 |
-| Truy vết | FR-ADM-03 |
+| Truy vết | FR-ADM-03; seq-quan-tri |
 | Story point | |
 
 ```gherkin
@@ -2068,7 +2068,7 @@ Feature: UC-10.05 Quản lý danh mục giọng đọc
 | Mô tả | Ghi lại mọi hành động quản trị: thay đổi cấu hình, danh sách mời, điều chỉnh số dư |
 | Use case | [UC-10.09](03-dac-ta-use-case/m10-quan-tri.md#uc-1009) · M10 — Quản trị |
 | Giai đoạn | P1 |
-| Truy vết | NFR-PRV-04 |
+| Truy vết | NFR-PRV-04; seq-quan-tri |
 | Story point | |
 
 ```gherkin
@@ -2095,7 +2095,7 @@ Feature: UC-10.09 Ghi audit log
 | Mô tả | Thêm, gỡ và xem email được mời tham gia closed beta; chỉ email trong danh sách mới tạo được hồ sơ (BR-30) |
 | Use case | [UC-10.11](03-dac-ta-use-case/m10-quan-tri.md#uc-1011) · M10 — Quản trị |
 | Giai đoạn | P1 |
-| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites` |
+| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites`; seq-quan-tri |
 | Story point | |
 
 ```gherkin
@@ -2145,7 +2145,7 @@ Feature: UC-10.11 Quản lý danh sách mời beta
 | Mô tả | Xem tổng quan tài khoản: trạng thái (Free / Đã nạp tiền), số dư ví, phần Free đã dùng trong tháng, số dự án, lối tắt |
 | Use case | [UC-01.03](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0103) · M01 — Tích hợp SSO & hồ sơ |
 | Giai đoạn | P2 |
-| Truy vết | FR-AUTH-09; FR-BIL-05, 12; API 2.1 `GET /me/dashboard` |
+| Truy vết | FR-AUTH-09; FR-BIL-05, 12; API 2.1 `GET /me/dashboard`; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -2173,7 +2173,7 @@ Feature: UC-01.03 Xem Dashboard
 | Mô tả | Chuyển tới trang hồ sơ của SSO để đổi mật khẩu, email, MFA |
 | Use case | [UC-01.05](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0105) · M01 — Tích hợp SSO & hồ sơ |
 | Giai đoạn | P2 |
-| Truy vết | FR-AUTH-09, C-05 |
+| Truy vết | FR-AUTH-09, C-05; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -2196,7 +2196,7 @@ Feature: UC-01.05 Mở trang quản lý tài khoản SSO
 | Mô tả | Sao chép toàn bộ văn bản truyện vào clipboard |
 | Use case | [UC-03.01a](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0301a) · M03 — Bản thảo & chương |
 | Giai đoạn | P2 |
-| Truy vết | FR-MAN-01; API 2.3 `GET /projects/{pid}/source` |
+| Truy vết | FR-MAN-01; API 2.3 `GET /projects/{pid}/source`; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -2891,7 +2891,7 @@ Feature: UC-09.05 Xem số dư ví
 | Mô tả | Giữ tổng chi phí AI thật của toàn hệ thống trong một ngày không vượt trần (closed beta: $10); chạm trần thì tạm dừng job mới và báo Admin |
 | Use case | [UC-10.12](03-dac-ta-use-case/m10-quan-tri.md#uc-1012) · M10 — Quản trị |
 | Giai đoạn | P2 |
-| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED` |
+| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED`; seq-quan-tri, seq-vong-doi-job |
 | Story point | |
 
 ```gherkin
@@ -2933,7 +2933,7 @@ Feature: UC-10.12 Áp trần chi tiêu AI hằng ngày
 | Mô tả | Chọn ngôn ngữ giao diện (vi, en) |
 | Use case | [UC-01.04](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0104) · M01 — Tích hợp SSO & hồ sơ |
 | Giai đoạn | P3 |
-| Truy vết | FR-AUTH-08 |
+| Truy vết | FR-AUTH-08; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin
@@ -2959,7 +2959,7 @@ Feature: UC-01.04 Đổi ngôn ngữ giao diện
 | Mô tả | Xem 6 bước của luồng chính và vị trí hiện tại của dự án. Trang tĩnh, đứng thứ hai trong thứ tự cắt giảm, sau nạp tiền sandbox (✂2, QĐ-61, QĐ-116) |
 | Use case | [UC-02.09](03-dac-ta-use-case/m02-du-an-cong-tac.md#uc-0209) · M02 — Quản lý dự án & cộng tác |
 | Giai đoạn | P3 ✂2 |
-| Truy vết | FR-PRJ-06 |
+| Truy vết | FR-PRJ-06; seq-quan-ly-du-an |
 | Story point | |
 
 ```gherkin

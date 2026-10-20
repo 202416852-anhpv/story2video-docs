@@ -22,11 +22,11 @@ actor "Admin" as Admin
 rectangle "AI Story Studio" {
     usecase "M01 Tích hợp SSO & hồ sơ\n(đăng nhập/đăng xuất qua SSO)" as M01
     usecase "M09 Ví & thanh toán" as M09
-    usecase "M08 Thư viện tài sản" as M08 #DDDDDD
+    usecase "M08 Thư viện tài sản cá nhân" as M08 #DDDDDD
     usecase "M02 Quản lý dự án & cộng tác" as M02
     usecase "M03 Bản thảo & chương" as M03
     usecase "M04 Thế giới truyện" as M04
-    usecase "M05 Sinh tư liệu\n(ảnh + thuyết minh nguyên văn)" as M05
+    usecase "M05 Sinh tư liệu: storyboard, ảnh,\nthuyết minh nguyên văn" as M05
     usecase "M06 Trình chỉnh sửa & xuất video\n(nhạc nền, SFX, chuyển cảnh)" as M06
     usecase "M07 AI Director" as M07 #DDDDDD
     usecase "M10 Quản trị" as M10

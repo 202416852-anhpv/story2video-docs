@@ -1,6 +1,6 @@
 # M10 — Quản trị
 
-> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m10-quan-tri.puml`. Yêu cầu: FR-ADM-01..07, FR-AUTH-11. Tác nhân chính của mọi use case: **Admin** (vai trò lấy từ claim SSO hoặc danh sách cục bộ, FR-AUTH-07). Mọi thay đổi cấu hình và số dư đều ghi audit log (UC-10.09).
+> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m10-quan-tri.puml`, `../../so-do/04-tuan-tu/seq-quan-tri.puml`. Yêu cầu: FR-ADM-01..07, FR-AUTH-11. Tác nhân chính của mọi use case: **Admin** (vai trò lấy từ claim SSO hoặc danh sách cục bộ, FR-AUTH-07). Mọi thay đổi cấu hình và số dư đều ghi audit log (UC-10.09).
 > **MVP không có giao diện quản trị** (QĐ-04): bảng giá, provider, style, giọng và `system_settings` nạp từ file seed (`pnpm seed`); danh sách mời quản lý bằng CLI (UC-10.11). Các bước "mở `/admin/...`" dưới đây mô tả giao diện sau MVP; trong MVP Admin sửa file seed rồi chạy lại lệnh nạp, hệ thống vẫn kiểm tra và ghi audit như nhau.
 
 ---
@@ -16,7 +16,7 @@
 | Hậu điều kiện | **Thành công:** `price_rules` phiên bản mới với ngày hiệu lực; job tạo trước đó giữ giá cũ |
 | Kích hoạt | MVP: sửa `seed/price-rules.yaml` và chạy `pnpm seed`. Sau MVP: mở `/admin/price-rules` |
 | Quan hệ | include UC-10.09 |
-| Truy vết | FR-ADM-01; BR-01; 08 §3 |
+| Truy vết | FR-ADM-01; BR-01; 08 §3; seq-quan-tri |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -62,7 +62,7 @@
 | Tiền điều kiện | Là Admin; secret của provider đã có trong secret manager |
 | Hậu điều kiện | **Thành công:** `ai_providers`/`ai_models` cập nhật; ProviderRouter dùng cấu hình mới |
 | Kích hoạt | MVP: `seed/ai-providers.yaml` + `pnpm seed`. Sau MVP: mở `/admin/ai-providers` |
-| Truy vết | FR-ADM-03; ADR-03, ADR-30; QĐ-119..125; 13 §11.3 |
+| Truy vết | FR-ADM-03; ADR-03, ADR-30; QĐ-119..125; 13 §11.3; seq-quan-tri |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -87,7 +87,7 @@
 | Tiền điều kiện | Là Admin |
 | Hậu điều kiện | **Thành công:** `styles` cập nhật; dự án đang dùng style bị ẩn không bị ảnh hưởng |
 | Kích hoạt | MVP: `seed/styles.yaml` + `pnpm seed`. Sau MVP: mở `/admin/styles` |
-| Truy vết | FR-ADM-03 |
+| Truy vết | FR-ADM-03; seq-quan-tri |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -106,7 +106,7 @@
 | Tiền điều kiện | Là Admin; provider TTS đang bật |
 | Hậu điều kiện | **Thành công:** `voices` cập nhật |
 | Kích hoạt | MVP: `seed/voices.yaml` + `pnpm seed`. Sau MVP: mở `/admin/voices` |
-| Truy vết | FR-ADM-03 |
+| Truy vết | FR-ADM-03; seq-quan-tri |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -251,7 +251,7 @@
 | Tiền điều kiện | Có hành động cần kiểm toán |
 | Hậu điều kiện | **Thành công:** bản ghi bất biến: ai, khi nào, đối tượng, giá trị trước/sau, lý do, IP. Giữ 2 năm |
 | Kích hoạt | UC-10.01, UC-10.07b, UC-10.08, UC-10.11, UC-10.12 và mọi thay đổi cấu hình |
-| Truy vết | NFR-PRV-04 |
+| Truy vết | NFR-PRV-04; seq-quan-tri |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -294,7 +294,7 @@
 | Hậu điều kiện | **Thành công:** `beta_invites` cập nhật; có audit log. **Tối thiểu:** gỡ lời mời không xóa hồ sơ đã tạo |
 | Kích hoạt | MVP: lệnh `pnpm admin:invites add\|remove\|list <email> [--note]`. Sau MVP: `/admin/invites` |
 | Quan hệ | include UC-10.09 |
-| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites` |
+| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites`; seq-quan-tri |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -325,7 +325,7 @@
 | Hậu điều kiện | **Thành công:** tại mọi thời điểm `spent + reserved ≤ cap` của ngày (IC-18), kể cả khi nhiều yêu cầu đồng thời; chi phí thực chỉ có thể vượt trần một lượng bằng phần các job đang chạy tốn hơn ước tính; Admin nhận đúng một cảnh báo cho mỗi ngưỡng mỗi ngày. **Tối thiểu:** job đang chạy không bị hủy giữa chừng |
 | Kích hoạt | Mỗi lần tạo job tốn phí (UC-05.17 bước 3); Scheduler chạy mỗi 5 phút |
 | Quan hệ | được include bởi UC-05.17 |
-| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED` |
+| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED`; seq-quan-tri, seq-vong-doi-job |
 | Giai đoạn | P2 |
 
 **Luồng chính**

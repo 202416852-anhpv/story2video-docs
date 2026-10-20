@@ -4,7 +4,10 @@ skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 skinparam responseMessageBelowArrow true
 autonumber
+'@sau-mvp
 title UC-05.01 (+05.01a) + UC-05.02c + UC-05.03 + UC-05.06 (a, c, e, f) + UC-05.09 + UC-05.10 (+05.10a, 05.10c):\nLập storyboard phủ kín, biên tập shot, sinh / thay / sửa ảnh shot; BR-08, BR-14, BR-16, BR-20, BR-21; IC-08, IC-09
+'@/sau-mvp
+'@mvp title UC-05.01 (+05.01a) + UC-05.02c + UC-05.03 + UC-05.06 (a, c, e, f) + UC-05.09 + UC-05.10 (+05.10a, 05.10c) (MVP):\nLập storyboard phủ kín, biên tập shot, sinh / thay / sửa ảnh shot; BR-08, BR-14, BR-16, BR-20, BR-21; IC-08, IC-09
 
 actor Editor
 participant "Web App\n(Storyboard)" as Web
@@ -45,7 +48,10 @@ HD -> DB : chapters.content, version (chỉ đọc)
 HD -> SEG : segment(content)
 SEG --> HD : sentences[{i, start, end}] (UTF-16, ADR-26),\nsegmenter_version (12 §1)
 HD -> CB : storyboardContext(chapter)
+'@sau-mvp
 CB -> DB : story_assets (tên, bí danh, appearance), timeline_events,\nvisual_rules, thời lượng mục tiêu mỗi ảnh; [sau MVP] chapter_rules
+'@/sau-mvp
+'@mvp CB -> DB : story_assets (tên, bí danh, appearance), timeline_events,\nvisual_rules, thời lượng mục tiêu mỗi ảnh
 CB --> HD : context (dữ liệu truyện bọc trong khối đánh dấu, NFR-SEC-08)
 HD -> GW : complete(system, câu đánh số, context,\nmật độ ≈ 3 ảnh/phút (QĐ-112), kind,\nschema = Shot[]{startSentence, endSentence, title, focus,\ncast[], items[], location, timeOfDay, storyDate, brief{7 trường}, caption})
 GW -> LLM : generateContent (structured output)
@@ -86,7 +92,10 @@ end
 alt Sửa brief, thời điểm, caption, cast (UC-05.06a, 05.06b)
     Web -> SH : PATCH …/shots/{shid} (If-Match)
     SH -> DB : UPDATE shots, shot_asset_refs; version++\n(không đổi source_*; ảnh hiện tại → "brief đã đổi")
+'@sau-mvp
     SH --> Web : 200 | 409 → UC-02.10
+'@/sau-mvp
+'@mvp     SH --> Web : 200 | 409 → tải lại (MVP chỉ một người sửa)
 else Tách / gộp / xóa shot (UC-05.06c)
     Web -> SH : POST …/shots/{shid}:split {atSentence} | :merge-up | :merge-down | DELETE
     SH -> DB : BEGIN; SELECT shots FOR UPDATE; khóa chương? (423)
@@ -127,7 +136,10 @@ JOBS --> Web : 202
 loop mỗi job (concurrency của queue image)
     HI -> DB : illustrations(PENDING, shot_version = shots.version)
     HI -> PC : compileShotPrompt(shot)
+'@sau-mvp
     PC -> DB : style, art_direction, visual_rules (dự án → chương),\n[sau MVP] chapter_rules, brief, facts, appearance
+'@/sau-mvp
+'@mvp     PC -> DB : style, art_direction, visual_rules (dự án → chương),\nbrief, facts, appearance
     PC -> PC : thứ tự BR-08 (chỉ dẫn sau ưu tiên hơn); facts chèn nguyên văn;\ntimeline truyện → mùa, thời điểm
     PC -> DB : ảnh tham chiếu hiện hành của cast → location → item\n(ưu tiên nhân vật, theo giới hạn số ảnh của provider, 05 §7.4)
     PC --> HI : prompt, references[], prompt_snapshot

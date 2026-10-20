@@ -1,0 +1,96 @@
+@startuml Seq_TaiSanPhongCach_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+autonumber
+title UC-04.02 (+04.02b, 04.02d, 04.02e) + UC-04.05 + UC-04.06 + UC-04.10 (MVP):\nQuản lý Story Assets (nhóm, sửa, gỡ), style dự án, Art Direction, Visual Rules; BR-08, BR-14, BR-16; IC-13
+
+actor Editor
+participant "Web App" as Web
+box "API Server - module world (M04)" #F5F5F5
+participant "StoryAssetService" as AS
+participant "ProjectService" as PS
+participant "VisualRuleService" as VR
+end box
+database PostgreSQL as DB
+
+== Story Assets (UC-04.02) ==
+Editor -> Web : Mở ?v=assets
+Web -> AS : GET /projects/{pid}/story-assets
+AS -> DB : story_assets, ảnh tham chiếu hiện hành,\nstory_asset_group_members
+AS --> Web : 200 (Characters, Locations, Props, Groups)
+note right of Web : "Analyze" (UC-04.01), sinh / tải ảnh tham chiếu\n(UC-04.03, 04.04) → seq-the-gioi-truyen
+
+== Tạo nhóm nhân vật (UC-04.02b) ==
+Editor -> Web : "New group": tên (1–80 ký tự), chọn ≥ 2 nhân vật
+Web -> AS : POST /projects/{pid}/story-assets {kind: GROUP, name, memberIds[]}
+AS -> AS : IC-13: ≥ 2 thành viên, đều CHARACTER,\ncùng dự án, không chứa chính nhóm
+alt vi phạm (2a)
+    AS --> Web : 422 PRECONDITION_FAILED_BUSINESS
+else hợp lệ
+    AS -> DB : BEGIN; INSERT story_assets(kind = GROUP);\nINSERT story_asset_group_members; COMMIT
+    AS --> Web : 201
+    opt sinh ảnh nhóm (bước 3, tính phí)
+        Web -> AS : POST …/story-assets/{sid}:generate-image → seq-the-gioi-truyen
+        note right of Web : Không đủ số dư hoặc sinh ảnh lỗi:\nnhóm vẫn còn, chưa có ảnh (3a)
+    end
+end
+
+== Chỉnh sửa tài sản (UC-04.02e) ==
+Editor -> Web : "Edit": tên, bí danh (≤ 10), mô tả ngoại hình,\nfacts bất biến; thành viên nhóm (GROUP)
+Web -> AS : PATCH /projects/{pid}/story-assets/{sid} (If-Match)
+AS -> AS : tên 1–80 ký tự, ≤ 10 bí danh (2b → 400 VALIDATION_ERROR);\nIC-13 với nhóm (2c → 422); trùng tên / bí danh\ntài sản khác → cảnh báo khớp mơ hồ, vẫn cho lưu (2a)
+AS -> DB : UPDATE story_assets … version = version + 1\nWHERE id = :sid AND version = :v\n(giữ id: shot_asset_refs, nhóm, relationships không đổi)
+alt 0 dòng (3a)
+    AS --> Web : 409 VERSION_CONFLICT {current}
+else
+    AS --> Web : 200 {version, warnings[]}
+    opt mô tả / facts / thành viên đổi, tài sản không "use exact" (4a)
+        Web -> Editor : gợi ý "Regenerate" kèm giá, không tự sinh lại (BR-14)
+    end
+end
+
+== Gỡ khỏi dự án (UC-04.02d) ==
+Editor -> Web : "Remove from project"
+Web -> Editor : hộp xác nhận: số shot đang tham chiếu,\nnhóm chứa tài sản, quan hệ liên quan
+Editor -> Web : Xác nhận (hủy → không đổi gì, 3a)
+Web -> AS : DELETE /projects/{pid}/story-assets/{sid} (If-Match)
+AS -> DB : BEGIN;\nshot_asset_refs.story_asset_id = NULL (giữ raw_name → "chưa liên kết");\nxóa khỏi story_asset_group_members; xóa relationships liên quan;\nxóa story_assets; COMMIT
+AS --> Web : 204 | 409 (4a)
+note right of Web : Ảnh shot đã sinh không đổi (BR-16).\nNhóm còn < 2 thành viên → cảnh báo bổ sung hoặc xóa nhóm.\nThêm lại tài sản cùng tên: UC-05.06f khớp lại tham chiếu
+
+== Style dự án (UC-04.05) ==
+Editor -> Web : "Set style"
+Web -> PS : GET /styles
+PS -> DB : styles WHERE active
+PS --> Web : 200 (ảnh mẫu, tên, mô tả)
+Editor -> Web : chọn style
+Web -> PS : PATCH /projects/{pid} {styleId} (If-Match)
+PS -> PS : dự án đã có style → chỉ Owner được đổi (UC-02.04)
+PS -> DB : projects.style_id, version + 1
+PS --> Web : 200 | 409
+opt đã có ảnh tham chiếu
+    Web -> Editor : đề xuất "Sinh lại tất cả" kèm giá (UC-04.03a)
+end
+
+== Art Direction (UC-04.06) ==
+Editor -> Web : nhập chỉ dẫn ("tông ấm, bão hòa thấp, nét vẽ mềm")
+Web -> PS : PUT /projects/{pid}/art-direction (If-Match)
+PS -> DB : projects.art_direction, version + 1
+PS --> Web : 200 | 409
+Web -> Editor : gợi ý sinh lại ảnh nếu cần (không tự sinh)
+
+== Visual Rules (UC-04.10) ==
+Editor -> Web : Mở ?v=visual-rules; "New rule": tên, nội dung,\nphạm vi PROJECT | CHAPTER (chọn chương)
+Web -> VR : POST /projects/{pid}/visual-rules
+VR -> VR : tên ≤ 80, nội dung ≤ 1.000 ký tự\n(1a → 400 VALIDATION_ERROR)
+VR -> DB : INSERT visual_rules(scope, chapter_id?, active, order_index)
+VR --> Web : 201
+Editor -> Web : sửa / tắt tạm / xóa (xác nhận)
+Web -> VR : PATCH | DELETE /projects/{pid}/visual-rules/{rid}
+VR -> DB : UPDATE visual_rules | DELETE
+VR --> Web : 200 | 204
+note over VR, DB : Áp vào prompt các lần sinh ảnh **sau** theo thứ tự BR-08:\nStyle → Art Direction → Visual Rules dự án → Visual Rules chương\n→ Shot brief (PromptCompiler, seq-storyboard-sinh-anh)
+@enduml

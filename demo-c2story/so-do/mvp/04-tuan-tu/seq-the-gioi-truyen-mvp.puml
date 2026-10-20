@@ -1,0 +1,140 @@
+@startuml Seq_TheGioiTruyen_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+autonumber
+title UC-04.01 (+04.01a) + UC-04.02a + UC-04.03 (+04.03a) + UC-04.04 + UC-04.07..04.09 (MVP): Phân tích tài sản bằng AI,\nduyệt đề xuất, ảnh tham chiếu, ảnh nguyên bản, dòng thời gian và quan hệ; BR-08, BR-14, WR-05, 05 §7.4
+
+actor Editor
+participant "Web App\n(Story Assets)" as Web
+box "API Server — module world" #F5F5F5
+participant "WorldController\n→ AssetService" as AS
+participant "StoryMetaService" as SM
+participant "JobService" as JOBS
+participant "Realtime (SSE)" as RT
+end box
+database PostgreSQL as DB
+box "Worker" #F5F5F5
+participant "AnalyzeAssetsHandler" as HA
+participant "AssetImageHandler" as HI
+participant "StoryMetaHandler" as HM
+end box
+box "AI Gateway" #FFFFFF
+participant "ContextBuilder" as CB
+participant "PromptCompiler" as PC
+participant "ProviderRouter\n+ Adapter" as GW
+end box
+participant "Google Gemini\n(LLM)" as LLM
+participant "Google Gemini\nImage" as IMG
+participant "Object Storage" as S3
+
+== Phân tích tài sản (UC-04.01) ==
+Editor -> Web : "Analyze"
+Web -> AS : POST /projects/{pid}/story-assets:analyze?dryRun=true
+AS --> Web : {estimatedCostUsd} (theo số chương × 4.000 token ra)
+Editor -> Web : Xác nhận
+Web -> AS : POST /projects/{pid}/story-assets:analyze (Idempotency-Key)
+AS -> JOBS : createPaidJob(ANALYZE_ASSETS, projectId)
+ref over JOBS, DB : seq-vong-doi-job §2 (402 / 503 → 2c)
+JOBS --> Web : 202 {jobId}
+loop map: mỗi chương (lô chương nếu dự án dài, 2b)
+    HA -> CB : chapterContext(chapter)
+    CB -> DB : chapters.content (chỉ đọc), story_assets hiện có
+    HA -> GW : complete(schema = AssetCandidate[]:\n{kind, name, aliases[], appearance, facts[]})
+    GW -> LLM : generateContent
+    LLM --> GW : JSON
+    HA -> RT : job.updated {progress: i / n}
+    RT --> Web : SSE tiến độ
+end
+HA -> GW : reduce: complete(kết quả map, schema = AssetCandidate[]\n+ chapters[] xuất hiện; gộp bí danh)
+GW -> LLM : generateContent
+LLM --> GW : danh sách đã hợp nhất
+HA -> HA : chỉ giữ tài sản **lặp lại** trong truyện;\nđánh dấu trùng với story_assets (tên / bí danh, không phân biệt dấu)
+HA -> DB : jobs.result = đề xuất; **không tạo tài sản** (AI chỉ đề xuất)
+ref over HA, DB : seq-vong-doi-job §5
+HA -> RT : job.updated
+RT --> Web : SSE job.updated (SUCCEEDED)
+alt không có tài sản lặp lại (2a)
+    Web -> Editor : "No recurring cast or places to design"
+end
+
+group UC-04.01a Duyệt đề xuất (trên client)
+    Web -> AS : GET /jobs/{jobId} → result
+    Editor -> Web : bỏ chọn, sửa tên / loại, gộp mục trùng\n(tên mục này → bí danh mục kia)
+    Web -> Web : kiểm tên 1–80 ký tự, bí danh ≤ 10 (5a)
+end
+Editor -> Web : "Thêm vào dự án"
+loop mỗi mục đã chốt (UC-04.02a)
+    Web -> AS : POST /projects/{pid}/story-assets {kind, name, aliases, appearance, facts}
+    AS -> DB : BEGIN; COUNT story_assets FOR UPDATE ≤ 200 (5b);\nINSERT story_assets; COMMIT
+    AS --> Web : 201 | 422 (vượt 200)
+end
+Web -> Editor : đề nghị sinh ảnh tham chiếu kèm tổng giá (bước 5)
+
+== Sinh ảnh tham chiếu (UC-04.03) và sinh lại tất cả (UC-04.03a) ==
+alt một tài sản
+    Editor -> Web : "Generate" trên tài sản
+    Web -> AS : POST …/story-assets/{sid}:generate-image (Idempotency-Key)
+    AS -> DB : use_exact_image = true? → 422 (nút ẩn, 1a)
+    AS -> JOBS : createPaidJob(GENERATE_ASSET_IMAGE, sid)
+else Regenerate all (sau khi đổi style / Art Direction)
+    Editor -> Web : "Regenerate all"
+    Web -> AS : POST …/story-assets:regenerate-all?dryRun=true
+    AS -> DB : đếm tài sản use_exact_image = false
+    AS --> Web : {count, estimatedCostUsd} | "Không có tài sản cần sinh lại" (2a)
+    Editor -> Web : Xác nhận
+    Web -> AS : POST …/story-assets:regenerate-all (Idempotency-Key)
+    AS -> JOBS : một giao dịch: createPaidJob(GENERATE_ASSET_IMAGE) × count,\nmỗi job HOLD riêng; thiếu tiền → không tạo job nào (WR-05)
+end
+ref over JOBS, DB : seq-vong-doi-job §2 (402 kèm số còn thiếu, 4a)
+loop mỗi job GENERATE_ASSET_IMAGE (concurrency của queue image)
+    HI -> PC : compileAssetPrompt(asset)
+    PC -> DB : style, art_direction, visual_rules (dự án),\nstory_assets.appearance, facts
+    PC -> PC : thứ tự BR-08: Style → Art Direction → Visual Rules\n→ mô tả + facts (chèn nguyên văn);\nđịa điểm: reference sheet nhiều góc nhìn
+    PC --> HI : prompt, prompt_snapshot
+    HI -> GW : generate(prompt, aspect = khung hình dự án)
+    GW -> IMG : generateContent (ảnh)
+    alt thành công
+        IMG --> GW : ảnh
+        HI -> S3 : PUT asset-images/{id}.png
+        HI -> DB : BEGIN; media_files; asset_images(media_id, style_id,\nprompt_snapshot, job_id); story_assets.current_image_id;\nCAPTURE + RELEASE dư; jobs SUCCEEDED; COMMIT
+        HI -> RT : asset.updated
+    else lỗi / CONTENT_POLICY (4a)
+        HI -> DB : RELEASE phần của job; jobs FAILED (ảnh cũ giữ nguyên)
+        HI -> RT : job.updated (FAILED) → gợi ý sửa mô tả
+    end
+end
+RT --> Web : SSE asset.updated / job.updated (tiến độ hàng loạt)
+
+== Dùng ảnh tải lên nguyên bản (UC-04.04, BR-14) ==
+Editor -> Web : Tải ảnh, chọn "Use exact"
+Web -> AS : POST …/story-assets/{sid}/image (multipart, useExact = true)
+AS -> AS : MIME thật, ≤ 10 MB, cạnh ngắn ≥ 512 px,\nquét malware, bỏ EXIF (NFR-SEC-10)
+AS -> S3 : PUT
+AS -> DB : media_files; asset_images(media_id, không prompt);\ncurrent_image_id;\nuse_exact_image = true (miễn phí, không job)
+AS --> Web : 201
+note right of AS : Ảnh "use exact" không bao giờ bị vẽ lại khi\nsinh hàng loạt; vẫn được đính kèm làm ảnh tham chiếu
+
+== Dòng thời gian và quan hệ (UC-04.09, UC-04.07, UC-04.08) ==
+Editor -> Web : "Re-analyse"
+Web -> SM : POST /projects/{pid}/story-meta:analyze (dryRun → xác nhận → Idempotency-Key)
+SM -> JOBS : createPaidJob(STORY_META, projectId)
+ref over JOBS, DB : seq-vong-doi-job §2
+loop mỗi chương
+    HM -> CB : chương + story_assets (tên, bí danh)
+    HM -> GW : complete(schema = {events[{chapterId, dateLabel, season,\nsummary, chronoRank}], relations[{a, b, label, dynamic, fromChapter}]})
+    GW -> LLM : generateContent
+    LLM --> GW : JSON
+end
+HM -> HM : ánh xạ tên / bí danh → asset_id;\nkhông khớp → bỏ cạnh, ghi vào danh sách (2a)
+HM -> DB : BEGIN; thay timeline_events (order_index, chrono_index),\nrelationships (asset_a_id, asset_b_id, label, dynamic);\nquyết toán; COMMIT
+HM -> RT : job.updated {unmatchedNames[]}
+Editor -> Web : Mở ?v=timeline (Theo mạch truyện | Theo thứ tự thời gian)
+Web -> SM : GET /projects/{pid}/timeline?order=narrative | chronological
+SM -> DB : timeline_events ORDER BY order_index | chrono_index NULLS LAST
+Editor -> Web : Mở ?v=relationships
+Web -> SM : GET /projects/{pid}/relationships
+SM --> Web : nút (nhân vật), cạnh (nhãn, diễn biến, chương bắt đầu)
+@enduml

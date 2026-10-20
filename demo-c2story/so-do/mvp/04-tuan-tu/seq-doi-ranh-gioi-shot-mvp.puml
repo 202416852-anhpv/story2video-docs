@@ -1,0 +1,89 @@
+@startuml Seq_DoiRanhGioiShot_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+autonumber
+title UC-03.02 + UC-03.02a (include UC-05.01a, UC-05.06e) + UC-06.15 (MVP): Dời ranh giới shot trong Workspace,\nviết lại 2 brief, thuyết minh OUTDATED, đồng bộ timeline; BR-05, BR-12, BR-20, BR-33; IC-08, IC-09
+
+actor Editor
+participant "Web App\n(Workspace)" as Web
+box "API Server" #F5F5F5
+participant "StoryboardController\n→ BoundaryService\n(manuscript → media)" as BS
+participant "CoverageValidator\n(AI Gateway)" as CV
+participant "PriceEstimator" as PE
+participant "JobService" as JOBS
+participant "editor.MediaSync" as MSYNC
+participant "Realtime (SSE)" as RT
+end box
+database PostgreSQL as DB
+box "Worker" #F5F5F5
+participant "RewriteShotHandler" as HR
+end box
+participant "AI Gateway\n+ Google Gemini (Flash)" as GW
+
+== Hiện vạch ranh giới trên văn bản ==
+Editor -> Web : Mở chương trong Workspace
+Web -> BS : GET /projects/{pid}/chapters/{cid}/shot-boundaries
+BS -> DB : shots của storyboard hiện hành (order_index, source_start)\n+ bảng câu (SentenceSegmenter, cùng segmenter_version)
+BS --> Web : [{leftShotId, rightShotId, offset, sentenceIndex}]
+
+== Kéo vạch, xem trước (dryRun) ==
+Editor -> Web : Kéo vạch giữa shot 4 và shot 5
+Web -> Web : vạch chỉ dừng ở ranh giới câu;\nchặn vượt vạch kế bên (1b); shot còn ≥ 1 câu (1a)
+Web -> BS : POST …/storyboards/{did}:move-boundary?dryRun=true\n{leftShotId, rightShotId, deltaSentences}
+BS -> DB : đọc 2 shot, chapters.content (chỉ đọc)
+BS -> CV : thử dời: offset mới theo câu, kiểm IC-08 cho 2 shot
+BS -> PE : estimateMax(REWRITE_SHOT × 2)
+BS --> Web : {moved: câu nào sang shot nào, readingSeconds{left, right},\nestimatedCostUsd, warnings: đoạn đọc > 30 s (3a)}
+Web -> Editor : Hộp xác nhận "Dời và viết lại brief"
+alt Hủy (4a)
+    Web -> Web : vạch bật về vị trí cũ, không gọi API
+end
+
+== Dời thật: một giao dịch ==
+Editor -> Web : "Dời và viết lại brief"
+Web -> BS : POST …:move-boundary {…} (Idempotency-Key, If-Match shots.version)
+BS -> DB : BEGIN; SELECT chapters, 2 shots FOR UPDATE
+alt chương bị job khóa (5d)
+    BS -> DB : ROLLBACK
+    BS --> Web : 423 RESOURCE_LOCKED
+else version sai (5c)
+    BS -> DB : ROLLBACK
+    BS --> Web : 409 VERSION_CONFLICT → tải lại vạch (BR-05)
+else
+    BS -> DB : UPDATE 2 shots: source_start / source_end
+    group UC-05.01a
+        BS -> CV : validate(storyboard)
+        CV --> BS : phủ kín 100%, source_hash mới của 2 shot
+    end
+    BS -> DB : shots.source_hash, version++
+    BS -> DB : narrations của 2 shot → OUTDATED (IC-09);\nillustrations giữ, đánh dấu "brief đã đổi"
+    BS -> JOBS : createPaidJob(REWRITE_SHOT, left, note = "đoạn nguồn đã đổi")\ncreatePaidJob(REWRITE_SHOT, right, …)
+    ref over JOBS, DB : seq-vong-doi-job §2 trong **cùng giao dịch**:\nBudgetGuard + HOLD; vượt trần → 503 (5b), thiếu tiền → 402 (5a)\n→ ROLLBACK cả việc dời, vạch bật về
+    BS -> DB : audit_logs; COMMIT
+    BS --> Web : 202 {jobIds[2], estimatedCostUsd}
+    BS -> RT : shot.updated (2 shot)
+    BS -> MSYNC : onShotsChanged(chapterId, shotIds) (UC-06.15)
+    MSYNC -> DB : timeline_items của 2 shot: dời item phía sau theo thời lượng,\ngiữ user_modified, sync_flag; clip thuyết minh OUTDATED
+    MSYNC -> RT : timeline.updated
+    RT --> Web : SSE shot.updated, timeline.updated
+end
+
+== Viết lại 2 brief (UC-05.06e, chạy song song) ==
+loop mỗi job REWRITE_SHOT
+    HR -> DB : shot (brief cũ, đoạn nguồn mới chỉ để đọc, tài sản),\nstyle, Art Direction, Visual Rules
+    HR -> GW : complete(schema = Brief 7 trường)
+    alt thành công
+        GW --> HR : brief mới
+        HR -> DB : BEGIN; chỉ UPDATE shots.brief; version++;\nCAPTURE + RELEASE dư; COMMIT
+        HR -> RT : shot.updated
+    else lỗi sau retry / CONTENT_POLICY (7a)
+        HR -> DB : ranh giới đã dời **giữ nguyên**, brief cũ giữ; RELEASE
+        HR -> RT : job.updated (FAILED) → nút "Viết lại brief"
+    end
+end
+RT --> Web : SSE
+Web -> Editor : gợi ý sinh lại ảnh + thuyết minh cho 2 shot\n(UC-05.07c, OUTDATED) kèm giá → seq-sinh-tu-lieu
+@enduml

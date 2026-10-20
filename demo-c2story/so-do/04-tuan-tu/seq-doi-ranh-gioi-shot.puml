@@ -4,7 +4,10 @@ skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 skinparam responseMessageBelowArrow true
 autonumber
+'@sau-mvp
 title UC-03.02 + UC-03.02a (include UC-05.01a, UC-05.06e) + UC-06.15: Dời ranh giới shot trong Workspace,\nviết lại 2 brief, thuyết minh OUTDATED, đồng bộ timeline; BR-05, BR-12, BR-20, BR-33; IC-08, IC-09
+'@/sau-mvp
+'@mvp title UC-03.02 + UC-03.02a (include UC-05.01a, UC-05.06e) + UC-06.15 (MVP): Dời ranh giới shot trong Workspace,\nviết lại 2 brief, thuyết minh OUTDATED, đồng bộ timeline; BR-05, BR-12, BR-20, BR-33; IC-08, IC-09
 
 actor Editor
 participant "Web App\n(Workspace)" as Web

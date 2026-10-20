@@ -146,7 +146,7 @@ package "Sinh tư liệu" {
 
 package "Trình chỉnh sửa video" {
     class Timeline {
-        scope
+        scope : CHAPTER (PROJECT: sau MVP)
         aspectRatio
         framing
         subtitleStyle
@@ -175,6 +175,7 @@ package "Trình chỉnh sửa video" {
         license
     }
     class Render {
+        scope : CHAPTER|PROJECT
         versionNo
         partNo
         watermark
@@ -244,7 +245,8 @@ TimelineItem "*" --> "0..1" Shot
 TimelineItem "*" --> "0..1" Illustration : ảnh
 TimelineItem "*" --> "0..1" Narration : thuyết minh (khóa)
 TimelineItem "*" --> "0..1" AudioAsset : nhạc / SFX
-Timeline "1" *-- "*" Render
+Project "1" *-- "*" Render
+Timeline "0..1" o-- "*" Render : CHAPTER
 DirectorPlan ..> Job : spawns
 
 ' Bố cục lưới: hàng 1 Identity | Project | Automation ; hàng 2 Story World | Sinh tư liệu | Trình chỉnh sửa

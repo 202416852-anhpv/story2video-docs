@@ -17,12 +17,12 @@ title Studio dự án - use case chính (MVP)
 actor "Owner" as Owner
 
 rectangle "Studio dự án (MVP)" {
-    package "M02 Dự án" as P2 {
+    package "M02 Quản lý dự án & cộng tác" as P2 {
         usecase "UC-02.02 Import truyện" as UC02
         usecase "UC-02.04 Cài đặt dự án" as UCset
         usecase "UC-02.09 Xem Map (✂2)" as UCmap
     }
-    package "M03 Bản thảo" as P3 {
+    package "M03 Bản thảo & chương" as P3 {
         usecase "UC-03.03 Chia chương" as UC05
         usecase "UC-03.02a Dời ranh giới shot" as UC05a
     }
@@ -31,7 +31,7 @@ rectangle "Studio dự án (MVP)" {
         usecase "UC-04.10 Visual Rules" as UC08
         usecase "Timeline (✂5) & Relationships (✂4)" as UCtl
     }
-    package "M05 Sinh tư liệu" as P5 {
+    package "M05 Sinh tư liệu: storyboard, ảnh,\nthuyết minh nguyên văn" as P5 {
         usecase "UC-05.07 Sinh tư liệu chương" as UC11
         usecase "UC-05.01 Storyboard\n(tự động, tinh chỉnh tùy chọn)" as UC09
         usecase "UC-05.09 Sinh & sửa ảnh" as UC10
@@ -39,8 +39,8 @@ rectangle "Studio dự án (MVP)" {
         usecase "UC-05.18 Nghe & đánh dấu" as UC18
     }
     package "M06 Trình chỉnh sửa & xuất video" as P6 {
-        usecase "UC-06.01 Chỉnh sửa video trên timeline\n(chuyển cảnh, nhạc nền, SFX, tốc độ đọc)" as UC13
-        usecase "UC-06.16 Xuất & tải video" as UC14
+        usecase "UC-06.01 Chỉnh sửa video trên timeline\n(theo chương: chuyển cảnh, nhạc nền, SFX)" as UC13
+        usecase "UC-06.16 Xuất & tải video\n(chương / cả dự án)" as UC14
     }
 }
 

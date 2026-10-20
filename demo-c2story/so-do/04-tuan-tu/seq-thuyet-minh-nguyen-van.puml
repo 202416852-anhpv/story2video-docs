@@ -5,9 +5,9 @@ skinparam sequenceMessageAlign left
 skinparam responseMessageBelowArrow true
 autonumber
 '@sau-mvp
-title UC-05.11 (+05.11a) + UC-05.12 + UC-05.13 (+05.13a, 05.13b, 05.13c) + UC-05.14 (+05.14a): Cài đặt giọng, nghe thử đồng bộ,\ntừ điển phát âm, sinh thuyết minh nguyên văn, kiểm chứng WER; BR-18, BR-19, BR-22; ADR-26, ADR-30; QĐ-121..123, QĐ-131
+title UC-05.11 (+05.11a) + UC-05.12 + UC-05.13 (+05.13a, 05.13b, 05.13c) + UC-05.14 (+05.14a): Cài đặt giọng, nghe thử đồng bộ,\ntừ điển phát âm, sinh thuyết minh nguyên văn, kiểm chứng WER; BR-18, BR-19, BR-22; ADR-26, ADR-30; QĐ-121..123, QĐ-131, QĐ-140
 '@/sau-mvp
-'@mvp title UC-05.11 (+05.11a) + UC-05.12 + UC-05.13 (+05.13a, 05.13b) (MVP): Cài đặt giọng, nghe thử đồng bộ,\ntừ điển phát âm, sinh thuyết minh nguyên văn bằng TTS tự host; BR-18, BR-19, BR-22; ADR-26, ADR-30; QĐ-121..123, QĐ-131
+'@mvp title UC-05.11 (+05.11a) + UC-05.12 + UC-05.13 (+05.13a, 05.13b) (MVP): Cài đặt giọng, nghe thử đồng bộ,\ntừ điển phát âm, sinh thuyết minh nguyên văn bằng TTS tự host; BR-18, BR-19, BR-22; ADR-26, ADR-30; QĐ-121..123, QĐ-131, QĐ-140
 
 actor Editor
 participant "Web App" as Web
@@ -107,7 +107,11 @@ loop mỗi NARRATE_SEGMENT (concurrency của queue tts, theo VRAM)
             TA -> TTS : POST /synthesize {text chữ thuần, speaker, speed}\n(timeout ≥ 2× thời lượng dự kiến, QĐ-126)
             TTS --> TA : wav
         end
-        TA -> TA : ghép đoạn + chèn khoảng lặng đúng độ dài PAUSE; mã hóa mp3
+        TA -> TA : ghép đoạn + chèn khoảng lặng đúng độ dài PAUSE
+        opt model không hỗ trợ tham số speed (QĐ-140)
+            TA -> TA : FFmpeg atempo = speed (giữ cao độ)\n**trước** căn timestamp, nên timestamp khớp file cuối
+        end
+        TA -> TA : mã hóa mp3
         TA -> UM : ai_usage_records(unit = SECONDS, giây GPU, QĐ-123)
         TA --> W : audio, duration_ms (không có timestamp)
         W -> S3 : PUT narrations/{id}.mp3

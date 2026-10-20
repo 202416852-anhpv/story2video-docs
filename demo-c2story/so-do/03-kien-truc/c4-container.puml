@@ -9,7 +9,7 @@ Person(admin, "Admin")
 System_Boundary(sys, "AI Story Studio") {
     Container(web, "Web App", "Next.js, React, Zustand, Remotion Player, WebAudio", "Studio, trình chỉnh sửa timeline + preview, media bin, ví; Director chat, admin (sau MVP)")
     Container(api, "API Server", "NestJS, TS", "BFF/OIDC, danh sách mời, authz, nghiệp vụ, BudgetGuard + HOLD (+ outbox sau MVP), webhook, SSE")
-    Container(sched, "Scheduler", "Node.js, BullMQ repeatable", "Outbox relay, reconciler job / sổ cái ví, cảnh báo trần chi tiêu ngày, dọn dữ liệu")
+    Container(sched, "Scheduler", "Node.js, BullMQ repeatable", "Outbox relay (sau MVP), reconciler job / sổ cái ví, cảnh báo trần chi tiêu ngày, dọn dữ liệu")
     Container(worker, "Job Workers", "Node.js, BullMQ Flows", "orchestrator, llm, image, tts; quyết toán chi phí thực × 110%")
     Container(align, "Alignment Worker", "Python, WhisperX/MFA", "align: word timings; STT + WER (bộ đánh giá P0, kiểm chứng sau MVP)")
     Container(mproc, "Media Processing Worker", "Node.js, FFmpeg, ClamAV", "media-proc: quét virus, chuyển mã audio tải lên, waveform, ZIP")

@@ -4,7 +4,10 @@ skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 skinparam responseMessageBelowArrow true
 autonumber
+'@sau-mvp
 title Khung chung: vòng đời một thao tác AI tốn phí (UC-05.17 + mọi UC tạo job)\nBR-01, BR-02, BR-29, BR-32; ADR-23, 25, 29; WR-05, WR-09; QĐ-132..134
+'@/sau-mvp
+'@mvp title Khung chung (MVP): vòng đời một thao tác AI tốn phí (UC-05.17 + mọi UC tạo job)\nBR-01, BR-02, BR-29, BR-32; ADR-23, 25, 29; WR-05, WR-09; QĐ-132..134
 
 actor Editor
 participant "Web App" as Web
@@ -72,14 +75,21 @@ else giữ chỗ được
         JOBS --> Web : 402 INSUFFICIENT_BALANCE {shortfallUsd}
     else đủ
         WAL -> DB : wallets.available -= held, held += held;\nINSERT wallet_ledger_entries(HOLD)
+'@sau-mvp
         JOBS -> DB : INSERT jobs(QUEUED, held_micro, budget_day,\nbudget_reserved_micro = x_cost);\naudit_logs; [sau MVP] outbox_events(job.created)
+'@/sau-mvp
+'@mvp         JOBS -> DB : INSERT jobs(QUEUED, held_micro, budget_day,\nbudget_reserved_micro = x_cost); audit_logs
         JOBS -> DB : COMMIT
+'@sau-mvp
         alt MVP (ADR-23)
+'@/sau-mvp
             JOBS -> R : enqueue(queue, bullmqJobId = jobs.id)\nsau commit; publish job.updated
+'@sau-mvp
         else sau MVP
             REC -> DB : outbox relay đọc outbox_events chưa publish
             REC -> R : enqueue + publish
         end
+'@/sau-mvp
         JOBS --> Web : 202 {jobId, estimatedCostUsd}
     end
 end
@@ -138,9 +148,11 @@ RUN -> RT : publish job.updated + sự kiện nghiệp vụ\n(illustration.ready
 RT --> Web : SSE
 
 == 6. Tự phục hồi (Reconciler) ==
-loop mỗi 1 phút (MVP) / 5 phút
+loop mỗi 1 phút
     REC -> DB : job QUEUED > 1 phút không có trong BullMQ?
     REC -> R : enqueue lại
+end
+loop mỗi 5 phút
     REC -> DB : job RUNNING mất heartbeat > 10 phút?\n(job cha còn con chưa kết thúc thì không tính là treo)
     REC -> DB : BEGIN; jobs FAILED; job gốc: CAPTURE phần con đã xong,\nRELEASE phần còn lại; con còn chờ → CANCELLED;\nreserved -= x_cost; mở khóa chương; COMMIT
 end

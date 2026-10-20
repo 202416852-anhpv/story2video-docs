@@ -1,0 +1,107 @@
+@startuml Seq_QuanTri
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+autonumber
+'@sau-mvp
+title UC-10.01 + UC-10.03 + UC-10.04 + UC-10.05 + UC-10.09 + UC-10.11 + UC-10.12:\nBảng giá, provider & mô hình AI, style, giọng đọc, audit log, danh sách mời beta, trần chi tiêu AI ngày; BR-01, BR-29, BR-30; IC-18
+'@/sau-mvp
+'@mvp title UC-10.01 + UC-10.03 + UC-10.04 + UC-10.05 + UC-10.09 + UC-10.11 + UC-10.12 (MVP):\nQuản trị bằng file seed và CLI (không có trang /admin): bảng giá, provider, style, giọng, mời beta, trần chi tiêu ngày; BR-01, BR-29, BR-30; IC-18
+
+actor Admin
+participant "CLI\n(pnpm seed,\npnpm admin:invites)" as CLI
+'@sau-mvp
+participant "Web App\n(/admin, sau MVP)" as Web
+'@/sau-mvp
+box "API Server" #F5F5F5
+participant "AdminService\n(seed loader)" as AS
+participant "AuditLogger" as AUD
+end box
+participant "AI Gateway\n(ProviderRouter)" as GW
+participant "Scheduler" as SCH
+database PostgreSQL as DB
+participant "Email service" as MAIL
+
+== Nạp cấu hình từ file seed (UC-10.01, 10.03, 10.04, 10.05) ==
+Admin -> CLI : sửa seed/price-rules.yaml | ai-providers.yaml |\nstyles.yaml | voices.yaml; chạy pnpm seed
+CLI -> AS : nạp từng file (mỗi file một giao dịch)
+AS -> AS : kiểm tra schema file
+AS -> DB : BEGIN
+group UC-10.01 Bảng giá
+    AS -> AS : hệ số < 1,00 (bán dưới chi phí thực)?\n→ cần cờ xác nhận lần hai (2a)
+    AS -> DB : INSERT price_rules phiên bản mới (effective_from);\nđóng effective_to của bản cũ (job đã tạo giữ giá cũ)
+end
+group UC-10.03 Provider & mô hình AI
+    AS -> AS : chỉ nhận **tên** secret, không nhận key;\ntắt provider duy nhất của một loại → chặn (2a)
+    AS -> GW : kiểm tra kết nối provider được bật (gọi thử)
+    alt lỗi (3a)
+        AS -> AS : giữ provider ở trạng thái tắt, báo lỗi
+    end
+    AS -> DB : UPSERT ai_providers, ai_models\n(adapter thật | mock, ưu tiên, unit_cost_usd)
+end
+group UC-10.04 Style
+    AS -> DB : UPSERT styles (tên, mô tả, prompt_fragment, ảnh mẫu, active)
+    note right of DB : Ẩn style: dự án đang dùng không bị ảnh hưởng
+end
+group UC-10.05 Giọng đọc
+    AS -> DB : UPSERT voices (ngôn ngữ, giới tính, audio mẫu, sample_wer, enabled)
+    note right of DB : WER mẫu > 3% → cảnh báo, không khuyến nghị bật (2a)
+end
+AS -> AUD : record(actor, action, đối tượng, trước / sau, lý do)
+AUD -> DB : INSERT audit_logs (append-only, giữ 2 năm) — cùng giao dịch (UC-10.09)
+alt ghi audit lỗi (UC-10.09 2a)
+    AS -> DB : ROLLBACK cả thay đổi
+    AS --> CLI : lỗi
+else
+    AS -> DB : COMMIT
+    AS --> CLI : tóm tắt thêm / sửa / bỏ qua
+end
+note over GW, DB : ProviderRouter và PriceEstimator đọc cấu hình mới\ncho các job tạo sau; job đã tạo giữ giá và mô hình đã báo
+
+== Danh sách mời beta (UC-10.11) ==
+Admin -> CLI : pnpm admin:invites add <email… | file.csv> --note "…"
+CLI -> AS : addInvites(emails, note)
+AS -> AS : chuẩn hóa (bỏ khoảng trắng, chữ thường), kiểm định dạng\n(sai → bỏ qua, ghi vào kết quả, 2a)
+AS -> DB : BEGIN; INSERT beta_invites … ON CONFLICT (email):\nđang hiệu lực → bỏ qua (2b); đã thu hồi → revoked_at = NULL (2c)
+AS -> AUD : record (UC-10.09)
+AS -> DB : COMMIT
+AS --> CLI : số thêm mới / đã có / lỗi
+Admin -> Admin : gửi lời mời qua kênh riêng kèm link ứng dụng
+opt remove (*a)
+    Admin -> CLI : pnpm admin:invites remove <email>
+    CLI -> AS : revoke(email)
+    AS -> DB : beta_invites.revoked_at = now(); audit_logs
+    note right of DB : Người đã có hồ sơ vẫn đăng nhập được (BR-30);\nmuốn chặn hẳn: users.status = LOCKED
+end
+opt list
+    Admin -> CLI : pnpm admin:invites list
+    CLI -> AS : list()
+    AS -> DB : email, ngày mời, used_by_user_id, revoked_at
+end
+
+== Trần chi tiêu AI hằng ngày (UC-10.12) ==
+note over AS, DB : Giữ chỗ nguyên tử khi tạo job tốn phí: seq-vong-doi-job §2\n(BudgetGuard, 503 DAILY_BUDGET_EXCEEDED); quyết toán: §5
+loop Scheduler mỗi 5 phút
+    SCH -> DB : daily_ai_budgets hôm nay\n(spent, reserved, cap, alert_80_sent_at, alert_100_sent_at)
+    opt spent + reserved ≥ 80% cap
+        SCH -> DB : UPDATE … SET alert_80_sent_at = now()\nWHERE alert_80_sent_at IS NULL RETURNING
+        SCH -> MAIL : (trúng 1 dòng) email cảnh báo sớm cho Admin
+    end
+    opt spent + reserved ≥ cap
+        SCH -> DB : UPDATE … SET alert_100_sent_at = now()\nWHERE alert_100_sent_at IS NULL RETURNING
+        SCH -> MAIL : (trúng 1 dòng) email: tổng chi phí + 5 người dùng chi nhiều nhất
+    end
+end
+opt nâng trần tạm thời (*a)
+    Admin -> CLI : đổi system_settings.daily_ai_budget_usd (seed hoặc CLI)
+    CLI -> AS : setDailyCap(usd)
+    AS -> DB : BEGIN; system_settings; daily_ai_budgets.cap_micro\ncủa hôm nay (hiệu lực ngay); audit_logs; COMMIT
+end
+'@sau-mvp
+
+== Sau MVP: trang quản trị web ==
+Admin -> Web : /admin/price-rules, /admin/ai-providers, /admin/styles,\n/admin/voices, /admin/invites
+Web -> AS : cùng nghiệp vụ như trên qua API quyền Admin\n(kiểm tra, ghi audit cùng giao dịch)
+'@/sau-mvp
+@enduml

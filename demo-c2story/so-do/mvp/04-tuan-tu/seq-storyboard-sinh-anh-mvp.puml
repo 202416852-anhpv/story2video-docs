@@ -1,0 +1,182 @@
+@startuml Seq_Storyboard_SinhAnh_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+autonumber
+title UC-05.01 (+05.01a) + UC-05.02c + UC-05.03 + UC-05.06 (a, c, e, f) + UC-05.09 + UC-05.10 (+05.10a, 05.10c) (MVP):\nLập storyboard phủ kín, biên tập shot, sinh / thay / sửa ảnh shot; BR-08, BR-14, BR-16, BR-20, BR-21; IC-08, IC-09
+
+actor Editor
+participant "Web App\n(Storyboard)" as Web
+box "API Server — module media" #F5F5F5
+participant "StoryboardController\n→ StoryboardService" as SB
+participant "ShotService" as SH
+participant "IllustrationService" as IL
+participant "JobService" as JOBS
+participant "Realtime (SSE)" as RT
+end box
+database PostgreSQL as DB
+box "Worker" #F5F5F5
+participant "StoryboardDraftHandler" as HD
+participant "RewriteShotHandler" as HR
+participant "ShotImageHandler" as HI
+end box
+box "AI Gateway" #FFFFFF
+participant "SentenceSegmenter" as SEG
+participant "ContextBuilder" as CB
+participant "CoverageValidator" as CV
+participant "PromptCompiler" as PC
+participant "ProviderRouter\n+ Adapter" as GW
+end box
+participant "Google Gemini\n(Pro: storyboard;\nFlash: viết lại brief)" as LLM
+participant "Google Gemini\nImage" as IMG
+participant "Object Storage" as S3
+
+== Tạo bản nháp storyboard (UC-05.01) và chia lại (UC-05.03) ==
+Editor -> Web : "Create storyboard draft" | "Nhiều hơn" / "Ít hơn"
+Web -> SB : POST …/chapters/{cid}/storyboards?dryRun=true {kind}
+SB --> Web : {estimatedCostUsd} (8.000 token ra / chương)
+Editor -> Web : Xác nhận
+Web -> SB : POST …/chapters/{cid}/storyboards {kind: INITIAL | RESPLIT_MORE | RESPLIT_FEWER}
+SB -> JOBS : createPaidJob(STORYBOARD_DRAFT, chapterId, params{kind, chapterVersion})
+ref over JOBS, DB : seq-vong-doi-job §2 (402 / 423 / 429 / 503)
+JOBS --> Web : 202 {jobId}
+HD -> DB : chapters.content, version (chỉ đọc)
+HD -> SEG : segment(content)
+SEG --> HD : sentences[{i, start, end}] (UTF-16, ADR-26),\nsegmenter_version (12 §1)
+HD -> CB : storyboardContext(chapter)
+CB -> DB : story_assets (tên, bí danh, appearance), timeline_events,\nvisual_rules, thời lượng mục tiêu mỗi ảnh
+CB --> HD : context (dữ liệu truyện bọc trong khối đánh dấu, NFR-SEC-08)
+HD -> GW : complete(system, câu đánh số, context,\nmật độ ≈ 3 ảnh/phút (QĐ-112), kind,\nschema = Shot[]{startSentence, endSentence, title, focus,\ncast[], items[], location, timeOfDay, storyDate, brief{7 trường}, caption})
+GW -> LLM : generateContent (structured output)
+LLM --> GW : JSON
+GW --> HD : Shot[] (**chỉ chỉ số câu**, không văn bản truyện, AI-P1)
+alt sai schema / chỉ số ngoài phạm vi
+    HD -> GW : gọi lại kèm thông báo lỗi (≤ 2 lần)
+end
+group UC-05.01a Tách câu & kiểm tra phủ kín
+    HD -> CV : validate(shots, sentences, content)
+    CV -> CV : câu → [source_start, source_end); sắp, kẹp, bỏ shot rỗng;\nhở → gộp shot trước; chồng → cắt theo shot sau;\nranh giới về đầu câu
+    CV -> CV : IC-08: start₀ = 0, endᵢ = startᵢ₊₁, end_cuối = độ dài,\nconcat(đoạn) == content (so byte)
+    alt vẫn sai (lỗi lập trình, 6a)
+        CV --> HD : CoverageError → job FAILED, cảnh báo P1
+    end
+    CV --> HD : shots + source_hash (sha256) + boundary_fixes
+end
+HD -> DB : chapters.version còn bằng lúc đọc?
+alt chương đã đổi (*a)
+    HD -> HD : bỏ kết quả, chạy lại từ đầu
+end
+HD -> DB : BEGIN; INSERT storyboard_drafts(kind, boundary_fixes,\nsegmenter_version), shots(order_index, source_start/end/hash, brief…)
+HD -> DB : shot_asset_refs: ánh xạ tên / bí danh → story_asset_id;\nkhông khớp → story_asset_id NULL (BR-16)
+HD -> DB : INITIAL và chưa có hiện hành → chapters.current_storyboard_id;\nquyết toán (seq-vong-doi-job §5); COMMIT
+HD -> RT : job.updated {draftId, boundaryFixes, unlinked}
+RT --> Web : SSE
+alt boundary_fixes > 20% (7a)
+    Web -> Editor : Director note: cảnh báo chất lượng, gợi ý tạo lại
+end
+opt Đặt bản nháp hiện hành (UC-05.02c, sau khi chia lại)
+    Editor -> Web : "Dùng bản này" (xác nhận nếu timeline đã sửa)
+    Web -> SB : POST …/storyboards/{did}:set-current (If-Match)
+    SB -> DB : BEGIN; khóa chương? (423); chapters.current_storyboard_id;\ntính lại chapters.media_status; COMMIT
+    SB -> RT : shot.updated, timeline.updated (editor.syncMedia, UC-06.15)
+end
+
+== Biên tập shot (UC-05.06) ==
+alt Sửa brief, thời điểm, caption, cast (UC-05.06a, 05.06b)
+    Web -> SH : PATCH …/shots/{shid} (If-Match)
+    SH -> DB : UPDATE shots, shot_asset_refs; version++\n(không đổi source_*; ảnh hiện tại → "brief đã đổi")
+    SH --> Web : 200 | 409 → tải lại (MVP chỉ một người sửa)
+else Tách / gộp / xóa shot (UC-05.06c)
+    Web -> SH : POST …/shots/{shid}:split {atSentence} | :merge-up | :merge-down | DELETE
+    SH -> DB : BEGIN; SELECT shots FOR UPDATE; khóa chương? (423)
+    SH -> SH : kiểm 1 ≤ số shot ≤ 40, mỗi shot ≥ 1 câu (2a, 2b, 4a)
+    SH -> CV : validate (UC-05.01a)
+    SH -> DB : UPDATE shots; narrations của shot đổi đoạn → OUTDATED (IC-09);\nshot mới chưa có ảnh / thuyết minh; COMMIT
+    SH -> RT : shot.updated → đồng bộ timeline (UC-06.15)
+else Tự khớp tên với tài sản (UC-05.06f)
+    Web -> SB : POST …/storyboards/{did}:auto-link-assets
+    SB -> DB : shot_asset_refs có story_asset_id NULL;\nso raw_name với tên + bí danh (chuẩn hóa hoa thường, khoảng trắng)
+    SB -> DB : chỉ gán khi khớp **đúng một** tài sản
+    SB --> Web : {linked: N, remaining[], ambiguous[]}
+else Viết lại brief bằng AI (UC-05.06e)
+    Web -> SH : POST …/shots/{shid}:rewrite {note} (dryRun → xác nhận)
+    SH -> JOBS : createPaidJob(REWRITE_SHOT, shotId, params{note, shotVersion})
+    ref over JOBS, DB : seq-vong-doi-job §2
+    HR -> CB : brief hiện tại, note, tài sản của shot, style,\nArt Direction, Visual Rules; đoạn nguồn **chỉ để đọc**
+    HR -> GW : complete(schema = Brief{subject, environment, composition,\ncamera, lighting, mood, details})
+    GW -> LLM : generateContent
+    LLM --> GW : brief mới
+    HR -> DB : BEGIN; shots.version == shotVersion?
+    alt shot đã đổi (5a)
+        HR -> DB : jobs.result = brief đề xuất; không ghi đè
+    else
+        HR -> DB : chỉ UPDATE shots.brief; version++ (ảnh → "brief đã đổi")
+    end
+    HR -> DB : quyết toán; COMMIT
+    HR -> RT : shot.updated → gợi ý sinh lại ảnh (UC-05.09)
+end
+
+== Sinh ảnh shot (UC-05.09) ==
+Editor -> Web : "Generate" trên shot | "Generate all missing"
+Web -> IL : POST …/shots/{shid}:generate-image | …/storyboards/{did}:generate-images\n(dryRun → xác nhận → Idempotency-Key)
+IL -> DB : bỏ shot có ảnh hiện hành UPLOAD (BR-14)
+IL -> JOBS : một giao dịch: createPaidJob(GENERATE_SHOT_IMAGE) × n,\nmỗi job là job gốc, HOLD riêng (WR-05)
+ref over JOBS, DB : seq-vong-doi-job §2
+JOBS --> Web : 202
+loop mỗi job (concurrency của queue image)
+    HI -> DB : illustrations(PENDING, shot_version = shots.version)
+    HI -> PC : compileShotPrompt(shot)
+    PC -> DB : style, art_direction, visual_rules (dự án → chương),\nbrief, facts, appearance
+    PC -> PC : thứ tự BR-08 (chỉ dẫn sau ưu tiên hơn); facts chèn nguyên văn;\ntimeline truyện → mùa, thời điểm
+    PC -> DB : ảnh tham chiếu hiện hành của cast → location → item\n(ưu tiên nhân vật, theo giới hạn số ảnh của provider, 05 §7.4)
+    PC --> HI : prompt, references[], prompt_snapshot
+    HI -> GW : generate(prompt, references, aspect = khung hình dự án)
+    GW -> S3 : tải ảnh tham chiếu
+    GW -> IMG : generateContent (văn bản + ảnh tham chiếu)
+    alt thành công
+        IMG --> GW : ảnh
+        HI -> S3 : PUT illustrations/{id}.png
+        HI -> DB : BEGIN; media_files; illustrations(DONE, edit_kind = GENERATE,\nprompt_snapshot, job_id); shots.current_illustration_id;\nCAPTURE + RELEASE dư; jobs SUCCEEDED; COMMIT
+        HI -> RT : illustration.ready
+    else CONTENT_POLICY / lỗi sau 3 lần
+        HI -> DB : illustrations FAILED (error_code); RELEASE; jobs FAILED
+        HI -> RT : job.updated (FAILED) → sửa brief rồi sinh lại (BR-18)
+    end
+end
+RT --> Web : SSE illustration.ready / job.updated
+
+== Thay ảnh bằng ảnh tải lên (UC-05.10, miễn phí) ==
+Editor -> Web : "Thay bằng ảnh của tôi"
+Web -> IL : POST …/shots/{shid}/illustrations:upload (multipart)
+IL -> IL : MIME thật PNG / JPEG / WebP, ≤ 10 MB, cạnh ngắn ≥ 512 px,\nquét malware, bỏ EXIF (NFR-SEC-10)
+alt không hợp lệ
+    IL --> Web : 422 (lý do)
+else hợp lệ
+    IL -> S3 : PUT
+    IL -> DB : BEGIN; media_files; illustrations(UPLOAD, DONE,\nshot_version = shots.version, không prompt, không job);\nshots.current_illustration_id; COMMIT
+    IL --> Web : 201 {illustrationId}
+    IL -> RT : illustration.ready
+end
+
+== Sửa ảnh theo mô tả (UC-05.10a) / khôi phục phiên bản (UC-05.10c) ==
+alt Describe → Edit (tính phí)
+    Web -> IL : POST …/illustrations/{iid}:edit {instruction} (dryRun → xác nhận)
+    IL -> JOBS : createPaidJob(EDIT_IMAGE, iid)
+    HI -> GW : edit(ảnh gốc, instruction)
+    GW -> IMG : generateContent (ảnh gốc + chỉ dẫn)
+    alt thành công
+        IMG --> GW : ảnh mới
+        HI -> DB : illustrations(EDIT, parent_illustration_id = iid, DONE);\ncurrent_illustration_id; CAPTURE + RELEASE dư
+    else lỗi / CONTENT_POLICY
+        HI -> DB : illustrations FAILED; RELEASE (ảnh cũ vẫn hiện hành)
+    end
+    HI -> RT : illustration.ready | job.updated
+else Khôi phục phiên bản (miễn phí)
+    Web -> IL : POST …/illustrations/{iid}:make-current
+    IL -> DB : shots.current_illustration_id = iid (không tạo bản ghi)
+    IL --> Web : 200
+    IL -> RT : illustration.ready
+end
+@enduml

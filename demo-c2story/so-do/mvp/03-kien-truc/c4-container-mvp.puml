@@ -9,7 +9,7 @@ Person(admin, "Admin")
 System_Boundary(sys, "AI Story Studio") {
     Container(web, "Web App", "Next.js, React, Zustand, Remotion Player, WebAudio", "Studio, trình chỉnh sửa timeline + preview, media bin, ví, màn hình đồng ý dữ liệu")
     Container(api, "API Server", "NestJS, TS", "BFF/OIDC, danh sách mời, authz, nghiệp vụ, BudgetGuard + HOLD, enqueue sau commit, webhook, SSE")
-        Container(worker, "Worker (một tiến trình, ADR-23)", "Node.js, BullMQ Flows", "Mọi queue: orchestrator, llm, image, tts, media-proc (quét virus, chuyển mã, waveform, đổi tốc độ audio); job lặp: reconciler, cảnh báo trần ngày; quyết toán chi phí thực × 110%")
+        Container(worker, "Worker (một tiến trình, ADR-23)", "Node.js, BullMQ Flows", "Mọi queue: orchestrator, llm, image, tts, media-proc (quét virus, chuyển mã, waveform); job lặp: reconciler, cảnh báo trần ngày; quyết toán chi phí thực × 110%")
     Container(tts, "TTS Server (tự host)", "Python, model TTS mã nguồn mở, GPU", "Bản đọc chữ thuần → audio; HTTP nội bộ (ADR-30)")
     Container(align, "Alignment Worker", "Python, WhisperX/MFA, GPU", "align: word timings cho audio của TTS tự host (QĐ-122)")
     Container(render, "Render Worker", "Remotion + FFmpeg", "render: timeline_snapshot → MP4, SRT/VTT; watermark Free")

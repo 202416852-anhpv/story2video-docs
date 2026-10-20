@@ -23,10 +23,10 @@ User -|> Guest
 rectangle "AI Story Studio - MVP" {
     usecase "M01 Tích hợp SSO & hồ sơ\n(danh sách mời, đồng ý dữ liệu, $2 dùng thử)" as M01
     usecase "M09 Ví & thanh toán\n(ví USD, nạp tiền sandbox, giới hạn Free)" as M09
-    usecase "M02 Quản lý dự án\n(chỉ Owner)" as M02
+    usecase "M02 Quản lý dự án & cộng tác\n(chỉ Owner; cộng tác sau MVP)" as M02
     usecase "M03 Bản thảo & chương\n(+ dời ranh giới shot)" as M03
     usecase "M04 Thế giới truyện" as M04
-    usecase "M05 Sinh tư liệu\n(ảnh + thuyết minh nguyên văn,\nnghe & đánh dấu)" as M05
+    usecase "M05 Sinh tư liệu: storyboard, ảnh,\nthuyết minh nguyên văn\n(nghe & đánh dấu)" as M05
     usecase "M06 Trình chỉnh sửa & xuất video\n(nhạc / SFX tải lên, watermark Free)" as M06
     usecase "M10 Quản trị\n(seed, CLI danh sách mời, trần $10/ngày)" as M10
 }
@@ -51,7 +51,7 @@ M04 --> AI
 M05 --> AI
 
 legend right
-  **Ngoài MVP:** M07 AI Director, M08 Thư viện tài sản,
+  **Ngoài MVP:** M07 AI Director, M08 Thư viện tài sản cá nhân,
   cộng tác (Editor, link mời, xung đột), gói đăng ký,
   giao diện quản trị.
   **Quan hệ:** M06 <<include>> M05; mọi thao tác AI

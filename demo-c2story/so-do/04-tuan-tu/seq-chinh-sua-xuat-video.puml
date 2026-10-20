@@ -7,7 +7,7 @@ autonumber
 '@sau-mvp
 title UC-06.01 (+06.01a) + UC-06.02 (+06.02a) + UC-06.03..06.11 (+06.11a) + UC-06.13 + UC-06.15 + UC-06.16 (+06.16a, 06.16b) + UC-06.17:\nMở, chỉnh sửa timeline chương với thuyết minh khóa, âm thanh, đồng bộ tư liệu, xuất chương / cả dự án, tải video; BR-24, BR-27; IC-10, IC-11; ADR-13, ADR-16; QĐ-140, QĐ-141
 '@/sau-mvp
-'@mvp title UC-06.01 (+06.01a) + UC-06.02 (+06.02a) + UC-06.03..06.11 (+06.11a) + UC-06.13 + UC-06.15 + UC-06.16 (+06.16a) + UC-06.17 (MVP):\nMở, chỉnh sửa timeline chương với thuyết minh khóa, âm thanh, đồng bộ tư liệu, xuất chương / cả dự án, tải video; BR-24, BR-27; IC-10, IC-11; ADR-13, ADR-16; QĐ-140, QĐ-141
+'@mvp title UC-06.01 (+06.01a) + UC-06.02 (+06.02a) + UC-06.03..06.06 + UC-06.08..06.11 (+06.11a) + UC-06.13 + UC-06.15 + UC-06.16 (+06.16a) + UC-06.17 (MVP):\nMở, chỉnh sửa timeline chương với thuyết minh khóa, âm thanh, đồng bộ tư liệu, xuất chương / cả dự án, tải video; BR-24, BR-27; IC-10, IC-11; ADR-13, ADR-16; QĐ-140, QĐ-141
 
 actor Editor
 box "Web App — trình chỉnh sửa" #F5F5F5
@@ -53,7 +53,10 @@ STORE -> PV : timeline → StoryVideo props
 PV -> S3 : prefetch media quanh playhead (signed URL 15 phút)
 PV -> Editor : Xem trước (UC-06.13) — cùng component với Render Worker (ADR-13)
 
+'@sau-mvp
 == Chỉnh sửa (UC-06.02..06.10, miễn phí) ==
+'@/sau-mvp
+'@mvp == Chỉnh sửa (UC-06.02..06.06, UC-06.08..06.10, miễn phí) ==
 Editor -> UI : Ken Burns / điểm tập trung (06.04), chuyển cảnh (06.05),\nkhung hình & màu (06.06), phụ đề (06.08), track (06.03)
 '@sau-mvp
 Editor -> UI : Overlay chữ / logo, clip tiêu đề & kết (06.07, sau MVP)

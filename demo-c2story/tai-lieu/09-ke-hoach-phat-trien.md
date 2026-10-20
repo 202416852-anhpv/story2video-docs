@@ -373,9 +373,9 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 |---|---|---|---|---|---|
 | UC-01.01 Đăng nhập qua SSO | P0 | FR-AUTH-01..04, 06, 07, 11, 12, 13; FR-BIL-10 | — | seq-dang-nhap-sso | E2E-sso-login-logout, IT-id-token-validation, IT-invite-gate, IT-consent-required, IT-trial-grant, IT-vbee-adapter |
 | UC-01.02 Đăng xuất | P0 | FR-AUTH-05 | — | seq-dang-nhap-sso | E2E-sso-login-logout |
-| UC-01.03 Xem Dashboard | P2 | FR-AUTH-09; FR-BIL-05, 12 | BO-05 | — | IT-dashboard-summary |
-| UC-01.04 Đổi ngôn ngữ giao diện | P3 | FR-AUTH-08 | — | — | IT-locale-preference |
-| UC-01.05 Mở trang quản lý tài khoản SSO | P2 | FR-AUTH-09 | — | — | E2E-sso-login-logout |
+| UC-01.03 Xem Dashboard | P2 | FR-AUTH-09; FR-BIL-05, 12 | BO-05 | seq-quan-ly-du-an | IT-dashboard-summary |
+| UC-01.04 Đổi ngôn ngữ giao diện | P3 | FR-AUTH-08 | — | seq-quan-ly-du-an | IT-locale-preference |
+| UC-01.05 Mở trang quản lý tài khoản SSO | P2 | FR-AUTH-09 | — | seq-quan-ly-du-an | E2E-sso-login-logout |
 | UC-01.06 Yêu cầu xóa dữ liệu ứng dụng | Sau | FR-AUTH-10 | — | — | IT-account-deletion |
 | UC-01.07 Nhận đăng xuất back-channel | Sau | FR-AUTH-05 | — | — | IT-backchannel-logout |
 
@@ -383,15 +383,15 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-02.01 Xem danh sách dự án | P1 | FR-PRJ-01 | — | — | IT-project-list-filter |
+| UC-02.01 Xem danh sách dự án | P1 | FR-PRJ-01 | — | seq-quan-ly-du-an | IT-project-list-filter |
 | UC-02.02 Nhập truyện giữ nguyên văn (Import) | P1 | FR-PRJ-02, 03; FR-BIL-12 | BO-01, BO-03 | seq-import-chia-chuong | IT-PRJ-import, IT-free-limits |
 | UC-02.03 Tạo dự án trống | P1 | FR-PRJ-04; FR-BIL-12 | BO-01 | seq-import-chia-chuong | IT-project-list-filter, IT-free-limits |
-| UC-02.04 Cài đặt dự án | P1 | FR-PRJ-07 | BO-02 | — | IT-project-settings-authz |
-| UC-02.05 Xóa dự án | P1 | FR-PRJ-01 | — | — | IT-project-delete |
+| UC-02.04 Cài đặt dự án | P1 | FR-PRJ-07 | BO-02 | seq-quan-ly-du-an | IT-project-settings-authz |
+| UC-02.05 Xóa dự án | P1 | FR-PRJ-01 | — | seq-quan-ly-du-an | IT-project-delete |
 | UC-02.06 Tạo / thu hồi link mời | Sau | FR-PRJ-08 | — | seq-cong-tac-xung-dot | IT-invite-link |
 | UC-02.07 Quản lý thành viên | Sau | FR-PRJ-09 | — | — | IT-member-remove |
 | UC-02.08 Tham gia dự án qua link | Sau | FR-AUTH-03; FR-PRJ-08 | — | — | IT-invite-link, E2E-collab-conflict |
-| UC-02.09 Xem bản đồ quy trình (Map) | P3 ✂2 | FR-PRJ-06 | BO-01 | — | E2E-project-map |
+| UC-02.09 Xem bản đồ quy trình (Map) | P3 ✂2 | FR-PRJ-06 | BO-01 | seq-quan-ly-du-an | E2E-project-map |
 | UC-02.10 Xử lý xung đột khi lưu | Sau | FR-EDT-18; FR-PRJ-11 | BO-03 | seq-cong-tac-xung-dot | E2E-collab-conflict, IT-chapter-save-optimistic-lock |
 | UC-02.11 Nhân bản dự án | Sau | FR-PRJ-13 | — | — | IT-project-duplicate |
 
@@ -399,7 +399,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-03.01 Xem văn bản gốc | P1 | FR-MAN-01; FR-PRJ-02, 03 | BO-03 | seq-import-chia-chuong | IT-PRJ-import |
+| UC-03.01 Xem văn bản gốc | P1 | FR-MAN-01; FR-PRJ-02, 03 | BO-03 | seq-import-chia-chuong, seq-quan-ly-du-an | IT-PRJ-import |
 | UC-03.02 Soạn thảo trong Workspace | P1 | FR-MAN-02, 11; FR-BOK-01b; FR-NAR-09 | BO-03 | act-phu-kin-van-ban, seq-doi-ranh-gioi-shot | IT-chapter-save-optimistic-lock, IT-move-shot-boundary, PBT-coverage-validator |
 | UC-03.03 Gợi ý chia chương bằng AI | P1 | FR-MAN-04; FR-BIL-12 | BO-01 | seq-import-chia-chuong | IT-split-suggest-schema |
 | UC-03.04 Chia chương tại vị trí | P1 | FR-MAN-03; FR-BIL-12 | BO-01 | seq-import-chia-chuong | PBT-chapter-text-preserved, IT-free-limits |
@@ -419,18 +419,18 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
 | UC-04.01 Phân tích tài sản bằng AI | P1 | FR-WLD-01 | BO-01, BO-02 | seq-the-gioi-truyen | IT-analyze-assets, EVAL-asset-extraction |
-| UC-04.02 Quản lý Story Assets | P1 | FR-WLD-02, 03, 05, 11, 12; FR-LIB-05 | BO-02 | seq-the-gioi-truyen | IT-story-asset-crud |
+| UC-04.02 Quản lý Story Assets | P1 | FR-WLD-02, 03, 05, 11, 12; FR-LIB-05 | BO-02 | seq-the-gioi-truyen, seq-tai-san-phong-cach | IT-story-asset-crud |
 | UC-04.03 Sinh ảnh tham chiếu | P1 | FR-WLD-03 | BO-02, BO-06 | seq-the-gioi-truyen | EVAL-consistency, IT-wallet-refund |
 | UC-04.04 Dùng ảnh tải lên nguyên bản | P1 | FR-WLD-04 | BO-02 | seq-the-gioi-truyen | IT-exact-image-upload |
-| UC-04.05 Chọn style dự án | P1 | FR-WLD-06 | BO-02 | — | IT-regenerate-all |
-| UC-04.06 Thiết lập Art Direction | P1 | FR-WLD-07 | BO-02 | — | UT-prompt-compiler-order |
+| UC-04.05 Chọn style dự án | P1 | FR-WLD-06 | BO-02 | seq-tai-san-phong-cach | IT-regenerate-all |
+| UC-04.06 Thiết lập Art Direction | P1 | FR-WLD-07 | BO-02 | seq-tai-san-phong-cach | UT-prompt-compiler-order |
 | UC-04.07 Xem dòng thời gian truyện | P2 ✂5 | FR-WLD-08 | BO-02 | seq-the-gioi-truyen | IT-story-timeline |
 | UC-04.08 Xem đồ thị quan hệ | P2 ✂4 | FR-WLD-09 | BO-02 | seq-the-gioi-truyen | IT-relationship-graph |
 | UC-04.09 Phân tích lại (Re-analyse) | P2 ✂4 ✂5 | FR-WLD-08, 09 | BO-02 | seq-the-gioi-truyen | IT-story-timeline, IT-relationship-graph |
-| UC-04.10 Quản lý Visual Rules | P1 | FR-WLD-10 | BO-02 | — | UT-prompt-compiler-order |
+| UC-04.10 Quản lý Visual Rules | P1 | FR-WLD-10 | BO-02 | seq-tai-san-phong-cach | UT-prompt-compiler-order |
 | UC-04.11 Xuất ZIP ảnh tài sản | Sau | FR-WLD-11 | — | — | IT-asset-zip-export |
 
-### 4.5 M05 — Sinh tư liệu
+### 4.5 M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
@@ -514,18 +514,18 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-10.01 Cấu hình bảng giá | P1 | FR-ADM-01 | BO-06 | — | IT-price-rules-versioned |
+| UC-10.01 Cấu hình bảng giá | P1 | FR-ADM-01 | BO-06 | seq-quan-tri | IT-price-rules-versioned |
 | UC-10.02 Cấu hình gói đăng ký | Sau | FR-ADM-02 | BO-05 | — | IT-plan-sync |
-| UC-10.03 Quản lý provider & mô hình AI | P1 | FR-ADM-03 | BO-06 | — | IT-catalog-admin |
-| UC-10.04 Quản lý danh mục style | P1 | FR-ADM-03 | BO-02 | — | IT-catalog-admin |
-| UC-10.05 Quản lý danh mục giọng đọc | P1 | FR-ADM-03 | BO-04 | — | IT-catalog-admin |
+| UC-10.03 Quản lý provider & mô hình AI | P1 | FR-ADM-03 | BO-06 | seq-quan-tri | IT-catalog-admin |
+| UC-10.04 Quản lý danh mục style | P1 | FR-ADM-03 | BO-02 | seq-quan-tri | IT-catalog-admin |
+| UC-10.05 Quản lý danh mục giọng đọc | P1 | FR-ADM-03 | BO-04 | seq-quan-tri | IT-catalog-admin |
 | UC-10.06 Quản lý thư viện nhạc & SFX có license | Sau | FR-ADM-03; FR-EDT-12 | — | — | IT-catalog-admin |
 | UC-10.07 Giám sát job | Sau | FR-ADM-04, 05 | BO-06 | — | IT-job-monitor-actions |
 | UC-10.08 Điều chỉnh số dư người dùng | Sau | FR-ADM-05 | BO-06 | — | IT-admin-audit, REC-ledger |
-| UC-10.09 Ghi audit log | P1 | — | — | — | IT-admin-audit |
+| UC-10.09 Ghi audit log | P1 | — | — | seq-quan-tri | IT-admin-audit |
 | UC-10.10 Xem báo cáo | Sau | FR-ADM-06 | BO-05, BO-06 | — | IT-admin-reports |
-| UC-10.11 Quản lý danh sách mời beta | P1 | FR-AUTH-11 | BO-06 | seq-dang-nhap-sso | IT-invite-gate, IT-admin-audit |
-| UC-10.12 Áp trần chi tiêu AI hằng ngày | P2 | FR-ADM-07 | BO-06 | act-giu-tru-tien | IT-daily-budget-cap, IT-daily-budget-concurrency |
+| UC-10.11 Quản lý danh sách mời beta | P1 | FR-AUTH-11 | BO-06 | seq-dang-nhap-sso, seq-quan-tri | IT-invite-gate, IT-admin-audit |
+| UC-10.12 Áp trần chi tiêu AI hằng ngày | P2 | FR-ADM-07 | BO-06 | act-giu-tru-tien, seq-quan-tri, seq-vong-doi-job | IT-daily-budget-cap, IT-daily-budget-concurrency |
 
 ### 4.11 Yêu cầu xuyên suốt và yêu cầu chưa có use case
 

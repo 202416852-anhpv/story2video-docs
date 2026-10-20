@@ -19,10 +19,10 @@ note right of DONE
 end note
 
 state Render {
-    [*] --> QUEUED : readiness OK (coverage 100%)\nFree: còn lượt và phút trong tháng
+    [*] --> QUEUED : scope CHAPTER | PROJECT (QĐ-141)\nreadiness OK (coverage 100%, mọi chương nếu PROJECT)\nFree: còn lượt và phút trong tháng
     QUEUED --> RENDERING
     RENDERING --> READY : encode xong\n(Free: watermark, cộng lượt + phút)
-    RENDERING --> FAILED_R : lỗi encode
+    RENDERING --> FAILED_R : lỗi encode sau 1 lần thử lại
     QUEUED --> CANCELLED : hủy
     RENDERING --> CANCELLED : hủy
     READY --> [*]

@@ -32,7 +32,7 @@ Editor -> Web : Chọn chương, "Sinh tư liệu" | "Sinh lại phần thiếu 
 Web -> MG : GET /projects/{pid}/media:quote?chapterIds&only&parts
 MG -> DB : storyboard hiện hành? số shot; Σ (source_end − source_start);\nảnh DONE hợp lệ + ảnh UPLOAD bị loại (BR-14)
 MG -> PE : estimateMax(storyboard nếu thiếu + ảnh × n + TTS theo ký tự)
-note right of PE : Chưa có storyboard: n ước tính theo độ dài chương\nvà target_shot_seconds (mặc định 15 s)
+note right of PE : Chưa có storyboard: n ước tính theo độ dài chương\nvà target_shot_seconds (mặc định 20 s, QĐ-138)
 PE --> MG : {shots, storyboardUsd, imagesUsd, ttsChars, ttsUsd, totalUsd}
 MG --> Web : 200 | "Không có phần nào cần sinh lại" (2a)
 Editor -> Web : Xác nhận

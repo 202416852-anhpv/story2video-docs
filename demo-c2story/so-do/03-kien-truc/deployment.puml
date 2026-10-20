@@ -71,7 +71,7 @@ legend right
   **Không vẽ mũi tên để gọn**
   • Mọi worker đọc/ghi PostgreSQL và Object storage
   • Mọi service đọc secret từ **Secrets Manager**
-  • Trace/log/metric qua **OpenTelemetry** → Grafana / Sentry
+  • Log có cấu trúc kèm jobId + Sentry; tracing **OpenTelemetry** sau MVP (NFR-MNT-03)
   • Email gửi từ API và worker qua dịch vụ Email
 endlegend
 @enduml

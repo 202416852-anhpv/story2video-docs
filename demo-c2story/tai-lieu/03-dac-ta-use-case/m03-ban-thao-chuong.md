@@ -1,6 +1,6 @@
 # M03 — Bản thảo & chương
 
-> Bước 2 của luồng chính. Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m03-ban-thao-chuong.puml`, `../../so-do/04-tuan-tu/seq-import-chia-chuong.puml`, `seq-doi-ranh-gioi-shot.puml`. Yêu cầu: FR-MAN-01..11. Văn bản truyện **chỉ do tác giả sửa** (BR-21).
+> Bước 2 của luồng chính. Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m03-ban-thao-chuong.puml`, `../../so-do/04-tuan-tu/seq-import-chia-chuong.puml`, `seq-doi-ranh-gioi-shot.puml`, `seq-quan-ly-du-an.puml` (xem văn bản gốc). Yêu cầu: FR-MAN-01..11. Văn bản truyện **chỉ do tác giả sửa** (BR-21).
 
 ---
 
@@ -15,7 +15,7 @@
 | Hậu điều kiện | **Thành công:** hiển thị văn bản và các điểm chia |
 | Kích hoạt | Mở `?v=source` |
 | Quan hệ | được mở rộng bởi UC-03.01a, UC-03.01b |
-| Truy vết | FR-MAN-01 |
+| Truy vết | FR-MAN-01; seq-quan-ly-du-an |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -34,7 +34,7 @@
 | Tiền điều kiện | Dự án có văn bản; đang ở màn hình Write (`?v=source`) |
 | Hậu điều kiện | **Thành công:** clipboard chứa toàn văn. **Tối thiểu:** không thay đổi dữ liệu dự án |
 | Kích hoạt | Bấm "Copy text" ở UC-03.01 bước 3 |
-| Truy vết | FR-MAN-01; API 2.3 `GET /projects/{pid}/source` |
+| Truy vết | FR-MAN-01; API 2.3 `GET /projects/{pid}/source`; seq-quan-ly-du-an |
 | Giai đoạn | P2 |
 
 **Luồng chính**

@@ -1,0 +1,149 @@
+@startuml Seq_VongDoiJob_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+autonumber
+title Khung chung (MVP): vòng đời một thao tác AI tốn phí (UC-05.17 + mọi UC tạo job)\nBR-01, BR-02, BR-29, BR-32; ADR-23, 25, 29; WR-05, WR-09; QĐ-132..134
+
+actor Editor
+participant "Web App" as Web
+box "API Server" #F5F5F5
+participant "Middleware\n(authz, idempotency,\nrate-limit)" as MW
+participant "<Module>Controller\n→ <Module>Service" as SVC
+participant "PriceEstimator\n(AI Gateway)" as PE
+participant "JobService\n(platform/jobs)" as JOBS
+participant "BudgetGuard" as BG
+participant "WalletService\n(billing)" as WAL
+participant "Realtime\n(SSE)" as RT
+end box
+database PostgreSQL as DB
+queue "Redis\n(BullMQ, Pub/Sub,\nrate limit)" as R
+box "Worker" #F5F5F5
+participant "JobRunner" as RUN
+participant "<Type>Handler" as H
+end box
+box "AI Gateway (thư viện)" #FFFFFF
+participant "ProviderRouter" as PR
+participant "Adapter" as AD
+participant "UsageMeter" as UM
+end box
+participant "Provider\n(Gemini / TTS Server /\nWhisperX)" as P
+participant "Reconciler\n(job lặp)" as REC
+
+== 1. Báo giá (không gọi provider) ==
+Editor -> Web : Mở hộp xác nhận thao tác tốn phí
+Web -> MW : POST …:<verb>?dryRun=true\n(hoặc GET media:quote / narrations:quote)
+MW -> SVC : quote(params)
+SVC -> PE : estimateMax(operation, input)
+PE -> DB : price_rules hiệu lực, ai_models.unit_cost_usd
+PE -> PE : x_cost = Σ đơn giá × giới hạn đầu ra\n(LLM: ký tự ÷ hệ số ký tự/token cục bộ × 1,2, QĐ-129;\nTTS tự host: ký tự → giây GPU theo BENCH-tts)\nheld = ceil(x_cost × 1,10)
+PE --> SVC : {x_cost, held}
+SVC --> Web : 200 {estimatedCostUsd = held, breakdown[]}\n(không tạo job)
+Editor -> Web : Xác nhận
+
+== 2. Tạo job: một giao dịch (ADR-25) ==
+Web -> MW : POST …:<verb>\nIdempotency-Key
+MW -> DB : idempotency_keys(key, user)
+alt key đã có
+    MW --> Web : trả lại response cũ (không tạo job mới)
+end
+MW -> R : INCR rl:{userId}:llm (cửa sổ 1 phút, BR-32)
+alt > 30 yêu cầu LLM/phút
+    MW --> Web : 429 + Retry-After
+end
+MW -> SVC : create(params)
+SVC -> SVC : kiểm quyền, giới hạn Free (BR-27), khóa chương (BR-12)
+SVC -> PE : estimateMax(...)
+SVC -> JOBS : createPaidJob(type, target, x_cost, held)
+JOBS -> DB : BEGIN
+JOBS -> BG : reserve(today, x_cost)
+BG -> DB : INSERT daily_ai_budgets … ON CONFLICT DO NOTHING;\nUPDATE … SET reserved += x_cost\nWHERE spent + reserved + x_cost <= cap RETURNING
+alt 0 dòng (chạm trần ngày)
+    BG --> JOBS : BudgetExceeded
+    JOBS -> DB : ROLLBACK
+    JOBS --> Web : 503 DAILY_BUDGET_EXCEEDED
+else giữ chỗ được
+    JOBS -> WAL : hold(userId, held)
+    WAL -> DB : SELECT wallets FOR UPDATE\n(thứ tự khóa: ngân sách ngày → ví)
+    alt available < held
+        WAL --> JOBS : InsufficientBalance
+        JOBS -> DB : ROLLBACK
+        JOBS --> Web : 402 INSUFFICIENT_BALANCE {shortfallUsd}
+    else đủ
+        WAL -> DB : wallets.available -= held, held += held;\nINSERT wallet_ledger_entries(HOLD)
+        JOBS -> DB : INSERT jobs(QUEUED, held_micro, budget_day,\nbudget_reserved_micro = x_cost); audit_logs
+        JOBS -> DB : COMMIT
+            JOBS -> R : enqueue(queue, bullmqJobId = jobs.id)\nsau commit; publish job.updated
+        JOBS --> Web : 202 {jobId, estimatedCostUsd}
+    end
+end
+
+== 3. Worker nhận việc an toàn (ADR-29) ==
+R -> RUN : job (có thể bị giao lại)
+RUN -> DB : UPDATE jobs SET status='RUNNING', attempts+=1,\nheartbeat_at=now() WHERE id=:id\nAND status IN ('QUEUED','RETRYING') RETURNING attempts
+alt 0 dòng (đã chạy / đã kết thúc)
+    RUN -> R : ack, bỏ qua (không gọi provider lần hai)
+end
+note right of RUN : Số job chạy cùng lúc = concurrency của queue (MVP).\nSemaphore theo người dùng: sau MVP (ADR-28)
+RUN -> RT : publish job.updated (RUNNING)
+RT --> Web : SSE job.updated
+RUN -> H : handle(job)
+activate H
+loop mỗi 30 s trong lúc chạy
+    RUN -> DB : jobs.heartbeat_at = now()
+end
+
+== 4. Gọi provider qua AI Gateway ==
+H -> H : chuẩn bị đầu vào (ContextBuilder / PromptCompiler /\nSpeechNormalizer, tùy loại job)
+H -> PR : call(kind, request, jobId, attempt)
+PR -> PR : chọn provider/mô hình theo loại tác vụ;\n[chỉ LLM, lần thử ≥ 2] có thể fallback sang mô hình Gemini\ncó unit_cost ≤ mô hình đã báo giá (QĐ-124, 125)
+PR -> AD : invoke(request, timeout theo loại, QĐ-126) — **một lần**, không lặp (QĐ-133)
+AD -> P : HTTPS / HTTP nội bộ\n(idempotency = jobId:attempt nếu hỗ trợ)
+P --> AD : kết quả | lỗi (Gemini chặn nội dung → CONTENT_POLICY, BR-18)
+AD -> UM : record(provider, model, unit, quantity,\ncost, latency, request_id, attempt,\nprompt_version, seed, succeeded)
+UM -> DB : INSERT ai_usage_records (mọi lần gọi, kể cả lỗi)
+AD --> PR : kết quả | lỗi
+PR --> H : kết quả | lỗi đã phân loại (tạm thời / vĩnh viễn, 13 §7.1)
+alt lỗi tạm thời (timeout, 5xx, 429) và attempts < 3
+    H -> DB : jobs RETRYING
+    H -> R : throw → BullMQ thử lại sau backoff 2 s / 8 s / 30 s + jitter\n(lần sau quay lại bước 3)
+end
+H -> H : hậu xử lý (kiểm schema; LLM sai schema: gọi lại kèm\nthông báo lỗi, tối đa 2 lần; CoverageValidator; ánh xạ timestamp)
+
+== 5. Quyết toán: một giao dịch, rồi mới ack ==
+note over H, DB : Chỉ job gốc giữ và quyết toán tiền. Job con của Flow (held = 0):\nchỉ ghi kết quả + trạng thái + heartbeat của cha; job cha quyết toán\ncả lượt khi kết thúc (WR-05, seq-sinh-tu-lieu)
+alt thành công
+    H -> DB : BEGIN; ghi kết quả nghiệp vụ (shots, illustrations, narrations…)
+    H -> WAL : capture(job, min(Σ cost lần thử thành công × 1,10, held))
+    WAL -> DB : ledger CAPTURE + RELEASE(phần dư); wallets
+    H -> BG : settle(budget_day, x_cost, Σ cost mọi lần thử)
+    BG -> DB : reserved -= x_cost; spent += Σ cost (WR-09)
+    H -> DB : jobs SUCCEEDED, result, charged_micro; [nếu là job cuối] mở khóa chương; COMMIT
+else thất bại vĩnh viễn (hết lượt, CONTENT_POLICY, đầu vào sai, kiểm tra tất định)
+    H -> DB : BEGIN; giữ dữ liệu cũ; đối tượng FAILED (error_code)
+    H -> WAL : release(job, held)
+    WAL -> DB : ledger RELEASE toàn bộ
+    H -> BG : settle(budget_day, x_cost, Σ cost)
+    H -> DB : jobs FAILED; mở khóa chương nếu cần; COMMIT
+end
+deactivate H
+RUN -> R : ack BullMQ
+RUN -> RT : publish job.updated + sự kiện nghiệp vụ\n(illustration.ready, narration.updated, wallet.updated…)
+RT --> Web : SSE
+
+== 6. Tự phục hồi (Reconciler) ==
+loop mỗi 1 phút
+    REC -> DB : job QUEUED > 1 phút không có trong BullMQ?
+    REC -> R : enqueue lại
+end
+loop mỗi 5 phút
+    REC -> DB : job RUNNING mất heartbeat > 10 phút?\n(job cha còn con chưa kết thúc thì không tính là treo)
+    REC -> DB : BEGIN; jobs FAILED; job gốc: CAPTURE phần con đã xong,\nRELEASE phần còn lại; con còn chờ → CANCELLED;\nreserved -= x_cost; mở khóa chương; COMMIT
+end
+loop hằng ngày
+    REC -> DB : Σ sổ cái = số dư ví (NFR-REL-03);\nspent_micro = Σ ai_usage_records trong ngày
+    REC -> REC : lệch ≠ 0 → sửa spent_micro, cảnh báo P1
+end
+@enduml

@@ -1,6 +1,6 @@
 # M04 — Thế giới truyện
 
-> Bước 3 của luồng chính. Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m04-the-gioi-truyen.puml`, `../../so-do/04-tuan-tu/seq-the-gioi-truyen.puml`. Yêu cầu: FR-WLD-01..11. Thứ tự chỉ dẫn hình ảnh: BR-08.
+> Bước 3 của luồng chính. Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m04-the-gioi-truyen.puml`, `../../so-do/04-tuan-tu/seq-the-gioi-truyen.puml`, `seq-tai-san-phong-cach.puml`. Yêu cầu: FR-WLD-01..11. Thứ tự chỉ dẫn hình ảnh: BR-08.
 
 ---
 
@@ -71,7 +71,7 @@
 | Hậu điều kiện | **Thành công:** Story Assets phản ánh đúng thế giới truyện |
 | Kích hoạt | Mở `?v=assets` |
 | Quan hệ | được mở rộng bởi UC-04.01, UC-04.02a..e |
-| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11 |
+| Truy vết | FR-WLD-02, FR-WLD-05, FR-WLD-11; seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -115,7 +115,7 @@
 | Tiền điều kiện | Dự án có ít nhất 2 nhân vật (`CHARACTER`) |
 | Hậu điều kiện | **Thành công:** có StoryAsset `kind = GROUP` với ≥ 2 thành viên. **Tối thiểu:** không tạo nhóm vi phạm IC-13 |
 | Kích hoạt | Bấm "New group" |
-| Truy vết | FR-WLD-02; IC-13; 04 §3.3 `story_asset_group_members` |
+| Truy vết | FR-WLD-02; IC-13; 04 §3.3 `story_asset_group_members`; seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -167,7 +167,7 @@
 | Tiền điều kiện | Tài sản thuộc dự án |
 | Hậu điều kiện | **Thành công:** StoryAsset bị gỡ; các shot từng tham chiếu giữ `raw_name` và chuyển "chưa liên kết"; ảnh shot đã sinh không đổi. **Tối thiểu:** không xóa gì khi Editor chưa xác nhận |
 | Kích hoạt | Chọn "Remove from project" |
-| Truy vết | BR-16; 04 §3.3, §3.4 (`shot_asset_refs.story_asset_id` cho phép NULL); API 2.4 `DELETE /projects/{pid}/story-assets/{sid}` |
+| Truy vết | BR-16; 04 §3.3, §3.4 (`shot_asset_refs.story_asset_id` cho phép NULL); API 2.4 `DELETE /projects/{pid}/story-assets/{sid}`; seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -194,7 +194,7 @@
 | Hậu điều kiện | **Thành công:** StoryAsset được cập nhật, giữ nguyên `id`, `version` tăng 1; `shot_asset_refs`, nhóm và `relationships` trỏ tới tài sản không đổi. **Tối thiểu:** ảnh đã sinh không bị đổi; không tốn phí nếu Editor không chọn sinh lại |
 | Kích hoạt | Mở chi tiết tài sản, bấm "Edit" |
 | Quan hệ | được mở rộng bởi UC-04.04 (thay ảnh bằng ảnh tải lên) |
-| Truy vết | FR-WLD-02; BR-08, BR-14; IC-13; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10); API 2.4 `PATCH /projects/{pid}/story-assets/{sid}` (If-Match) |
+| Truy vết | FR-WLD-02; BR-08, BR-14; IC-13; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10); API 2.4 `PATCH /projects/{pid}/story-assets/{sid}` (If-Match); seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -305,7 +305,7 @@
 | Tiền điều kiện | Là Owner (đổi) hoặc dự án chưa có style (lần đầu, Editor được chọn) |
 | Hậu điều kiện | **Thành công:** `projects.style_id` cập nhật |
 | Kích hoạt | "Set style" hoặc điểm duyệt UC-07.03 |
-| Truy vết | FR-WLD-06 |
+| Truy vết | FR-WLD-06; seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -325,7 +325,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** `projects.art_direction` cập nhật; áp cho mọi lần sinh ảnh sau |
 | Kích hoạt | Ô "Art direction" trong Story Assets |
-| Truy vết | FR-WLD-07; BR-08 |
+| Truy vết | FR-WLD-07; BR-08; seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -414,7 +414,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** luật được áp vào prompt các lần sinh ảnh sau theo thứ tự BR-08 |
 | Kích hoạt | Mở `?v=visual-rules` |
-| Truy vết | FR-WLD-10; BR-08 |
+| Truy vết | FR-WLD-10; BR-08; seq-tai-san-phong-cach |
 | Giai đoạn | P1 |
 
 **Luồng chính**

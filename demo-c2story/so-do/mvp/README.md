@@ -18,13 +18,13 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 | `01-use-case/phan-ra/` | `uc-m01..m06, m09, m10-*-mvp` (sinh tự động) | Chỉ còn 104/165 use case thuộc MVP; M07, M08 không có bản MVP |
 | `02-du-lieu/` | `erd-mvp` (42/55 bảng), `domain-class-mvp` (sinh tự động) | Bỏ gói đăng ký, thư viện, Director, archive, notes, chapter rules, đa giọng, lịch sử timeline |
 | `03-kien-truc/` | `c4-context-mvp`, `c4-container-mvp`, `c4-component-api-mvp`, `c4-component-editor-mvp`, `deployment-mvp` | Không có Director, thư viện, gói; quản trị bằng CLI/seed; triển khai một máy ảo staging |
-| `04-tuan-tu/` | `seq-dang-nhap-sso-mvp`, `seq-thanh-toan-mvp`, `seq-sinh-tu-lieu-mvp`, `seq-thuyet-minh-nguyen-van-mvp`, `seq-chinh-sua-xuat-video-mvp` | Không back-channel logout; chỉ nạp tiền (không gói); không kiểm chứng WER từng shot (thay bằng nghe & đánh dấu); không lịch sử timeline, chia video, thư viện âm thanh |
+| `04-tuan-tu/` | 13 sơ đồ `seq-*-mvp` (sinh tự động): `vong-doi-job`, `dang-nhap-sso`, `quan-ly-du-an`, `import-chia-chuong`, `doi-ranh-gioi-shot`, `the-gioi-truyen`, `tai-san-phong-cach`, `storyboard-sinh-anh`, `sinh-tu-lieu`, `thuyet-minh-nguyen-van`, `chinh-sua-xuat-video`, `thanh-toan`, `quan-tri` | Không back-channel logout; chỉ nạp tiền (không gói); không kiểm chứng WER từng shot (thay bằng nghe & đánh dấu); không lịch sử timeline, chia video, thư viện âm thanh; không outbox, chapter rules, xử lý xung đột cộng tác (409 → tải lại); quản trị bằng seed/CLI |
 | `05-hoat-dong/` | `act-quy-trinh-project-mvp` | Không Director, Archive; bước tham gia beta |
 | `06-trang-thai/` | `state-narration-render-mvp`, `state-chapter-media-mvp` | Thuyết minh chỉ có `DONE`, không `VERIFIED` / `NEEDS_REVIEW` / `ACCEPTED` |
 
 ## Sơ đồ dùng chung (MVP giống bản đầy đủ)
 
-`04-tuan-tu/seq-vong-doi-job`, `seq-import-chia-chuong`, `seq-doi-ranh-gioi-shot`, `seq-the-gioi-truyen`, `seq-storyboard-sinh-anh`; `05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
+`05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
 
 ## Sơ đồ chỉ có ở bản đầy đủ (toàn bộ sau MVP)
 

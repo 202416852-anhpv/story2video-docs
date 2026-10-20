@@ -1,6 +1,6 @@
 # M02 — Quản lý dự án & cộng tác
 
-> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m02-du-an-cong-tac.puml`, `../../so-do/04-tuan-tu/seq-import-chia-chuong.puml`, `../../so-do/04-tuan-tu/seq-cong-tac-xung-dot.puml`. Yêu cầu: FR-PRJ-01..13. Quyền: [08 §2](../08-quy-tac-nghiep-vu.md).
+> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m02-du-an-cong-tac.puml`, `../../so-do/04-tuan-tu/seq-import-chia-chuong.puml`, `../../so-do/04-tuan-tu/seq-cong-tac-xung-dot.puml`, `seq-quan-ly-du-an.puml`. Yêu cầu: FR-PRJ-01..13. Quyền: [08 §2](../08-quy-tac-nghiep-vu.md).
 
 ---
 
@@ -14,7 +14,7 @@
 | Tiền điều kiện | Đã đăng nhập |
 | Hậu điều kiện | **Thành công:** danh sách hiển thị đúng quyền |
 | Kích hoạt | Mở `/projects` |
-| Truy vết | FR-PRJ-01 |
+| Truy vết | FR-PRJ-01; seq-quan-ly-du-an |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -120,7 +120,7 @@
 | Tiền điều kiện | Là Owner của dự án |
 | Hậu điều kiện | **Thành công:** `projects` cập nhật (version tăng); thay đổi áp dụng cho các lần sinh **sau** |
 | Kích hoạt | Mở Settings |
-| Truy vết | FR-PRJ-07; BR-04 |
+| Truy vết | FR-PRJ-07; BR-04; seq-quan-ly-du-an |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -146,7 +146,7 @@
 | Tiền điều kiện | Là Owner; không có job đang chạy (hoặc chấp nhận hủy) |
 | Hậu điều kiện | **Thành công:** dự án soft delete, mọi thành viên mất quyền ngay; xóa cứng cùng media sau 30 ngày. **Tối thiểu:** không xóa khi chưa xác nhận |
 | Kích hoạt | Chọn "Xóa" ở danh sách dự án hoặc Settings |
-| Truy vết | FR-PRJ-01; BR-04; 04 §5 |
+| Truy vết | FR-PRJ-01; BR-04; 04 §5; seq-quan-ly-du-an |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -245,7 +245,7 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** hiển thị tiến độ từng bước; điều hướng tới bước được chọn |
 | Kích hoạt | Mở `?v=map` |
-| Truy vết | FR-PRJ-06 |
+| Truy vết | FR-PRJ-06; seq-quan-ly-du-an |
 | Giai đoạn | P3 ✂2 |
 
 **Luồng chính**

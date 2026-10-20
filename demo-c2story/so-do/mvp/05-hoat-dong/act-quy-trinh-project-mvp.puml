@@ -52,14 +52,15 @@ partition "4. Sinh tư liệu (ảnh + thuyết minh)" {
 }
 partition "5. Chỉnh sửa video" {
   |Editor|
-  :Mở trình chỉnh sửa timeline;
+  :Mở trình chỉnh sửa timeline của chương\n(không có timeline cả dự án trong MVP, QĐ-141);
   :Ken Burns, chuyển cảnh, khung hình;
   :Thêm **nhạc nền** và **SFX** tải lên;
   :Định kiểu phụ đề;
   :Xem trước;
 }
 partition "6. Xuất & tải" {
-  if (Độ phủ 100%, ảnh + thuyết minh DONE,\nkhông OUTDATED?) then (có)
+  :Chọn xuất chương này hoặc **cả dự án**\n(ghép các chương nối tiếp, cắt thẳng, FR-EDT-28);
+  if (Độ phủ 100%, ảnh + thuyết minh DONE,\nkhông OUTDATED (mọi chương nếu xuất cả dự án)?) then (có)
     if (Free hết lượt / phút trong tháng?) then (có)
       :Nạp tiền (sandbox) hoặc đợi tháng sau;
     else (không)
@@ -69,7 +70,7 @@ partition "6. Xuất & tải" {
       :Tải video xuống;
     endif
   else (không)
-    :Xử lý các vị trí chưa đạt\ntrên timeline;
+    :Xử lý các vị trí / chương chưa đạt\n(422 kèm danh sách chương);
   endif
 }
 stop

@@ -18,7 +18,7 @@ title M08 - Thư viện tài sản cá nhân
 
 actor "User" as User
 
-rectangle "M08 Thư viện tài sản" {
+rectangle "M08 Thư viện tài sản cá nhân" {
     usecase "UC-08.01\nXem thư viện" as UC1 #DDDDDD
     usecase "UC-08.01a\nLọc & tìm kiếm" as UC1a #DDDDDD
     usecase "UC-08.02\nTạo tài sản từ ảnh hoặc mô tả" as UC2 #DDDDDD

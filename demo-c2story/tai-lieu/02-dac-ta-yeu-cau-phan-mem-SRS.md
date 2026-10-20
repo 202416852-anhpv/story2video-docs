@@ -29,14 +29,14 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 
 | Phân hệ | Trong MVP | Sau MVP |
 |---|---|---|
-| M01 SSO | Đăng nhập, đăng xuất, hồ sơ (Keycloak → Vbee), danh sách mời beta, màn hình đồng ý xử lý dữ liệu | Back-channel logout, tự yêu cầu xóa dữ liệu (làm thủ công) |
-| M02 Dự án | Danh sách, import, tạo trống, cài đặt, xóa, Map ✂2 | Link mời, thành viên, xung đột giữa nhiều người, realtime, nhân bản |
-| M03 Bản thảo | Văn bản gốc, Workspace, chia/gộp/dời/sắp xếp chương, tái cấu trúc nguyên tử, dời ranh giới shot | Find & replace, Archives, Notes, lịch sử phiên bản chương |
+| M01 Tích hợp SSO & hồ sơ | Đăng nhập, đăng xuất, hồ sơ (Keycloak → Vbee), danh sách mời beta, màn hình đồng ý xử lý dữ liệu | Back-channel logout, tự yêu cầu xóa dữ liệu (làm thủ công) |
+| M02 Quản lý dự án & cộng tác | Danh sách, import, tạo trống, cài đặt, xóa, Map ✂2 | Link mời, thành viên, xung đột giữa nhiều người, realtime, nhân bản |
+| M03 Bản thảo & chương | Văn bản gốc, Workspace, chia/gộp/dời/sắp xếp chương, tái cấu trúc nguyên tử, dời ranh giới shot | Find & replace, Archives, Notes, lịch sử phiên bản chương |
 | M04 Thế giới truyện | Phân tích tài sản, CRUD tài sản, ảnh tham chiếu, ảnh tải lên, style, Art Direction, Visual Rules, Timeline truyện ✂5, Relationships ✂4 | Thư viện, xuất ZIP |
-| M05 Sinh tư liệu | Storyboard phủ kín, biên tập shot, sinh/sửa ảnh, TTS nguyên văn, quy tắc ký hiệu, từ điển phát âm ✂6, nghe & đánh dấu, "Sinh tư liệu", media bin | Quản lý nhiều bản nháp, chapter rules, re-direct, đa giọng, kiểm chứng ASR, ZIP ảnh |
-| M06 Trình chỉnh sửa | Track video/thuyết minh/phụ đề/nhạc/SFX, Ken Burns, chuyển cảnh cơ bản (nâng cao ✂3), phụ đề (preset ✂3), tải nhạc lên, ducking, preview, render, tải MP4/SRT | Overlay, tinh chỉnh màu, keyframe, lịch sử phiên bản timeline, thư viện âm thanh, trộn âm nâng cao, chia video |
+| M05 Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn | Storyboard phủ kín, biên tập shot, sinh/sửa ảnh, TTS nguyên văn, quy tắc ký hiệu, từ điển phát âm ✂6, nghe & đánh dấu, "Sinh tư liệu", media bin | Quản lý nhiều bản nháp, chapter rules, re-direct, đa giọng, kiểm chứng ASR, ZIP ảnh |
+| M06 Trình chỉnh sửa & xuất video | Track video/thuyết minh/phụ đề/nhạc/SFX, Ken Burns, chuyển cảnh cơ bản (nâng cao ✂3), phụ đề (preset ✂3), tải nhạc lên, ducking, preview, render, tải MP4/SRT | Overlay, tinh chỉnh màu, keyframe, lịch sử phiên bản timeline, thư viện âm thanh, trộn âm nâng cao, chia video |
 | M07 AI Director | — | Toàn bộ |
-| M08 Thư viện cá nhân | — | Toàn bộ |
+| M08 Thư viện tài sản cá nhân | — | Toàn bộ |
 | M09 Ví & thanh toán | Ví USD, tiền dùng thử, giữ/trừ/hoàn, giới hạn Free, nạp tiền sandbox, lịch sử chi tiêu | Gói đăng ký, hóa đơn, portal |
 | M10 Quản trị | Bảng giá, provider, style, giọng nạp bằng file cấu hình (seed); danh sách mời; trần chi tiêu ngày | Giao diện admin, giám sát job, điều chỉnh số dư, báo cáo |
 
@@ -115,7 +115,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-WLD-11 | Project Assets (hộp thoại quản trị đầy đủ): thêm, gỡ, bí danh, nhóm; xuất ZIP ảnh tài sản. | S | Sau | QS |
 | FR-WLD-12 | Thêm tài sản có sẵn từ thư viện cá nhân (M08); xóa vĩnh viễn khỏi thư viện (xác nhận 2 bước). | S | Sau | QS, QĐ-59 |
 
-### 2.5 M05 — Sinh tư liệu: ảnh + thuyết minh nguyên văn (MED) · lõi
+### 2.5 M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn (MED) · lõi
 
 > Bước 4 của luồng chính. Đầu ra **chỉ gồm ảnh minh họa và audio thuyết minh nguyên văn** của từng shot. Nhạc nền và SFX **không** sinh ở bước này; chúng được thêm trong trình chỉnh sửa video (M06). Storyboard chạy **tự động** bên trong bước này; màn hình Storyboard chỉ dùng để tinh chỉnh khi cần.
 

@@ -78,7 +78,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | POST | `/me:request-data-deletion` | U | *(sau MVP)* Yêu cầu xóa dữ liệu của ứng dụng (không xóa tài khoản SSO) |
 | GET | `/me/dashboard` | U | Trạng thái tài khoản (Free / Đã nạp tiền), số dư ví, phần Free đã dùng trong tháng, số dự án, link "Quản lý tài khoản" của SSO |
 
-### 2.2 Dự án & cộng tác (M02)
+### 2.2 Quản lý dự án & cộng tác (M02)
 
 | Method | Path | Quyền | Job | Mô tả |
 |---|---|---|---|---|
@@ -136,7 +136,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | CRUD | `/library-assets[/{id}]` | U | | *(sau MVP)* Thư viện cá nhân |
 | GET | `/styles` | P | | Danh mục style |
 
-### 2.5 Sinh tư liệu: storyboard, ảnh, thuyết minh (M05)
+### 2.5 Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn (M05)
 
 **Điều phối**
 

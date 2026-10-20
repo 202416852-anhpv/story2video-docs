@@ -1,0 +1,121 @@
+@startuml Seq_QuanLyDuAn
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+autonumber
+'@sau-mvp
+title UC-01.03 (+01.05) + UC-01.04 + UC-02.01 + UC-02.04 + UC-02.05 + UC-02.09 + UC-03.01 (+03.01a):\nDashboard, ngôn ngữ giao diện, danh sách / cài đặt / xóa dự án, bản đồ quy trình, xem và sao chép văn bản gốc; BR-04, BR-27
+'@/sau-mvp
+'@mvp title UC-01.03 (+01.05) + UC-01.04 + UC-02.01 + UC-02.04 + UC-02.05 + UC-02.09 + UC-03.01 (+03.01a) (MVP):\nDashboard, ngôn ngữ giao diện, danh sách / cài đặt / xóa dự án, bản đồ quy trình, xem và sao chép văn bản gốc; BR-04, BR-27
+
+actor Editor
+participant "Web App" as Web
+box "API Server" #F5F5F5
+participant "Middleware\n(authz)" as MW
+participant "AccountController\n(/me)" as ME
+participant "ProjectService" as PS
+participant "WalletService" as WAL
+participant "JobService" as JOBS
+end box
+database PostgreSQL as DB
+participant "SSO có sẵn" as SSO
+
+== Dashboard (UC-01.03, extend UC-01.05) ==
+Editor -> Web : Mở /dashboard
+Web -> ME : GET /me/dashboard
+ME -> DB : users (FREE / PAID), số dự án chưa xóa,\nrenders trong tháng (Free: số lần + phút, BR-27)
+ME -> WAL : balance(userId)
+WAL -> DB : wallets (available_micro, held_micro)
+alt không lấy được số dư (2a)
+    ME --> Web : 200, wallet = null
+    Web -> Editor : ô số dư "Đang cập nhật", phần còn lại vẫn hiện
+else
+    ME --> Web : 200 {accountStatus, availableUsd, heldUsd,\nfreeUsage, projects, ssoAccountUrl}
+end
+opt "Quản lý tài khoản" (UC-01.05)
+    Editor -> Web : bấm
+    Web -> SSO : mở trang tài khoản SSO (tab mới)
+    note right of SSO : Đổi email / tên trên SSO được đồng bộ\nở lần đăng nhập sau (UC-01.01b)
+end
+
+== Đổi ngôn ngữ giao diện (UC-01.04) ==
+Editor -> Web : chọn "Tiếng Việt" | "English"
+Web -> ME : PATCH /me {locale}
+ME -> DB : users.locale
+ME --> Web : 200
+Web -> Web : tải chuỗi giao diện theo locale\n(không đổi ngôn ngữ thuyết minh, UC-05.11)
+
+== Danh sách dự án (UC-02.01) ==
+Editor -> Web : Mở /projects (từ khóa, trạng thái, trang)
+Web -> PS : GET /projects?q=&status=
+'@sau-mvp
+PS -> DB : projects deleted_at IS NULL, User là Owner hoặc Editor
+'@/sau-mvp
+'@mvp PS -> DB : projects deleted_at IS NULL, User là Owner
+PS -> PS : status IN_PROGRESS / DONE suy ra từ trạng thái chương;\nlọc tiêu đề không phân biệt hoa thường, dấu (2c)
+PS --> Web : 200 {items[{title, cover, chapters, style, step 1–6, status, role}], next}
+alt chưa có dự án (2a)
+    Web -> Editor : "Import truyện" (UC-02.02) | "Tạo dự án trống" (UC-02.03)\n→ seq-import-chia-chuong
+end
+Editor -> Web : chọn dự án → Studio ở bước hiện tại
+
+== Bản đồ quy trình (UC-02.09, ✂2) ==
+Editor -> Web : Mở ?v=map
+Web -> PS : GET /projects/{pid}
+PS -> DB : đếm: văn bản, chương, tài sản có ảnh tham chiếu,\nchương READY_TO_EDIT, timeline đã chỉnh, bản xuất
+PS --> Web : 200 {progress[6]}
+Web -> Editor : 6 bước, làm nổi bật bước kế tiếp;\nbấm một bước → mở màn hình tương ứng
+
+== Cài đặt dự án (UC-02.04) ==
+Editor -> Web : Mở Settings, đổi style / mô hình ảnh / ngôn ngữ /\nthời lượng mục tiêu mỗi ảnh / tỷ lệ khung hình
+alt đổi style khi đã có ảnh (2a)
+    Web -> Editor : hỏi "Sinh lại tất cả ảnh tham chiếu" kèm giá\n(UC-04.03a → seq-the-gioi-truyen)
+else đổi tỷ lệ khi đã có timeline (2b)
+    Web -> Editor : cảnh báo ảnh sẽ crop / fit theo khung mới (UC-06.06)
+end
+Web -> MW : PATCH /projects/{pid} (If-Match: version)
+'@sau-mvp
+MW -> MW : là Owner? Editor chỉ xem (*a) → 403
+'@/sau-mvp
+'@mvp MW -> MW : là Owner? không → 403
+MW -> PS : update(fields)
+PS -> DB : UPDATE projects SET …, version = version + 1\nWHERE id = :pid AND version = :v
+alt 0 dòng (3a)
+    PS --> Web : 409 VERSION_CONFLICT {current}\n→ tải lại cài đặt, chọn lại
+else
+    PS --> Web : 200 "Đã lưu" (áp cho các lần sinh sau)
+end
+
+== Xóa dự án (UC-02.05) ==
+Editor -> Web : "Xóa dự án"
+Web -> Editor : hệ quả: số chương, tư liệu, bản xuất;\nnhập tên dự án để xác nhận
+alt có job RUNNING (2a)
+    Web -> Editor : chờ job kết thúc hoặc "Hủy và xóa"
+end
+Web -> MW : DELETE /projects/{pid}
+MW -> PS : delete (chỉ Owner)
+PS -> DB : BEGIN
+PS -> JOBS : cancelAll(projectId): job QUEUED → CANCELLED,\nRELEASE toàn bộ tiền đang giữ, trả chỗ ngân sách ngày\n(seq-vong-doi-job §5)
+PS -> DB : projects.deleted_at = now(); audit_logs; COMMIT
+PS --> Web : 204
+'@sau-mvp
+PS -> PS : thông báo thành viên dự án (cộng tác)
+'@/sau-mvp
+note over PS, DB : Mọi thành viên mất quyền ngay; xóa cứng dự án + media sau 30 ngày\n(job dọn dữ liệu của Scheduler, 04 §5). Free được tạo dự án mới ngay sau khi xóa.
+
+== Xem và sao chép văn bản gốc (UC-03.01, extend UC-03.01a) ==
+Editor -> Web : Mở ?v=source
+Web -> PS : GET /projects/{pid}/source
+PS -> DB : chapters theo order_index (title, content)
+PS --> Web : 200 {chapters[], totalChars}
+Web -> Editor : toàn văn, ranh giới chương, nút "Split here"\n(UC-03.03, UC-03.04 → seq-import-chia-chuong)
+opt "Copy text" (UC-03.01a)
+    Web -> Web : ghép tiêu đề + nội dung từng chương,\ncách nhau một dòng trống
+    alt trình duyệt chặn clipboard (3a)
+        Web -> Editor : hộp văn bản đã chọn sẵn để tự sao chép
+    else
+        Web -> Editor : "Đã sao chép N ký tự"
+    end
+end
+@enduml

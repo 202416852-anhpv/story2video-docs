@@ -52,12 +52,14 @@ stop
 floating note right
   Reconciler mỗi 5 phút:
   job RUNNING mất heartbeat > 10 phút
-  → FAILED + RELEASE.
+  → FAILED; job gốc CAPTURE phần con đã xong,
+  RELEASE phần còn lại. Job cha còn con
+  chưa kết thúc không tính là treo (QĐ-134).
   Reconciler hằng ngày:
   Σ sổ cái == số dư ví; mỗi job CAPTURE + RELEASE = HOLD
   (IC-05), lệch → cảnh báo P1;
   spent của ngày == Σ ai_usage_records.
-  Job QUEUED > 1 phút không có trong queue
-  → đẩy lại (ADR-23).
+  Reconciler mỗi 1 phút: job QUEUED > 1 phút
+  không có trong queue → đẩy lại (ADR-23).
 end note
 @enduml

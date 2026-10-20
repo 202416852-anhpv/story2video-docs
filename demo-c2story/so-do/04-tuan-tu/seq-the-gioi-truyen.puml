@@ -4,7 +4,10 @@ skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 skinparam responseMessageBelowArrow true
 autonumber
+'@sau-mvp
 title UC-04.01 (+04.01a) + UC-04.02a + UC-04.03 (+04.03a) + UC-04.04 + UC-04.07..04.09: Phân tích tài sản bằng AI,\nduyệt đề xuất, ảnh tham chiếu, ảnh nguyên bản, dòng thời gian và quan hệ; BR-08, BR-14, WR-05, 05 §7.4
+'@/sau-mvp
+'@mvp title UC-04.01 (+04.01a) + UC-04.02a + UC-04.03 (+04.03a) + UC-04.04 + UC-04.07..04.09 (MVP): Phân tích tài sản bằng AI,\nduyệt đề xuất, ảnh tham chiếu, ảnh nguyên bản, dòng thời gian và quan hệ; BR-08, BR-14, WR-05, 05 §7.4
 
 actor Editor
 participant "Web App\n(Story Assets)" as Web

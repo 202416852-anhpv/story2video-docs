@@ -1,6 +1,6 @@
 # M01 — Tích hợp SSO & hồ sơ
 
-> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m01-tich-hop-sso.puml`, `../../so-do/04-tuan-tu/seq-dang-nhap-sso.puml`. Yêu cầu: FR-AUTH-01..13. Quy tắc: BR-28, BR-30, BR-31. Đăng ký, mật khẩu và MFA thuộc SSO; ứng dụng **không** phát triển lại (C-05).
+> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m01-tich-hop-sso.puml`, `../../so-do/04-tuan-tu/seq-dang-nhap-sso.puml`, `seq-quan-ly-du-an.puml` (Dashboard, ngôn ngữ). Yêu cầu: FR-AUTH-01..13. Quy tắc: BR-28, BR-30, BR-31. Đăng ký, mật khẩu và MFA thuộc SSO; ứng dụng **không** phát triển lại (C-05).
 > **SSO:** Keycloak tự dựng từ P0; SSO Vbee ở P3 qua cùng `IdentityProviderPort` (ADR-20). Nếu Vbee chỉ có OAuth 2.0, bước xác thực ID token (UC-01.01a) được thay bằng gọi userinfo với access token (QĐ-23).
 
 ---
@@ -209,7 +209,7 @@
 | Hậu điều kiện | **Thành công:** hiển thị số liệu mới nhất |
 | Kích hoạt | Mở `/dashboard` |
 | Quan hệ | được mở rộng bởi UC-01.05 |
-| Truy vết | FR-AUTH-09; FR-BIL-05, 12; API 2.1 `GET /me/dashboard` |
+| Truy vết | FR-AUTH-09; FR-BIL-05, 12; API 2.1 `GET /me/dashboard`; seq-quan-ly-du-an |
 | Giai đoạn | P2 |
 
 **Luồng chính**
@@ -232,7 +232,7 @@
 | Tiền điều kiện | Đã đăng nhập (Guest đổi được tạm thời qua cookie) |
 | Hậu điều kiện | **Thành công:** `users.locale` cập nhật; giao diện hiển thị theo ngôn ngữ mới |
 | Kích hoạt | Chọn ngôn ngữ ở menu |
-| Truy vết | FR-AUTH-08 |
+| Truy vết | FR-AUTH-08; seq-quan-ly-du-an |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -256,7 +256,7 @@
 | Hậu điều kiện | **Thành công:** trang SSO mở trong tab mới |
 | Kích hoạt | Bấm "Quản lý tài khoản" |
 | Quan hệ | extend UC-01.03 |
-| Truy vết | FR-AUTH-09, C-05 |
+| Truy vết | FR-AUTH-09, C-05; seq-quan-ly-du-an |
 | Giai đoạn | P2 |
 
 **Luồng chính**
