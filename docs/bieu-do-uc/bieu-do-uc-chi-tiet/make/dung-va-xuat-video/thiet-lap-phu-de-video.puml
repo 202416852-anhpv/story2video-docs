@@ -7,9 +7,9 @@ actor "Dịch vụ AI" as AI_Service
 rectangle "Thiết lập phụ đề video" {
     usecase "Tự động tạo phụ đề đồng bộ theo giọng đọc" as UC_01
     usecase "Bật / Tắt hiển thị phụ đề trên video" as UC_02
-    usecase "Áp dụng mẫu Preset phụ đề có sẵn" as UC_03
+    usecase "Chọn phong cách cho phụ đề" as UC_03
     usecase "Tùy biến phông chữ, cỡ chữ & màu sắc phụ đề" as UC_04
-    usecase "Tùy chỉnh hiệu ứng hiển thị & Highlight từ đang đọc" as UC_05
+    usecase "Thiết lập hiệu ứng Highlight từ đang đọc" as UC_05
     usecase "Điều chỉnh vị trí hiển thị phụ đề trên khung hình" as UC_06
 }
 
