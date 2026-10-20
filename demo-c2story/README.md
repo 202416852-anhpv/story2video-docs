@@ -109,7 +109,7 @@ demo-c2story/
 | `03-kien-truc/` | `c4-context`, `c4-container`, `c4-component-api`, `c4-component-ai`, `c4-component-editor`, `deployment` |
 | `04-tuan-tu/` | `seq-dang-nhap-sso`, `seq-import-chia-chuong`, `seq-storyboard-sinh-anh`, `seq-director`, `seq-sinh-tu-lieu`, `seq-thuyet-minh-nguyen-van`, `seq-chinh-sua-xuat-video`, `seq-cong-tac-xung-dot`, `seq-thanh-toan` |
 | `05-hoat-dong/` | `act-quy-trinh-project`, `act-giu-tru-credit`, `act-phu-kin-van-ban` |
-| `06-trang-thai/` | `state-job`, `state-chapter-media`, `state-narration-render`, `state-director-plan`, `state-subscription` |
+| `06-trang-thai/` | `state-job`, `state-chapter-media`, `state-narration-render`, `state-director-plan`, `state-tool-proposal`, `state-subscription` |
 
 Render toàn bộ sơ đồ (cần Java và Graphviz), chạy trong `demo-c2story/`:
 
@@ -132,3 +132,6 @@ java -DPLANTUML_LIMIT_SIZE=16384 -jar plantuml.jar -tpng "so-do/**.puml"
 | 1.6 | 2026-10-19 | Đặc tả đầy đủ **165 use case** (mã `UC-xx.yy`, ghi trên sơ đồ phân rã), tách theo phân hệ trong `tai-lieu/03-dac-ta-use-case/` |
 | 1.7 | 2026-10-19 | Mô hình dữ liệu 2.0: 55 bảng, 6 nhóm theo luồng; thêm audit, outbox, idempotency, đề xuất tool Director, gợi ý SFX, gán người nói; cột trạng thái chương `media_status` |
 | 1.8 | 2026-10-19 | Kiến trúc 2.0: ánh xạ luồng 6 bước ↔ module/queue/bảng; module theo M01–M10 + lớp platform; Scheduler, Media Processing Worker; điều phối Sinh tư liệu bằng BullMQ Flows; thành phần trình chỉnh sửa; ADR-15..19; thêm `c4-component-api`, `c4-component-editor` |
+| 1.9 | 2026-10-20 | Bổ sung từ bản nháp `docs/`: tìm/lọc dự án, trạng thái dự án suy ra (UC-02.01); xem timeline truyện theo mạch/thời gian, thêm `chrono_index` (UC-04.07, UC-04.09); thay ảnh shot bằng ảnh tải lên, `edit_kind = UPLOAD`, endpoint `:upload`, mở rộng BR-14 (UC-05.10); vùng an toàn & lưới (UC-06.06); preset phụ đề (UC-06.08) ; chuẩn hóa tên use case theo quy cách mới (00-muc-luc §2) |
+| 1.10 | 2026-10-20 | Đặc tả chi tiết **57 use case con** (include/extend) theo khung đầy đủ: tác nhân, tiền/hậu điều kiện, kích hoạt, truy vết, luồng chính và luồng thay thế / ngoại lệ |
+| 1.11 | 2026-10-20 | Cập nhật 10 sơ đồ tuần tự, hoạt động và trạng thái theo đặc tả use case con (đăng nhập SSO, nhập / nhập lại, xung đột khi lưu, thuyết minh nguyên văn, trình chỉnh sửa & xuất, Director, sinh tư liệu, thanh toán, phủ kín văn bản); thêm `state-tool-proposal` |
