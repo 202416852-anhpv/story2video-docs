@@ -8,7 +8,7 @@ rectangle "Thiết lập khung hình & Bố cục video" {
     usecase "Tùy chỉnh màu sắc phông nền" as UC_02
     usecase "Áp dụng hiệu ứng phông nền làm mờ" as UC_03
     usecase "Cấu hình chế độ hiển thị ảnh/video (Fit / Fill)" as UC_04
-    usecase "Bật / Tắt khung an toàn & Lưới căn chỉnh (Safe Zone)" as UC_05
+    usecase "Bật / Tắt lưới căn chỉnh bố cục" as UC_05
 }
 
 User --> UC_01

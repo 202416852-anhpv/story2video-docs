@@ -2,35 +2,22 @@
 left to right direction
 
 actor "Người dùng" as User
-actor "Dịch vụ AI" as AI_Service
-actor "Hệ thống kết xuất (Renderer)" as Render_Service <<System>>
+actor "Hệ thống Render" as Render_Service
 
 rectangle "Xem trước & Xuất video" {
-    usecase "Xem trước video đồng bộ đa track (Canvas Preview)" as UC_01
-    usecase "Tua và điều hướng dòng thời gian phát" as UC_02
-    usecase "Sinh toàn bộ âm thanh TTS trước khi phát / xuất" as UC_03
-    usecase "Yêu cầu xuất video thành phẩm" as UC_04
-    usecase "Xuất video qua Cloud Server (FFmpeg Backend)" as UC_04_1
-    usecase "Xuất video cục bộ qua Desktop Agent (GPU HW)" as UC_04_2
-    usecase "Theo dõi tiến độ kết xuất video" as UC_05
-    usecase "Tải xuống video MP4 hoàn chỉnh" as UC_06
+    usecase "Xem trước video" as UC_01
+    usecase "Tua và tạm dừng video" as UC_02
+    usecase "Xuất video" as UC_04
+    usecase "Theo dõi tiến độ render video" as UC_05
+    usecase "Tải video" as UC_06
 }
 
 User --> UC_01
 User --> UC_02
 User --> UC_04
 
-UC_01 ..> UC_03 : <<include>>
-UC_04 ..> UC_03 : <<include>>
-UC_03 --> AI_Service
-
-UC_04 <|-- UC_04_1
-UC_04 <|-- UC_04_2
-
-UC_04_1 --> Render_Service
-UC_04_2 --> Render_Service
-
 UC_04 ..> UC_05 : <<include>>
 UC_04 <.. UC_06 : <<extend>>
 
+UC_04 --> Render_Service
 @enduml

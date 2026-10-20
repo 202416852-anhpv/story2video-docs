@@ -4,27 +4,47 @@ left to right direction
 actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
 
-rectangle "Dựng video trên timeline đa lớp" {
-    usecase "Tự động xây dựng timeline từ kịch bản phân cảnh" as UC_01
-    usecase "Kéo thả sắp xếp thứ tự các khối" as UC_02
-    usecase "Co giãn & Cắt xén khối giọng đọc (Voice Track)" as UC_03
-    usecase "Cắt xén & Căn chỉnh thời lượng ảnh/video (Media Track)" as UC_04
-    usecase "Chèn & Lặp lại nhạc nền / hiệu ứng âm thanh (BGM & SFX)" as UC_05
-    usecase "Điều chỉnh âm lượng từng track" as UC_06
-    usecase "Thu phóng dòng thời gian" as UC_07
-    usecase "Hoàn tác & Làm lại (Undo / Redo)" as UC_08
+rectangle "Dựng video trên Timeline đa lớp" {
+    ' --- USE CASE MỤC TIÊU CỐT LÕI (SEA LEVEL) ---
+    usecase "Tự động xây dựng Timeline từ kịch bản phân cảnh" as UC_Auto
+    usecase "Quản lý và điều khiển Track" as UC_Track
+    usecase "Biên tập khối nội dung trên Timeline" as UC_Clip
+    usecase "Thêm hiệu ứng chuyển cảnh giữa các phân cảnh" as UC_Trans
+    usecase "Cấu hình hiệu ứng âm thanh nhỏ dần" as UC_Fade
+
+    ' --- CÁC THAO TÁC MỞ RỘNG CỦA TRACK ---
+    usecase "Khóa / Mở khóa track" as UC_Track_Lock
+    usecase "Bật / Tắt tiếng track âm thanh" as UC_Track_Mute
+    usecase "Ẩn / Hiện track hiển thị" as UC_Track_Hide
+    usecase "Điều chỉnh âm lượng track" as UC_Track_Vol
+
+    ' --- CÁC THAO TÁC MỞ RỘNG BIÊN TẬP KHỐI ---
+    usecase "Cắt tách khối" as UC_Clip_Split
+    usecase "Co giãn & Căn chỉnh thời lượng khối" as UC_Clip_Trim
+    usecase "Kéo thả sắp xếp thứ tự khối" as UC_Clip_Move
+    usecase "Xóa khối khỏi Timeline" as UC_Clip_Del
 }
 
-User --> UC_01
-User --> UC_06
-User --> UC_07
-User --> UC_08
+' Người dùng chỉ kết nối tới các mục tiêu chính
+User --> UC_Auto
+User --> UC_Track
+User --> UC_Clip
+User --> UC_Trans
+User --> UC_Fade
 
-UC_01 --> AI_Service
+' Quan hệ mở rộng (Extend) của nhóm Track
+UC_Track <.. UC_Track_Lock : <<extend>>
+UC_Track <.. UC_Track_Mute : <<extend>>
+UC_Track <.. UC_Track_Hide : <<extend>>
+UC_Track <.. UC_Track_Vol  : <<extend>>
 
-UC_08 ..> UC_02 : <<extend>>
-UC_08 ..> UC_03 : <<extend>>
-UC_08 ..> UC_04 : <<extend>>
-UC_08 ..> UC_05 : <<extend>>
+' Quan hệ mở rộng (Extend) của nhóm Biên tập khối
+UC_Clip <.. UC_Clip_Split : <<extend>>
+UC_Clip <.. UC_Clip_Trim  : <<extend>>
+UC_Clip <.. UC_Clip_Move  : <<extend>>
+UC_Clip <.. UC_Clip_Del   : <<extend>>
+
+' AI hỗ trợ khởi tạo
+UC_Auto --> AI_Service
 
 @enduml
