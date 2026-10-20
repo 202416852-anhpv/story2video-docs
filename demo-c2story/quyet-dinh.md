@@ -2,7 +2,7 @@
 
 > Ghi các quyết định đã chốt của nhóm (ngày, nội dung, lý do). Không cần duyệt riêng; khi bất đồng, PO quyết định cuối (QĐ-50).
 > Nguồn: 4 vòng câu hỏi chốt phạm vi và kế hoạch ngày 2026-10-20 (file câu hỏi đã được xóa sau khi chốt; nội dung trả lời được ghi đầy đủ ở đây). Mã ở cột Nguồn: **A/B/C/D…** = vòng 1, **V2 / V3 / V4 + số câu** = vòng 2–4.
-> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16.
+> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16; mục 11 áp ở phiên bản 1.18.
 
 ## 1. Bối cảnh, năng lực, lộ trình
 
@@ -72,7 +72,7 @@
 | QĐ-59 | Tách FR-WLD-05: gỡ tài sản khỏi dự án là M (FR-WLD-05); thư viện là S (FR-WLD-12) | B7 | 02 |
 | QĐ-60 | Lời thoại một giọng kể trong MVP; đa giọng sau. Ngôn ngữ thuyết minh lúc ra mắt: tiếng Việt và tiếng Anh. Tiêu đề chương không đọc | 09 §6 câu 5–7 | 02 |
 | QĐ-61 | Giữ **Map** (UC-02.09) trong MVP nhưng ở **đầu** thứ tự cắt giảm | V4 4 | 02, 09 |
-| QĐ-62 | Đưa **Vbee AIVoice** vào danh sách provider TTS so sánh ở P0 | V3 6 | 05 §7.3, 09 |
+| QĐ-62 | ~~Đưa **Vbee AIVoice** vào danh sách provider TTS so sánh ở P0~~ (thay bằng QĐ-121: Vbee AIVoice sau MVP) | V3 6 | 05 §7.3, 09 |
 
 ## 6. Kiểm thử và UAT
 
@@ -130,3 +130,23 @@ Nguồn: đánh giá kế hoạch với vai trò AI Engineer. Ý chính: các ng
 |---|---|---|
 | QĐ-80 | Từ điển phát âm nằm trong thứ tự cắt giảm (cuối cùng, vị trí 5). Nếu bị cắt, mục tiêu WER ≤ 3% chỉ còn dựa vào chọn provider ở P0. Ghi vào R-06 | V4 lưu ý |
 | QĐ-81 | Kế hoạch chỉ vừa khít nếu Coding Agent giúp được ít nhất 1,5 lần năng suất (R-12); được giảm bớt bằng QĐ-91, QĐ-94 | V3 4 |
+
+## 11. Tích hợp hệ thống AI bên ngoài (2026-10-20)
+
+Nguồn: [13 — Tích hợp hệ thống AI bên ngoài](tai-lieu/13-tich-hop-he-thong-ai.md). PO chọn lại nhà cung cấp và duyệt cả 8 đề xuất ĐX-AI-01..08. QĐ-121 thay QĐ-62.
+
+| Mã | Quyết định | Tài liệu |
+|---|---|---|
+| QĐ-119 | **LLM: Google Gemini.** Mô hình nhanh (Flash) cho tác vụ thường; mô hình mạnh (Pro) cho storyboard, phân tích dài, Director *(sau MVP)*. Mã mô hình chốt ở P0 theo eval. MVP không seed provider LLM khác; port vẫn giữ để đổi sau (AG-02) | 05 §7.3; 13 §1.1 |
+| QĐ-120 | **Ảnh: Google Gemini Image** cho ảnh tham chiếu, ảnh shot, sửa ảnh. P0 đo Gemini Image theo ngưỡng 09 §1.5; không đạt thì áp quy tắc dự phòng (QĐ-97), gồm thử thêm một provider | 05 §7.3; 09 §1.2, §1.5 |
+| QĐ-121 | **TTS: MVP dùng model tự host** (mã nguồn mở, tiếng Việt và tiếng Anh, giấy phép cho phép dùng trong đồ án), chạy thành **TTS Server** nội bộ trên GPU (ADR-30). P0 chọn model trong 2–3 ứng viên bằng `EVAL-wer-golden`, `EVAL-alignment`, `BENCH-tts`. **Sau MVP: Vbee AIVoice** qua adapter `TtsPort`. Thay QĐ-62 | 02 IF-05; 05 §4, §7.3, ADR-30; 09 |
+| QĐ-122 | **Aligner / STT giữ nguyên:** WhisperX tự host (MFA thay thế). TTS tự host không trả timestamp tin cậy nên **Alignment Worker bắt buộc trong MVP** (bỏ điều kiện "tùy chọn" của ADR-23) | 05 §4.1 |
+| QĐ-123 | **Chi phí TTS tự host** tính theo giây GPU: `ai_models.unit_cost_usd` (đơn vị `SECONDS`) = giá thuê GPU một giờ / 3.600, đo ở P0. Giá vẫn × 110% và tính vào trần chi tiêu ngày như provider ngoài. Chi phí máy GPU lúc rảnh thuộc ngân sách hạ tầng | 08 §3.2; 09 §1.7 |
+| QĐ-124 | (ĐX-AI-01) **Fallback chỉ áp cho LLM**, giữa các mô hình Gemini. Ảnh và TTS ghim theo dự án / giọng; circuit breaker mở thì job lỗi tạm thời, không đổi provider | 05 §7.1 |
+| QĐ-125 | (ĐX-AI-02) Chỉ fallback sang mô hình có `unit_cost_usd` ≤ mô hình đã báo giá | 05 §6.1, §7.1; 08 §3.1 |
+| QĐ-126 | (ĐX-AI-03) **Timeout** mỗi lời gọi: LLM 120 s, ảnh 90 s, TTS ≥ 2× thời lượng audio dự kiến (tối thiểu 30 s), nghe thử 15 s; quá hạn là lỗi tạm thời | 07 NFR-REL-04 |
+| QĐ-127 | (ĐX-AI-04) `ai_usage_records` ghi thêm `prompt_version` và `seed` (nếu provider hỗ trợ) để tái lập kết quả LLM; không lưu toàn văn prompt LLM | 04 §3 |
+| QĐ-128 | (ĐX-AI-05) Dùng Gemini API **gói trả phí** (không dùng gói miễn phí, vì dữ liệu gói miễn phí có thể được dùng để cải thiện sản phẩm; kiểm lại điều khoản ở P0). Thông báo đồng ý (BR-31) nêu tên Google là bên nhận văn bản truyện và ảnh; TTS tự host không gửi văn bản ra ngoài | 08 BR-31 |
+| QĐ-129 | (ĐX-AI-06) Báo giá chỉ dùng hệ số ký tự/token cục bộ; tokenizer thật chỉ dùng để hiệu chỉnh hệ số ở P0 | 05 §7.1 |
+| QĐ-130 | (ĐX-AI-07) Ghi bảng ánh xạ `jobs.type` ↔ `price_rules.operation` vào 08 §3.2 | 08 §3.2 |
+| QĐ-131 | (ĐX-AI-08) **Nghe thử phát âm là ngoại lệ đồng bộ** của AG-01: báo giá → giữ chỗ trần ngày + HOLD → gọi TTS (timeout 15 s, không thử lại) → CAPTURE/RELEASE trong cùng request; vẫn ghi `ai_usage_records` | 05 AG-01, §6.1; 06 |

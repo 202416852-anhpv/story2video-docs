@@ -42,7 +42,7 @@ Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, 5 tu�
 
 ## Cấu trúc tài liệu và truy vết
 
-- `tai-lieu/01` BRD → `02` SRS (FR, cột Ưu tiên MoSCoW + **GĐ**) → `03` use case (Cockburn) → `04` dữ liệu → `05` kiến trúc (ADR; §4.1 cấu hình rút gọn cho MVP theo ADR-23) → `06` API → `07` NFR → `08` quy tắc nghiệp vụ & tính phí → `09` kế hoạch + RTM → `10` thuật ngữ → `11` backlog → `12` đặc tả kỹ thuật lõi (tách câu, ánh xạ timestamp, `timeline_snapshot`).
+- `tai-lieu/01` BRD → `02` SRS (FR, cột Ưu tiên MoSCoW + **GĐ**) → `03` use case (Cockburn) → `04` dữ liệu → `05` kiến trúc (ADR; §4.1 cấu hình rút gọn cho MVP theo ADR-23) → `06` API → `07` NFR → `08` quy tắc nghiệp vụ & tính phí → `09` kế hoạch + RTM → `10` thuật ngữ → `11` backlog → `12` đặc tả kỹ thuật lõi (tách câu, ánh xạ timestamp, `timeline_snapshot`) → `13` tích hợp AI bên ngoài (tổng hợp, nguồn sự thật vẫn là 05/08/09/12).
 - `tai-lieu/schemas/timeline-snapshot.schema.json` là hợp đồng giữa API, preview và render; sửa schema thì sửa luôn file ví dụ cạnh nó và kiểm lại (`jsonschema` Draft 2020-12), cùng các ca SNP-T* ở 12 §3.2.
 - `quyet-dinh.md` là sổ quyết định (`QĐ-xx`); mọi thay đổi phạm vi/kế hoạch ghi vào đây trước, các tài liệu khác dẫn mã QĐ ở cột Nguồn.
 - Mỗi UC có mục **Truy vết** (FR, BR, IC, NFR, API, sơ đồ); RTM gộp Truy vết của UC gốc và UC con.
@@ -56,6 +56,7 @@ Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, 5 tu�
 - **Tốc độ đọc**: clip thuyết minh đổi tốc độ bằng file audio dẫn xuất sinh ở server, preview và render cùng phát ở tốc độ 1,0 (ADR-24); không dùng `playbackRate` của trình duyệt.
 - **Trần chi tiêu ngày** phải giữ chỗ nguyên tử trên `daily_ai_budgets` cùng giao dịch với HOLD (ADR-25), không đọc-rồi-so-sánh.
 - **Offset văn bản** luôn là code unit UTF-16 trên văn bản NFC (ADR-26); không dùng `char_length()` của Postgres cho phủ kín hay cắt văn bản.
+- **Nhà cung cấp AI** (QĐ-119..123): LLM và ảnh là Google Gemini; TTS trong MVP là model tự host (TTS Server, ADR-30), Vbee AIVoice sau MVP; Aligner/STT là WhisperX tự host; fallback chỉ cho LLM, không đổi provider ảnh/TTS giữa chừng.
 - **Job**: bảng `jobs` là nguồn sự thật, BullMQ chỉ vận chuyển; nhận việc bằng `UPDATE … WHERE status IN (…)`; giới hạn đồng thời theo người dùng bằng semaphore Redis, không dùng BullMQ Pro groups (ADR-28, ADR-29).
 - **Tiền**: không còn "credit". Ví USD lưu micro-USD; giá = chi phí thực của provider × 110%; giữ giá ước tính tối đa → trừ chi phí thực → hoàn phần dư; tài khoản Free / Đã nạp tiền; trần chi tiêu AI $10/ngày.
 - **MVP chỉ có Owner**; Editor, cộng tác, AI Director (M07), thư viện (M08) là sau MVP nhưng đặc tả vẫn giữ.

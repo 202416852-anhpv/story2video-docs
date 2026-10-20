@@ -9,9 +9,9 @@ System(studio, "AI Story Studio", "6 bước: nhập truyện → chia chương 
 
 System_Ext(sso, "SSO", "Keycloak tự dựng; SSO Vbee trước khi bảo vệ - đăng ký, đăng nhập, đăng xuất, MFA (không phát triển lại)")
 System_Ext(pay, "Stripe (test mode)", "Checkout nạp tiền, webhook; subscription sau MVP")
-System_Ext(llm, "LLM Provider", "Chia chương, phân tích, storyboard, viết lại brief, Director (sau MVP)")
-System_Ext(img, "Image Provider", "Sinh và sửa ảnh có tham chiếu")
-System_Ext(tts, "TTS Provider", "Giọng đọc nguyên văn (ứng viên P0 gồm Vbee AIVoice)")
+System_Ext(llm, "Google Gemini (LLM)", "Chia chương, phân tích, storyboard, viết lại brief, Director (sau MVP)")
+System_Ext(img, "Google Gemini Image", "Sinh và sửa ảnh có tham chiếu")
+System_Ext(tts, "Vbee AIVoice (TTS)", "Giọng đọc nguyên văn; thay TTS tự host của MVP")
 System_Ext(stt, "Aligner / STT", "Timestamp từng từ; WER cho bộ đánh giá P0 và kiểm chứng từng shot (sau MVP)")
 System_Ext(mail, "Email Service", "Cảnh báo trần chi tiêu cho Admin, thông báo xuất video")
 System_Ext(store, "Object Storage + CDN", "S3 / R2 / MinIO")

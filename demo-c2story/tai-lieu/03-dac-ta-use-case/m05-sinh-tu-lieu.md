@@ -683,6 +683,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **1a.** Vượt 500 mục hoặc trùng từ viết: báo lỗi.
+- **1b.** Giọng của dự án thuộc TTS tự host (MVP, ADR-30): chỉ cho chọn kiểu alias; giao diện gợi ý viết lại cách đọc bằng chữ thay cho phoneme.
 
 ---
 
@@ -762,6 +763,7 @@
 **Luồng thay thế / ngoại lệ**
 - **4a.** Kiểm tra ngược thất bại (có từ bị thêm, bớt hoặc đổi): không gọi TTS, Narration `FAILED`, RELEASE tiền đã giữ, cảnh báo P1 vì đây là lỗi vi phạm bất biến [ĐX].
 - **2a.** Mục từ điển lỗi cú pháp phoneme: bỏ qua mục đó, ghi vào `normalization_log` và cảnh báo trong kết quả.
+- **2b.** Giọng thuộc TTS tự host (MVP, ADR-30): mục `PHONEME` bị bỏ qua như 2a; SSML vẫn sinh để lưu và kiểm tra ngược, adapter chỉ gửi bản đọc chữ thuần.
 - **1a.** Đoạn nguồn chỉ gồm dòng phân cách (SYM-05): không gọi TTS; tạo Narration `DONE` là khoảng lặng 0,5 s, không có `word_timings`, không có phụ đề (BR-22).
 - **1b.** Quy tắc ký hiệu bị tắt ở dự án: ký hiệu được giữ trong bản đọc và gửi nguyên cho TTS.
 

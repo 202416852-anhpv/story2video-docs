@@ -73,6 +73,7 @@
 | **Job** | Tác vụ bất đồng bộ (thường gọi AI) có vòng đời và chi phí |
 | **AI Gateway** | Lớp nội bộ chuẩn hóa việc gọi nhiều nhà cung cấp AI |
 | **Adapter / Port** | Mẫu thiết kế tách interface (port) khỏi cài đặt theo provider (adapter) |
+| **TTS Server** | Dịch vụ nội bộ chạy model TTS mã nguồn mở trên GPU của nhóm, dùng cho thuyết minh trong MVP (ADR-30); sau MVP thay bằng Vbee AIVoice |
 | **Outbox pattern** | Ghi sự kiện vào DB trong cùng giao dịch, sau đó mới đẩy ra queue, để không mất job |
 | **Idempotency-Key** | Khóa giúp gửi lại cùng request mà không tạo trùng job hoặc trừ tiền hai lần |
 | **Clean-room** | Phát triển lại từ hành vi quan sát được, không dùng mã, tài nguyên hay khóa của hệ thống gốc |

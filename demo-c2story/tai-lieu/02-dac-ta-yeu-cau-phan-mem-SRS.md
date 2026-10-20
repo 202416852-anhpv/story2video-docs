@@ -289,10 +289,10 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | Mã | Giao diện | Năng lực cần có |
 |---|---|---|
 | IF-01 | Web UI | Responsive; Studio tối ưu desktop ≥ 1280px; tablet ≥ 768px chỉ đọc và chỉnh nhẹ |
-| IF-02 | LLM | Chat completion, structured output (JSON Schema), tool calling, streaming, context ≥ 128k token; trả số token dùng để tính chi phí thực |
-| IF-03 | Image | Text-to-image có ảnh tham chiếu (≥ 3 ảnh), edit theo hướng dẫn bằng lời |
-| IF-04 | Forced aligner / STT | Timestamp cấp từ cho audio + văn bản đã biết (tiếng Việt, tiếng Anh) khi TTS không trả timestamp; STT để tính WER (bộ đánh giá ở P0; kiểm chứng từng shot sau MVP) |
-| IF-05 | TTS | TTS chất lượng cao tiếng Việt và tiếng Anh, hỗ trợ SSML (alias/phoneme/break), trả timestamp nếu có, đọc **đúng văn bản đầu vào** (không "cải biên"). Ứng viên P0 gồm cả Vbee AIVoice (QĐ-62) |
+| IF-02 | LLM (Google Gemini, QĐ-119) | Chat completion, structured output (JSON Schema), tool calling, streaming, context ≥ 128k token; trả số token dùng để tính chi phí thực |
+| IF-03 | Image (Google Gemini Image, QĐ-120) | Text-to-image có ảnh tham chiếu (≥ 3 ảnh), edit theo hướng dẫn bằng lời |
+| IF-04 | Forced aligner / STT (WhisperX tự host) | Timestamp cấp từ cho audio + văn bản đã biết (tiếng Việt, tiếng Anh) khi TTS không trả timestamp; STT để tính WER (bộ đánh giá ở P0; kiểm chứng từng shot sau MVP) |
+| IF-05 | TTS | TTS chất lượng cao tiếng Việt và tiếng Anh, đọc **đúng văn bản đầu vào** (không "cải biên"). **MVP: model tự host** trên GPU của nhóm, nhận chữ thuần (không cần SSML; ngắt nghỉ do adapter chèn, cách đọc riêng bằng alias), timestamp lấy từ aligner (QĐ-121, ADR-30). **Sau MVP: Vbee AIVoice**, dùng SSML (alias/phoneme/break) và timestamp nếu có |
 | IF-09 | Render engine | FFmpeg (zoompan, xfade, subtitles/ASS, sidechaincompress để ducking, rubberband/atempo để đổi tốc độ giữ cao độ) hoặc Remotion; chạy trong hạ tầng của hệ thống |
 | IF-06 | Payment | Checkout có host ở chế độ sandbox, webhook có chữ ký; portal sau MVP |
 | IF-07 | Object storage | S3-compatible, presigned URL |

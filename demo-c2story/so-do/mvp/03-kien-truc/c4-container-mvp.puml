@@ -10,7 +10,8 @@ System_Boundary(sys, "AI Story Studio") {
     Container(web, "Web App", "Next.js, React, Zustand, Remotion Player, WebAudio", "Studio, trình chỉnh sửa timeline + preview, media bin, ví, màn hình đồng ý dữ liệu")
     Container(api, "API Server", "NestJS, TS", "BFF/OIDC, danh sách mời, authz, nghiệp vụ, BudgetGuard + HOLD, enqueue sau commit, webhook, SSE")
         Container(worker, "Worker (một tiến trình, ADR-23)", "Node.js, BullMQ Flows", "Mọi queue: orchestrator, llm, image, tts, media-proc (quét virus, chuyển mã, waveform, đổi tốc độ audio); job lặp: reconciler, cảnh báo trần ngày; quyết toán chi phí thực × 110%")
-    Container(align, "Alignment Worker (tùy chọn)", "Python, WhisperX/MFA", "Chỉ khi provider TTS không trả timestamp (ADR-23)")
+    Container(tts, "TTS Server (tự host)", "Python, model TTS mã nguồn mở, GPU", "Bản đọc chữ thuần → audio; HTTP nội bộ (ADR-30)")
+    Container(align, "Alignment Worker", "Python, WhisperX/MFA, GPU", "align: word timings cho audio của TTS tự host (QĐ-122)")
     Container(render, "Render Worker", "Remotion + FFmpeg", "render: timeline_snapshot → MP4, SRT/VTT; watermark Free")
     Container(gw, "AI Gateway", "Thư viện nội bộ", "Adapter thật + mock, PriceEstimator, prompt compiler, speech normalizer (ký hiệu SYM), coverage validator, moderation, usage")
     Container(cli, "Admin CLI / seed", "Node.js", "pnpm seed (giá, provider, style, giọng, system_settings); pnpm admin:invites")
@@ -21,7 +22,7 @@ System_Boundary(sys, "AI Story Studio") {
 
 System_Ext(sso, "SSO", "Keycloak / SSO Vbee")
 System_Ext(pay, "Stripe (test mode)")
-System_Ext(ai, "AI Providers", "LLM / Image / TTS / Aligner-STT")
+System_Ext(ai, "Google Gemini", "LLM, Image")
 System_Ext(mail, "Email")
 
 Rel(user, web, "Dùng", "HTTPS")
@@ -47,4 +48,5 @@ Rel(render, redis, "Consume render", "RESP")
 Rel(render, db, "renders", "SQL")
 Rel(render, s3, "Đọc media, ghi MP4", "S3 API")
 Rel(gw, ai, "Gọi API (mock ở dev/CI)", "HTTPS")
+Rel(gw, tts, "Tổng hợp giọng (mock ở dev/CI)", "HTTP nội bộ")
 @enduml

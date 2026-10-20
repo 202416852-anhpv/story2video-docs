@@ -23,7 +23,7 @@ System_Boundary(sys, "AI Story Studio") {
 
 System_Ext(sso, "SSO", "Keycloak / SSO Vbee")
 System_Ext(pay, "Stripe (test mode)")
-System_Ext(ai, "AI Providers", "LLM / Image / TTS / Aligner-STT")
+System_Ext(ai, "AI Providers", "Google Gemini (LLM, Image); Vbee AIVoice (TTS)")
 System_Ext(mail, "Email")
 
 Rel(user, web, "Dùng", "HTTPS")

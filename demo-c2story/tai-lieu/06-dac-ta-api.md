@@ -178,7 +178,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | GET | `/voices?language=` | U | | Danh mục giọng, kèm URL nghe thử |
 | GET / PUT | `/projects/{pid}/narration-settings` | E | | Giọng, tốc độ, ngắt nghỉ, `symbolRules` (bật/tắt SYM-01..05, 08 §6); ngưỡng WER sau MVP |
 | CRUD | `/projects/{pid}/pronunciations[/{id}]` | E | | Từ điển phát âm |
-| POST | `/projects/{pid}/pronunciations:preview` | E | ✓ | `{text}` (≤ 200 ký tự) trả audio nghe thử ngắn; tính phí TTS theo BR-01 |
+| POST | `/projects/{pid}/pronunciations:preview` | E | ✓ | `{text}` (≤ 200 ký tự) trả audio nghe thử ngắn **đồng bộ** (ngoại lệ của AG-01, QĐ-131): HOLD → gọi TTS (timeout 15 s, không thử lại) → CAPTURE/RELEASE trong cùng request; tính phí TTS theo BR-01. Lỗi: `402`, `429`, `451`, `503` |
 | GET | `/projects/{pid}/chapters/{cid}/narrations:quote` | E | | `{chars, estimatedCostUsd}` |
 | POST | `/projects/{pid}/chapters/{cid}/narrations` | E | ✓ | Sinh thuyết minh cả chương (job cha + job con theo shot) |
 | POST | `…/shots/{shid}/narration:generate` | E | ✓ | Sinh hoặc sinh lại thuyết minh một shot |

@@ -9,10 +9,8 @@ System(studio, "AI Story Studio", "6 bước: nhập truyện → chia chương 
 
 System_Ext(sso, "SSO", "Keycloak tự dựng; SSO Vbee trước khi bảo vệ - đăng ký, đăng nhập, đăng xuất, MFA (không phát triển lại)")
 System_Ext(pay, "Stripe (test mode)", "Checkout nạp tiền (sandbox), webhook")
-System_Ext(llm, "LLM Provider", "Chia chương, phân tích, storyboard, viết lại brief")
-System_Ext(img, "Image Provider", "Sinh và sửa ảnh có tham chiếu")
-System_Ext(tts, "TTS Provider", "Giọng đọc nguyên văn (ứng viên P0 gồm Vbee AIVoice)")
-System_Ext(stt, "Aligner / STT", "Timestamp từng từ khi TTS không trả; WER chỉ dùng cho bộ đánh giá P0")
+System_Ext(llm, "Google Gemini (LLM)", "Chia chương, phân tích, storyboard, viết lại brief")
+System_Ext(img, "Google Gemini Image", "Sinh và sửa ảnh có tham chiếu")
 System_Ext(mail, "Email Service", "Cảnh báo trần chi tiêu cho Admin, thông báo xuất video")
 System_Ext(store, "Object Storage + CDN", "S3 / R2 / MinIO")
 
@@ -23,8 +21,6 @@ Rel(studio, sso, "Xác thực, logout", "OIDC / OAuth 2.0")
 Rel(studio, pay, "Checkout, nhận webhook", "HTTPS")
 Rel(studio, llm, "Gọi", "HTTPS")
 Rel(studio, img, "Sinh ảnh", "HTTPS")
-Rel(studio, tts, "Sinh thuyết minh", "HTTPS")
-Rel(studio, stt, "Căn timestamp", "HTTPS")
 Rel(studio, mail, "Gửi email", "API")
 Rel(studio, store, "Lưu media", "S3 API")
 @enduml

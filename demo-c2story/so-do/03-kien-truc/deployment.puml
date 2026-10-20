@@ -44,7 +44,7 @@ rectangle "Tầng dữ liệu (managed)" {
 cloud "Bên thứ ba" {
     component "SSO Vbee (OIDC / OAuth 2.0)" as sso
     component "Stripe" as stripe
-    component "AI Providers" as ai
+    component "AI Providers\n(Google Gemini, Vbee AIVoice)" as ai
     component "Email" as mail
 }
 

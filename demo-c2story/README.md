@@ -72,7 +72,7 @@ demo-c2story/
 ├── README.md                     # Tài liệu này
 ├── quyet-dinh.md                 # Sổ quyết định (QĐ-xx) từ 4 vòng câu hỏi chốt kế hoạch
 ├── CLAUDE.md                     # Hướng dẫn cho Claude Code khi làm việc với bộ tài liệu
-├── tai-lieu/                     # 12 tài liệu đặc tả (xem §6); schemas/ chứa JSON Schema
+├── tai-lieu/                     # 13 tài liệu đặc tả (xem §6); schemas/ chứa JSON Schema
 │   └── 03-dac-ta-use-case/       # Đặc tả 165 use case: mục lục + 10 file M01–M10
 ├── so-do/                        # Sơ đồ PlantUML của hệ thống mới (xem §7)
 │   ├── 01-use-case/
@@ -105,6 +105,7 @@ demo-c2story/
 | 10 | [Thuật ngữ](tai-lieu/10-thuat-ngu.md) | — |
 | 11 | [Product backlog (nháp, sinh tự động)](tai-lieu/11-product-backlog.md) | User story + Gherkin |
 | 12 | [Đặc tả kỹ thuật lõi](tai-lieu/12-dac-ta-ky-thuat-loi.md): tách câu, ánh xạ timestamp, `timeline_snapshot` ([JSON Schema](tai-lieu/schemas/timeline-snapshot.schema.json)) | JSON Schema 2020-12 |
+| 13 | [Tích hợp hệ thống AI bên ngoài](tai-lieu/13-tich-hop-he-thong-ai.md): Gemini (LLM, ảnh), TTS tự host, port, hợp đồng dữ liệu, vòng đời lời gọi, lỗi, tiền, bảo mật, mock, eval (tổng hợp từ 05, 08, 09, 12) | — |
 | — | [Sổ quyết định](quyet-dinh.md) | — |
 
 ## 7. Danh mục sơ đồ (`so-do/`)
@@ -151,3 +152,5 @@ java -DPLANTUML_LIMIT_SIZE=16384 -jar plantuml.jar -tpng "so-do/**.puml"
 | 1.14 | 2026-10-20 | Theo đánh giá kỹ sư phần mềm: thêm **12 — Đặc tả kỹ thuật lõi** (tách câu tiếng Việt `SentenceSegmenter` với 22 ca kiểm thử; `NormalizationMap` và thuật toán ánh xạ timestamp từ bản đọc về văn bản gốc, dựng phụ đề; hợp đồng `timeline_snapshot` + JSON Schema và ví dụ đã kiểm); **ADR-23** triển khai rút gọn cho MVP (một tiến trình worker, không outbox, bỏ worker Python khi TTS có timestamp, IC-08 chỉ ở service); **ADR-24** đổi tốc độ thuyết minh bằng file audio dẫn xuất để preview = render; **ADR-25** trần chi tiêu ngày bằng bộ đếm nguyên tử `daily_ai_budgets` (sửa race condition); 9 mã test mới |
 | 1.15 | 2026-10-20 | Theo đánh giá back-end: **ADR-26** mọi offset văn bản theo UTF-16, bỏ `char_length()` khỏi IC-08, thêm ca kiểm thử có emoji; **ADR-27** Kysely + SQL tay; **ADR-28** semaphore Redis theo người dùng (thay BullMQ Pro groups); **ADR-29** bảng `jobs` là nguồn sự thật, nhận việc an toàn khi giao lại, chi phí lần thử lỗi do hệ thống chịu (WR-09), mở khóa chương trong giao dịch kết thúc job và reconciler; SSE MVP không phát lại sự kiện; OpenAPI viết trước (80/119 endpoint thuộc MVP); dời danh sách mời và đồng ý dữ liệu sang P1; PO tách khỏi back-end; nền tảng kiểm thử (09 §2.3) |
 | 1.16 | 2026-10-20 | Theo đánh giá AI Engineering (QĐ-110..118): cách đo cho các ngưỡng AI ở P0 (rubric và 2 người chấm cho ảnh nhất quán; WER theo âm tiết trừ WER nền của ASR, danh sách khó; tỷ lệ ảnh bị từ chối; sai lệch timestamp); 4 mã test mới `EVAL-refusal-rate`, `EVAL-asset-extraction`, `EVAL-alignment`, `EVAL-cost-per-minute`; mật độ ảnh mặc định 3 ảnh/phút và chi phí/phút đo ở M0; làm rõ BR-18 (được sửa brief, không sửa văn bản truyện); rủi ro R-21; **nạp tiền sandbox lên ✂1**, đánh số lại tầng 1 (✂1–✂6); ablation cho báo cáo trong UAT |
+| 1.17 | 2026-10-20 | Thêm **13 — Tích hợp hệ thống AI bên ngoài**: tổng hợp port, danh mục tác vụ AI, hợp đồng đầu ra LLM/ảnh/TTS, vòng đời lời gọi tốn phí, ranh giới tin cậy, phân loại lỗi, giám sát, giới hạn đồng thời, mock và eval; 8 đề xuất mở ĐX-AI-01..08 (chưa có QĐ) |
+| 1.18 | 2026-10-20 | Chọn lại nhà cung cấp AI và duyệt ĐX-AI-01..08 (QĐ-119..131): **LLM và ảnh dùng Google Gemini**; **TTS tự host trong MVP** (TTS Server trên GPU, **ADR-30**), Vbee AIVoice sau MVP; Alignment Worker WhisperX bắt buộc; chi phí TTS theo giây GPU; fallback chỉ cho LLM; timeout theo loại lời gọi; nghe thử phát âm đồng bộ; `BENCH-tts`; rủi ro R-22, R-23 |

@@ -8,7 +8,7 @@
 | # | Mục tiêu | Lý do |
 |---|---|---|
 | AG-00 | **Bảo toàn nguyên văn** từ import đến audio và phụ đề | BR-19..24; LLM chỉ chọn ranh giới, không bao giờ sinh lại văn bản truyện; track thuyết minh khóa |
-| AG-01 | Mọi tác vụ AI, xử lý media và render chạy **bất đồng bộ** qua hàng đợi | Thời gian từ vài giây (ảnh) đến vài phút (thuyết minh cả chương, render) |
+| AG-01 | Mọi tác vụ AI, xử lý media và render chạy **bất đồng bộ** qua hàng đợi. Ngoại lệ duy nhất: nghe thử phát âm ≤ 200 ký tự chạy đồng bộ (QĐ-131, §6.1) | Thời gian từ vài giây (ảnh) đến vài phút (thuyết minh cả chương, render) |
 | AG-02 | **Không khóa vào một nhà cung cấp AI** | Giá và chất lượng mô hình thay đổi liên tục (R-03) |
 | AG-03 | **Đúng tiền tuyệt đối** | Mỗi job có HOLD giá ước tính → CAPTURE chi phí thực × 110% + RELEASE phần dư (IC-05); tiền lưu micro-USD |
 | AG-04 | **Cộng tác an toàn** | Khóa lạc quan + sự kiện realtime (cộng tác nhiều người sau MVP) |
@@ -27,7 +27,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-context.puml`.
 | Admin | Cấu hình giá, provider, giọng (file seed trong MVP); danh sách mời beta; nhận cảnh báo trần chi tiêu |
 | **SSO** (Keycloak tự dựng; SSO Vbee trước khi bảo vệ) | Đăng ký, đăng nhập, đăng xuất, MFA; back-channel logout (sau MVP) |
 | Payment Gateway (Stripe **test mode**, tài khoản của nhóm) | Checkout nạp tiền, webhook; customer portal sau MVP |
-| AI Providers | LLM, Image, TTS, STT/Aligner. **Không có Video provider, không có Music/SFX provider** (QĐ-57) |
+| AI Providers | LLM và Image: Google Gemini (QĐ-119, QĐ-120). TTS: model tự host trong MVP (TTS Server, không phải hệ thống ngoài), Vbee AIVoice sau MVP (QĐ-121). Aligner/STT: WhisperX tự host. **Không có Video provider, không có Music/SFX provider** (QĐ-57) |
 | Email service | Email giao dịch (cảnh báo trần chi tiêu cho Admin, thông báo xuất video) |
 | Object storage + CDN | Ảnh, audio, video, nhạc & SFX tải lên |
 
@@ -54,7 +54,8 @@ Sơ đồ: `../so-do/03-kien-truc/c4-container.puml`.
 | **Web App** | Next.js 15 (React, TS), TanStack Query, TipTap (Workspace), Zustand (store trình chỉnh sửa), **Remotion Player** (preview), WebAudio, Tailwind | Studio, trình chỉnh sửa timeline, media bin, Director chat, Pricing, Admin |
 | **API Server** | NestJS (Node.js 22, TS), REST + OpenAPI 3.1 (viết trước, 06 §1.2), SSE; truy cập DB bằng **Kysely** + SQL viết tay cho đường tiền và tái cấu trúc (ADR-27) | Phiên BFF/OIDC, phân quyền, nghiệp vụ M01–M10, tạo job, ví USD, trần chi tiêu, webhook, realtime |
 | **Job Workers** | Node.js + BullMQ (Flows cho job cha/con) | Queue `orchestrator`, `llm`, `image`, `tts`, `export`: gọi AI Gateway, lưu kết quả, quyết toán tiền theo chi phí thực |
-| **Alignment Worker** | Python, WhisperX / Montreal Forced Aligner (GPU tùy chọn) | Queue `align`: forced alignment (word timings) khi TTS không trả timestamp; STT + WER cho bộ đánh giá P0 và kiểm chứng từng shot (sau MVP) |
+| **TTS Server** *(MVP, ADR-30)* | Python, model TTS mã nguồn mở chọn ở P0, GPU | API HTTP nội bộ cho `SelfHostedTtsAdapter`: nhận bản đọc chữ thuần + giọng + tốc độ, trả audio; không có kết nối ra ngoài. Sau MVP thay bằng Vbee AIVoice, có thể giữ làm dự phòng |
+| **Alignment Worker** | Python, WhisperX / Montreal Forced Aligner (GPU dùng chung với TTS Server) | Queue `align`: forced alignment (word timings) khi TTS không trả timestamp (luôn đúng với TTS tự host); STT + WER cho bộ đánh giá P0 và kiểm chứng từng shot (sau MVP) |
 | **Media Processing Worker** | Node.js + FFmpeg, ClamAV | Queue `media-proc`: quét virus, bỏ EXIF, chuyển mã audio tải lên (≤ 100 MB, ≤ 15 phút), sinh waveform, chuẩn hóa loudness bản nghe thử, ZIP (sau MVP) |
 | **Render Worker** | Remotion renderer + FFmpeg (CPU, tùy chọn NVENC) | Queue `render`: dựng khung hình từ `timeline_snapshot`, trộn âm, encode MP4, SRT/VTT |
 | **Scheduler** | Node.js (BullMQ repeatable jobs) | Outbox relay, reconciler job treo và sổ cái ví, theo dõi chi tiêu AI trong ngày (cảnh báo Admin khi chạm trần), dọn idempotency/outbox, chuyển media sang lưu trữ lạnh, xóa cứng dự án quá 30 ngày |
@@ -71,7 +72,7 @@ Bảng trên là thiết kế đầy đủ. MVP (3 người, 20 giờ/tuần) d�
 |---|---|---|
 | Job Workers, Media Processing Worker, Scheduler là các container riêng | **Một tiến trình worker Node** đăng ký mọi queue (`orchestrator`, `llm`, `image`, `tts`, `media-proc`) + chạy job lặp của Scheduler (leader lock Redis); **Render Worker vẫn tách riêng** vì chiếm CPU lâu | Queue bị dồn > 5 phút hoặc render làm chậm job khác |
 | Outbox pattern (`outbox_events` + relay) | **Enqueue và publish ngay sau commit**; reconciler mỗi 1 phút tìm job `QUEUED` không có trong BullMQ để đẩy lại; sự kiện SSE mất thì client tải lại ảnh chụp (đã có trong UC-05.07b) | Có cộng tác realtime nhiều người (FR-PRJ-12) |
-| Alignment Worker Python (WhisperX / MFA) | **Bỏ** nếu provider TTS chọn ở P0 trả timestamp từng ký tự/từ; giữ lại chỉ khi cần (và khi chạy `EVAL-wer-golden` ở P0, có thể chạy offline) | Provider TTS không có timestamp; bật kiểm chứng ASR (sau MVP) |
+| Alignment Worker Python (WhisperX / MFA) | **Giữ** (QĐ-122): TTS tự host không trả timestamp tin cậy. Chạy cùng máy GPU với TTS Server | Bỏ được khi đổi sang TTS có timestamp đạt `EVAL-alignment` (vd. Vbee AIVoice nếu có, sau MVP) |
 | IC-08 bằng service + constraint trigger DEFERRABLE | **Chỉ kiểm ở service** (`CoverageValidator` trước khi ghi, trong cùng giao dịch) + `PBT-coverage-validator` | Có nhiều đường ghi shot ngoài module `media` |
 | RLS Postgres làm lớp phân quyền thứ hai (D-07) | Chỉ kiểm quyền ở tầng ứng dụng (`authz`) + `IT-permission-matrix` | Có cộng tác nhiều người |
 | OpenTelemetry tracing xuyên tiến trình | Log có cấu trúc kèm `jobId` làm correlation id; Sentry cho lỗi | Hệ thống nhiều instance |
@@ -138,6 +139,8 @@ Sơ đồ: `seq-storyboard-sinh-anh`, `act-giu-tru-tien`, `state-job`.
    - Kết quả và chuyển trạng thái được commit vào DB **trước**, rồi mới ack BullMQ.
 7. Thành công: một giao dịch ghi kết quả + CAPTURE `min(Σ cost_usd × 1,10, held)` + RELEASE phần dư + `SUCCEEDED` + `daily_ai_budgets` của `budget_day`: `reserved -= x_cost`, `spent += Σ cost_usd`. Thất bại vĩnh viễn: RELEASE toàn bộ + `FAILED` + `reserved -= x_cost`, `spent += Σ cost_usd` (lần gọi lỗi vẫn có thể tốn tiền provider).
 8. Reconciler (5 phút): job `RUNNING` có heartbeat > 10 phút → `FAILED` + RELEASE + trả chỗ ngân sách + **mở khóa chương** nếu `chapters.locked_by_job_id` trỏ tới job đó (hoặc tới job đã kết thúc); job `QUEUED` quá 1 phút không có trong BullMQ thì đẩy lại. Reconciler hằng ngày: Σ sổ cái = số dư ví, IC-05 (NFR-REL-03); `spent_micro` khớp Σ `ai_usage_records` của ngày, lệch thì sửa và cảnh báo.
+
+**Ngoại lệ đồng bộ: nghe thử phát âm** (`POST …/pronunciations:preview`, QĐ-131). Trong cùng request: báo giá → một giao dịch giữ chỗ trần ngày + HOLD (như bước 3, có ghi `jobs` loại `PRONUNCIATION_PREVIEW` để có nơi gắn sổ cái và `ai_usage_records`) → gọi `TtsPort.speak` với timeout 15 s, không thử lại → một giao dịch CAPTURE/RELEASE + `SUCCEEDED`/`FAILED` → trả audio. Lỗi provider trả `503`/`451` đồng bộ. Không đi qua BullMQ.
 
 ### 6.2 Điều phối "Sinh tư liệu" (bước 4)
 
@@ -221,11 +224,11 @@ Sơ đồ: `../so-do/03-kien-truc/c4-component-ai.puml`.
 | `SpeechNormalizer` | Đoạn nguồn → SSML; áp quy tắc ký hiệu SYM-01..05 (08 §6); không đổi chữ; sinh `NormalizationMap` để ánh xạ timestamp về văn bản gốc ([12 §2](12-dac-ta-ky-thuat-loi.md)) |
 | `WerScorer` | Chuẩn hóa hai phía (NFC, chữ thường, bỏ dấu câu, đọc số theo `SpeechNormalizer`, giữ dấu thanh), tính WER theo âm tiết và vị trí lệch; trừ WER nền của ASR (QĐ-111). Bộ đánh giá P0; kiểm chứng từng shot sau MVP |
 | `ModerationFilter` | Kiểm duyệt văn bản đầu vào, ảnh/audio đầu ra |
-| `ProviderRouter` | Chọn provider/mô hình theo loại tác vụ, ưu tiên, sẵn sàng; fallback; circuit breaker |
+| `ProviderRouter` | Chọn provider/mô hình theo loại tác vụ, ưu tiên, sẵn sàng; circuit breaker; timeout theo loại (NFR-REL-04). **Fallback chỉ cho LLM**, giữa các mô hình Gemini, và chỉ sang mô hình có `unit_cost_usd` ≤ mô hình đã báo giá (QĐ-124, QĐ-125). Ảnh ghim provider theo dự án, TTS ghim theo giọng: circuit breaker mở thì job lỗi tạm thời, không đổi provider |
 | `RetryPolicy` | Backoff + jitter, tối đa 3 lần |
-| `Adapters` | `LlmPort`, `ImagePort`, `TtsPort`, `AlignerPort`, `SttPort`; mỗi port có adapter thật và adapter **mock** (fixture, không gọi mạng) chọn bằng cấu hình (NFR-MNT-02) |
-| `UsageMeter` | Ghi `ai_usage_records` (provider, model, đơn vị, số lượng, chi phí thực, `attempt`, `request_id`) cho mọi lần gọi, kể cả lần lỗi. Provider trả chi phí thì dùng số đó; không trả thì **tự tính** = số lượng đo được (token, ảnh, ký tự, giây) × `ai_models.unit_cost_usd` |
-| `PriceEstimator` | Giá ước tính tối đa trước khi chạy và số trừ thực (chi phí thực × 110%) sau khi chạy (BR-01, BR-02). Token đầu vào LLM đếm bằng tokenizer của provider nếu có thư viện; không có thì dùng **hệ số ký tự/token đo ở PoC cho tiếng Việt và tiếng Anh** (lưu trong `price_rules.formula`), nhân hệ số an toàn 1,2 |
+| `Adapters` | `LlmPort`, `ImagePort`, `TtsPort`, `AlignerPort`, `SttPort`; mỗi port có adapter thật và adapter **mock** (fixture, không gọi mạng) chọn bằng cấu hình (NFR-MNT-02). MVP: `GeminiLlmAdapter`, `GeminiImageAdapter`, `SelfHostedTtsAdapter` (ADR-30), `WhisperXAlignerAdapter`; sau MVP: `VbeeTtsAdapter` |
+| `UsageMeter` | Ghi `ai_usage_records` (provider, model, đơn vị, số lượng, chi phí thực, `attempt`, `request_id`, `prompt_version`, `seed`; QĐ-127) cho mọi lần gọi, kể cả lần lỗi. Provider trả chi phí thì dùng số đó; không trả thì **tự tính** = số lượng đo được (token, ảnh, ký tự, giây) × `ai_models.unit_cost_usd` |
+| `PriceEstimator` | Giá ước tính tối đa trước khi chạy và số trừ thực (chi phí thực × 110%) sau khi chạy (BR-01, BR-02). Token đầu vào LLM tính bằng **hệ số ký tự/token cục bộ cho tiếng Việt và tiếng Anh** (lưu trong `price_rules.formula`), nhân hệ số an toàn 1,2; không gọi tokenizer của provider khi báo giá. Tokenizer thật chỉ dùng ở P0 để đo hệ số (QĐ-129) |
 
 ### 7.2 Interface (rút gọn)
 
@@ -242,13 +245,15 @@ interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hi
 
 | Loại | Mặc định | Thay thế |
 |---|---|---|
-| LLM | Anthropic Claude (Sonnet cho tác vụ thường; Opus cho Director, phân tích dài) | OpenAI GPT, Google Gemini |
-| Image | Google Gemini Image / Imagen (ảnh tham chiếu nhân vật) | OpenAI gpt-image, Flux |
-| TTS | Chọn ở P0 trong 2–3 ứng viên: ElevenLabs (multilingual, timestamp ký tự), **Vbee AIVoice** (tiếng Việt, QĐ-62), Azure AI Speech | Google Cloud TTS, FPT.AI, Viettel AI |
-| Aligner / STT | WhisperX tự host | Montreal Forced Aligner, Azure STT, Google STT |
+| LLM | **Google Gemini** (QĐ-119): Flash cho tác vụ thường; Pro cho storyboard, phân tích dài, Director *(sau MVP)*; mã mô hình chốt ở P0 | Chỉ khi có QĐ mới: Anthropic Claude, OpenAI GPT |
+| Image | **Google Gemini Image** (QĐ-120): ảnh tham chiếu, ảnh shot, sửa ảnh | Chỉ khi không đạt ngưỡng P0 (QĐ-97): OpenAI gpt-image, Flux |
+| TTS | **MVP: model tự host** (QĐ-121, ADR-30), chọn ở P0 trong 2–3 model mã nguồn mở hỗ trợ tiếng Việt và tiếng Anh, giấy phép cho phép dùng trong đồ án. **Sau MVP: Vbee AIVoice** | Dự phòng khi không model nào đạt (R-23): đưa Vbee AIVoice vào sớm |
+| Aligner / STT | WhisperX tự host (QĐ-122) | Montreal Forced Aligner |
 | Thư viện nhạc & SFX *(sau MVP)* | Bộ CC0/CC-BY tuyển chọn từ Pixabay, Freesound (QĐ-58) | — |
 
-> **Tiêu chí chọn ở P0** (cách đo ở [09 §1.5](09-ke-hoach-phat-trien.md)): ảnh: tỷ lệ shot sai ngoại hình ≤ 10% trên golden set, tỷ lệ bị từ chối ≤ 5%; TTS: WER hiệu chỉnh ≤ 3% (vi, en), chất lượng tiếng Việt, SSML alias/phoneme, timestamp đạt `EVAL-alignment`, giá trên 1.000 ký tự; chi phí AI ≤ $0,15/phút video ở mật độ ảnh đã chốt (QĐ-07, QĐ-110..115). Ngân sách PoC $200. Key nằm trong secret manager; `ai_providers.config_ref` chỉ lưu **tên** secret.
+> **Tiêu chí ở P0** (cách đo ở [09 §1.5](09-ke-hoach-phat-trien.md)): ảnh (Gemini Image): tỷ lệ shot sai ngoại hình ≤ 10% trên golden set, tỷ lệ bị từ chối ≤ 5%; TTS tự host: WER hiệu chỉnh ≤ 3% (vi, en), chất lượng tiếng Việt, tổng hợp + căn timestamp ≤ 0,4× thời lượng audio trên máy GPU đã chọn (`BENCH-tts`), timestamp đạt `EVAL-alignment`, chi phí GPU trên 1 phút audio; chi phí AI ≤ $0,15/phút video ở mật độ ảnh đã chốt (QĐ-07, QĐ-110..115). Ngân sách PoC $200. Key nằm trong secret manager; `ai_providers.config_ref` chỉ lưu **tên** secret (với TTS Server: tên secret chứa URL nội bộ và token).
+
+**TTS tự host (ADR-30).** `SpeechNormalizer` vẫn sinh bản đọc R, SSML và `NormalizationMap` như cũ (12 §2). Model tự host thường không hiểu SSML nên `SelfHostedTtsAdapter` gửi **R dạng chữ thuần**, tách tại các đoạn `PAUSE` và chèn khoảng lặng đúng độ dài khi ghép audio. Mục từ điển `PHONEME` không dùng được với model tự host: giao diện chỉ cho tạo `ALIAS` (viết lại cách đọc) khi giọng thuộc TTS tự host. Giọng mẫu (speaker reference) phải do nhóm tự thu hoặc có giấy phép rõ ràng. Văn bản truyện không rời hạ tầng của nhóm ở bước TTS.
 
 ### 7.4 Giữ nhân vật nhất quán
 
@@ -302,6 +307,7 @@ interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hi
 | ADR-27 | **Kysely** (query builder có kiểu) + SQL viết tay cho đường tiền, ngân sách và tái cấu trúc chương; migration bằng Kysely Migrator (file TS chứa SQL); `bigint` ánh xạ sang `bigint` của TS, ra API thành chuỗi thập phân | Prisma; TypeORM; SQL thuần với `pg` | Cần `SELECT … FOR UPDATE`, `UPDATE … WHERE … RETURNING` có điều kiện, `INSERT … ON CONFLICT`, unique `DEFERRABLE`, partial index, `jsonb`: Prisma hỗ trợ kém (khóa hàng, deferrable, bigint); TypeORM dễ sinh truy vấn ngầm khó kiểm soát; SQL thuần thiếu kiểu |
 | ADR-28 | **Semaphore theo người dùng bằng Redis**: worker `INCR conc:{userId}:{kind}` khi bắt đầu, vượt giới hạn thì `DECR` và trì hoãn job 3 s; `DECR` trong `finally`; khóa có TTL bằng 2× thời gian chạy tối đa; reconciler đặt lại bộ đếm từ số job `RUNNING` trong DB | BullMQ Pro groups; chỉ kiểm khi tạo job | BullMQ bản mã nguồn mở không giới hạn theo nhóm; group là tính năng trả phí. Chỉ kiểm lúc tạo job không chặn được job cha sinh nhiều job con |
 | ADR-29 | **Bảng `jobs` là nguồn sự thật**; BullMQ chỉ vận chuyển (cùng `jobId`); nhận việc bằng `UPDATE … WHERE status IN (…)` để chạy lặp an toàn; commit DB rồi mới ack; mọi lần gọi provider ghi `ai_usage_records` kèm `attempt`; **chi phí của các lần thử lỗi do hệ thống chịu** (WR-09); khóa chương mở cùng giao dịch kết thúc job và bởi reconciler | Lấy trạng thái từ BullMQ; để BullMQ tự retry không ghi DB | Hai nguồn trạng thái sẽ lệch khi retry, hủy, worker chết; một job giao lại không được gọi provider hai lần hay trừ tiền hai lần |
+| ADR-30 | **TTS tự host sau `TtsPort`** (QĐ-121): TTS Server Python chạy model mã nguồn mở trên GPU, worker gọi qua HTTP nội bộ bằng `SelfHostedTtsAdapter`; adapter gửi bản đọc R chữ thuần theo từng đoạn giữa các `PAUSE`, timestamp lấy từ Alignment Worker; chi phí tính theo giây GPU (QĐ-123). Đổi sang Vbee AIVoice sau MVP chỉ cần thêm adapter và seed `voices` | TTS thương mại ngay trong MVP (ElevenLabs, Azure AI Speech, Vbee AIVoice) | Không phụ thuộc giá TTS thương mại trong MVP; văn bản không rời hạ tầng; đổi lại: phải lo GPU, chất lượng tiếng Việt và tốc độ (R-23) |
 
 ## 10. Triển khai
 
@@ -310,7 +316,7 @@ Sơ đồ: `../so-do/03-kien-truc/deployment.puml`.
 | Môi trường | Mục đích | Ghi chú |
 |---|---|---|
 | `local` | Phát triển | docker-compose trên máy cá nhân: postgres, redis, minio, **Keycloak dev realm**, ClamAV; provider AI ở chế độ **mock** (fixture); Stripe CLI cho webhook |
-| `staging` | Demo, E2E hằng tuần, **closed beta** | Một máy ảo dùng ưu đãi sinh viên (GitHub Student Developer Pack, Azure for Students, QĐ-41); Keycloak (hoặc SSO Vbee khi có); provider AI thật với trần $10/ngày; Stripe test mode |
+| `staging` | Demo, E2E hằng tuần, **closed beta** | Một máy ảo dùng ưu đãi sinh viên (GitHub Student Developer Pack, Azure for Students, QĐ-41); Keycloak (hoặc SSO Vbee khi có); Gemini thật với trần $10/ngày; Stripe test mode. **Máy GPU** chạy TTS Server + Alignment Worker: thuê theo giờ (bật khi demo, E2E, beta) hoặc máy có GPU của thành viên, chốt ở P0 theo `BENCH-tts`; nối với máy staging qua mạng riêng (WireGuard) |
 | `production` *(sau MVP)* | Vận hành | Autoscale từng loại worker theo độ dài queue |
 
 | Thành phần | Hạ tầng đề xuất | Scale |
@@ -318,7 +324,8 @@ Sơ đồ: `../so-do/03-kien-truc/deployment.puml`.
 | Web App | Vercel hoặc container | Edge/CDN |
 | API Server | Container (ECS Fargate / Fly.io / GKE), 2..N | Theo CPU, số kết nối SSE |
 | Job Workers | Container | Theo độ dài queue `llm`, `image`, `tts`, `orchestrator` |
-| Alignment Worker | Container GPU nhỏ (hoặc CPU nếu dùng dịch vụ STT ngoài) | Theo queue `align` |
+| TTS Server *(MVP)* | Container GPU (dùng chung máy với Alignment Worker) | 1 instance; giới hạn đồng thời theo VRAM |
+| Alignment Worker | Container GPU nhỏ | Theo queue `align` |
 | Media Processing Worker | Container CPU + ClamAV sidecar | Theo queue `media-proc` |
 | Render Worker | Container CPU mạnh (tùy chọn NVENC), Chromium headless cho Remotion | Theo queue `render`; giới hạn 1 render đồng thời/người |
 | Scheduler | 1 instance (leader lock trong Redis) | — |

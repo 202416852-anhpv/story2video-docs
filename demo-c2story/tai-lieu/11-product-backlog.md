@@ -2687,6 +2687,10 @@ Feature: UC-05.12 Quản lý từ điển phát âm
   Scenario: 1a Vượt 500 mục hoặc trùng từ viết
     When Vượt 500 mục hoặc trùng từ viết
     Then báo lỗi
+
+  Scenario: 1b Giọng của dự án thuộc TTS tự host (MVP, ADR-30)
+    When Giọng của dự án thuộc TTS tự host (MVP, ADR-30)
+    Then chỉ cho chọn kiểu alias; giao diện gợi ý viết lại cách đọc bằng chữ thay cho phoneme
 ```
 
 #### ST-05-13 Sinh thuyết minh nguyên văn
@@ -2797,6 +2801,11 @@ Feature: UC-05.13b Chuẩn hóa phát âm (SSML)
     Given luồng chính đã tới bước 2
     When Mục từ điển lỗi cú pháp phoneme
     Then bỏ qua mục đó, ghi vào normalization_log và cảnh báo trong kết quả
+
+  Scenario: 2b Giọng thuộc TTS tự host (MVP, ADR-30)
+    Given luồng chính đã tới bước 2
+    When Giọng thuộc TTS tự host (MVP, ADR-30)
+    Then mục PHONEME bị bỏ qua như 2a; SSML vẫn sinh để lưu và kiểm tra ngược, adapter chỉ gửi bản đọc chữ thuần
 
   Scenario: 1a Đoạn nguồn chỉ gồm dòng phân cách (SYM-05)
     When Đoạn nguồn chỉ gồm dòng phân cách (SYM-05)

@@ -17,7 +17,6 @@ cloud "Máy ảo staging (GitHub Student Pack / Azure for Students)" as vm {
         component "Next.js Web App" as web
         component "NestJS API + SSE" as api
         component "Worker (một tiến trình)\norchestrator / llm / image / tts /\nmedia-proc + reconciler, cảnh báo\n(FFmpeg, ClamAV)" as wk
-        component "Alignment (tùy chọn)" as al
         component "Render worker\n(Remotion + FFmpeg)" as rw
         database "PostgreSQL" as pg
         database "Redis" as rd
@@ -26,10 +25,15 @@ cloud "Máy ảo staging (GitHub Student Pack / Azure for Students)" as vm {
     }
 }
 
+node "Máy GPU (thuê theo giờ / máy thành viên)" as gpu {
+    component "TTS Server\n(model tự host)" as tts
+    component "Alignment\n(WhisperX)" as al
+}
+
 cloud "Bên thứ ba" {
     component "SSO Vbee\n(P3, nếu có tài liệu)" as vbee
     component "Stripe test mode" as stripe
-    component "AI Providers\n(trần $10/ngày)" as ai
+    component "Google Gemini\nLLM + Image\n(trần $10/ngày)" as ai
     component "Email" as mail
 }
 
@@ -48,14 +52,16 @@ rd --> wk
 rd --> al
 rd --> rw
 wk --> ai
+wk --> tts : HTTP nội bộ (WireGuard)
+al --> s3 : đọc audio
 wk --> mail : cảnh báo trần chi tiêu
 rw --> s3
 
 legend right
   • Một máy ảo chạy toàn bộ service bằng Docker Compose; không autoscale
   • Cấu hình rút gọn theo ADR-23: một tiến trình worker, render tách riêng,
-    không outbox, Alignment chỉ khi TTS không trả timestamp
-  • Provider AI thật chỉ dùng ở staging (demo, E2E hằng tuần, closed beta)
+    không outbox; TTS tự host + Alignment trên máy GPU riêng (ADR-30, QĐ-122)
+  • Gemini thật và máy GPU chỉ dùng ở staging (demo, E2E hằng tuần, closed beta)
   • Backup PostgreSQL hằng ngày, giữ 7 ngày (NFR-REL-05)
   • Xóa toàn bộ dữ liệu beta sau ngày bảo vệ (BR-31)
 endlegend
