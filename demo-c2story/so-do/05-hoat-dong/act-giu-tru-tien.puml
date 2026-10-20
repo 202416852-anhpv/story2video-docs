@@ -1,7 +1,7 @@
 @startuml Act_GiuTruTien
 !theme plain
 skinparam defaultFontName "Segoe UI"
-title Vòng đời tiền của một job tốn phí (BR-01, BR-02, BR-29, WR-01..05) - dùng chung cho MVP và bản đầy đủ
+title Vòng đời tiền của một job tốn phí (BR-01, BR-02, BR-29, WR-01..05, ADR-25) - dùng chung cho MVP và bản đầy đủ
 
 start
 :Nhận yêu cầu + Idempotency-Key;
@@ -10,23 +10,26 @@ if (Key đã xử lý?) then (có)
   stop
 endif
 :Giới hạn kỹ thuật (≤ 30 yêu cầu LLM/phút, BR-32);
-:PriceEstimator: giá ước tính tối đa x\n= đơn giá provider × giới hạn đầu ra × 1,10;
-if (Chi tiêu AI hôm nay + tiền đang giữ + x > trần ngày? (BR-29)) then (có)
-  :503 DAILY_BUDGET_EXCEEDED;\nemail cảnh báo Admin (1 lần/ngày);
-  stop
-endif
-partition "Giao dịch DB #1" {
+:PriceEstimator: chi phí provider ước tính c0\nvà giá ước tính tối đa x = c0 × 1,10;
+partition "Giao dịch DB #1 (thứ tự khóa: ngân sách ngày → ví)" {
+  :INSERT daily_ai_budgets(hôm nay) ON CONFLICT DO NOTHING;
+  :UPDATE daily_ai_budgets SET reserved += c0\nWHERE spent + reserved + c0 <= cap;
+  if (Trúng 1 dòng?) then (không)
+    :ROLLBACK;
+    :503 DAILY_BUDGET_EXCEEDED;\nemail cảnh báo Admin (1 lần/ngày);
+    stop
+  endif
   :SELECT wallets FOR UPDATE;
   if (available_micro >= x?) then (không)
-    :ROLLBACK;
+    :ROLLBACK (trả luôn chỗ ngân sách);
     :402 INSUFFICIENT_BALANCE;
     stop
   endif
   :ledger HOLD(x);\navailable -= x; held += x;
-  :INSERT jobs(QUEUED, held_micro = x) + outbox;
+  :INSERT jobs(QUEUED, held_micro = x,\nbudget_day, budget_reserved_micro = c0);
   :COMMIT;
 }
-:Relay outbox → BullMQ;
+:Enqueue BullMQ sau commit\n(MVP, ADR-23; sau MVP: outbox relay);
 :Worker chạy job;\nUsageMeter ghi ai_usage_records (cost_usd);
 if (Kết quả?) then (thành công)
   partition "Giao dịch DB #2" {
@@ -34,11 +37,13 @@ if (Kết quả?) then (thành công)
     :c = min(Σ cost_usd × 1,10, x);
     :ledger CAPTURE(c); ledger RELEASE(x − c);\nheld -= x; available += x − c;
     :jobs SUCCEEDED, charged_micro = c;
+    :ngân sách ngày: reserved -= c0;\nspent += Σ cost_usd;
   }
 else (thất bại / hủy / vi phạm)
   partition "Giao dịch DB #2" {
     :ledger RELEASE(x); held -= x; available += x;
     :jobs FAILED / CANCELLED;
+    :ngân sách ngày: reserved -= c0;\nspent += chi phí đã phát sinh;
   }
 endif
 :Publish SSE job.updated, wallet.updated;
@@ -50,6 +55,9 @@ floating note right
   → FAILED + RELEASE.
   Reconciler hằng ngày:
   Σ sổ cái == số dư ví; mỗi job CAPTURE + RELEASE = HOLD
-  (IC-05), lệch → cảnh báo P1.
+  (IC-05), lệch → cảnh báo P1;
+  spent của ngày == Σ ai_usage_records.
+  Job QUEUED > 1 phút không có trong queue
+  → đẩy lại (ADR-23).
 end note
 @enduml

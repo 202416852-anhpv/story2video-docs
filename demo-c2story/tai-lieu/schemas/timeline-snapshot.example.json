@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 1,
+  "timelineId": "0192a7c4-0000-7000-8000-000000000001",
+  "timelineVersion": 12,
+  "projectId": "0192a7c4-0000-7000-8000-000000000002",
+  "scope": {
+    "kind": "CHAPTER",
+    "chapterIds": [
+      "0192a7c4-0000-7000-8000-000000000003"
+    ]
+  },
+  "output": {
+    "aspectRatio": "16:9",
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "watermark": true
+  },
+  "framing": "CROP",
+  "subtitleStyle": {
+    "enabled": true,
+    "fontFamily": "Be Vietnam Pro",
+    "fontSizePx": 42,
+    "color": "#FFFFFF",
+    "outlineColor": "#000000",
+    "background": "NONE",
+    "position": "BOTTOM",
+    "marginPct": 8
+  },
+  "master": {
+    "loudnessLufs": -14,
+    "volume": 1
+  },
+  "coverage": {
+    "covered": 17,
+    "total": 17
+  },
+  "tracks": [
+    {
+      "id": "0192a7c4-0000-7000-8000-000000000010",
+      "kind": "VIDEO",
+      "muted": false,
+      "volume": 1,
+      "items": [
+        {
+          "id": "0192a7c4-0000-7000-8000-000000000011",
+          "kind": "IMAGE",
+          "startMs": 0,
+          "durationMs": 1500,
+          "shotId": "0192a7c4-0000-7000-8000-000000000020",
+          "illustrationId": "0192a7c4-0000-7000-8000-000000000030",
+          "mediaKey": "p/0192/illustrations/s1-v2.png",
+          "motion": {
+            "phases": [
+              {
+                "type": "ZOOM_IN",
+                "intensity": 0.1,
+                "focusX": 0.5,
+                "focusY": 0.4,
+                "fromPct": 0,
+                "toPct": 100
+              }
+            ]
+          }
+        },
+        {
+          "id": "0192a7c4-0000-7000-8000-000000000012",
+          "kind": "IMAGE",
+          "startMs": 1500,
+          "durationMs": 1900,
+          "shotId": "0192a7c4-0000-7000-8000-000000000021",
+          "illustrationId": "0192a7c4-0000-7000-8000-000000000031",
+          "mediaKey": "p/0192/illustrations/s2-v1.png",
+          "motion": {
+            "phases": [
+              {
+                "type": "PAN_LEFT",
+                "intensity": 0.08,
+                "focusX": 0.6,
+                "focusY": 0.5,
+                "fromPct": 0,
+                "toPct": 100
+              }
+            ]
+          },
+          "transitionIn": {
+            "type": "CROSSFADE",
+            "durationMs": 500
+          }
+        }
+      ]
+    },
+    {
+      "id": "0192a7c4-0000-7000-8000-000000000013",
+      "kind": "NARRATION",
+      "muted": false,
+      "volume": 1,
+      "items": [
+        {
+          "id": "0192a7c4-0000-7000-8000-000000000014",
+          "kind": "NARRATION",
+          "startMs": 0,
+          "durationMs": 1200,
+          "shotId": "0192a7c4-0000-7000-8000-000000000020",
+          "narrationId": "0192a7c4-0000-7000-8000-000000000040",
+          "mediaKey": "p/0192/narrations/s1-v1.mp3",
+          "playbackRate": 1.0,
+          "volume": 1,
+          "chapterId": "0192a7c4-0000-7000-8000-000000000003",
+          "sourceStart": 0,
+          "sourceEnd": 7,
+          "sourceHash": "484d3696fbaea5510492a05d22a8871e074f9d49867b69aee22722baeb2bfb8a",
+          "wordTimings": [
+            {
+              "charStart": 0,
+              "charEnd": 2,
+              "startMs": 80,
+              "endMs": 420
+            },
+            {
+              "charStart": 3,
+              "charEnd": 6,
+              "startMs": 440,
+              "endMs": 1050
+            }
+          ]
+        },
+        {
+          "id": "0192a7c4-0000-7000-8000-000000000015",
+          "kind": "NARRATION",
+          "startMs": 1500,
+          "durationMs": 1600,
+          "shotId": "0192a7c4-0000-7000-8000-000000000021",
+          "narrationId": "0192a7c4-0000-7000-8000-000000000041",
+          "mediaKey": "p/0192/narrations/s2-v1.mp3",
+          "derivedMediaKey": "p/0192/narrations/s2-v1-r1.25.mp3",
+          "playbackRate": 1.25,
+          "volume": 1,
+          "chapterId": "0192a7c4-0000-7000-8000-000000000003",
+          "sourceStart": 7,
+          "sourceEnd": 17,
+          "sourceHash": "a66305cac6a1680ffbfe193f204a0d48ede14a09146c5927ba4effda0fe945be",
+          "wordTimings": [
+            {
+              "charStart": 7,
+              "charEnd": 10,
+              "startMs": 1560,
+              "endMs": 1880
+            },
+            {
+              "charStart": 11,
+              "charEnd": 12,
+              "startMs": 1900,
+              "endMs": 2200
+            },
+            {
+              "charStart": 13,
+              "charEnd": 17,
+              "startMs": 2220,
+              "endMs": 2980
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0192a7c4-0000-7000-8000-000000000016",
+      "kind": "MUSIC",
+      "muted": false,
+      "volume": 0.6,
+      "items": [
+        {
+          "id": "0192a7c4-0000-7000-8000-000000000017",
+          "kind": "AUDIO",
+          "startMs": 0,
+          "durationMs": 3400,
+          "audioAssetId": "0192a7c4-0000-7000-8000-000000000050",
+          "mediaKey": "u/0192/audio/calm-piano.mp3",
+          "sourceInMs": 0,
+          "loop": false,
+          "volume": 0.6,
+          "fadeInMs": 500,
+          "fadeOutMs": 800,
+          "duckingDb": -12
+        }
+      ]
+    }
+  ],
+  "subtitles": [
+    {
+      "startMs": 80,
+      "endMs": 1050,
+      "lines": [
+        "Cô đi."
+      ],
+      "chapterId": "0192a7c4-0000-7000-8000-000000000003",
+      "charStart": 0,
+      "charEnd": 6
+    },
+    {
+      "startMs": 1560,
+      "endMs": 2980,
+      "lines": [
+        "Anh ở lại."
+      ],
+      "chapterId": "0192a7c4-0000-7000-8000-000000000003",
+      "charStart": 7,
+      "charEnd": 17
+    }
+  ]
+}

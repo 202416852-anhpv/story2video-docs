@@ -1,7 +1,7 @@
 # 04 — Mô hình dữ liệu
 
 > **Phiên bản mô hình:** 2.1 (khớp luồng Studio 6 bước, use case ở [03](03-dac-ta-use-case/00-muc-luc.md) và các quyết định ở [sổ quyết định](../quyet-dinh.md)). Bảng chỉ dùng sau MVP vẫn giữ trong mô hình và được đánh dấu *(sau MVP)*; ERD MVP (`../so-do/mvp/02-du-lieu/erd-mvp.puml`) sinh tự động bằng `python3 so-do/tools/gen_mvp.py` dựa trên các đánh dấu này.
-> **Sơ đồ:** `../so-do/02-du-lieu/domain-class.puml` (mô hình miền); `../so-do/02-du-lieu/erd.puml` (mô hình vật lý đầy đủ, 55 bảng); ERD theo nhóm `../so-do/02-du-lieu/erd-1..6-*.puml`, sinh tự động từ `erd.puml` bằng `python3 so-do/tools/split_erd.py`. Chỉ sửa `erd.puml` rồi chạy lại script.
+> **Sơ đồ:** `../so-do/02-du-lieu/domain-class.puml` (mô hình miền); `../so-do/02-du-lieu/erd.puml` (mô hình vật lý đầy đủ, 56 bảng); ERD theo nhóm `../so-do/02-du-lieu/erd-1..6-*.puml`, sinh tự động từ `erd.puml` bằng `python3 so-do/tools/split_erd.py`. Chỉ sửa `erd.puml` rồi chạy lại script.
 > **CSDL:** PostgreSQL 16. Khóa chính `uuid` (UUIDv7). Mọi bảng có thêm `created_at`, `updated_at` (`timestamptz`, không liệt kê ở dưới).
 
 ## 1. Nguyên tắc thiết kế
@@ -14,7 +14,7 @@
 | D-04 | **Phiên bản hóa đầu ra AI:** ảnh (`illustrations`, `asset_images`), thuyết minh (`narrations`) và bản xuất (`renders`) không ghi đè; mỗi lần sinh tạo bản ghi mới, bảng cha trỏ bản hiện hành. |
 | D-05 | **Nguyên văn được bảo vệ bằng dữ liệu:** `chapters.content` là nguồn duy nhất; shot chỉ lưu offset + hash (`source_start`, `source_end`, `source_hash`); thuyết minh lưu `source_hash` để phát hiện lệch. Không có cột nào chứa "văn bản đọc" do client gửi (BR-19). |
 | D-06 | File nhị phân nằm ở object storage; DB chỉ lưu `media_files` (key, mime, kích thước, checksum). |
-| D-07 | Bảng thuộc dự án có `project_id` (trực tiếp hoặc qua bảng cha) để phân quyền; RLS của Postgres là lớp bảo vệ thứ hai [ĐX]. |
+| D-07 | Bảng thuộc dự án có `project_id` (trực tiếp hoặc qua bảng cha) để phân quyền; RLS của Postgres là lớp bảo vệ thứ hai [ĐX], **sau MVP** (ADR-23). |
 | D-08 | Xóa mềm (`deleted_at`) cho `projects`, `library_assets`; người dùng xóa dữ liệu dùng `users.status = DELETED` + `deletion_requested_at`. |
 | D-09 | **Tiền lưu bằng số nguyên micro-USD** (`bigint`, 1 USD = 1.000.000) ở mọi cột hậu tố `_micro`; không dùng số thực cho tiền. Chi phí thực của provider (`ai_usage_records.cost_usd`) giữ kiểu `numeric` để không mất độ chính xác khi nhân 110% (QĐ-30, QĐ-31). |
 
@@ -92,7 +92,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 
 | Bảng | Cột | Ghi chú / Use case |
 |---|---|---|
-| `storyboard_drafts` | id PK, chapter_id FK, project_id FK, name, kind (`INITIAL`/`RESPLIT_MORE`/`RESPLIT_FEWER`/`DUPLICATE`), boundary_fixes, created_by FK? | `boundary_fixes` = số ranh giới validator đã sửa (cảnh báo > 20%). UC-05.01..03 |
+| `storyboard_drafts` | id PK, chapter_id FK, project_id FK, name, kind (`INITIAL`/`RESPLIT_MORE`/`RESPLIT_FEWER`/`DUPLICATE`), boundary_fixes, segmenter_version, created_by FK? | `boundary_fixes` = số ranh giới validator đã sửa (cảnh báo > 20%). `segmenter_version` = phiên bản `SentenceSegmenter` đã dùng (12 §1.1). UC-05.01..03 |
 | `shots` | id PK, draft_id FK, project_id FK, order_index, title, focus, time_of_day, story_date, brief, caption, **source_start, source_end, source_hash**, current_illustration_id FK?, current_narration_id FK?, version | IC-08. UC-05.01, UC-05.06 |
 | `shot_asset_refs` | id PK, shot_id FK, story_asset_id FK?, raw_name, role (`CAST`/`ITEM`/`LOCATION`) | `story_asset_id` NULL = chưa liên kết (BR-16). UC-05.06b, UC-05.06f |
 | `illustrations` | id PK, shot_id FK, media_id FK?, status, edit_kind (`GENERATE`/`EDIT`/`RETRY`/`UPLOAD`), instruction?, prompt_snapshot, shot_version, parent_illustration_id FK?, job_id FK? | `shot_version` < `shots.version` = "brief đã đổi" (bản `UPLOAD` đặt `shot_version = shots.version`, `prompt_snapshot`/`job_id` rỗng, `status = DONE`). UC-05.09, UC-05.10 |
@@ -110,7 +110,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `timelines` | id PK, project_id FK, scope (`CHAPTER`/`PROJECT`), chapter_id FK?, aspect_ratio, framing (`CROP`/`FIT`/`BLUR`), subtitle_style, master (`{loudnessLufs, volume}`), status, version, updated_by FK? | Tự dựng khi chương `READY_TO_EDIT`. UC-06.01, UC-06.06, UC-06.08, UC-06.12 |
 | `timeline_versions` *(sau MVP)* | id PK, timeline_id FK, version, name?, snapshot, created_by FK? | Bất biến. UC-06.14, UC-02.10a |
 | `timeline_tracks` | id PK, timeline_id FK, kind, name, order_index, muted, solo, hidden, locked, volume | Track `NARRATION`: `locked = true`, không xóa. UC-06.03 |
-| `timeline_items` | id PK, track_id FK, kind, start_ms, duration_ms, source_in_ms, shot_id FK?, illustration_id FK?, narration_id FK?, audio_asset_id FK?, media_id FK? (logo), text?, text_style?, motion?, transition_in?, color?, volume, volume_keyframes?, fade_in_ms, fade_out_ms, ducking_db?, playback_rate (mặc định 1,0; item `NARRATION`: 0,8–1,25, BR-24), user_modified, sync_flag (`NONE`/`UPDATED`/`NEEDS_REVIEW`) | Một bảng cho mọi loại clip. IC-10. UC-06.02..10, UC-06.15 |
+| `timeline_items` | id PK, track_id FK, kind, start_ms, duration_ms, source_in_ms, shot_id FK?, illustration_id FK?, narration_id FK?, audio_asset_id FK?, media_id FK? (logo), text?, text_style?, motion?, transition_in?, color?, volume, volume_keyframes?, fade_in_ms, fade_out_ms, ducking_db?, playback_rate (mặc định 1,0; item `NARRATION`: 0,8–1,25, BR-24), derived_media_id FK? (audio đã đổi tốc độ, bắt buộc khi `playback_rate ≠ 1`; ADR-24), user_modified, sync_flag (`NONE`/`UPDATED`/`NEEDS_REVIEW`) | Một bảng cho mọi loại clip. IC-10. UC-06.02..10, UC-06.15 |
 | `audio_assets` | id PK, owner_user_id FK? (NULL = hệ thống), kind (`MUSIC`/`SFX`), title, genre, mood, tags, media_id FK, duration_ms, waveform, license (`USER_UPLOAD`; `LIBRARY_CC0`/`LIBRARY_CC_BY` sau MVP), license_note (tác giả, nguồn, dòng ghi công CC-BY), published | BR-26. MVP chỉ có file người dùng tải lên. UC-06.11, UC-06.11a, UC-10.06 |
 | `renders` | id PK, timeline_id FK, timeline_version, project_id FK, render_group_id?, part_no?, version_no, is_primary, resolution, aspect_ratio, watermark, status, progress, media_id FK?, subtitle_srt_media_id FK?, subtitle_vtt_media_id FK?, narration_audio_media_id FK?, duration_ms, **coverage_chars, total_chars**, timeline_snapshot, job_id FK? | IC-11. `render_group_id` + `part_no` khi chia phần. UC-06.16, UC-06.16b, UC-06.17 |
 
@@ -121,14 +121,15 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `director_plans` *(sau MVP)* | id PK, project_id FK, started_by FK, status, current_step (`pickStyle`/`split`/`cast`/`pickVoice`/`media`/`verify`/`draftTimeline`), awaiting_reason?, step_state, estimated_remaining_micro, version | UC-07.02..08 |
 | `director_messages` *(sau MVP)* | id PK, project_id FK, plan_id FK?, sender (`USER`/`DIRECTOR`/`TOOL`), user_id FK?, content, tool_call? | UC-07.01 |
 | `director_tool_proposals` *(sau MVP)* | id PK, message_id FK, tool, args, estimated_cost_micro, status (`PENDING`/`CONFIRMED`/`REJECTED`/`EXPIRED`), decided_by FK?, decided_at?, job_id FK? | Tool tốn phí chờ xác nhận. UC-07.01b |
-| `jobs` | id PK, project_id FK?, user_id FK (người trả tiền), type, status, priority, target_type, target_id, params, result, error_code?, error_message?, attempts, held_micro (giá ước tính đã giữ), charged_micro? (số đã trừ = chi phí thực × 110%, ≤ `held_micro`), idempotency_key UQ, parent_job_id FK?, heartbeat_at?, started_at?, finished_at? | Job cha `GENERATE_MEDIA_CHAPTER` có job con. UC-05.07, UC-05.17, UC-10.07 |
+| `jobs` | id PK, project_id FK?, user_id FK (người trả tiền), type, status, priority, target_type, target_id, params, result, error_code?, error_message?, attempts, held_micro (giá ước tính đã giữ), charged_micro? (số đã trừ = chi phí thực × 110%, ≤ `held_micro`), budget_day?, budget_reserved_micro? (chỗ đã giữ trong trần ngày, tính theo chi phí provider chưa cộng phí; ADR-25), idempotency_key UQ, parent_job_id FK?, heartbeat_at?, started_at?, finished_at? | Job cha `GENERATE_MEDIA_CHAPTER` có job con. UC-05.07, UC-05.17, UC-10.07 |
 | `ai_providers` | id PK, code UQ, kind, enabled, priority, config_ref | `config_ref` = **tên** secret, không lưu key. UC-10.03 |
 | `ai_models` | id PK, provider_id FK, code, display_name, capabilities, unit_cost_usd, enabled, user_selectable | UC-10.03 |
 | `ai_usage_records` | id PK, job_id FK, provider_id FK?, model, unit (`TOKENS`/`IMAGES`/`SECONDS`/`CHARS`), quantity, cost_usd, latency_ms, request_id | Đối soát chi phí. UC-10.10 |
 | `price_rules` | id PK, operation, formula, effective_from, effective_to?, created_by FK? | `formula` gồm hệ số (1,10), cơ sở tính chi phí và giới hạn đầu ra để ước tính (08 §3.2). Có phiên bản theo ngày hiệu lực; MVP nạp từ file seed. UC-10.01 |
+| `daily_ai_budgets` | day PK (ngày giờ Việt Nam), cap_micro, reserved_micro, spent_micro, alert_80_sent_at?, alert_100_sent_at? | **Bộ đếm nguyên tử** cho trần chi tiêu ngày (BR-29, IC-18): giữ chỗ bằng một câu `UPDATE … WHERE spent + reserved + x ≤ cap` trong cùng giao dịch với HOLD. Tạo dòng của ngày khi cần (`INSERT … ON CONFLICT DO NOTHING`). UC-05.17, UC-10.12 |
 | `system_settings` | key PK, value, updated_by FK? | Cấu hình vận hành: `daily_ai_budget_usd` (mặc định 10, BR-29), `beta_invite_only` (true, BR-30), `consent_notice_version`, `vnd_rate`. MVP sửa bằng file seed/CLI. UC-10.11, UC-10.12 |
 | `media_files` | id PK, owner_user_id FK?, owner_project_id FK?, storage_key UQ, mime, bytes, width?, height?, duration_ms?, sha256, storage_class (`HOT`/`COLD`) | D-06 |
-| `outbox_events` | id PK, aggregate_type, aggregate_id, event_type, payload, published_at? | Outbox pattern (ADR-07): ghi cùng giao dịch, relay đẩy sang queue/SSE |
+| `outbox_events` *(dùng sau MVP; ADR-23)* | id PK, aggregate_type, aggregate_id, event_type, payload, published_at? | Outbox pattern (ADR-07): ghi cùng giao dịch, relay đẩy sang queue/SSE |
 | `idempotency_keys` | (key, user_id FK) PK, request_hash, response_status, response_body, expires_at | Giữ 24 giờ (06 §1) |
 
 ## 4. Ràng buộc toàn vẹn
@@ -142,7 +143,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | IC-05 | Mỗi job tốn phí có đúng một HOLD; khi kết thúc, tổng CAPTURE + RELEASE bằng số đã HOLD, và CAPTURE ≤ HOLD | Service + reconciler định kỳ (`act-giu-tru-tien`) |
 | IC-06 | `payments`: `kind = TOPUP` thì `plan_id` NULL; `kind = SUBSCRIPTION` thì `plan_id` NOT NULL | CHECK |
 | IC-07 | `payment_events.gateway_event_id` duy nhất | Unique index |
-| **IC-08** | **Phủ kín:** shot của mỗi bản nháp, sắp theo `order_index`: `shot[0].source_start = 0`, `shot[i].source_end = shot[i+1].source_start`, `shot[last].source_end = char_length(chapter.content)` | Service (CoverageValidator) + constraint trigger DEFERRABLE |
+| **IC-08** | **Phủ kín:** shot của mỗi bản nháp, sắp theo `order_index`: `shot[0].source_start = 0`, `shot[i].source_end = shot[i+1].source_start`, `shot[last].source_end = char_length(chapter.content)` | Service (CoverageValidator) trong cùng giao dịch ghi; constraint trigger DEFERRABLE sau MVP (ADR-23) |
 | **IC-09** | `narrations` khác `OUTDATED` phải có `source_hash = shots.source_hash` | Service đặt `OUTDATED` khi chương đổi |
 | **IC-10** | Timeline của chương: mỗi shot hiện hành có đúng 1 item `IMAGE` và 1 item `NARRATION`; item `NARRATION` đúng thứ tự, không chồng lấn, `duration_ms` = độ dài audio; item `IMAGE` phủ trọn khoảng đọc của shot | Service kiểm tra mỗi lần `apply-ops` (BR-24) |
 | **IC-11** | Render chỉ được tạo khi `coverage_chars = total_chars` và IC-10 thỏa | Service (UC-06.16a) |
@@ -151,7 +152,8 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | IC-14 | `relationships.asset_a_id ≠ asset_b_id`, cùng project | CHECK + trigger |
 | IC-15 | `audio_assets` có `license = USER_UPLOAD` thì `owner_user_id` NOT NULL; `published = false` không xuất hiện trong tìm kiếm | CHECK + điều kiện truy vấn |
 | IC-16 | Mỗi người dùng có đúng một `TRIAL_GRANT` trong đời tài khoản; không tạo lại cho cùng email đã nhận (BR-28) | Partial unique index `(user_id) WHERE entry_type='TRIAL_GRANT'` + kiểm tra `beta_invites.used_by_user_id` |
-| IC-17 | `timeline_items.playback_rate` ∈ [0,8; 1,25] với item `NARRATION`; item khác mặc định 1,0 | CHECK + `@studio/timeline-rules` |
+| IC-17 | `timeline_items.playback_rate` ∈ [0,8; 1,25] với item `NARRATION`; item khác mặc định 1,0; `playback_rate ≠ 1` thì `derived_media_id` NOT NULL trước khi render | CHECK + `@studio/timeline-rules` + `ReadinessChecker` |
+| IC-18 | `daily_ai_budgets`: `reserved_micro ≥ 0`, `spent_micro ≥ 0`, `spent_micro + reserved_micro ≤ cap_micro` tại mọi thời điểm giữ chỗ | CHECK + câu `UPDATE` có điều kiện (05 §6.1, ADR-25) |
 
 ## 5. Cột trạng thái ↔ sơ đồ trạng thái
 

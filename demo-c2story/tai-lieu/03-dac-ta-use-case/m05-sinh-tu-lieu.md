@@ -47,11 +47,11 @@
 | Tiền điều kiện | Chương có văn bản; có danh sách shot với chỉ số câu (từ LLM ở UC-05.01 bước 3, hoặc từ thao tác của Editor ở UC-05.03, UC-05.06c, UC-03.02a) |
 | Hậu điều kiện | **Thành công:** các shot phủ kín chương, không chồng lấn, không sót; mỗi shot có `source_start`, `source_end`, `source_hash`. **Tối thiểu:** không lưu bản nháp vi phạm phủ kín |
 | Kích hoạt | UC-05.01 bước 4; mỗi thao tác đổi ranh giới shot |
-| Truy vết | BR-20; IC-08; NFR-INT-01; ADR-11; API 2.5 `…/storyboards/{did}/coverage`; `so-do/05-hoat-dong/act-phu-kin-van-ban.puml` |
+| Truy vết | BR-20; IC-08; NFR-INT-01; ADR-11; 12 §1 (`SentenceSegmenter`, SEG-R1..R7); API 2.5 `…/storyboards/{did}/coverage`; `so-do/05-hoat-dong/act-phu-kin-van-ban.puml` |
 | Giai đoạn | P1 |
 
 **Luồng chính**
-1. Hệ thống lấy bảng câu của chương (tách tất định, mỗi câu có offset `[start, end)`).
+1. Hệ thống lấy bảng câu của chương bằng `SentenceSegmenter` (tách tất định theo 12 §1, mỗi câu có offset `[start, end)`); ghi `segmenter_version` vào bản nháp.
 2. Hệ thống đổi `startSentence`, `endSentence` của từng shot thành `source_start`, `source_end`.
 3. Hệ thống sắp shot theo thứ tự, kẹp chỉ số vào phạm vi hợp lệ và bỏ shot rỗng.
 4. Khoảng hở giữa hai shot được gộp vào shot trước (khoảng hở ở đầu chương gộp vào shot đầu); phần chồng lấn được cắt theo shot sau.
@@ -705,7 +705,7 @@
 2. Thực hiện **UC-05.13a**.
 3. Thực hiện **UC-05.13b**.
 4. Gọi TTS (chia theo câu nếu vượt giới hạn, rồi nối audio); lưu audio.
-5. Lấy `word_timings` từ TTS nếu provider trả timestamp; nếu không, Aligner chạy forced alignment giữa audio và `text`.
+5. Lấy thời gian từng từ trên bản đọc từ TTS nếu provider trả timestamp; nếu không, Aligner chạy forced alignment giữa audio và bản đọc. Ánh xạ về tọa độ chương bằng `NormalizationMap` theo 12 §2.3 để có `word_timings`.
 6. Lưu Narration `DONE` (phiên bản mới, đặt làm hiện hành, `flagged_at` rỗng), trừ chi phí thực × 110% và hoàn phần dư, phát `narration.updated`.
 7. *(Sau MVP)* Thực hiện **UC-05.13c** trước bước 6; trạng thái là `VERIFIED` hoặc `NEEDS_REVIEW` thay cho `DONE`.
 
@@ -749,13 +749,13 @@
 | Tiền điều kiện | Có `text` từ UC-05.13a; dự án có `narration_settings` và từ điển phát âm |
 | Hậu điều kiện | **Thành công:** có `ssml` và `normalization_log`; `text` gốc không đổi. **Tối thiểu:** không gọi TTS khi kiểm tra ngược thất bại |
 | Kích hoạt | UC-05.13 bước 3 |
-| Truy vết | BR-19; FR-NAR-03, 04; NFR-INT-02; 08 §6; 04 §3.4 `pronunciation_entries`, `narration_settings.symbol_rules` |
+| Truy vết | BR-19; FR-NAR-03, 04; NFR-INT-02; 08 §6; 12 §2.2 (`NormalizationMap`); 04 §3.4 `pronunciation_entries`, `narration_settings.symbol_rules` |
 | Giai đoạn | P2 |
 
 **Luồng chính**
 1. Hệ thống áp quy tắc tất định lên bản đọc: các quy tắc ký hiệu SYM-01..05 đang bật của dự án (08 §6: `*Bố*` đọc "Bố", `[Về ăn cơm]` đọc "Về ăn cơm", `# Hồi 2` đọc "Hồi 2", dòng `---` thành khoảng lặng 0,5 s); đọc số, ngày và đơn vị; ngắt nghỉ theo dấu câu với độ dài nghỉ câu và nghỉ đoạn từ `narration_settings`.
 2. Hệ thống áp từ điển phát âm bằng SSML `alias` hoặc `phoneme` (tôn trọng `case_sensitive`).
-3. Hệ thống ghi `normalization_log` liệt kê các biến đổi đã áp.
+3. Hệ thống ghi `normalization_log` gồm bản đồ chuẩn hóa `NormalizationMap` (12 §2.2: các đoạn `IDENTITY`/`DROP`/`EXPAND`/`ALIAS`/`PAUSE` nối S với bản đọc) và danh sách quy tắc đã áp.
 4. Hệ thống kiểm tra ngược: gỡ thẻ SSML và đảo các alias thì phải ra đúng `text`, chỉ khác ở các biến đổi mức phát âm được phép (BR-19), tức là chỉ thiếu các ký tự ký hiệu đã bỏ theo quy tắc đang bật.
 5. Hệ thống trả `ssml` cho bước gọi TTS của UC-05.13.
 
@@ -907,15 +907,15 @@
 **Luồng chính**
 1. Hệ thống kiểm tra `Idempotency-Key`; trùng thì trả kết quả cũ.
 2. Hệ thống tính **giá ước tính tối đa** `x` từ `price_rules` (đơn giá provider × giới hạn đầu ra × 1,10).
-3. Hệ thống kiểm tra trần chi tiêu AI trong ngày (BR-29).
-4. Trong một giao dịch: khóa `wallets` (`FOR UPDATE`) của **người kích hoạt** (BR-03), kiểm tra `available ≥ x`, ghi HOLD `x`, tạo job (`held_micro = x`) + outbox.
-5. Khi job thành công: tính `c = min(Σ ai_usage_records.cost_usd × 1,10, x)`; ghi CAPTURE `c` và RELEASE `x − c` cùng giao dịch với kết quả job; đặt `jobs.charged_micro = c`.
-6. Khi job thất bại, bị hủy hoặc vi phạm chính sách: RELEASE `x`.
+3. Trong **một giao dịch**: giữ chỗ trong trần chi tiêu ngày bằng câu cập nhật có điều kiện trên `daily_ai_budgets` (UC-10.12, BR-29, ADR-25).
+4. Cùng giao dịch: khóa `wallets` (`FOR UPDATE`) của **người kích hoạt** (BR-03), kiểm tra `available ≥ x`, ghi HOLD `x`, tạo job (`held_micro = x`, `budget_day`, `budget_reserved_micro`). Thứ tự khóa luôn là ngân sách ngày → ví.
+5. Khi job thành công: tính `c = min(Σ ai_usage_records.cost_usd × 1,10, x)`; ghi CAPTURE `c` và RELEASE `x − c` cùng giao dịch với kết quả job; đặt `jobs.charged_micro = c`; trả chỗ ngân sách (`reserved −= budget_reserved_micro`, `spent += Σ cost_usd`).
+6. Khi job thất bại, bị hủy hoặc vi phạm chính sách: RELEASE `x`; trả chỗ ngân sách và cộng chi phí provider đã phát sinh (nếu có) vào `spent`.
 7. Hệ thống phát `wallet.updated`.
 
 **Luồng thay thế / ngoại lệ**
-- **3a.** Chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED`; không giữ tiền, không tạo job.
-- **4a.** Không đủ số dư: `402 INSUFFICIENT_BALANCE` kèm số còn thiếu.
+- **3a.** Câu cập nhật ngân sách không trúng dòng nào (vượt trần): ROLLBACK, `503 DAILY_BUDGET_EXCEEDED`; không giữ tiền, không tạo job.
+- **4a.** Không đủ số dư: ROLLBACK cả phần giữ chỗ ngân sách, `402 INSUFFICIENT_BALANCE` kèm số còn thiếu.
 - **5a.** Chi phí thực × 110% lớn hơn số đã giữ (ước tính sai): chỉ trừ bằng số đã giữ, phần chênh do hệ thống chịu, ghi cảnh báo để chỉnh giới hạn đầu ra trong `price_rules` [ĐX].
 - **5b.** Provider không trả số liệu sử dụng: dùng đơn giá × đơn vị đo được (số ảnh, số ký tự) để tính chi phí thực.
 - **\*a.** Job mất heartbeat > 10 phút: reconciler đặt `FAILED` và RELEASE.

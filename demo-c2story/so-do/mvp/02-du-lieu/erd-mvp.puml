@@ -249,6 +249,7 @@ package "Sinh tư liệu" #F5EEFF {
         * kind : text
         boundary_fixes : int
         created_by : uuid <<FK>>
+        segmenter_version : text
     }
     entity shots {
         * id : uuid <<PK>>
@@ -401,6 +402,7 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         fade_out_ms : int
         ducking_db : numeric
         playback_rate : numeric
+        derived_media_id : uuid <<FK>>
         user_modified : bool
         sync_flag : text
     }
@@ -470,6 +472,15 @@ package "Director, job & hạ tầng" #EEEEEE {
         heartbeat_at : timestamptz
         started_at : timestamptz
         finished_at : timestamptz
+    }
+    entity daily_ai_budgets {
+        * day : date <<PK>>
+        --
+        * cap_micro : bigint
+        * reserved_micro : bigint
+        * spent_micro : bigint
+        alert_80_sent_at : timestamptz
+        alert_100_sent_at : timestamptz
     }
     entity system_settings {
         * key : text <<PK>>

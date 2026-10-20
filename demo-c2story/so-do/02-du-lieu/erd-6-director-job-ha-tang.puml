@@ -65,6 +65,15 @@ package "Director, job & hạ tầng" #EEEEEE {
         started_at : timestamptz
         finished_at : timestamptz
     }
+    entity daily_ai_budgets {
+        * day : date <<PK>>
+        --
+        * cap_micro : bigint
+        * reserved_micro : bigint
+        * spent_micro : bigint
+        alert_80_sent_at : timestamptz
+        alert_100_sent_at : timestamptz
+    }
     entity system_settings {
         * key : text <<PK>>
         --

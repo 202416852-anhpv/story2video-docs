@@ -71,7 +71,7 @@
 | Hậu điều kiện | **Thành công:** thay đổi được lưu tự động (version tăng) và thỏa BR-24. **Tối thiểu:** thao tác vi phạm bị hoàn tác, không làm hỏng timeline |
 | Kích hoạt | Thao tác chuột/bàn phím trên timeline |
 | Quan hệ | include UC-06.02a |
-| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14 |
+| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14, ADR-24; IC-17 |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -81,7 +81,8 @@
 4. Server thực hiện **UC-06.02a**, ghi items, tăng version, trả ETag mới.
 
 **Luồng thay thế / ngoại lệ**
-- **1a.** Editor chọn một clip thuyết minh và đổi tốc độ (thanh trượt 0,8×–1,25×, bước 0,05): preview phát với tốc độ mới, giữ cao độ; clip ảnh và phụ đề của shot co giãn theo, các clip phía sau dời theo (BR-24).
+- **1a.** Editor chọn một clip thuyết minh và đổi tốc độ (thanh trượt 0,8×–1,25×, bước 0,05): timeline cập nhật ngay độ dài clip, clip ảnh và phụ đề của shot co giãn theo, các clip phía sau dời theo (BR-24). Server tạo job `PROCESS_AUDIO_RATE` sinh file audio đã đổi tốc độ, giữ cao độ (ADR-24); trong lúc chờ (vài giây), clip hiện "Đang xử lý tốc độ" và preview phát im lặng đúng độ dài mới. Khi xong, `derived_media_id` được gán và preview phát file dẫn xuất ở tốc độ 1,0, giống hệt bản xuất. Cặp narration–tốc độ đã có file thì dùng lại ngay (cache).
+- **1b.** Job `PROCESS_AUDIO_RATE` lỗi: clip giữ tốc độ mới nhưng báo lỗi và nút "Thử lại"; không xuất được tới khi có file (IC-17).
 - **4a.** `422 NARRATION_LOCKED`: client hoàn tác thao tác vi phạm, hiện giải thích.
 - **4b.** `409` (timeline vừa đổi ở tab khác): tải lại timeline (BR-05); sau MVP xử lý theo UC-02.10.
 - **\*a.** Mất mạng: thao tác giữ trong hàng đợi cục bộ, đồng bộ khi có mạng; hiện trạng thái "Chưa lưu".
@@ -460,15 +461,15 @@
 | Hậu điều kiện | **Thành công:** Render phiên bản mới `READY`, đặt làm bản chính, có MP4 + SRT/VTT; với tài khoản Free, lượt render và phút video của tháng được cộng. **Tối thiểu:** lỗi thì Render `FAILED`, không ảnh hưởng timeline, không tính lượt |
 | Kích hoạt | Bấm "Xuất video" |
 | Quan hệ | include UC-06.16a; được mở rộng bởi UC-06.16b |
-| Truy vết | FR-EDT-21..24; FR-BIL-12; BR-23, BR-27; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-21..24; FR-BIL-12; BR-23, BR-27; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
 1. Editor bấm "Xuất video".
 2. Hệ thống thực hiện **UC-06.16a** và hiện báo cáo độ phủ, thời lượng.
 3. Editor chọn độ phân giải (720p / 1080p) và xác nhận. Tài khoản Free: chỉ 720p, hộp thoại hiện số lượt render và phút video còn lại trong tháng, và ghi chú video sẽ có watermark (BR-27).
-4. Hệ thống chụp `timeline_snapshot` của phiên bản hiện tại và tạo job `RENDER_TIMELINE` (miễn phí).
-5. Render Worker dựng khung hình (Ken Burns, chuyển cảnh, phụ đề; watermark đường kẻ + logo nếu tài khoản Free) theo đoạn song song; đổi tốc độ clip thuyết minh theo `playback_rate` (giữ cao độ); trộn thuyết minh + nhạc (ducking) + SFX; chuẩn hóa loudness; encode H.264/AAC.
+4. Hệ thống chụp `timeline_snapshot` của phiên bản hiện tại (hợp lệ theo `schemas/timeline-snapshot.schema.json` và SNP-01..07, 12 §3) và tạo job `RENDER_TIMELINE` (miễn phí).
+5. Render Worker kiểm schema snapshot, dựng khung hình (Ken Burns, chuyển cảnh, phụ đề dựng sẵn trong snapshot; watermark đường kẻ + logo nếu tài khoản Free) theo đoạn song song; dùng file dẫn xuất cho clip đã đổi tốc độ; trộn thuyết minh + nhạc (ducking) + SFX; chuẩn hóa loudness; encode H.264/AAC.
 6. Tiến độ gửi qua SSE; Editor có thể hủy.
 7. Hoàn tất: tạo Render `READY` + SRT/VTT; thông báo "Video đã sẵn sàng" và mở UC-06.17.
 
@@ -496,7 +497,7 @@
 
 **Luồng chính**
 1. Hệ thống kiểm tra mọi shot hiện hành có ảnh `DONE`.
-2. Hệ thống kiểm tra mọi shot có thuyết minh `DONE` (sau MVP: `VERIFIED` hoặc `ACCEPTED`), không có `OUTDATED`.
+2. Hệ thống kiểm tra mọi shot có thuyết minh `DONE` (sau MVP: `VERIFIED` hoặc `ACCEPTED`), không có `OUTDATED`; clip có `playback_rate ≠ 1` đã có file dẫn xuất (IC-17).
 3. Hệ thống kiểm tra timeline thỏa IC-10 và BR-24.
 4. Hệ thống kiểm tra tổng ký tự các đoạn nguồn có clip thuyết minh bằng tổng ký tự chương (100%).
 5. Hệ thống liệt kê **cảnh báo không chặn**: các shot được đánh dấu cần sinh lại (BR-34); với tài khoản Free thêm lượt render, phút video còn lại và ghi chú watermark.

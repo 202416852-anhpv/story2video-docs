@@ -17,6 +17,7 @@ package "Sinh tư liệu" #F5EEFF {
         * kind : text
         boundary_fixes : int
         created_by : uuid <<FK>>
+        segmenter_version : text
     }
     entity shots {
         * id : uuid <<PK>>

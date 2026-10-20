@@ -68,6 +68,7 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         fade_out_ms : int
         ducking_db : numeric
         playback_rate : numeric
+        derived_media_id : uuid <<FK>>
         user_modified : bool
         sync_flag : text
     }

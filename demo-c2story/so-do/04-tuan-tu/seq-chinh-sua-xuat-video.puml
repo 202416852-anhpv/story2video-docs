@@ -39,6 +39,11 @@ API -> API : UC-06.02a: kiểm tra BR-24 / IC-10 / IC-17 trên toàn lô\n(thuy�
 alt hợp lệ
     API -> DB : ghi items; version v2
     API --> Web : 200 ETag v2
+    opt có clip thuyết minh đổi playbackRate (ADR-24)
+        API -> DB : job PROCESS_AUDIO_RATE (media-proc, miễn phí)\nhoặc dùng lại file dẫn xuất đã có (cache)
+        API --> Web : SSE timeline.updated (rateStatus READY, derived_media_id)
+        Web -> Web : Preview phát file dẫn xuất ở tốc độ 1,0\n(giống bản xuất)
+    end
 else vi phạm (vd. xóa clip thuyết minh)
     API --> Web : 422 NARRATION_LOCKED {opIndex}
     Web -> Web : hoàn tác thao tác, hiện giải thích

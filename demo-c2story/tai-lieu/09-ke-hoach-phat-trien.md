@@ -417,7 +417,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-05.01 Tạo bản nháp storyboard | P1 | FR-BOK-01, 01a, 05 | BO-01, BO-03 | act-phu-kin-van-ban, seq-storyboard-sinh-anh | IT-storyboard-schema, PBT-coverage-validator |
+| UC-05.01 Tạo bản nháp storyboard | P1 | FR-BOK-01, 01a, 05 | BO-01, BO-03 | act-phu-kin-van-ban, seq-storyboard-sinh-anh | IT-storyboard-schema, PBT-coverage-validator, UT-sentence-segmenter, PBT-segmenter-coverage, EVAL-segmenter-golden |
 | UC-05.02 Quản lý bản nháp | Sau | FR-BOK-02 | BO-03 | — | IT-storyboard-schema |
 | UC-05.03 Chia lại shot (nhiều / ít hơn) | P1 | FR-BOK-03 | BO-01 | — | IT-redirect-preserves-source, PBT-coverage-validator |
 | UC-05.04 Thiết lập Chapter rules | Sau | FR-BOK-04 | BO-02 | — | UT-prompt-compiler-order |
@@ -429,11 +429,11 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-05.10 Sửa ảnh | P1 | FR-BOK-10 | BO-02 | seq-storyboard-sinh-anh | E2E-shot-image |
 | UC-05.11 Cài đặt thuyết minh | P2 | FR-NAR-01, 03 | BO-04 | — | IT-narration-settings, IT-symbol-rules |
 | UC-05.12 Quản lý từ điển phát âm | P2 ✂5 | FR-NAR-04 | BO-04 | — | IT-pronunciation-dictionary |
-| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden |
+| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden, UT-normalization-map, PBT-normalization-map, UT-timing-map |
 | UC-05.14 Duyệt shot cần xem lại (NEEDS_REVIEW) | Sau | FR-NAR-07 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van, state-narration-render | E2E-needs-review |
 | UC-05.15 Gán giọng theo nhân vật | Sau | FR-NAR-05 | BO-04 | — | IT-multi-voice |
 | UC-05.16 Tải ZIP ảnh | Sau | FR-BOK-16 | — | — | IT-asset-zip-export |
-| UC-05.17 Giữ / trừ / hoàn tiền | P1 | FR-BIL-11 | BO-06 | act-giu-tru-tien | PBT-wallet-ledger, IT-wallet-refund, IT-daily-budget-cap |
+| UC-05.17 Giữ / trừ / hoàn tiền | P1 | FR-BIL-11 | BO-06 | act-giu-tru-tien | PBT-wallet-ledger, IT-wallet-refund, IT-daily-budget-cap, IT-daily-budget-concurrency |
 | UC-05.18 Nghe & đánh dấu cần sinh lại | P2 | FR-NAR-08 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van, state-narration-render | E2E-listen-flag, IT-render-readiness |
 
 ### 4.6 M06 — Trình chỉnh sửa & xuất video
@@ -441,7 +441,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
 | UC-06.01 Mở trình chỉnh sửa | P3 | FR-EDT-01..03 | BO-01 | seq-chinh-sua-xuat-video, seq-sinh-tu-lieu | IT-media-sync |
-| UC-06.02 Thao tác timeline | P3 | FR-EDT-03, 04, 18, 20 | BO-01, BO-03 | seq-chinh-sua-xuat-video | UT-timeline-ops, UT-narration-track-locked, UT-narration-speed |
+| UC-06.02 Thao tác timeline | P3 | FR-EDT-03, 04, 18, 20 | BO-01, BO-03 | seq-chinh-sua-xuat-video | UT-timeline-ops, UT-narration-track-locked, UT-narration-speed, IT-narration-rate-variant |
 | UC-06.03 Quản lý track | P3 | FR-EDT-02, 15 | BO-01 | — | UT-timeline-ops |
 | UC-06.04 Đặt hiệu ứng Ken Burns & điểm tập trung | P3 | FR-EDT-06 | BO-01 | — | UT-visual-effects |
 | UC-06.05 Đặt chuyển cảnh | P3 (nâng cao ✂2) | FR-EDT-07 | BO-01 | — | UT-visual-effects |
@@ -455,7 +455,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-06.13 Xem trước | P3 ✂9 | FR-EDT-17 | BO-01 | — | E2E-preview-sync |
 | UC-06.14 Xem lịch sử & khôi phục phiên bản timeline | Sau | FR-EDT-18 | — | — | IT-timeline-autosave |
 | UC-06.15 Đồng bộ khi tư liệu thay đổi | P3 | FR-EDT-19 | BO-03 | — | IT-media-sync |
-| UC-06.16 Xuất video MP4 | P3 | FR-EDT-21..24, 26; FR-BIL-12 | BO-03, BO-06 | seq-chinh-sua-xuat-video | IT-render-readiness, IT-subtitle-verbatim, IT-free-render-quota, BENCH-render |
+| UC-06.16 Xuất video MP4 | P3 | FR-EDT-21..24, 26; FR-BIL-12 | BO-03, BO-06 | seq-chinh-sua-xuat-video | IT-render-readiness, IT-subtitle-verbatim, IT-free-render-quota, BENCH-render, UT-snapshot-schema |
 | UC-06.17 Tải MP4 / SRT / audio | P3 | FR-EDT-24, 25 | BO-01 | — | IT-render-download |
 
 ### 4.7 M07 — AI Director
@@ -508,7 +508,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-10.09 Ghi audit log | P1 | — | — | — | IT-admin-audit |
 | UC-10.10 Xem báo cáo | Sau | FR-ADM-06 | BO-05, BO-06 | — | IT-admin-reports |
 | UC-10.11 Quản lý danh sách mời beta | P0 | FR-AUTH-11 | BO-06 | seq-dang-nhap-sso | IT-invite-gate, IT-admin-audit |
-| UC-10.12 Áp trần chi tiêu AI hằng ngày | P2 | FR-ADM-07 | BO-06 | act-giu-tru-tien | IT-daily-budget-cap |
+| UC-10.12 Áp trần chi tiêu AI hằng ngày | P2 | FR-ADM-07 | BO-06 | act-giu-tru-tien | IT-daily-budget-cap, IT-daily-budget-concurrency |
 
 ### 4.11 Yêu cầu xuyên suốt và yêu cầu chưa có use case
 
@@ -592,6 +592,9 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `IT-asset-zip-export` | IT |  | ZIP ảnh tài sản/ảnh shot đủ file, tên file an toàn, link ký có thời hạn |
 | `IT-storyboard-schema` | IT | ✓ | Bản nháp storyboard của LLM đúng schema, 1–40 shot; quản lý bản nháp, "Set as current" |
 | `PBT-coverage-validator` | PBT | ✓ | Mọi bản nháp và mọi thao tác shot: đoạn nguồn liên tục, không chồng lấn, nối lại bằng đúng chương (BR-20) |
+| `UT-sentence-segmenter` | UT | ✓ | 22 ca SEG-01..22 của `SentenceSegmenter` (12 §1.4) |
+| `PBT-segmenter-coverage` | PBT | ✓ | 10.000 chuỗi ngẫu nhiên: bất biến SEG-I1..I5; tách → nối → tách lại ổn định |
+| `EVAL-segmenter-golden` | EVAL | ✓ | Ranh giới câu trên golden set đúng ≥ 98%, không ranh giới nào giữa một từ (12 §1.4) |
 | `IT-redirect-preserves-source` | IT | ✓ | Re-split / Re-direct / viết lại brief không đổi văn bản đoạn nguồn (BR-21) |
 | `IT-auto-link-assets` | IT | ✓ | Tự khớp tên cast/item/location theo tên và bí danh; tên mơ hồ bị cảnh báo |
 | `E2E-generate-media-chapter` | E2E | ✓ | "Sinh tư liệu" một chương: báo giá, sinh ảnh + thuyết minh song song, chương "Sẵn sàng dựng" |
@@ -602,14 +605,19 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `IT-pronunciation-dictionary` | IT | ✓ | Từ điển phát âm chỉ đổi bản đọc, không đổi văn bản nguồn và phụ đề |
 | `IT-tts-input-equals-source` | IT | ✓ | Văn bản gửi TTS sau khi bỏ SSML bằng đúng đoạn nguồn của shot (BR-19) |
 | `IT-symbol-rules` | IT | ✓ | SYM-01..05: bản đọc bỏ ký hiệu giữ chữ, "---" thành lặng 0,5 s; quy tắc tắt thì giữ ký hiệu; phụ đề luôn hiện nguyên văn kể cả ký hiệu (BR-19, BR-22) |
+| `UT-normalization-map` | UT | ✓ | `NormalizationMap` phủ kín cả S và bản đọc, đơn điệu; ghép lại đúng S (12 §2.2) |
+| `PBT-normalization-map` | PBT | ✓ | S ngẫu nhiên có ký hiệu, số, mục từ điển: bất biến 12 §2.2 và ánh xạ bản đọc → S đơn điệu |
+| `UT-timing-map` | UT | ✓ | Ca MAP-01..08: ánh xạ thời gian từ bản đọc về văn bản gốc và dựng cue phụ đề (12 §2.3–2.5) |
 | `EVAL-wer-golden` | EVAL | ✓ | WER trung bình ≤ 3% trên golden set vi/en với provider và giọng đã chọn (P0; chạy lại khi đổi provider, giọng, quy tắc chuẩn hóa) |
 | `E2E-needs-review` | E2E |  | (Sau MVP) Shot vượt ngưỡng WER chuyển NEEDS_REVIEW, tô đỏ chỗ lệch, khóa xuất cho tới khi xử lý |
 | `E2E-listen-flag` | E2E | ✓ | Nghe thuyết minh tô sáng theo từ; đánh dấu / bỏ đánh dấu; sinh lại phạm vi FLAGGED xóa cờ; cờ không chặn xuất (BR-34) |
 | `IT-multi-voice` | IT |  | Gán giọng theo nhân vật chỉ áp cho lời thoại trong ngoặc kép; văn bản không đổi |
 | `PBT-wallet-ledger` | PBT | ✓ | Mọi chuỗi giữ/trừ/hoàn: số dư = tổng sổ cái, không âm, CAPTURE ≤ HOLD, CAPTURE + RELEASE = HOLD, không trừ hai lần (BR-02, IC-05) |
 | `IT-daily-budget-cap` | IT | ✓ | Chạm trần chi tiêu ngày: job tốn phí mới bị 503 DAILY_BUDGET_EXCEEDED, job đang chạy vẫn xong, Admin nhận 1 email; qua 00:00 giờ Việt Nam thì mở lại (BR-29) |
+| `IT-daily-budget-concurrency` | IT | ✓ | 50 yêu cầu đồng thời quanh ngưỡng trần: `spent + reserved` không bao giờ vượt `cap`; hết chỗ thì 503; thiếu số dư thì trả chỗ ngân sách (IC-18, ADR-25) |
 | `UT-narration-track-locked` | UT | ✓ | Clip thuyết minh không cắt, trim, xóa, đổi thứ tự được (BR-24) |
 | `UT-narration-speed` | UT | ✓ | Đổi tốc độ clip thuyết minh 0,8–1,25× co giãn ảnh, phụ đề, dời clip sau; ngoài khoảng trả NARRATION_LOCKED (BR-24, IC-17) |
+| `IT-narration-rate-variant` | IT | ✓ | Đổi tốc độ tạo file dẫn xuất giữ cao độ, thời lượng = gốc / tốc độ ± 1 khung hình; dùng lại cache; chưa có file thì không xuất được (ADR-24, IC-17) |
 | `IT-timeline-autosave` | IT |  | Autosave debounce ≤ 2 s, khóa lạc quan; lịch sử phiên bản timeline khôi phục được (sau MVP) |
 | `UT-timeline-ops` | UT | ✓ | Kéo thả, cắt, trim, nhân bản, undo/redo trên các track không phải thuyết minh |
 | `UT-visual-effects` | UT | ✓ | Ken Burns, chuyển cảnh, khung hình sinh đúng tham số render; tinh chỉnh màu (sau MVP) |
@@ -621,6 +629,7 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `E2E-preview-sync` | E2E | ✓ | Xem trước bắt đầu ≤ 2 s; lệch hình–tiếng–phụ đề ≤ 100 ms (NFR-PERF-11) |
 | `IT-media-sync` | IT | ✓ | Sinh lại ảnh/thuyết minh hoặc đổi storyboard thì timeline đồng bộ, giữ chỉnh sửa của người dùng |
 | `IT-render-readiness` | IT | ✓ | Chặn xuất khi độ phủ < 100%, còn ảnh hoặc thuyết minh chưa DONE, hoặc OUTDATED; shot đã đánh dấu chỉ là cảnh báo (BR-23, BR-34) |
+| `UT-snapshot-schema` | UT | ✓ | Ca SNP-T01..T06: `timeline_snapshot` theo `schemas/timeline-snapshot.schema.json` và SNP-01..07 (12 §3) |
 | `IT-free-render-quota` | IT | ✓ | Free: chỉ 720p, watermark; lượt render thứ 4 hoặc vượt 10 phút/tháng bị 403; render lỗi không tính lượt; đã nạp tiền thì không watermark (BR-27) |
 | `BENCH-render` | BENCH | ✓ | P0: đo trên cấu hình máy staging thật, ngưỡng MVP 1 phút 720p ≤ 2 phút (§1.5); sau MVP: 1080p ≤ 1× thời lượng trên 8 vCPU (NFR-PERF-10) |
 | `E2E-walking-skeleton` | E2E | ✓ | Mốc M1 (T6): một chương mẫu đi hết import → storyboard → ảnh → TTS → MP4 có phụ đề trên staging với provider thật |

@@ -1430,7 +1430,7 @@ Feature: UC-05.01 Tạo bản nháp storyboard
 | Mô tả | Đổi chỉ số câu do LLM hoặc Editor đưa ra thành ranh giới ký tự và bảo đảm các shot phủ kín 100% văn bản chương (IC-08, BR-20) |
 | Use case | [UC-05.01a](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0501a) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P1 |
-| Truy vết | BR-20; IC-08; NFR-INT-01; ADR-11; API 2.5 `…/storyboards/{did}/coverage`; `so-do/05-hoat-dong/act-phu-kin-van-ban.puml` |
+| Truy vết | BR-20; IC-08; NFR-INT-01; ADR-11; 12 §1 (`SentenceSegmenter`, SEG-R1..R7); API 2.5 `…/storyboards/{did}/coverage`; `so-do/05-hoat-dong/act-phu-kin-van-ban.puml` |
 | Story point | |
 
 ```gherkin
@@ -1439,7 +1439,7 @@ Feature: UC-05.01a Tách câu & kiểm tra phủ kín
     Given Chương có văn bản; có danh sách shot với chỉ số câu (từ LLM ở UC-05.01 bước 3, hoặc từ thao tác của Editor ở UC-05.03, UC-05.06c, UC-03.02a)
 
   Scenario: Luồng chính
-    When Hệ thống lấy bảng câu của chương (tách tất định, mỗi câu có offset [start, end))
+    When Hệ thống lấy bảng câu của chương bằng SentenceSegmenter (tách tất định theo 12 §1, mỗi câu có offset [start, end)); ghi segmenter_version vào bản nháp
     And Hệ thống đổi startSentence, endSentence của từng shot thành source_start, source_end
     And Hệ thống sắp shot theo thứ tự, kẹp chỉ số vào phạm vi hợp lệ và bỏ shot rỗng
     And Khoảng hở giữa hai shot được gộp vào shot trước (khoảng hở ở đầu chương gộp vào shot đầu); phần chồng lấn được cắt theo shot sau
@@ -1954,22 +1954,22 @@ Feature: UC-05.17 Giữ / trừ / hoàn tiền
   Scenario: Luồng chính
     When Hệ thống kiểm tra Idempotency-Key; trùng thì trả kết quả cũ
     And Hệ thống tính giá ước tính tối đa x từ price_rules (đơn giá provider × giới hạn đầu ra × 1,10)
-    And Hệ thống kiểm tra trần chi tiêu AI trong ngày (BR-29)
-    And Trong một giao dịch: khóa wallets (FOR UPDATE) của người kích hoạt (BR-03), kiểm tra available ≥ x, ghi HOLD x, tạo job (held_micro = x) + outbox
-    And Khi job thành công: tính c = min(Σ ai_usage_records.cost_usd × 1,10, x); ghi CAPTURE c và RELEASE x − c cùng giao dịch với kết quả job; đặt jobs.charged_micro = c
-    And Khi job thất bại, bị hủy hoặc vi phạm chính sách: RELEASE x
+    And Trong một giao dịch: giữ chỗ trong trần chi tiêu ngày bằng câu cập nhật có điều kiện trên daily_ai_budgets (UC-10.12, BR-29, ADR-25)
+    And Cùng giao dịch: khóa wallets (FOR UPDATE) của người kích hoạt (BR-03), kiểm tra available ≥ x, ghi HOLD x, tạo job (held_micro = x, budget_day, budget_reserved_micro). Thứ tự khóa luôn là ngân sách ngày → ví
+    And Khi job thành công: tính c = min(Σ ai_usage_records.cost_usd × 1,10, x); ghi CAPTURE c và RELEASE x − c cùng giao dịch với kết quả job; đặt jobs.charged_micro = c; trả chỗ ngân sách (reserved −= budget_reserved_micro, spent += Σ cost_usd)
+    And Khi job thất bại, bị hủy hoặc vi phạm chính sách: RELEASE x; trả chỗ ngân sách và cộng chi phí provider đã phát sinh (nếu có) vào spent
     And Hệ thống phát wallet.updated
     Then sổ cái có đúng một HOLD cho mỗi job; khi job kết thúc, CAPTURE + RELEASE bằng số đã HOLD và CAPTURE ≤ HOLD (IC-05)
 
-  Scenario: 3a Chạm trần chi tiêu ngày
+  Scenario: 3a Câu cập nhật ngân sách không trúng dòng nào (vượt trần)
     Given luồng chính đã tới bước 3
-    When Chạm trần chi tiêu ngày
-    Then 503 DAILY_BUDGET_EXCEEDED; không giữ tiền, không tạo job
+    When Câu cập nhật ngân sách không trúng dòng nào (vượt trần)
+    Then ROLLBACK, 503 DAILY_BUDGET_EXCEEDED; không giữ tiền, không tạo job
 
   Scenario: 4a Không đủ số dư
     Given luồng chính đã tới bước 4
     When Không đủ số dư
-    Then 402 INSUFFICIENT_BALANCE kèm số còn thiếu
+    Then ROLLBACK cả phần giữ chỗ ngân sách, 402 INSUFFICIENT_BALANCE kèm số còn thiếu
 
   Scenario: 5a Chi phí thực × 110% lớn hơn số đã giữ (ước tính sai)
     Given luồng chính đã tới bước 5
@@ -2700,7 +2700,7 @@ Feature: UC-05.13 Sinh thuyết minh nguyên văn
     And Thực hiện UC-05.13a
     And Thực hiện UC-05.13b
     And Gọi TTS (chia theo câu nếu vượt giới hạn, rồi nối audio); lưu audio
-    And Lấy word_timings từ TTS nếu provider trả timestamp; nếu không, Aligner chạy forced alignment giữa audio và text
+    And Lấy thời gian từng từ trên bản đọc từ TTS nếu provider trả timestamp; nếu không, Aligner chạy forced alignment giữa audio và bản đọc. Ánh xạ về tọa độ chương bằng NormalizationMap theo 12 §2.3 để có word_timings
     And Lưu Narration DONE (phiên bản mới, đặt làm hiện hành, flagged_at rỗng), trừ chi phí thực × 110% và hoàn phần dư, phát narration.updated
     And *(Sau MVP)* Thực hiện UC-05.13c trước bước 6; trạng thái là VERIFIED hoặc NEEDS_REVIEW thay cho DONE
     Then Narration DONE kèm word_timings; cờ "cần sinh lại" (nếu có) được xóa
@@ -2762,7 +2762,7 @@ Feature: UC-05.13a Cắt đoạn nguồn & kiểm tra hash
 | Mô tả | Biến đoạn văn nguồn thành SSML để đọc đúng cách (số, ngày, từ mượn) mà không thêm, bớt, đổi hay sắp xếp lại từ nào |
 | Use case | [UC-05.13b](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0513b) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 |
-| Truy vết | BR-19; FR-NAR-03, 04; NFR-INT-02; 08 §6; 04 §3.4 `pronunciation_entries`, `narration_settings.symbol_rules` |
+| Truy vết | BR-19; FR-NAR-03, 04; NFR-INT-02; 08 §6; 12 §2.2 (`NormalizationMap`); 04 §3.4 `pronunciation_entries`, `narration_settings.symbol_rules` |
 | Story point | |
 
 ```gherkin
@@ -2773,7 +2773,7 @@ Feature: UC-05.13b Chuẩn hóa phát âm (SSML)
   Scenario: Luồng chính
     When Hệ thống áp quy tắc tất định lên bản đọc: các quy tắc ký hiệu SYM-01..05 đang bật của dự án (08 §6: *Bố* đọc "Bố", [Về ăn cơm] đọc "Về ăn cơm", # Hồi 2 đọc "Hồi 2", dòng --- thành khoảng lặng 0,5 s); đọc số, ngày và đơn vị; ngắt nghỉ theo dấu câu với độ dài nghỉ câu và nghỉ đoạn từ narration_settings
     And Hệ thống áp từ điển phát âm bằng SSML alias hoặc phoneme (tôn trọng case_sensitive)
-    And Hệ thống ghi normalization_log liệt kê các biến đổi đã áp
+    And Hệ thống ghi normalization_log gồm bản đồ chuẩn hóa NormalizationMap (12 §2.2: các đoạn IDENTITY/DROP/EXPAND/ALIAS/PAUSE nối S với bản đọc) và danh sách quy tắc đã áp
     And Hệ thống kiểm tra ngược: gỡ thẻ SSML và đảo các alias thì phải ra đúng text, chỉ khác ở các biến đổi mức phát âm được phép (BR-19), tức là chỉ thiếu các ký tự ký hiệu đã bỏ theo quy tắc đang bật
     And Hệ thống trả ssml cho bước gọi TTS của UC-05.13
     Then có ssml và normalization_log; text gốc không đổi
@@ -2872,7 +2872,7 @@ Feature: UC-09.05 Xem số dư ví
 | Mô tả | Giữ tổng chi phí AI thật của toàn hệ thống trong một ngày không vượt trần (closed beta: $10); chạm trần thì tạm dừng job mới và báo Admin |
 | Use case | [UC-10.12](03-dac-ta-use-case/m10-quan-tri.md#uc-1012) · M10 — Quản trị |
 | Giai đoạn | P2 |
-| Truy vết | FR-ADM-07; BR-29; QĐ-39; NFR-COST-02; API `503 DAILY_BUDGET_EXCEEDED` |
+| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED` |
 | Story point | |
 
 ```gherkin
@@ -2881,16 +2881,18 @@ Feature: UC-10.12 Áp trần chi tiêu AI hằng ngày
     Given system_settings.daily_ai_budget_usd đã cấu hình
 
   Scenario: Luồng chính
-    When Khi có yêu cầu tạo job tốn phí, BudgetGuard tính: chi phí thực từ 00:00 giờ Việt Nam (Σ ai_usage_records.cost_usd) + tiền đang giữ của các job chưa xong + giá ước tính của job mới
-    And Tổng ≤ trần: cho tạo job (UC-05.17 tiếp bước 4)
-    And Scheduler mỗi 5 phút tính tổng chi phí thực trong ngày; vượt 80% trần thì gửi email cảnh báo sớm cho Admin
-    And 00:00 giờ Việt Nam, bộ đếm về 0; job mới được tạo bình thường
-    Then tổng chi phí thực trong ngày không vượt trần (sai số tối đa bằng phần vượt ước tính của các job đang chạy); Admin nhận đúng một cảnh báo cho mỗi ngưỡng mỗi ngày
+    When Khi có yêu cầu tạo job tốn phí, trong giao dịch của UC-05.17, BudgetGuard tạo dòng daily_ai_budgets của hôm nay nếu chưa có (cap_micro lấy từ system_settings), rồi chạy một câu UPDATE … SET reserved_micro = reserved_micro + x WHERE day = hôm nay AND spent_micro + reserved_micro + x <= cap_micro với x là chi phí provider ước tính
+    And Câu lệnh trúng một dòng: chỗ đã được giữ, UC-05.17 tiếp bước 4. Khóa dòng của UPDATE bảo đảm các yêu cầu đồng thời được xếp hàng, không thể cùng vượt trần
+    And Khi job kết thúc: reserved −= x, spent += chi phí thực (UC-05.17 bước 5–6)
+    And Scheduler mỗi 5 phút đọc dòng của hôm nay; spent + reserved ≥ 80% trần và alert_80_sent_at rỗng thì gửi email cảnh báo sớm và ghi thời điểm; chạm trần thì làm tương tự với alert_100_sent_at
+    And Sang ngày mới (00:00 giờ Việt Nam) dùng dòng mới; job tạo hôm trước vẫn trả chỗ vào dòng của ngày tạo (jobs.budget_day)
+    And Reconciler hằng ngày đối chiếu spent_micro với Σ ai_usage_records.cost_usd của ngày; lệch thì sửa và cảnh báo
+    Then tại mọi thời điểm spent + reserved ≤ cap của ngày (IC-18), kể cả khi nhiều yêu cầu đồng thời; chi phí thực chỉ có thể vượt trần một lượng bằng phần các job đang chạy tốn hơn ước tính; Admin nhận đúng một cảnh báo cho mỗi ngưỡng mỗi ngày
 
-  Scenario: 2a Tổng vượt trần
+  Scenario: 2a Câu lệnh không trúng dòng nào (vượt trần)
     Given luồng chính đã tới bước 2
-    When Tổng vượt trần
-    Then từ chối với 503 DAILY_BUDGET_EXCEEDED; giao diện hiện "Hệ thống tạm dừng tác vụ AI mới đến 00:00 do đạt giới hạn chi phí trong ngày"; gửi email cho Admin kèm tổng chi phí và 5 người dùng chi nhiều nhất
+    When Câu lệnh không trúng dòng nào (vượt trần)
+    Then ROLLBACK, 503 DAILY_BUDGET_EXCEEDED; giao diện hiện "Hệ thống tạm dừng tác vụ AI mới đến 00:00 do đạt giới hạn chi phí trong ngày"; email cho Admin (một lần, theo alert_100_sent_at) kèm tổng chi phí và 5 người dùng chi nhiều nhất
 
   Scenario: 2b Thao tác miễn phí (render, chỉnh sửa, tải lên)
     Given luồng chính đã tới bước 2
@@ -2899,7 +2901,7 @@ Feature: UC-10.12 Áp trần chi tiêu AI hằng ngày
 
   Scenario: *a Admin nâng trần tạm thời
     When Admin nâng trần tạm thời
-    Then sửa daily_ai_budget_usd (seed hoặc CLI); có hiệu lực ngay, ghi audit (UC-10.09)
+    Then sửa daily_ai_budget_usd (seed hoặc CLI); lệnh đồng thời cập nhật cap_micro của dòng hôm nay nên có hiệu lực ngay; ghi audit (UC-10.09)
 ```
 
 ### Giai đoạn P3
@@ -3030,7 +3032,7 @@ Feature: UC-06.01a Dựng bản nháp timeline từ tư liệu
 | Mô tả | Kéo thả, di chuyển, cắt (split), trim, nhân bản, xóa clip; zoom, snap, phím tắt, undo/redo |
 | Use case | [UC-06.02](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0602) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14 |
+| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14, ADR-24; IC-17 |
 | Story point | |
 
 ```gherkin
@@ -3047,7 +3049,11 @@ Feature: UC-06.02 Thao tác timeline
 
   Scenario: 1a Editor chọn một clip thuyết minh và đổi tốc độ (thanh trượt 0,8×–1,25×, bước 0,0
     When Editor chọn một clip thuyết minh và đổi tốc độ (thanh trượt 0,8×–1,25×, bước 0,05)
-    Then preview phát với tốc độ mới, giữ cao độ; clip ảnh và phụ đề của shot co giãn theo, các clip phía sau dời theo (BR-24)
+    Then timeline cập nhật ngay độ dài clip, clip ảnh và phụ đề của shot co giãn theo, các clip phía sau dời theo (BR-24). Server tạo job PROCESS_AUDIO_RATE sinh file audio đã đổi tốc độ, giữ cao độ (ADR-24); trong lúc chờ (vài giây), clip hiện "Đang xử lý tốc độ" và preview phát im lặng đúng độ dài mới. Khi xong, derived_media_id được gán và preview phát file dẫn xuất ở tốc độ 1,0, giống hệt bản xuất. Cặp narration–tốc độ đã có file thì dùng lại ngay (cache)
+
+  Scenario: 1b Job PROCESS_AUDIO_RATE lỗi
+    When Job PROCESS_AUDIO_RATE lỗi
+    Then clip giữ tốc độ mới nhưng báo lỗi và nút "Thử lại"; không xuất được tới khi có file (IC-17)
 
   Scenario: 4a 422 NARRATION_LOCKED
     Given luồng chính đã tới bước 4
@@ -3451,7 +3457,7 @@ Feature: UC-06.15 Đồng bộ khi tư liệu thay đổi
 | Mô tả | Bước 6: render timeline thành MP4 kèm phụ đề |
 | Use case | [UC-06.16](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0616) · M06 — Trình chỉnh sửa & xuất video |
 | Giai đoạn | P3 |
-| Truy vết | FR-EDT-21..24; FR-BIL-12; BR-23, BR-27; seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-21..24; FR-BIL-12; BR-23, BR-27; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video |
 | Story point | |
 
 ```gherkin
@@ -3463,8 +3469,8 @@ Feature: UC-06.16 Xuất video MP4
     When Editor bấm "Xuất video"
     And Hệ thống thực hiện UC-06.16a và hiện báo cáo độ phủ, thời lượng
     And Editor chọn độ phân giải (720p / 1080p) và xác nhận. Tài khoản Free: chỉ 720p, hộp thoại hiện số lượt render và phút video còn lại trong tháng, và ghi chú video sẽ có watermark (BR-27)
-    And Hệ thống chụp timeline_snapshot của phiên bản hiện tại và tạo job RENDER_TIMELINE (miễn phí)
-    And Render Worker dựng khung hình (Ken Burns, chuyển cảnh, phụ đề; watermark đường kẻ + logo nếu tài khoản Free) theo đoạn song song; đổi tốc độ clip thuyết minh theo playback_rate (giữ cao độ); trộn thuyết minh + nhạc (ducking) + SFX; chuẩn hóa loudness; encode H.264/AAC
+    And Hệ thống chụp timeline_snapshot của phiên bản hiện tại (hợp lệ theo schemas/timeline-snapshot.schema.json và SNP-01..07, 12 §3) và tạo job RENDER_TIMELINE (miễn phí)
+    And Render Worker kiểm schema snapshot, dựng khung hình (Ken Burns, chuyển cảnh, phụ đề dựng sẵn trong snapshot; watermark đường kẻ + logo nếu tài khoản Free) theo đoạn song song; dùng file dẫn xuất cho clip đã đổi tốc độ; trộn thuyết minh + nhạc (ducking) + SFX; chuẩn hóa loudness; encode H.264/AAC
     And Tiến độ gửi qua SSE; Editor có thể hủy
     And Hoàn tất: tạo Render READY + SRT/VTT; thông báo "Video đã sẵn sàng" và mở UC-06.17
     Then Render phiên bản mới READY, đặt làm bản chính, có MP4 + SRT/VTT; với tài khoản Free, lượt render và phút video của tháng được cộng
@@ -3518,7 +3524,7 @@ Feature: UC-06.16a Kiểm tra điều kiện & độ phủ 100%
 
   Scenario: Luồng chính
     When Hệ thống kiểm tra mọi shot hiện hành có ảnh DONE
-    And Hệ thống kiểm tra mọi shot có thuyết minh DONE (sau MVP: VERIFIED hoặc ACCEPTED), không có OUTDATED
+    And Hệ thống kiểm tra mọi shot có thuyết minh DONE (sau MVP: VERIFIED hoặc ACCEPTED), không có OUTDATED; clip có playback_rate ≠ 1 đã có file dẫn xuất (IC-17)
     And Hệ thống kiểm tra timeline thỏa IC-10 và BR-24
     And Hệ thống kiểm tra tổng ký tự các đoạn nguồn có clip thuyết minh bằng tổng ký tự chương (100%)
     And Hệ thống liệt kê cảnh báo không chặn: các shot được đánh dấu cần sinh lại (BR-34); với tài khoản Free thêm lượt render, phút video còn lại và ghi chú watermark

@@ -1,6 +1,6 @@
 # Demo C2Story Studio — Bộ tài liệu đặc tả để phát triển lại từ đầu
 
-> **Phiên bản:** 1.13 · **Ngày:** 2026-10-20 · **Vai trò soạn thảo:** Business Analyst
+> **Phiên bản:** 1.14 · **Ngày:** 2026-10-20 · **Vai trò soạn thảo:** Business Analyst
 > **Trạng thái:** Đã chốt phạm vi MVP và kế hoạch theo 4 vòng câu hỏi ([sổ quyết định](quyet-dinh.md))
 > **Bối cảnh:** đồ án tốt nghiệp, nhóm 3 người, 7 tháng phát triển; MVP = hết P3; thử nghiệm bằng closed beta 10–20 người
 
@@ -72,7 +72,7 @@ demo-c2story/
 ├── README.md                     # Tài liệu này
 ├── quyet-dinh.md                 # Sổ quyết định (QĐ-xx) từ 4 vòng câu hỏi chốt kế hoạch
 ├── CLAUDE.md                     # Hướng dẫn cho Claude Code khi làm việc với bộ tài liệu
-├── tai-lieu/                     # 11 tài liệu đặc tả (xem §6)
+├── tai-lieu/                     # 12 tài liệu đặc tả (xem §6); schemas/ chứa JSON Schema
 │   └── 03-dac-ta-use-case/       # Đặc tả 165 use case: mục lục + 10 file M01–M10
 ├── so-do/                        # Sơ đồ PlantUML của hệ thống mới (xem §7)
 │   ├── 01-use-case/
@@ -104,6 +104,7 @@ demo-c2story/
 | 09 | [Kế hoạch phát triển & ma trận truy vết](tai-lieu/09-ke-hoach-phat-trien.md) | RTM |
 | 10 | [Thuật ngữ](tai-lieu/10-thuat-ngu.md) | — |
 | 11 | [Product backlog (nháp, sinh tự động)](tai-lieu/11-product-backlog.md) | User story + Gherkin |
+| 12 | [Đặc tả kỹ thuật lõi](tai-lieu/12-dac-ta-ky-thuat-loi.md): tách câu, ánh xạ timestamp, `timeline_snapshot` ([JSON Schema](tai-lieu/schemas/timeline-snapshot.schema.json)) | JSON Schema 2020-12 |
 | — | [Sổ quyết định](quyet-dinh.md) | — |
 
 ## 7. Danh mục sơ đồ (`so-do/`)
@@ -147,3 +148,4 @@ java -DPLANTUML_LIMIT_SIZE=16384 -jar plantuml.jar -tpng "so-do/**.puml"
 | 1.11 | 2026-10-20 | Cập nhật 10 sơ đồ tuần tự, hoạt động và trạng thái theo đặc tả use case con (đăng nhập SSO, nhập / nhập lại, xung đột khi lưu, thuyết minh nguyên văn, trình chỉnh sửa & xuất, Director, sinh tư liệu, thanh toán, phủ kín văn bản); thêm `state-tool-proposal` |
 | 1.12 | 2026-10-20 | Áp toàn bộ 4 vòng câu hỏi chốt phạm vi và kế hoạch ([sổ quyết định](quyet-dinh.md)): **MVP = hết P3** cho một người dùng (Owner), cột **Giai đoạn** cho mọi FR và use case, thứ tự cắt giảm ✂1–✂5; **ví USD** thay credit (chi phí thực × 110%, giữ ước tính / trừ thực / hoàn dư, $2 dùng thử, Free / Đã nạp tiền, nạp tiền sandbox); closed beta: **danh sách mời**, **đồng ý xử lý dữ liệu**, **trần $10/ngày**; Keycloak → SSO Vbee (ADR-20); bỏ Fix a spot, AI nhạc/SFX, gợi ý SFX, credit hằng ngày; dời ranh giới shot sang Workspace (UC-03.02a); kiểm chứng thủ công (UC-05.18), WER từng shot sau MVP; đổi tốc độ clip thuyết minh 0,8–1,25×; quy tắc ký hiệu trình bày; kế hoạch 24 tuần + RTM có giai đoạn; product backlog sinh tự động; **26 sơ đồ MVP riêng** (`so-do/mvp/`) và tô xám phần sau MVP trong bộ đầy đủ |
 | 1.13 | 2026-10-20 | Áp đánh giá PM vào kế hoạch (QĐ-90..99): mốc khung chạy đầu-cuối T6, đo vận tốc T8, spike editor/render T14; dời 9 UC từ P1 sang P2 (P1 49 · P2 21 story); thứ tự cắt giảm tầng 2 (✂6–✂10) và tầng 3; Tết 2027 và lịch thi; vai trò kèm người dự phòng; bảng rủi ro có ngưỡng kích hoạt và người phụ trách; quy tắc dự phòng P0; benchmark render staging; viết báo cáo dần |
+| 1.14 | 2026-10-20 | Theo đánh giá kỹ sư phần mềm: thêm **12 — Đặc tả kỹ thuật lõi** (tách câu tiếng Việt `SentenceSegmenter` với 22 ca kiểm thử; `NormalizationMap` và thuật toán ánh xạ timestamp từ bản đọc về văn bản gốc, dựng phụ đề; hợp đồng `timeline_snapshot` + JSON Schema và ví dụ đã kiểm); **ADR-23** triển khai rút gọn cho MVP (một tiến trình worker, không outbox, bỏ worker Python khi TTS có timestamp, IC-08 chỉ ở service); **ADR-24** đổi tốc độ thuyết minh bằng file audio dẫn xuất để preview = render; **ADR-25** trần chi tiêu ngày bằng bộ đếm nguyên tử `daily_ai_budgets` (sửa race condition); 9 mã test mới |

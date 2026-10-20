@@ -45,7 +45,7 @@
 | Mã | Yêu cầu |
 |---|---|
 | NFR-REL-01 | Trong 3 tuần closed beta: dịch vụ chạy liên tục, sự cố được khôi phục trong ngày làm việc. Uptime API ≥ 99,5%/tháng (sau MVP, không tính provider AI) |
-| NFR-REL-02 | Không mất job: outbox + BullMQ persistence; reconciler giải phóng job treo (§4 của 05) |
+| NFR-REL-02 | Không mất job: BullMQ persistence + reconciler đẩy lại job `QUEUED` bị sót và giải phóng job treo (MVP, ADR-23); outbox sau MVP (05 §6.1) |
 | NFR-REL-03 | **Đúng tiền:** tổng sổ cái = số dư ví; mỗi job có HOLD và đúng một CAPTURE/RELEASE; số trừ ≤ số giữ; reconciler hằng ngày báo lệch bằng 0. Lệch thì cảnh báo P1 |
 | NFR-REL-04 | Retry provider: tối đa 3 lần, backoff 2s/8s/30s + jitter; circuit breaker mở khi tỷ lệ lỗi > 50% trong 1 phút |
 | NFR-REL-05 | Backup PostgreSQL: snapshot hằng ngày giữ 7 ngày trong closed beta. PITR, RPO ≤ 5 phút, RTO ≤ 2 giờ (sau MVP) |

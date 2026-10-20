@@ -322,19 +322,21 @@
 | Mức | Chức năng con |
 | Mô tả | Giữ tổng chi phí AI thật của toàn hệ thống trong một ngày không vượt trần (closed beta: $10); chạm trần thì tạm dừng job mới và báo Admin |
 | Tiền điều kiện | `system_settings.daily_ai_budget_usd` đã cấu hình |
-| Hậu điều kiện | **Thành công:** tổng chi phí thực trong ngày không vượt trần (sai số tối đa bằng phần vượt ước tính của các job đang chạy); Admin nhận đúng một cảnh báo cho mỗi ngưỡng mỗi ngày. **Tối thiểu:** job đang chạy không bị hủy giữa chừng |
+| Hậu điều kiện | **Thành công:** tại mọi thời điểm `spent + reserved ≤ cap` của ngày (IC-18), kể cả khi nhiều yêu cầu đồng thời; chi phí thực chỉ có thể vượt trần một lượng bằng phần các job đang chạy tốn hơn ước tính; Admin nhận đúng một cảnh báo cho mỗi ngưỡng mỗi ngày. **Tối thiểu:** job đang chạy không bị hủy giữa chừng |
 | Kích hoạt | Mỗi lần tạo job tốn phí (UC-05.17 bước 3); Scheduler chạy mỗi 5 phút |
 | Quan hệ | được include bởi UC-05.17 |
-| Truy vết | FR-ADM-07; BR-29; QĐ-39; NFR-COST-02; API `503 DAILY_BUDGET_EXCEEDED` |
+| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED` |
 | Giai đoạn | P2 |
 
 **Luồng chính**
-1. Khi có yêu cầu tạo job tốn phí, `BudgetGuard` tính: chi phí thực từ 00:00 giờ Việt Nam (Σ `ai_usage_records.cost_usd`) + tiền đang giữ của các job chưa xong + giá ước tính của job mới.
-2. Tổng ≤ trần: cho tạo job (UC-05.17 tiếp bước 4).
-3. Scheduler mỗi 5 phút tính tổng chi phí thực trong ngày; vượt 80% trần thì gửi email cảnh báo sớm cho Admin.
-4. 00:00 giờ Việt Nam, bộ đếm về 0; job mới được tạo bình thường.
+1. Khi có yêu cầu tạo job tốn phí, trong giao dịch của UC-05.17, `BudgetGuard` tạo dòng `daily_ai_budgets` của hôm nay nếu chưa có (`cap_micro` lấy từ `system_settings`), rồi chạy **một câu** `UPDATE … SET reserved_micro = reserved_micro + x WHERE day = hôm nay AND spent_micro + reserved_micro + x <= cap_micro` với `x` là chi phí provider ước tính.
+2. Câu lệnh trúng một dòng: chỗ đã được giữ, UC-05.17 tiếp bước 4. Khóa dòng của `UPDATE` bảo đảm các yêu cầu đồng thời được xếp hàng, không thể cùng vượt trần.
+3. Khi job kết thúc: `reserved −= x`, `spent += chi phí thực` (UC-05.17 bước 5–6).
+4. Scheduler mỗi 5 phút đọc dòng của hôm nay; `spent + reserved ≥ 80%` trần và `alert_80_sent_at` rỗng thì gửi email cảnh báo sớm và ghi thời điểm; chạm trần thì làm tương tự với `alert_100_sent_at`.
+5. Sang ngày mới (00:00 giờ Việt Nam) dùng dòng mới; job tạo hôm trước vẫn trả chỗ vào dòng của ngày tạo (`jobs.budget_day`).
+6. Reconciler hằng ngày đối chiếu `spent_micro` với Σ `ai_usage_records.cost_usd` của ngày; lệch thì sửa và cảnh báo.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** Tổng vượt trần: từ chối với `503 DAILY_BUDGET_EXCEEDED`; giao diện hiện "Hệ thống tạm dừng tác vụ AI mới đến 00:00 do đạt giới hạn chi phí trong ngày"; gửi email cho Admin kèm tổng chi phí và 5 người dùng chi nhiều nhất.
+- **2a.** Câu lệnh không trúng dòng nào (vượt trần): ROLLBACK, `503 DAILY_BUDGET_EXCEEDED`; giao diện hiện "Hệ thống tạm dừng tác vụ AI mới đến 00:00 do đạt giới hạn chi phí trong ngày"; email cho Admin (một lần, theo `alert_100_sent_at`) kèm tổng chi phí và 5 người dùng chi nhiều nhất.
 - **2b.** Thao tác miễn phí (render, chỉnh sửa, tải lên): không bị ảnh hưởng.
-- **\*a.** Admin nâng trần tạm thời: sửa `daily_ai_budget_usd` (seed hoặc CLI); có hiệu lực ngay, ghi audit (UC-10.09).
+- **\*a.** Admin nâng trần tạm thời: sửa `daily_ai_budget_usd` (seed hoặc CLI); lệnh đồng thời cập nhật `cap_micro` của dòng hôm nay nên có hiệu lực ngay; ghi audit (UC-10.09).
