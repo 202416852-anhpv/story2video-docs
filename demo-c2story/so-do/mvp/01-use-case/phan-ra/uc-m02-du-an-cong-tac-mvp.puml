@@ -1,0 +1,47 @@
+@startuml UC_M02_DuAn_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M02 - Quản lý dự án & cộng tác (MVP)
+
+actor "Editor" as Editor
+actor "Owner" as Owner
+actor "User" as User
+Owner -|> Editor
+Editor -|> User
+
+rectangle "M02 Quản lý dự án & cộng tác" {
+    usecase "UC-02.01\nXem danh sách dự án" as UC1
+    usecase "UC-02.02\nNhập truyện giữ nguyên văn\n(Import)" as UC2
+    usecase "UC-02.02a\nKiểm tra & chuẩn hóa kỹ\nthuật" as UC2a
+    usecase "UC-02.03\nTạo dự án trống" as UC3
+    usecase "UC-02.04\nCài đặt dự án" as UC4
+    usecase "UC-02.05\nXóa dự án" as UC5
+    usecase "UC-02.09\nXem bản đồ quy trình (Map)" as UC9
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+Owner --> UC4
+Owner --> UC5
+Editor --> UC9
+UC2 ..> UC2a : <<include>>
+note right of UC1
+  Nhánh 2c: tìm theo tiêu đề, lọc In Progress / Done
+  (trạng thái suy ra từ trạng thái chương)
+end note
+@enduml

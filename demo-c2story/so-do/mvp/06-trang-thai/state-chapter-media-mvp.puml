@@ -1,0 +1,30 @@
+@startuml State_ChapterMedia_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Trạng thái chương theo luồng Studio (MVP)
+
+[*] --> Draft : nhập / chia chương
+Draft --> Generating : "Sinh tư liệu"
+Generating --> NeedsAttention : còn ảnh / thuyết minh lỗi
+NeedsAttention --> Generating : sinh lại phần thiếu / lỗi
+NeedsAttention --> ReadyToEdit : sinh lại thành công
+Generating --> ReadyToEdit : mọi shot có ảnh DONE\n+ thuyết minh DONE
+ReadyToEdit --> Editing : mở trình chỉnh sửa\n(bản nháp timeline)
+Editing --> Exported : xuất video thành công
+Exported --> Editing : chỉnh tiếp / xuất bản mới
+ReadyToEdit --> Outdated : sửa văn bản / chia lại chương /\ndời ranh giới shot
+Editing --> Outdated : sửa văn bản / chia lại chương /\ndời ranh giới shot
+Exported --> Outdated : sửa văn bản / chia lại chương /\ndời ranh giới shot
+Outdated --> Generating : sinh lại tư liệu\ncho shot bị ảnh hưởng
+
+note right of Outdated
+  Chỉ shot có đoạn nguồn đổi hash
+  bị OUTDATED; timeline giữ chỉnh sửa
+  (nhạc, SFX, chuyển cảnh, tốc độ) và đánh dấu
+  clip cần cập nhật (FR-EDT-19).
+end note
+note left of ReadyToEdit
+  Shot được đánh dấu "cần sinh lại" (UC-05.18)
+  không chặn trạng thái này (BR-34).
+end note
+@enduml

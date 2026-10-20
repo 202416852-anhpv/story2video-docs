@@ -21,16 +21,16 @@ Owner -|> Editor
 rectangle "Studio dự án" {
     package "M02 Dự án & cộng tác" as P2 {
         usecase "UC-02.02 Import truyện" as UC02
-        usecase "UC-02.06 Mời cộng tác" as UC03
+        usecase "UC-02.06 Mời cộng tác" as UC03 #DDDDDD
         usecase "Cài đặt dự án" as UCset
-        usecase "UC-02.10 Xử lý xung đột lưu" as UC04
+        usecase "UC-02.10 Xử lý xung đột lưu" as UC04 #DDDDDD
         usecase "Xem Map" as UCmap
     }
     package "M03 Bản thảo" as P3 {
         usecase "UC-03.03 Chia chương" as UC05
-        usecase "UC-03.11 Archive" as UC06
-        usecase "Find & replace" as UCfr
-        usecase "Notes" as UCnote
+        usecase "UC-03.11 Archive" as UC06 #DDDDDD
+        usecase "Find & replace" as UCfr #DDDDDD
+        usecase "Notes" as UCnote #DDDDDD
     }
     package "M04 Thế giới truyện" as P4 {
         usecase "UC-04.01 Story Assets" as UC07
@@ -41,13 +41,13 @@ rectangle "Studio dự án" {
         usecase "UC-05.07 Sinh tư liệu chương" as UC11
         usecase "UC-05.01 Storyboard\n(tự động, tinh chỉnh tùy chọn)" as UC09
         usecase "UC-05.09 Sinh & sửa ảnh" as UC10
-        usecase "UC-05.13 Thuyết minh nguyên văn\n& kiểm chứng WER" as UC12
+        usecase "UC-05.13 Thuyết minh nguyên văn\n(kiểm chứng WER sau MVP)" as UC12
     }
     package "M06 Trình chỉnh sửa & xuất video" as P6 {
         usecase "UC-06.01 Chỉnh sửa video trên timeline\n(chuyển cảnh, nhạc nền, SFX, tinh chỉnh)" as UC13
         usecase "UC-06.16 Xuất & tải video" as UC14
     }
-    package "M07 AI Director" as P7 {
+    package "M07 AI Director (sau MVP)" as P7 #DDDDDD {
         usecase "UC-07.02 Director tự động" as UC15
         usecase "UC-07.01 Ra lệnh Director" as UC16
     }
@@ -79,5 +79,6 @@ legend right
   • M05 dùng tài sản của M04 (giữ nhất quán)
   • M06 dựng video từ ảnh + thuyết minh của M05
   • M07 Director điều phối M03 → M04 → M05 và dựng bản nháp timeline M06
+  Nền xám: sau MVP (bản MVP: so-do/mvp/)
 endlegend
 @enduml

@@ -22,7 +22,8 @@ package "Tài khoản & thanh toán" #EEF5FF {
         * status : user_status
         gateway_customer_id : text
         last_login_at : timestamptz
-        last_daily_claim_on : date
+        consented_at : timestamptz
+        consent_version : text
         deletion_requested_at : timestamptz
     }
     entity user_sessions {
@@ -37,28 +38,27 @@ package "Tài khoản & thanh toán" #EEF5FF {
         revoked_at : timestamptz
         last_seen_at : timestamptz
     }
-    entity plans {
+    entity plans #DDDDDD {
         * id : uuid <<PK>>
         --
         * code : text <<UQ>>
         name : text
-        * monthly_credits : int
         price_monthly : numeric
         price_annual : numeric
         gateway_price_ids : jsonb
         features : jsonb
         active : bool
     }
-    entity credit_packs {
+    entity beta_invites {
         * id : uuid <<PK>>
         --
-        * code : text <<UQ>>
-        * credits : int
-        * price : numeric
-        gateway_price_id : text
-        active : bool
+        * email : citext <<UQ>>
+        invited_by : uuid <<FK>>
+        note : text
+        used_by_user_id : uuid <<FK>>
+        revoked_at : timestamptz
     }
-    entity subscriptions {
+    entity subscriptions #DDDDDD {
         * id : uuid <<PK>>
         --
         * user_id : uuid <<FK>>
@@ -76,8 +76,7 @@ package "Tài khoản & thanh toán" #EEF5FF {
         * user_id : uuid <<FK>>
         * kind : payment_kind
         plan_id : uuid <<FK>>
-        credit_pack_id : uuid <<FK>>
-        * amount : numeric
+        * amount_micro : bigint
         * currency : text
         * status : text
         gateway_ref : text
@@ -90,27 +89,25 @@ package "Tài khoản & thanh toán" #EEF5FF {
         payload : jsonb
         processed_at : timestamptz
     }
-    entity credit_balances {
+    entity wallets {
         * user_id : uuid <<PK,FK>>
-        * bucket : credit_bucket <<PK>>
         --
-        * available : int
-        * held : int
-        expires_at : timestamptz
+        * available_micro : bigint
+        * held_micro : bigint
+        * topup_total_micro : bigint
+        * version : int
     }
-    entity credit_ledger_entries {
+    entity wallet_ledger_entries {
         * id : uuid <<PK>>
         --
         * user_id : uuid <<FK>>
-        * bucket : credit_bucket
-        * delta : int
-        * type : ledger_type
+        * entry_type : ledger_type
+        * amount_micro : bigint
         job_id : uuid <<FK>>
         payment_id : uuid <<FK>>
         project_id : uuid <<FK>>
         actor_id : uuid <<FK>>
         reason : text
-        expires_at : timestamptz
     }
     entity audit_logs {
         * id : uuid <<PK>>
@@ -153,7 +150,7 @@ package "Dự án & bản thảo" #F3FFF0 {
         joined_at : timestamptz
         last_active_at : timestamptz
     }
-    entity invite_links {
+    entity invite_links #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -196,7 +193,7 @@ package "Dự án & bản thảo" #F3FFF0 {
         * content : text
         edited_by : uuid <<FK>>
     }
-    entity archives {
+    entity archives #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -207,7 +204,7 @@ package "Dự án & bản thảo" #F3FFF0 {
         * source : text
         created_by : uuid <<FK>>
     }
-    entity notes {
+    entity notes #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -230,7 +227,7 @@ package "Thế giới truyện" #FFF8E8 {
         preview_media_id : uuid <<FK>>
         active : bool
     }
-    entity library_assets {
+    entity library_assets #DDDDDD {
         * id : uuid <<PK>>
         --
         * owner_id : uuid <<FK>>
@@ -283,7 +280,7 @@ package "Thế giới truyện" #FFF8E8 {
         active : bool
         order_index : int
     }
-    entity chapter_rules {
+    entity chapter_rules #DDDDDD {
         * id : uuid <<PK>>
         --
         * chapter_id : uuid <<FK>>
@@ -360,7 +357,6 @@ package "Sinh tư liệu" #F5EEFF {
         * status : media_status
         * edit_kind : text
         instruction : text
-        mask_media_id : uuid <<FK>>
         prompt_snapshot : text
         shot_version : int
         parent_illustration_id : uuid <<FK>>
@@ -375,6 +371,7 @@ package "Sinh tư liệu" #F5EEFF {
         pitch : numeric
         sentence_pause_ms : int
         paragraph_pause_ms : int
+        symbol_rules : jsonb
         wer_threshold : numeric
         multi_voice : bool
     }
@@ -400,13 +397,13 @@ package "Sinh tư liệu" #F5EEFF {
         * kind : text
         case_sensitive : bool
     }
-    entity character_voices {
+    entity character_voices #DDDDDD {
         * project_id : uuid <<PK,FK>>
         * story_asset_id : uuid <<PK,FK>>
         --
         * voice_id : uuid <<FK>>
     }
-    entity dialogue_attributions {
+    entity dialogue_attributions #DDDDDD {
         * id : uuid <<PK>>
         --
         * shot_id : uuid <<FK>>
@@ -432,6 +429,7 @@ package "Sinh tư liệu" #F5EEFF {
         wer : numeric
         mismatches : jsonb
         * status : narration_status
+        flagged_at : timestamptz
         accepted_by : uuid <<FK>>
         accepted_at : timestamptz
         job_id : uuid <<FK>>
@@ -453,7 +451,7 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         * version : int
         updated_by : uuid <<FK>>
     }
-    entity timeline_versions {
+    entity timeline_versions #DDDDDD {
         * id : uuid <<PK>>
         --
         * timeline_id : uuid <<FK>>
@@ -498,6 +496,7 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         fade_in_ms : int
         fade_out_ms : int
         ducking_db : numeric
+        playback_rate : numeric
         user_modified : bool
         sync_flag : text
     }
@@ -516,17 +515,6 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         * license : text
         license_note : text
         published : bool
-    }
-    entity sfx_suggestions {
-        * id : uuid <<PK>>
-        --
-        * timeline_id : uuid <<FK>>
-        * shot_id : uuid <<FK>>
-        * at_ms : int
-        * query : text
-        audio_asset_id : uuid <<FK>>
-        * status : text
-        job_id : uuid <<FK>>
     }
     entity renders {
         * id : uuid <<PK>>
@@ -556,7 +544,7 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
 }
 
 package "Director, job & hạ tầng" #EEEEEE {
-    entity director_plans {
+    entity director_plans #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -565,10 +553,10 @@ package "Director, job & hạ tầng" #EEEEEE {
         current_step : text
         awaiting_reason : text
         step_state : jsonb
-        estimated_remaining_credits : int
+        estimated_remaining_micro : bigint
         * version : int
     }
-    entity director_messages {
+    entity director_messages #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -578,13 +566,13 @@ package "Director, job & hạ tầng" #EEEEEE {
         content : text
         tool_call : jsonb
     }
-    entity director_tool_proposals {
+    entity director_tool_proposals #DDDDDD {
         * id : uuid <<PK>>
         --
         * message_id : uuid <<FK>>
         * tool : text
         * args : jsonb
-        credit_cost : int
+        estimated_cost_micro : bigint
         * status : text
         decided_by : uuid <<FK>>
         decided_at : timestamptz
@@ -605,12 +593,19 @@ package "Director, job & hạ tầng" #EEEEEE {
         error_code : text
         error_message : text
         attempts : int
-        credit_cost : int
+        held_micro : bigint
+        charged_micro : bigint
         * idempotency_key : text <<UQ>>
         parent_job_id : uuid <<FK>>
         heartbeat_at : timestamptz
         started_at : timestamptz
         finished_at : timestamptz
+    }
+    entity system_settings {
+        * key : text <<PK>>
+        --
+        * value : jsonb
+        updated_by : uuid <<FK>>
     }
     entity ai_providers {
         * id : uuid <<PK>>
@@ -692,11 +687,11 @@ users ||--o{ subscriptions
 plans ||--o{ subscriptions
 users ||--o{ payments
 plans |o--o{ payments
-credit_packs |o--o{ payments
-users ||--o{ credit_balances
-users ||--o{ credit_ledger_entries
-payments |o--o{ credit_ledger_entries
-jobs |o--o{ credit_ledger_entries
+users ||--|| wallets
+users ||--o{ wallet_ledger_entries
+payments |o--o{ wallet_ledger_entries
+jobs |o--o{ wallet_ledger_entries
+users |o--o{ beta_invites : invited by
 users ||--o{ audit_logs : actor
 users ||--o{ projects : owns
 projects ||--|{ project_members
@@ -745,9 +740,6 @@ illustrations |o--o{ timeline_items
 narrations |o--o{ timeline_items
 audio_assets |o--o{ timeline_items
 users |o--o{ audio_assets : uploads
-timelines ||--o{ sfx_suggestions
-shots ||--o{ sfx_suggestions
-audio_assets |o--o{ sfx_suggestions
 timelines ||--o{ renders
 projects ||--o{ director_plans
 director_plans |o--o{ director_messages
@@ -773,4 +765,5 @@ jobs -[hidden]right- storyboard_drafts
 storyboard_drafts -[hidden]right- timelines
 users -[hidden]down- jobs
 chapters -[hidden]down- storyboard_drafts
+caption Nền xám: bảng sau MVP (ERD chỉ gồm MVP: so-do/mvp/02-du-lieu/erd-mvp.puml)
 @enduml

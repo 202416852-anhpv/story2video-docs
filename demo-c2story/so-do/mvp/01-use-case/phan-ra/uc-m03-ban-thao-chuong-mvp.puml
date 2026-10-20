@@ -1,0 +1,56 @@
+@startuml UC_M03_BanThao_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M03 - Bản thảo & chương (MVP)
+
+actor "Editor" as Editor
+
+rectangle "M03 Bản thảo & chương" {
+    usecase "UC-03.01\nXem văn bản gốc" as UC1
+    usecase "UC-03.01a\nSao chép toàn văn" as UC1a
+    usecase "UC-03.01b\nNhập lại (Re-import)" as UC1b
+    usecase "UC-03.02\nSoạn thảo trong Workspace" as UC2
+    usecase "UC-03.02a\nDời ranh giới shot" as UC2a
+    usecase "UC-03.03\nGợi ý chia chương bằng AI" as UC3
+    usecase "UC-03.04\nChia chương tại vị trí" as UC4
+    usecase "UC-03.05\nGộp chương vào chương trước" as UC5
+    usecase "UC-03.06\nDời ranh giới chương" as UC6
+    usecase "UC-03.07\nThêm / xóa / đổi tên chương" as UC7
+    usecase "UC-03.08\nSắp xếp lại chương" as UC8
+    usecase "UC-03.09\nTái cấu trúc nguyên tử" as UC9
+}
+rectangle "LLM Provider" as LLM
+
+Editor --> UC1
+Editor --> UC2
+Editor --> UC3
+Editor --> UC7
+Editor --> UC8
+UC1 <.. UC1a : <<extend>>
+UC1 <.. UC1b : <<extend>>
+UC2 <.. UC2a : <<extend>>
+UC2 <.. UC4 : <<extend>>
+UC2 <.. UC5 : <<extend>>
+UC2 <.. UC6 : <<extend>>
+UC4 ..> UC9 : <<include>>
+UC5 ..> UC9 : <<include>>
+UC6 ..> UC9 : <<include>>
+UC8 ..> UC9 : <<include>>
+UC3 ..> UC9 : <<include>>
+UC3 --> LLM
+UC2a --> LLM
+@enduml

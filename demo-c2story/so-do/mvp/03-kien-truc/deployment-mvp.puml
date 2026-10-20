@@ -1,0 +1,63 @@
+@startuml Deployment_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam nodesep 50
+skinparam ranksep 50
+title AI Story Studio - Deployment MVP (dev + staging / closed beta)
+
+actor "Người dùng beta\n(10–20, được mời)" as U
+actor "Nhóm phát triển" as Dev
+
+node "Máy cá nhân (local)" as local {
+    component "docker-compose:\npostgres, redis, minio,\nKeycloak dev realm, ClamAV,\nAI mock, Stripe CLI" as dc
+}
+
+cloud "Máy ảo staging (GitHub Student Pack / Azure for Students)" as vm {
+    node "Docker Compose" {
+        component "Next.js Web App" as web
+        component "NestJS API + SSE" as api
+        component "Scheduler" as sched
+        component "Job workers\n(orchestrator / llm / image / tts)" as wk
+        component "Alignment (CPU)" as al
+        component "Media processing\n(FFmpeg + ClamAV)" as mp
+        component "Render worker\n(Remotion + FFmpeg)" as rw
+        database "PostgreSQL" as pg
+        database "Redis" as rd
+        storage "MinIO / S3" as s3
+        component "Keycloak" as kc
+    }
+}
+
+cloud "Bên thứ ba" {
+    component "SSO Vbee\n(P3, nếu có tài liệu)" as vbee
+    component "Stripe test mode" as stripe
+    component "AI Providers\n(trần $10/ngày)" as ai
+    component "Email" as mail
+}
+
+Dev --> dc : phát triển, CI dùng mock
+Dev --> vm : deploy (GitHub Actions)
+U --> web : HTTPS
+U ..> kc : đăng nhập
+U ..> vbee : đăng nhập (khi đã chuyển)
+web --> api
+api --> pg
+api --> rd
+api --> kc : OIDC
+api ..> vbee : OIDC / OAuth 2.0
+stripe --> api : webhook
+rd --> wk
+rd --> al
+rd --> mp
+rd --> rw
+wk --> ai
+sched --> mail : cảnh báo trần chi tiêu
+rw --> s3
+
+legend right
+  • Một máy ảo chạy toàn bộ service bằng Docker Compose; không autoscale
+  • Provider AI thật chỉ dùng ở staging (demo, E2E hằng tuần, closed beta)
+  • Backup PostgreSQL hằng ngày, giữ 7 ngày (NFR-REL-05)
+  • Xóa toàn bộ dữ liệu beta sau ngày bảo vệ (BR-31)
+endlegend
+@enduml

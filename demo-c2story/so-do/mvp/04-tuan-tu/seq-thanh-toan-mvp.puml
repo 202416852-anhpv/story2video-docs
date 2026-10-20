@@ -1,0 +1,52 @@
+@startuml Seq_ThanhToan_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-09.03 + UC-09.08 (MVP): Nạp tiền vào ví qua Stripe sandbox
+actor User
+participant "Web App" as Web
+participant "API" as API
+database PostgreSQL as DB
+participant "Stripe\n(test mode)" as ST
+
+== Nạp tiền vào ví (UC-09.03) ==
+User -> Web : Chọn số tiền ($2 / $5 / $10 / khác)
+Web -> API : POST /billing/topup-sessions {amountUsd}
+alt ngoài khoảng $1–$100
+    API --> Web : 400 VALIDATION_ERROR
+else hợp lệ
+    API -> DB : INSERT payments (kind = TOPUP, status = PENDING, amount_micro)
+    API -> ST : (tạo customer nếu chưa có → users.gateway_customer_id)\nCreate Checkout Session một lần\n(client_reference_id = userId, metadata.paymentId, success_url, cancel_url)
+    ST --> API : session.url
+    API --> Web : {url}
+    Web -> ST : redirect (trang thanh toán sandbox, thẻ thử)
+    User -> ST : Thanh toán
+    alt hủy
+        ST --> Web : redirect cancel_url (không đổi gì)
+    else thanh toán xong
+        ST --> Web : redirect success_url → Dashboard ("Đang xử lý thanh toán")
+    end
+end
+
+== Webhook (UC-09.08) ==
+ST -> API : webhook checkout.session.completed
+API -> API : Xác thực chữ ký + timestamp (≤ 5 phút)
+alt chữ ký sai
+    API --> ST : 400, log bảo mật
+else chữ ký đúng
+    API -> DB : INSERT payment_events (gateway_event_id UNIQUE)
+    alt event mới
+        API -> DB : UC-09.08a — BEGIN; payments SUCCEEDED;\nwallets FOR UPDATE: available_micro += x, topup_total_micro += x;\nledger TOPUP (+x, payment_id); processed_at; COMMIT
+        alt lỗi xử lý
+            API -> DB : ROLLBACK
+            API --> ST : 500 (cổng gửi lại)
+        else thành công
+            API --> ST : 200
+            API -> Web : SSE wallet.updated (lần nạp đầu: accountStatus = PAID, bỏ giới hạn Free)
+        end
+    else trùng event
+        API --> ST : 200 (idempotent, bỏ qua)
+    end
+end
+@enduml

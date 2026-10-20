@@ -21,21 +21,21 @@ actor "Admin" as Admin
 
 rectangle "AI Story Studio" {
     usecase "M01 Tích hợp SSO & hồ sơ\n(đăng nhập/đăng xuất qua SSO)" as M01
-    usecase "M09 Credit & thanh toán" as M09
-    usecase "M08 Thư viện tài sản" as M08
+    usecase "M09 Ví & thanh toán" as M09
+    usecase "M08 Thư viện tài sản" as M08 #DDDDDD
     usecase "M02 Quản lý dự án & cộng tác" as M02
     usecase "M03 Bản thảo & chương" as M03
     usecase "M04 Thế giới truyện" as M04
     usecase "M05 Sinh tư liệu\n(ảnh + thuyết minh nguyên văn)" as M05
     usecase "M06 Trình chỉnh sửa & xuất video\n(nhạc nền, SFX, chuyển cảnh)" as M06
-    usecase "M07 AI Director" as M07
+    usecase "M07 AI Director" as M07 #DDDDDD
     usecase "M10 Quản trị" as M10
 }
 
 ' Hệ thống ngoài (bên phải)
-rectangle "SSO có sẵn\n(vd. SSO Vbee, OIDC)" as IdP
+rectangle "SSO\n(Keycloak; SSO Vbee)" as IdP
 rectangle "Payment Gateway" as Pay
-rectangle "AI Gateway\n(LLM/Image/TTS/STT/Music)" as AI
+rectangle "AI Gateway\n(LLM/Image/TTS/STT)" as AI
 
 Guest --> M01
 User --> M09
@@ -62,5 +62,6 @@ legend right
   • M06 <<include>> M05 (ảnh + thuyết minh)
   • M04 <<extend>> M08 (lấy tài sản từ thư viện)
   **Kế thừa tác nhân**: Owner → Editor → User → Guest
+  Nền xám: phân hệ sau MVP (bản MVP: so-do/mvp/)
 endlegend
 @enduml

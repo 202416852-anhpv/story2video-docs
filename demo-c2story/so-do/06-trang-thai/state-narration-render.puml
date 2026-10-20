@@ -5,23 +5,31 @@ title Trạng thái thuyết minh (mỗi shot) và bản xuất video
 
 state Narration {
     [*] --> PENDING : shot mới / chưa sinh
-    PENDING --> GENERATING : sinh (HOLD credit)
-    GENERATING --> VERIFIED : WER <= ngưỡng\n(mặc định 0,03)
-    GENERATING --> NEEDS_REVIEW : WER > ngưỡng\n(> 10% luôn cần người duyệt)
-    GENERATING --> FAILED : TTS / Aligner / STT lỗi sau retry,\nkiểm tra ngược SSML thất bại,\nvi phạm chính sách (RELEASE)
-    NEEDS_REVIEW --> GENERATING : sinh lại (từ điển phát âm / đổi giọng)
-    NEEDS_REVIEW --> ACCEPTED : Editor chấp nhận thủ công\n(narration:accept, UC-05.14a)
+    PENDING --> GENERATING : sinh (HOLD giá ước tính)
+    GENERATING --> DONE : MVP: audio + word_timings
+    GENERATING --> VERIFIED : sau MVP: WER <= ngưỡng\n(mặc định 0,03)
+    GENERATING --> NEEDS_REVIEW : sau MVP: WER > ngưỡng\n(> 10% luôn cần người duyệt)
+    GENERATING --> FAILED : TTS / Aligner lỗi sau retry,\nkiểm tra ngược SSML thất bại,\nvi phạm chính sách (RELEASE)
+    DONE --> GENERATING : sinh lại (đã đánh dấu,\ntừ điển phát âm, đổi giọng)
+    NEEDS_REVIEW --> GENERATING : sinh lại
+    NEEDS_REVIEW --> ACCEPTED : Editor chấp nhận thủ công\n(UC-05.14a, sau MVP)
     FAILED --> GENERATING : thử lại
+    DONE --> OUTDATED : đoạn nguồn đổi hash
     VERIFIED --> OUTDATED : đoạn nguồn đổi hash
     ACCEPTED --> OUTDATED : đoạn nguồn đổi hash
     NEEDS_REVIEW --> OUTDATED : đoạn nguồn đổi hash
     OUTDATED --> GENERATING : sinh lại
 }
+note right of DONE
+  Cờ "cần sinh lại" (flagged_at) do Editor đặt
+  ở UC-05.18 không đổi trạng thái, chỉ là ghi nhớ
+  (BR-34).
+end note
 
 state Render {
-    [*] --> QUEUED : readiness OK (coverage 100%)
+    [*] --> QUEUED : readiness OK (coverage 100%)\nFree: còn lượt và phút trong tháng
     QUEUED --> RENDERING
-    RENDERING --> READY : encode xong
+    RENDERING --> READY : encode xong\n(Free: watermark, cộng lượt + phút)
     RENDERING --> FAILED_R : lỗi encode
     QUEUED --> CANCELLED : hủy
     RENDERING --> CANCELLED : hủy
@@ -30,7 +38,7 @@ state Render {
     CANCELLED --> [*]
 }
 note bottom of Render
-  Render chỉ được tạo khi mọi shot trên timeline
-  có Narration VERIFIED hoặc ACCEPTED (BR-23)
+  Render chỉ được tạo khi mọi shot trên timeline có Narration DONE
+  (sau MVP: VERIFIED hoặc ACCEPTED) và không OUTDATED (BR-23)
 end note
 @enduml

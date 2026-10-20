@@ -1,0 +1,82 @@
+@startuml Act_QuyTrinhProject_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Luồng chính của Studio: 6 bước từ truyện đến video (MVP)
+
+|Editor|
+start
+partition "0. Tham gia beta" {
+  :Đăng nhập SSO (email trong danh sách mời);
+  :Đồng ý xử lý dữ liệu; nhận $2 dùng thử;
+}
+partition "1. Nhập truyện" {
+  :Nhập truyện giữ nguyên văn (Import)\n/ viết trong Workspace;
+  :Chọn style, tỷ lệ khung hình;
+}
+partition "2. Chia chương" {
+  |AI|
+  :Gợi ý điểm chia chương (tính phí);
+  |Editor|
+  :Chấp nhận / chỉnh chia chương;
+}
+partition "3. Thế giới truyện" {
+  |AI|
+  :Phân tích nhân vật, địa điểm, đạo cụ;
+  :Dựng Timeline & Relationships;
+  |Editor|
+  :Duyệt cast, Art Direction, Visual Rules;
+  |AI|
+  :Sinh ảnh tham chiếu tài sản;
+}
+partition "4. Sinh tư liệu (ảnh + thuyết minh)" {
+  |Editor|
+  :Chọn giọng đọc, quy tắc ký hiệu;
+  :Bấm "Sinh tư liệu" cho chương\n(xác nhận một giá ước tính tổng);
+  |AI|
+  :Storyboard tự động:\nchia **toàn bộ** chương thành shot\n(kiểm tra phủ kín văn bản);
+  fork
+    :Sinh ảnh minh họa\ntừng shot;
+  fork again
+    :TTS **nguyên văn** từng shot\n(bỏ ký hiệu khi đọc);
+  end fork
+  |Editor|
+  :Nghe thuyết minh (không bắt buộc);
+  if (Có ảnh / thuyết minh lỗi hoặc shot nghe thấy đọc sai?) then (có)
+    :Sửa ảnh (mô tả) hoặc thay bằng ảnh tải lên;\nđánh dấu shot đọc sai, sửa phát âm, sinh lại;
+  else (không)
+  endif
+  :Dời ranh giới shot trong Workspace nếu cần\n(AI viết lại brief 2 shot, tính phí);
+  |AI|
+  :Chương "Sẵn sàng dựng"\n→ dựng bản nháp timeline;
+}
+partition "5. Chỉnh sửa video" {
+  |Editor|
+  :Mở trình chỉnh sửa timeline;
+  :Ken Burns, chuyển cảnh, khung hình,\nđổi tốc độ clip thuyết minh (0,8–1,25×);
+  :Thêm **nhạc nền** và **SFX** tải lên;
+  :Định kiểu phụ đề;
+  :Xem trước;
+}
+partition "6. Xuất & tải" {
+  if (Độ phủ 100%, ảnh + thuyết minh DONE,\nkhông OUTDATED?) then (có)
+    if (Free hết lượt / phút trong tháng?) then (có)
+      :Nạp tiền (sandbox) hoặc đợi tháng sau;
+    else (không)
+      |Render|
+      :Xuất MP4 + SRT/VTT\n(Free: 720p, watermark);
+      |Editor|
+      :Tải video xuống;
+    endif
+  else (không)
+    :Xử lý các vị trí chưa đạt\ntrên timeline;
+  endif
+}
+stop
+
+note right
+  MVP: một người dùng (Owner) thao tác tay;
+  AI Director, cộng tác, Archive, thư viện tài sản
+  nằm ngoài MVP. AI không bao giờ sửa văn bản
+  truyện; track thuyết minh bị khóa nội dung.
+end note
+@enduml

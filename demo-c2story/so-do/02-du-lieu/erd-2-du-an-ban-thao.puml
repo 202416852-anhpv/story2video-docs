@@ -34,7 +34,7 @@ package "Dự án & bản thảo" #F3FFF0 {
         joined_at : timestamptz
         last_active_at : timestamptz
     }
-    entity invite_links {
+    entity invite_links #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -77,7 +77,7 @@ package "Dự án & bản thảo" #F3FFF0 {
         * content : text
         edited_by : uuid <<FK>>
     }
-    entity archives {
+    entity archives #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -88,7 +88,7 @@ package "Dự án & bản thảo" #F3FFF0 {
         * source : text
         created_by : uuid <<FK>>
     }
-    entity notes {
+    entity notes #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>

@@ -1,6 +1,7 @@
 # M08 — Thư viện tài sản cá nhân
 
 > Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m08-thu-vien-tai-san.puml`. Yêu cầu: FR-LIB-01..05.
+> **Toàn bộ phân hệ nằm ngoài MVP** (QĐ-04).
 
 ---
 
@@ -16,6 +17,7 @@
 | Kích hoạt | Mở `/characters` |
 | Quan hệ | được mở rộng bởi UC-08.01a |
 | Truy vết | FR-LIB-01 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User mở thư viện; hệ thống hiển thị 3 tab Characters / Locations / Items kèm số lượng.
@@ -35,7 +37,8 @@
 | Tiền điều kiện | Đang xem một tab của thư viện (Characters, Locations, Items) |
 | Hậu điều kiện | **Thành công:** danh sách chỉ gồm tài sản thỏa điều kiện. **Tối thiểu:** không thay đổi dữ liệu |
 | Kích hoạt | Chọn bộ lọc hoặc nhập từ khóa |
-| Truy vết | FR-LIB-01; D-08; API 2.4 `GET /library-assets` |
+| Truy vết | FR-LIB-01, 02; D-08; API 2.4 `GET /library-assets` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User chọn một trong ba bộ lọc: All, My Created (tạo trực tiếp ở thư viện), From Projects (lưu từ dự án, UC-08.04).
@@ -60,6 +63,7 @@
 | Kích hoạt | "New character / location / item" |
 | Quan hệ | include UC-08.02a |
 | Truy vết | FR-LIB-03 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User chọn loại, nhập tên, bí danh, mô tả, facts.
@@ -75,21 +79,22 @@
 | Loại | include của UC-08.02 (bước 3) |
 | Tác nhân | User / Image Provider |
 | Mô tả | Sinh ảnh tham chiếu cho tài sản thư viện; vì tài sản thư viện không thuộc dự án nào nên User tự chọn style |
-| Tiền điều kiện | Tài sản có mô tả; đủ credit (1 credit) |
-| Hậu điều kiện | **Thành công:** tài sản có ảnh tham chiếu theo style đã chọn; credit được trừ. **Tối thiểu:** lỗi thì hoàn credit |
+| Tiền điều kiện | Tài sản có mô tả; đủ số dư cho giá ước tính |
+| Hậu điều kiện | **Thành công:** tài sản có ảnh tham chiếu theo style đã chọn; tiền được trừ. **Tối thiểu:** lỗi thì hoàn tiền |
 | Kích hoạt | UC-08.02 bước 3 |
-| Truy vết | FR-LIB-03; BR-01, BR-02, BR-18; 08 §3.2 (`ASSET_REFERENCE_IMAGE`, 1 credit); API 2.4 `GET /styles` |
+| Truy vết | FR-LIB-03; BR-01, BR-02, BR-18; 08 §3.2 (`ASSET_REFERENCE_IMAGE`); API 2.4 `GET /styles` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User chọn một style từ danh mục (`GET /styles`).
-2. Hệ thống hiển thị giá 1 credit; User xác nhận; hệ thống giữ credit (UC-05.17) và tạo job `GENERATE_ASSET_IMAGE`.
+2. Hệ thống hiển thị giá ước tính; User xác nhận; hệ thống giữ tiền (UC-05.17) và tạo job `GENERATE_ASSET_IMAGE`.
 3. Worker ghép prompt từ style, mô tả và facts của tài sản (không có Art Direction hay Visual Rules vì không có dự án).
-4. Sau moderation hai chiều, hệ thống lưu ảnh làm ảnh tham chiếu, ghi `style_id`, CAPTURE credit.
+4. Sau moderation hai chiều, hệ thống lưu ảnh làm ảnh tham chiếu, ghi `style_id`, CAPTURE chi phí thực × 110%.
 5. Giao diện hiển thị ảnh; User có thể sinh lại hoặc chấp nhận.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** Không đủ credit: `402`; User có thể lưu tài sản không ảnh hoặc tải ảnh lên.
-- **4a.** Lỗi sau retry hoặc vi phạm chính sách: RELEASE credit, báo lý do; tài sản chưa có ảnh.
+- **2a.** Không đủ số dư: `402`; User có thể lưu tài sản không ảnh hoặc tải ảnh lên.
+- **4a.** Lỗi sau retry hoặc vi phạm chính sách: RELEASE tiền đã giữ, báo lý do; tài sản chưa có ảnh.
 
 ---
 
@@ -104,6 +109,7 @@
 | Hậu điều kiện | **Thành công:** tài sản cập nhật hoặc bị xóa; **bản sao trong các dự án không bị ảnh hưởng** (FR-LIB-05) |
 | Kích hoạt | "Edit" / "Delete permanently from library" |
 | Truy vết | FR-LIB-05, FR-WLD-05 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User sửa tên, bí danh, mô tả, facts, ảnh; hệ thống lưu.
@@ -122,6 +128,7 @@
 | Hậu điều kiện | **Thành công:** `library_assets` mới dùng chung ảnh gốc (không nhân đôi file) |
 | Kích hoạt | "Save to library" trên Story Asset |
 | Truy vết | FR-LIB-04 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User chọn "Lưu vào thư viện".
@@ -141,9 +148,10 @@
 | Tác nhân chính | User (là Editor của dự án đích) |
 | Mô tả | Đưa tài sản từ thư viện vào Story Assets của dự án |
 | Tiền điều kiện | Là thành viên dự án đích |
-| Hậu điều kiện | **Thành công:** StoryAsset mới trong dự án (`source_library_asset_id`), **không tốn credit** |
+| Hậu điều kiện | **Thành công:** StoryAsset mới trong dự án (`source_library_asset_id`), **miễn phí** |
 | Kích hoạt | "Add to project" ở thư viện, hoặc UC-04.02c từ dự án |
 | Truy vết | FR-LIB-05, FR-WLD-05 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User chọn tài sản và dự án đích.

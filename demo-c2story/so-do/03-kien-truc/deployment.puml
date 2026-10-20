@@ -3,7 +3,7 @@
 skinparam defaultFontName "Segoe UI"
 skinparam nodesep 50
 skinparam ranksep 50
-title AI Story Studio - Deployment (production)
+title AI Story Studio - Deployment (production, sau MVP)
 
 actor "Người dùng" as U
 
@@ -22,7 +22,7 @@ cloud "Container platform (ECS / Fly / GKE)" {
         component "Outbox relay\nReconciler\nCleanup" as sched
     }
     node "Job workers (autoscale)" {
-        component "orchestrator / llm /\nimage / tts / audio-gen / export" as wk
+        component "orchestrator / llm /\nimage / tts / export" as wk
     }
     node "Alignment (GPU nhỏ)" {
         component "WhisperX / MFA" as al
@@ -42,7 +42,7 @@ rectangle "Tầng dữ liệu (managed)" {
 }
 
 cloud "Bên thứ ba" {
-    component "SSO có sẵn (OIDC)" as sso
+    component "SSO Vbee (OIDC / OAuth 2.0)" as sso
     component "Stripe" as stripe
     component "AI Providers" as ai
     component "Email" as mail

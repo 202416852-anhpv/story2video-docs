@@ -1,7 +1,8 @@
 # Demo C2Story Studio — Bộ tài liệu đặc tả để phát triển lại từ đầu
 
-> **Phiên bản:** 1.1 · **Ngày:** 2026-10-19 · **Vai trò soạn thảo:** Business Analyst
-> **Trạng thái:** Bản nháp để review
+> **Phiên bản:** 1.13 · **Ngày:** 2026-10-20 · **Vai trò soạn thảo:** Business Analyst
+> **Trạng thái:** Đã chốt phạm vi MVP và kế hoạch theo 4 vòng câu hỏi ([sổ quyết định](quyet-dinh.md))
+> **Bối cảnh:** đồ án tốt nghiệp, nhóm 3 người, 7 tháng phát triển; MVP = hết P3; thử nghiệm bằng closed beta 10–20 người
 
 ## 1. Mục đích
 
@@ -14,7 +15,7 @@ Bộ tài liệu đặc tả hệ thống **AI Story Studio theo dự án (Proje
 →  6. Xuất & tải video
 ```
 
-Nhân vật và bối cảnh được giữ nhất quán xuyên suốt. Người dùng có thể làm thủ công từng bước, hoặc giao cho **AI Director** chạy tự động từ bước 2 đến khi có bản nháp timeline.
+Nhân vật và bối cảnh được giữ nhất quán xuyên suốt. Trong MVP, người dùng (Owner) làm từng bước với AI hỗ trợ ở mỗi bước. **AI Director** chạy tự động từ bước 2 đến bản nháp timeline là hướng phát triển sau MVP.
 
 > **Nguyên tắc cốt lõi: Thuyết minh nguyên văn (Verbatim narration).** Audio của video đọc **toàn bộ** văn bản truyện, **đúng từng chữ, đúng thứ tự**. Không chỉnh sửa, không tóm tắt, không bỏ đoạn. AI chỉ được *minh họa* câu chuyện, không được *viết lại* nó. Xem BR-19..BR-23 ở [08](tai-lieu/08-quy-tac-nghiep-vu.md).
 
@@ -30,11 +31,11 @@ Chức năng tham chiếu module Projects của c2story.com. Tài liệu dùng �
 
 | Phụ trợ | Vì sao cần |
 |---|---|
-| Tích hợp **SSO có sẵn** (vd. SSO Vbee) | Định danh Owner/Editor, phân quyền dự án. **Không tự phát triển** đăng ký, đăng nhập, đăng xuất, mật khẩu; chỉ tích hợp qua OIDC |
-| Thư viện tài sản cá nhân | Tái sử dụng nhân vật giữa các dự án |
-| Thư viện âm thanh | Nhạc nền & SFX có license cho trình chỉnh sửa |
-| Credit & thanh toán | Chi trả các job AI tốn phí |
-| Quản trị tối thiểu | Cấu hình giá credit, mô hình AI; theo dõi job |
+| Tích hợp **SSO** (Keycloak tự dựng; **SSO Vbee** trước khi bảo vệ) | Định danh người dùng, danh sách mời beta, đồng ý xử lý dữ liệu. **Không tự phát triển** đăng ký, đăng nhập, đăng xuất, mật khẩu; chỉ tích hợp qua OIDC (hoặc OAuth 2.0 nếu Vbee chỉ hỗ trợ chuẩn này) |
+| Thư viện tài sản cá nhân *(sau MVP)* | Tái sử dụng nhân vật giữa các dự án |
+| Âm thanh | MVP: nhạc nền & SFX người dùng tải lên; sau MVP: thư viện CC0/CC-BY |
+| Ví & thanh toán | Ví USD; giá = chi phí AI thực × 110%; tiền dùng thử $2; nạp tiền qua cổng ở chế độ sandbox |
+| Quản trị tối thiểu | Bảng giá, mô hình AI, giọng (file seed); danh sách mời; trần chi tiêu AI $10/ngày |
 
 **Đã lược bỏ** (không thiết kế ở phiên bản này): Explore/thư viện cộng đồng, Create nhanh (Auto-make), Remix (Continue/Rewrite), Chat nhân vật, Guide cộng đồng, bán sách và chia doanh thu cho tác giả, API công khai, Poster/Trailer cho sách tạo nhanh, Like/Share công khai, **video AI (image-to-video, Video Storyboard, Animated Book, chất lượng Basic/Enhance/Cinema)**, **AI viết lại văn bản truyện**, **sách tranh (Compile book, trình đọc, PDF)**.
 
@@ -46,7 +47,7 @@ Chức năng tham chiếu module Projects của c2story.com. Tài liệu dùng �
 | CR-02 | Mọi dịch vụ ngoài (AI, thanh toán, email, lưu trữ) dùng **tài khoản và key do nhóm tự đăng ký**, cấu hình qua biến môi trường và quản lý bằng secret manager. |
 | CR-03 | Không sao chép mã nguồn, hình ảnh, văn bản marketing, logo hay nội dung người dùng của c2story. Chỉ tham chiếu **hành vi chức năng**. |
 | CR-04 | API được **thiết kế lại** theo REST và OpenAPI 3.1 (xem `06`). Không phụ thuộc hệ thống cũ. |
-| CR-05 | Giá credit ghi lại làm **giá trị tham khảo**, lưu thành cấu hình. |
+| CR-05 | Giá thao tác tính theo chi phí thực của nhà cung cấp AI của nhóm × 110%, lưu thành cấu hình; không sao chép bảng giá của hệ thống tham chiếu. |
 
 ## 4. Nguồn thông tin
 
@@ -69,7 +70,9 @@ Mức độ chắc chắn được đánh dấu như sau:
 ```
 demo-c2story/
 ├── README.md                     # Tài liệu này
-├── tai-lieu/                     # 10 tài liệu đặc tả (xem §6)
+├── quyet-dinh.md                 # Sổ quyết định (QĐ-xx) từ 4 vòng câu hỏi chốt kế hoạch
+├── CLAUDE.md                     # Hướng dẫn cho Claude Code khi làm việc với bộ tài liệu
+├── tai-lieu/                     # 11 tài liệu đặc tả (xem §6)
 │   └── 03-dac-ta-use-case/       # Đặc tả 165 use case: mục lục + 10 file M01–M10
 ├── so-do/                        # Sơ đồ PlantUML của hệ thống mới (xem §7)
 │   ├── 01-use-case/
@@ -79,7 +82,9 @@ demo-c2story/
 │   ├── 04-tuan-tu/               # Sơ đồ tuần tự
 │   ├── 05-hoat-dong/             # Sơ đồ hoạt động
 │   ├── 06-trang-thai/            # Sơ đồ trạng thái
-│   └── tools/split_erd.py        # Sinh ERD theo phân hệ từ erd.puml
+│   ├── mvp/                      # Bản MVP của các sơ đồ có phần sau MVP (xem so-do/mvp/README.md)
+│   └── tools/                    # split_erd.py (ERD theo phân hệ), gen_mvp.py (sơ đồ MVP + tô xám)
+├── tools/gen_backlog.py          # Sinh 11-product-backlog.md từ đặc tả use case
 └── khao-sat-c2story/             # Kết quả khảo sát c2story.com bằng REA (tham chiếu, không phải thiết kế mới)
     └── uc04-studio/
 ```
@@ -95,25 +100,30 @@ demo-c2story/
 | 05 | [Kiến trúc hệ thống](tai-lieu/05-kien-truc-he-thong.md) | C4 model, ADR |
 | 06 | [Đặc tả API](tai-lieu/06-dac-ta-api.md) | REST, OpenAPI 3.1, RFC 9457 |
 | 07 | [Yêu cầu phi chức năng](tai-lieu/07-yeu-cau-phi-chuc-nang.md) | ISO/IEC 25010 |
-| 08 | [Quy tắc nghiệp vụ & credit](tai-lieu/08-quy-tac-nghiep-vu.md) | — |
+| 08 | [Quy tắc nghiệp vụ, phân quyền & tính phí](tai-lieu/08-quy-tac-nghiep-vu.md) | — |
 | 09 | [Kế hoạch phát triển & ma trận truy vết](tai-lieu/09-ke-hoach-phat-trien.md) | RTM |
 | 10 | [Thuật ngữ](tai-lieu/10-thuat-ngu.md) | — |
+| 11 | [Product backlog (nháp, sinh tự động)](tai-lieu/11-product-backlog.md) | User story + Gherkin |
+| — | [Sổ quyết định](quyet-dinh.md) | — |
 
 ## 7. Danh mục sơ đồ (`so-do/`)
 
 | Thư mục | File |
 |---|---|
 | `01-use-case/` | `uc-tong-quan` (tổng quan), `uc-studio-chi-tiet` (Studio) |
-| `01-use-case/phan-ra/` | `uc-m01-tich-hop-sso`, `uc-m02-du-an-cong-tac`, `uc-m03-ban-thao-chuong`, `uc-m04-the-gioi-truyen`, `uc-m05a-storyboard`, `uc-m05b-sinh-anh-thuyet-minh`, `uc-m06-trinh-chinh-sua-video`, `uc-m07-ai-director`, `uc-m08-thu-vien-tai-san`, `uc-m09-credit-thanh-toan`, `uc-m10-quan-tri` |
-| `02-du-lieu/` | `domain-class`, `erd` (đầy đủ); ERD theo phân hệ `erd-1-tai-khoan-credit`, `erd-2-du-an-ban-thao`, `erd-3-the-gioi-truyen`, `erd-4-sinh-tu-lieu`, `erd-5-trinh-chinh-sua-video`, `erd-6-director-job-ha-tang`. Các ERD con sinh tự động: chỉ sửa `erd.puml` rồi chạy `python3 so-do/tools/split_erd.py` |
+| `01-use-case/phan-ra/` | `uc-m01-tich-hop-sso`, `uc-m02-du-an-cong-tac`, `uc-m03-ban-thao-chuong`, `uc-m04-the-gioi-truyen`, `uc-m05a-storyboard`, `uc-m05b-sinh-anh-thuyet-minh`, `uc-m06-trinh-chinh-sua-video`, `uc-m07-ai-director`, `uc-m08-thu-vien-tai-san`, `uc-m09-vi-thanh-toan`, `uc-m10-quan-tri`. Use case sau MVP tô nền xám |
+| `02-du-lieu/` | `domain-class`, `erd` (đầy đủ); ERD theo phân hệ `erd-1-tai-khoan-vi`, `erd-2-du-an-ban-thao`, `erd-3-the-gioi-truyen`, `erd-4-sinh-tu-lieu`, `erd-5-trinh-chinh-sua-video`, `erd-6-director-job-ha-tang`. Các ERD con sinh tự động: chỉ sửa `erd.puml` rồi chạy `python3 so-do/tools/split_erd.py` |
 | `03-kien-truc/` | `c4-context`, `c4-container`, `c4-component-api`, `c4-component-ai`, `c4-component-editor`, `deployment` |
 | `04-tuan-tu/` | `seq-dang-nhap-sso`, `seq-import-chia-chuong`, `seq-storyboard-sinh-anh`, `seq-director`, `seq-sinh-tu-lieu`, `seq-thuyet-minh-nguyen-van`, `seq-chinh-sua-xuat-video`, `seq-cong-tac-xung-dot`, `seq-thanh-toan` |
-| `05-hoat-dong/` | `act-quy-trinh-project`, `act-giu-tru-credit`, `act-phu-kin-van-ban` |
+| `05-hoat-dong/` | `act-quy-trinh-project`, `act-giu-tru-tien`, `act-phu-kin-van-ban` |
 | `06-trang-thai/` | `state-job`, `state-chapter-media`, `state-narration-render`, `state-director-plan`, `state-tool-proposal`, `state-subscription` |
+| `mvp/` | 26 sơ đồ phạm vi MVP: use case (tổng quan, Studio, 9 phân rã), ERD, mô hình miền, C4 (context, container, API, editor), deployment, 5 tuần tự, quy trình, 2 trạng thái. Danh mục và cách cập nhật: [`so-do/mvp/README.md`](so-do/mvp/README.md) |
 
 Render toàn bộ sơ đồ (cần Java và Graphviz), chạy trong `demo-c2story/`:
 
 ```bash
+python3 so-do/tools/gen_mvp.py && python3 so-do/tools/split_erd.py   # sinh lại sơ đồ MVP, tô xám, ERD con
+python3 tools/gen_backlog.py                                          # sinh lại product backlog
 java -DPLANTUML_LIMIT_SIZE=16384 -jar plantuml.jar -tpng "so-do/**.puml"
 ```
 
@@ -135,3 +145,5 @@ java -DPLANTUML_LIMIT_SIZE=16384 -jar plantuml.jar -tpng "so-do/**.puml"
 | 1.9 | 2026-10-20 | Bổ sung từ bản nháp `docs/`: tìm/lọc dự án, trạng thái dự án suy ra (UC-02.01); xem timeline truyện theo mạch/thời gian, thêm `chrono_index` (UC-04.07, UC-04.09); thay ảnh shot bằng ảnh tải lên, `edit_kind = UPLOAD`, endpoint `:upload`, mở rộng BR-14 (UC-05.10); vùng an toàn & lưới (UC-06.06); preset phụ đề (UC-06.08) ; chuẩn hóa tên use case theo quy cách mới (00-muc-luc §2) |
 | 1.10 | 2026-10-20 | Đặc tả chi tiết **57 use case con** (include/extend) theo khung đầy đủ: tác nhân, tiền/hậu điều kiện, kích hoạt, truy vết, luồng chính và luồng thay thế / ngoại lệ |
 | 1.11 | 2026-10-20 | Cập nhật 10 sơ đồ tuần tự, hoạt động và trạng thái theo đặc tả use case con (đăng nhập SSO, nhập / nhập lại, xung đột khi lưu, thuyết minh nguyên văn, trình chỉnh sửa & xuất, Director, sinh tư liệu, thanh toán, phủ kín văn bản); thêm `state-tool-proposal` |
+| 1.12 | 2026-10-20 | Áp toàn bộ 4 vòng câu hỏi chốt phạm vi và kế hoạch ([sổ quyết định](quyet-dinh.md)): **MVP = hết P3** cho một người dùng (Owner), cột **Giai đoạn** cho mọi FR và use case, thứ tự cắt giảm ✂1–✂5; **ví USD** thay credit (chi phí thực × 110%, giữ ước tính / trừ thực / hoàn dư, $2 dùng thử, Free / Đã nạp tiền, nạp tiền sandbox); closed beta: **danh sách mời**, **đồng ý xử lý dữ liệu**, **trần $10/ngày**; Keycloak → SSO Vbee (ADR-20); bỏ Fix a spot, AI nhạc/SFX, gợi ý SFX, credit hằng ngày; dời ranh giới shot sang Workspace (UC-03.02a); kiểm chứng thủ công (UC-05.18), WER từng shot sau MVP; đổi tốc độ clip thuyết minh 0,8–1,25×; quy tắc ký hiệu trình bày; kế hoạch 24 tuần + RTM có giai đoạn; product backlog sinh tự động; **26 sơ đồ MVP riêng** (`so-do/mvp/`) và tô xám phần sau MVP trong bộ đầy đủ |
+| 1.13 | 2026-10-20 | Áp đánh giá PM vào kế hoạch (QĐ-90..99): mốc khung chạy đầu-cuối T6, đo vận tốc T8, spike editor/render T14; dời 9 UC từ P1 sang P2 (P1 49 · P2 21 story); thứ tự cắt giảm tầng 2 (✂6–✂10) và tầng 3; Tết 2027 và lịch thi; vai trò kèm người dự phòng; bảng rủi ro có ngưỡng kích hoạt và người phụ trách; quy tắc dự phòng P0; benchmark render staging; viết báo cáo dần |

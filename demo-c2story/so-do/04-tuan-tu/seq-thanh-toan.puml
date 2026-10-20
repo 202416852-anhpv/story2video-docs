@@ -3,49 +3,57 @@
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 autonumber
-title UC-09.02 + UC-09.03a + UC-09.08a: Đăng ký gói qua Stripe (tài khoản của nhóm)
+title UC-09.03 + UC-09.08: Nạp tiền vào ví qua Stripe sandbox; gói đăng ký (sau MVP)
 actor User
 participant "Web App" as Web
 participant "API" as API
 database PostgreSQL as DB
-participant "Stripe" as ST
+participant "Stripe\n(test mode)" as ST
 
-User -> Web : Chọn Creator / Monthly
-Web -> API : POST /billing/checkout-sessions {planCode, cycle}
-API -> API : Gói còn active? User chưa có gói trả phí đang hoạt động?
-alt gói không hợp lệ / đã có gói trả phí
-    API --> Web : 404 / 422 (đã có gói → dùng UC-09.04)
+== Nạp tiền vào ví (UC-09.03) ==
+User -> Web : Chọn số tiền ($2 / $5 / $10 / khác)
+Web -> API : POST /billing/topup-sessions {amountUsd}
+alt ngoài khoảng $1–$100
+    API --> Web : 400 VALIDATION_ERROR
 else hợp lệ
-    API -> ST : (tạo customer nếu chưa có → users.gateway_customer_id)\nCreate Checkout Session\n(client_reference_id = userId, price id, success_url, cancel_url)
+    API -> DB : INSERT payments (kind = TOPUP, status = PENDING, amount_micro)
+    API -> ST : (tạo customer nếu chưa có → users.gateway_customer_id)\nCreate Checkout Session một lần\n(client_reference_id = userId, metadata.paymentId, success_url, cancel_url)
     ST --> API : session.url
     API --> Web : {url}
-    Web -> ST : redirect
+    Web -> ST : redirect (trang thanh toán sandbox, thẻ thử)
     User -> ST : Thanh toán
     alt hủy
-        ST --> Web : redirect cancel_url → Pricing (không đổi gì)
+        ST --> Web : redirect cancel_url (không đổi gì)
     else thanh toán xong
         ST --> Web : redirect success_url → Dashboard ("Đang xử lý thanh toán")
     end
 end
-ST -> API : webhook (checkout.session.completed / invoice.paid / invoice.payment_failed /\ncustomer.subscription.deleted / refund / chargeback)
+
+== Webhook (UC-09.08) ==
+ST -> API : webhook checkout.session.completed
 API -> API : Xác thực chữ ký + timestamp (≤ 5 phút)
 alt chữ ký sai
     API --> ST : 400, log bảo mật
 else chữ ký đúng
     API -> DB : INSERT payment_events (gateway_event_id UNIQUE)
     alt event mới
-        API -> DB : UC-09.08a — BEGIN theo loại event:\n• gói paid: subscriptions ACTIVE; EXPIRE credit SUBSCRIPTION cũ; GRANT credit kỳ mới\n• pack: PURCHASE vào bucket PACK\n• payment_failed: PAST_DUE + email\n• subscription.deleted: CANCELED; EXPIRE credit gói\n• refund / chargeback: ADJUST âm (khóa thao tác tốn phí nếu số dư âm)\nghi payments + credit_ledger_entries; processed_at; COMMIT
+        API -> DB : UC-09.08a — BEGIN; payments SUCCEEDED;\nwallets FOR UPDATE: available_micro += x, topup_total_micro += x;\nledger TOPUP (+x, payment_id); processed_at; COMMIT
         alt lỗi xử lý
             API -> DB : ROLLBACK
             API --> ST : 500 (cổng gửi lại)
         else thành công
             API --> ST : 200
+            API -> Web : SSE wallet.updated (lần nạp đầu: accountStatus = PAID, bỏ giới hạn Free)
         end
     else trùng event
-        API -> API : bỏ qua (idempotent)
-        API --> ST : 200
+        API --> ST : 200 (idempotent, bỏ qua)
     end
 end
-Web -> API : GET /me/dashboard (hoặc nhận SSE khi webhook đến chậm)
-API --> Web : Creator, 300 credits
+
+== Gói đăng ký (sau MVP, UC-09.02 / UC-09.04) ==
+User -> Web : Chọn gói tháng / năm
+Web -> API : POST /billing/checkout-sessions {planCode, cycle}
+API -> ST : Create Checkout Session (subscription)
+ST -> API : webhook invoice.paid / invoice.payment_failed /\ncustomer.subscription.deleted / refund / chargeback
+API -> DB : subscriptions theo state-subscription;\nrefund / chargeback → ledger REFUND âm (khóa thao tác tốn phí nếu số dư âm)
 @enduml

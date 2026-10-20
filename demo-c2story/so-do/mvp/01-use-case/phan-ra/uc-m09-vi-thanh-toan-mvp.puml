@@ -1,0 +1,43 @@
+@startuml UC_M09_Billing_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M09 - Ví & thanh toán (MVP)
+
+actor "Guest" as Guest
+actor "User" as User
+User -|> Guest
+
+rectangle "M09 Ví & thanh toán" {
+    usecase "UC-09.01\nXem bảng giá" as UC1
+    usecase "UC-09.03\nNạp tiền vào ví" as UC3
+    usecase "UC-09.03a\nThanh toán qua checkout" as UC3a
+    usecase "UC-09.05\nXem số dư ví" as UC5
+    usecase "UC-09.06\nXem lịch sử chi tiêu" as UC6
+    usecase "UC-09.08\nXử lý webhook thanh toán" as UC8
+    usecase "UC-09.08a\nGhi nạp tiền vào sổ cái" as UC8a
+}
+rectangle "Payment Gateway\n(Stripe test mode)" as PAY
+
+Guest --> UC1
+User --> UC3
+User --> UC5
+User --> UC6
+UC3 ..> UC3a : <<include>>
+UC8 ..> UC8a : <<include>>
+UC3a --> PAY
+PAY --> UC8
+@enduml

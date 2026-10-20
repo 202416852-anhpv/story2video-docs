@@ -5,16 +5,20 @@ title Luồng chính của Studio: 6 bước từ truyện đến video
 
 |Editor|
 start
+partition "0. Tham gia beta" {
+  :Đăng nhập SSO (email trong danh sách mời);
+  :Đồng ý xử lý dữ liệu; nhận $2 dùng thử;
+}
 partition "1. Nhập truyện" {
   :Nhập truyện giữ nguyên văn (Import)\n/ viết trong Workspace;
   :Chọn style, tỷ lệ khung hình;
 }
 partition "2. Chia chương" {
   |AI|
-  :Gợi ý điểm chia chương;
+  :Gợi ý điểm chia chương (tính phí);
   |Editor|
   :Chấp nhận / chỉnh chia chương;
-  :Lưu Archive (khuyến nghị);
+  :Lưu Archive (khuyến nghị, sau MVP);
 }
 partition "3. Thế giới truyện" {
   |AI|
@@ -27,37 +31,43 @@ partition "3. Thế giới truyện" {
 }
 partition "4. Sinh tư liệu (ảnh + thuyết minh)" {
   |Editor|
-  :Chọn giọng đọc;
-  :Bấm "Sinh tư liệu" cho chương\n(xác nhận một báo giá tổng);
+  :Chọn giọng đọc, quy tắc ký hiệu;
+  :Bấm "Sinh tư liệu" cho chương\n(xác nhận một giá ước tính tổng);
   |AI|
   :Storyboard tự động:\nchia **toàn bộ** chương thành shot\n(kiểm tra phủ kín văn bản);
   fork
     :Sinh ảnh minh họa\ntừng shot;
   fork again
-    :TTS **nguyên văn** từng shot\n+ kiểm chứng WER;
+    :TTS **nguyên văn** từng shot\n(bỏ ký hiệu khi đọc;\nkiểm chứng WER: sau MVP);
   end fork
   |Editor|
-  if (Có ảnh lỗi / thuyết minh NEEDS_REVIEW?) then (có)
-    :Sửa ảnh (mô tả / tô vùng) hoặc thay bằng ảnh tải lên,\nsửa phát âm, sinh lại, chấp nhận thủ công;
+  :Nghe thuyết minh (không bắt buộc);
+  if (Có ảnh / thuyết minh lỗi, shot đọc sai\n(sau MVP: NEEDS_REVIEW)?) then (có)
+    :Sửa ảnh (mô tả) hoặc thay bằng ảnh tải lên;\nđánh dấu shot đọc sai, sửa phát âm, sinh lại\n(sau MVP: chấp nhận thủ công);
   else (không)
   endif
+  :Dời ranh giới shot trong Workspace nếu cần\n(AI viết lại brief 2 shot, tính phí);
   |AI|
   :Chương "Sẵn sàng dựng"\n→ dựng bản nháp timeline;
 }
 partition "5. Chỉnh sửa video" {
   |Editor|
   :Mở trình chỉnh sửa timeline;
-  :Ken Burns, chuyển cảnh,\nkhung hình, tinh chỉnh màu;
-  :Thêm **nhạc nền** và **SFX**\n(thư viện / tải lên / AI tùy chọn);
-  :Phụ đề, overlay chữ, trộn âm;
+  :Ken Burns, chuyển cảnh, khung hình,\nđổi tốc độ clip thuyết minh (0,8–1,25×);\ntinh chỉnh màu (sau MVP);
+  :Thêm **nhạc nền** và **SFX**\n(tải lên; thư viện CC0/CC-BY sau MVP);
+  :Phụ đề; overlay chữ, trộn âm (sau MVP);
   :Xem trước;
 }
 partition "6. Xuất & tải" {
-  if (Độ phủ 100% & thuyết minh đã kiểm chứng?) then (có)
-    |Render|
-    :Xuất MP4 + SRT/VTT;
-    |Editor|
-    :Tải video xuống;
+  if (Độ phủ 100%, ảnh + thuyết minh DONE,\nkhông OUTDATED?) then (có)
+    if (Free hết lượt / phút trong tháng?) then (có)
+      :Nạp tiền (sandbox) hoặc đợi tháng sau;
+    else (không)
+      |Render|
+      :Xuất MP4 + SRT/VTT\n(Free: 720p, watermark);
+      |Editor|
+      :Tải video xuống;
+    endif
   else (không)
     :Xử lý các vị trí chưa đạt\ntrên timeline;
   endif
@@ -65,7 +75,7 @@ partition "6. Xuất & tải" {
 stop
 
 note right
-  AI Director có thể chạy tự động bước 2 → 4
+  Sau MVP: AI Director có thể chạy tự động bước 2 → 4
   và dựng sẵn bản nháp timeline; dừng ở:
   chọn style, duyệt cast, chọn giọng,
   duyệt thuyết minh. AI không bao giờ

@@ -1,0 +1,82 @@
+@startuml Seq_ChinhSuaXuatVideo_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-06.01 + UC-06.16 (MVP): Chỉnh sửa video trên timeline, xuất và tải
+actor Editor
+participant "Web App\n(Timeline editor + Preview)" as Web
+participant "API (editor module)" as API
+database PostgreSQL as DB
+participant "Render Worker\n(Remotion / FFmpeg)" as R
+participant "Object Storage" as S3
+
+== Mở trình chỉnh sửa ==
+Editor -> Web : Mở trình chỉnh sửa chương 1
+Web -> API : POST /timelines {scope: CHAPTER, chapterId} (tạo hoặc lấy)
+alt chưa có timeline (UC-06.01a)
+    API -> DB : chương READY_TO_EDIT?
+    alt chưa sẵn sàng
+        API --> Web : 422 PRECONDITION_FAILED_BUSINESS
+    else sẵn sàng
+        API -> DB : TimelineBuilder: tracks Video / Thuyết minh (khóa) / Phụ đề /\nNhạc nền / SFX; mỗi shot 1 item IMAGE + 1 item NARRATION;\nphụ đề nguyên văn (kể cả ký hiệu) từ word_timings;\nKen Burns luân phiên, crossfade 0,5 s
+    end
+end
+Web -> API : GET /timelines/{tl} (ETag v1)
+API -> DB : tracks + items (ảnh, thuyết minh khóa, phụ đề)
+API --> Web : timeline
+Web -> Web : Preview realtime (cùng component dựng khung hình)
+
+== Chỉnh sửa (miễn phí) ==
+Editor -> Web : Ken Burns, chuyển cảnh (cơ bản; nâng cao ✂2) cho các clip ảnh
+Editor -> Web : Đổi tốc độ clip thuyết minh shot 5 → 1,1× (0,8–1,25×)
+Editor -> Web : Tìm "calm piano" trong Âm thanh của tôi, kéo vào track Nhạc nền
+Web -> API : GET /audio-assets?kind=MUSIC&q=calm piano
+Editor -> Web : Kéo SFX "pháo hoa" vào track SFX tại 01:42
+Web -> Web : NarrationGuard (cùng bộ luật với server, BR-24) kiểm tra trước,\nrồi áp thao tác vào store cục bộ (undo/redo)
+Web -> API : POST /timelines/{tl}:apply-ops {ifMatch: v1, ops[]} (debounce)
+API -> API : UC-06.02a: kiểm tra BR-24 / IC-10 / IC-17 trên toàn lô\n(thuyết minh đủ, đúng thứ tự, không cắt / trim / xóa;\ntốc độ 0,8–1,25×; ảnh phủ khoảng đọc)
+alt hợp lệ
+    API -> DB : ghi items; version v2
+    API --> Web : 200 ETag v2
+else vi phạm (vd. xóa clip thuyết minh)
+    API --> Web : 422 NARRATION_LOCKED {opIndex}
+    Web -> Web : hoàn tác thao tác, hiện giải thích
+else xung đột version
+    API --> Web : 409 → tải lại timeline (BR-05)
+end
+opt Tải nhạc / SFX của tôi (UC-06.11a)
+    Editor -> Web : Chọn file MP3 / WAV / M4A (tự chịu trách nhiệm bản quyền)
+    Web -> API : POST /audio-assets (multipart)
+    API -> API : Kiểm MIME thật, ≤ 100 MB, ≤ 15 phút, quét malware
+    API -> DB : audio_assets(USER_UPLOAD) + job PROCESS_AUDIO_UPLOAD (waveform)
+    API --> Web : 202 → SSE asset.updated khi xong
+end
+
+== Xuất & tải ==
+Editor -> Web : Xuất video
+Web -> API : GET /timelines/{tl}/readiness (UC-06.16a)
+API -> DB : độ phủ, ảnh DONE, thuyết minh DONE (không OUTDATED), IC-10;\ncảnh báo shot đã đánh dấu; hạn mức Free
+alt chưa đạt
+    API --> Web : 422 {notDone[], outdated[], violations[]}
+else đạt (độ phủ 9895/9895)
+    Web -> API : POST /timelines/{tl}/renders {resolution}
+    alt Free: hết lượt / vượt phút trong tháng / chọn 1080p
+        API --> Web : 403 FREE_LIMIT_REACHED → gợi ý nạp tiền
+    else được phép
+        API -> DB : renders(QUEUED, timeline_snapshot v2, coverage, watermark = Free?)
+        API --> Web : 202
+        R -> S3 : tải ảnh, audio thuyết minh, nhạc, SFX, font
+        R -> R : Dựng khung hình (Ken Burns, chuyển cảnh, phụ đề nguyên văn,\nwatermark đường kẻ + logo nếu Free) theo đoạn song song
+        R -> R : Đổi tốc độ clip thuyết minh (giữ cao độ); trộn thuyết minh +\nnhạc (ducking) + SFX; loudnorm -14 LUFS; encode H.264/AAC
+        R --> Web : SSE render.progress
+        R -> S3 : PUT video.mp4, subs.srt, subs.vtt
+        R -> DB : renders READY, is_primary; Free: cộng lượt render + phút video
+        R --> Web : SSE render.ready
+        Editor -> Web : Tải xuống
+        Web -> API : GET /renders/{rid}/download?file=MP4
+        API --> Web : 302 → link ký 15 phút
+        Web -> S3 : tải video.mp4
+    end
+end
+@enduml

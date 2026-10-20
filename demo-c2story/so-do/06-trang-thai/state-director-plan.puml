@@ -1,7 +1,7 @@
 @startuml State_DirectorPlan
 !theme plain
 skinparam defaultFontName "Segoe UI"
-title Trạng thái kế hoạch AI Director
+title Trạng thái kế hoạch AI Director (sau MVP)
 [*] --> RUNNING : start()
 state RUNNING {
     [*] --> pickStyle
@@ -13,8 +13,8 @@ state RUNNING {
     verify --> draftTimeline
     draftTimeline --> [*] : Editor tự chỉnh sửa\nnhạc, SFX và xuất
 }
-RUNNING --> AWAITING_INPUT : chọn style / duyệt cast / chọn giọng /\nduyệt NEEDS_REVIEW / thiếu credit
-AWAITING_INPUT --> RUNNING : submit-input / nạp credit + continue
+RUNNING --> AWAITING_INPUT : chọn style / duyệt cast / chọn giọng /\nduyệt thuyết minh / thiếu số dư
+AWAITING_INPUT --> RUNNING : submit-input / nạp tiền + continue
 RUNNING --> PAUSED : pause
 PAUSED --> RUNNING : continue
 RUNNING --> COMPLETED : mọi bước xong

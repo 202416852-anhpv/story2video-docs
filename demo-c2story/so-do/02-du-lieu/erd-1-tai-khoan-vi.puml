@@ -1,11 +1,11 @@
-@startuml erd_1_tai_khoan_credit
+@startuml erd_1_tai_khoan_vi
 ' Sinh tự động từ erd.puml - chỉ sửa erd.puml rồi chạy: python3 so-do/tools/split_erd.py
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam linetype ortho
 hide circle
 hide empty members
-title ERD 1 - Tài khoản, credit & thanh toán
+title ERD 1 - Tài khoản, ví & thanh toán
 
 package "Tài khoản & thanh toán" #EEF5FF {
     entity users {
@@ -20,7 +20,8 @@ package "Tài khoản & thanh toán" #EEF5FF {
         * status : user_status
         gateway_customer_id : text
         last_login_at : timestamptz
-        last_daily_claim_on : date
+        consented_at : timestamptz
+        consent_version : text
         deletion_requested_at : timestamptz
     }
     entity user_sessions {
@@ -35,28 +36,27 @@ package "Tài khoản & thanh toán" #EEF5FF {
         revoked_at : timestamptz
         last_seen_at : timestamptz
     }
-    entity plans {
+    entity plans #DDDDDD {
         * id : uuid <<PK>>
         --
         * code : text <<UQ>>
         name : text
-        * monthly_credits : int
         price_monthly : numeric
         price_annual : numeric
         gateway_price_ids : jsonb
         features : jsonb
         active : bool
     }
-    entity credit_packs {
+    entity beta_invites {
         * id : uuid <<PK>>
         --
-        * code : text <<UQ>>
-        * credits : int
-        * price : numeric
-        gateway_price_id : text
-        active : bool
+        * email : citext <<UQ>>
+        invited_by : uuid <<FK>>
+        note : text
+        used_by_user_id : uuid <<FK>>
+        revoked_at : timestamptz
     }
-    entity subscriptions {
+    entity subscriptions #DDDDDD {
         * id : uuid <<PK>>
         --
         * user_id : uuid <<FK>>
@@ -74,8 +74,7 @@ package "Tài khoản & thanh toán" #EEF5FF {
         * user_id : uuid <<FK>>
         * kind : payment_kind
         plan_id : uuid <<FK>>
-        credit_pack_id : uuid <<FK>>
-        * amount : numeric
+        * amount_micro : bigint
         * currency : text
         * status : text
         gateway_ref : text
@@ -88,27 +87,25 @@ package "Tài khoản & thanh toán" #EEF5FF {
         payload : jsonb
         processed_at : timestamptz
     }
-    entity credit_balances {
+    entity wallets {
         * user_id : uuid <<PK,FK>>
-        * bucket : credit_bucket <<PK>>
         --
-        * available : int
-        * held : int
-        expires_at : timestamptz
+        * available_micro : bigint
+        * held_micro : bigint
+        * topup_total_micro : bigint
+        * version : int
     }
-    entity credit_ledger_entries {
+    entity wallet_ledger_entries {
         * id : uuid <<PK>>
         --
         * user_id : uuid <<FK>>
-        * bucket : credit_bucket
-        * delta : int
-        * type : ledger_type
+        * entry_type : ledger_type
+        * amount_micro : bigint
         job_id : uuid <<FK>>
         payment_id : uuid <<FK>>
         project_id : uuid <<FK>>
         actor_id : uuid <<FK>>
         reason : text
-        expires_at : timestamptz
     }
     entity audit_logs {
         * id : uuid <<PK>>
@@ -137,11 +134,11 @@ users ||--o{ subscriptions
 plans ||--o{ subscriptions
 users ||--o{ payments
 plans |o--o{ payments
-credit_packs |o--o{ payments
-users ||--o{ credit_balances
-users ||--o{ credit_ledger_entries
-payments |o--o{ credit_ledger_entries
-jobs |o--o{ credit_ledger_entries
+users ||--|| wallets
+users ||--o{ wallet_ledger_entries
+payments |o--o{ wallet_ledger_entries
+jobs |o--o{ wallet_ledger_entries
+users |o--o{ beta_invites : invited by
 users ||--o{ audit_logs : actor
 users ||--o{ projects : owns
 users ||--o{ project_members

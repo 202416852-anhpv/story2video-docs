@@ -19,13 +19,13 @@ title M08 - Thư viện tài sản cá nhân
 actor "User" as User
 
 rectangle "M08 Thư viện tài sản" {
-    usecase "UC-08.01\nXem thư viện" as UC1
-    usecase "UC-08.01a\nLọc & tìm kiếm" as UC1a
-    usecase "UC-08.02\nTạo tài sản từ ảnh hoặc mô tả" as UC2
-    usecase "UC-08.02a\nSinh ảnh tham chiếu" as UC2a
-    usecase "UC-08.03\nSửa / xóa tài sản" as UC3
-    usecase "UC-08.04\nLưu tài sản từ dự án vào thư viện" as UC4
-    usecase "UC-08.05\nThêm tài sản vào dự án" as UC5
+    usecase "UC-08.01\nXem thư viện" as UC1 #DDDDDD
+    usecase "UC-08.01a\nLọc & tìm kiếm" as UC1a #DDDDDD
+    usecase "UC-08.02\nTạo tài sản từ ảnh hoặc mô tả" as UC2 #DDDDDD
+    usecase "UC-08.02a\nSinh ảnh tham chiếu" as UC2a #DDDDDD
+    usecase "UC-08.03\nSửa / xóa tài sản" as UC3 #DDDDDD
+    usecase "UC-08.04\nLưu tài sản từ dự án vào thư viện" as UC4 #DDDDDD
+    usecase "UC-08.05\nThêm tài sản vào dự án" as UC5 #DDDDDD
 }
 rectangle "Image Provider" as IMG
 
@@ -37,4 +37,5 @@ User --> UC5
 UC1 <.. UC1a : <<extend>>
 UC2 ..> UC2a : <<include>>
 UC2a --> IMG
+caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

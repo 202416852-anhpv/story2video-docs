@@ -1,0 +1,73 @@
+@startuml Seq_SinhTuLieu_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-05.07 (MVP): Sinh tư liệu chương (ảnh + thuyết minh nguyên văn)
+actor Editor
+participant "Web App" as Web
+participant "API" as API
+database PostgreSQL as DB
+participant "Media Orchestrator\n(job cha)" as ORC
+participant "LLM Worker\n(storyboard)" as SB
+participant "Image Worker" as IMG
+participant "TTS + Align Worker" as NAR
+
+Editor -> Web : "Sinh tư liệu" chương 1
+Web -> API : GET /media:quote?chapterIds=c1
+API --> Web : giá ước tính tối đa (đã gồm phí 10%):\n{shots≈10, storyboardUsd, imagesUsd, ttsChars 9895, ttsUsd, totalUsd}
+Editor -> Web : Xác nhận
+Web -> API : POST /media:generate {chapterIds:[c1]} (Idempotency-Key)
+API -> API : BudgetGuard: chi tiêu AI hôm nay + đang giữ + ước tính ≤ trần ngày? (BR-29)
+alt vượt trần
+    API --> Web : 503 DAILY_BUDGET_EXCEEDED
+else trong trần
+    API -> DB : wallets FOR UPDATE; HOLD totalUsd; jobs GENERATE_MEDIA_CHAPTER (QUEUED)
+    alt không đủ số dư
+        API --> Web : 402 INSUFFICIENT_BALANCE → gợi ý nạp tiền
+    else đủ
+        API --> Web : 202
+    end
+end
+ORC -> DB : chương có storyboard hiện hành?
+alt chưa có (UC-05.07a, STORYBOARD_DRAFT)
+    ORC -> SB : STORYBOARD_DRAFT, kind = INITIAL\n(tách câu → LLM chọn ranh giới → CoverageValidator phủ kín)
+    alt thành công
+        SB --> ORC : N shot (source_start/end/hash), đặt làm hiện hành
+        ORC -> DB : điều chỉnh HOLD theo N thực tế (WR-05)
+    else lỗi sau retry
+        SB --> ORC : FAILED
+        ORC -> DB : chương NEEDS_ATTENTION; bỏ qua chương này, các chương khác vẫn chạy
+    end
+end
+par mỗi shot (giới hạn đồng thời 8 ảnh, 8 TTS)
+    ORC -> IMG : GENERATE_SHOT_IMAGE(shot)
+    IMG --> ORC : illustration DONE / FAILED
+else
+    ORC -> NAR : NARRATE_SEGMENT(shot)\n(text = content[start:end], ký hiệu SYM, SSML, TTS, timestamp)
+    NAR --> ORC : narration DONE / FAILED
+end
+ORC --> Web : SSE media.progress (từng shot, từng phần)
+ORC -> DB : mỗi job con: CAPTURE chi phí thực × 110%, RELEASE phần dư;\njob lỗi: RELEASE toàn bộ
+alt mọi shot: ảnh DONE & thuyết minh DONE
+    ORC -> DB : chương READY_TO_EDIT;\ntạo timeline nháp: track Video (ảnh), Thuyết minh (khóa),\nPhụ đề (nguyên văn), Nhạc nền & SFX trống
+    ORC --> Web : SSE chapter.media-ready {timelineId} + số đã trừ / đã hoàn
+else còn lỗi
+    ORC -> DB : chương NEEDS_ATTENTION
+    ORC --> Web : danh sách shot cần xử lý
+end
+opt Nghe & đánh dấu (UC-05.18, không bắt buộc)
+    Editor -> Web : Nghe từng shot; "Đánh dấu cần sinh lại"
+    Web -> API : POST .../shots/{shid}/narration:flag
+end
+opt Sinh lại phần thiếu / lỗi / OUTDATED / đã đánh dấu (UC-05.07c)
+    Editor -> Web : Chọn phạm vi (MISSING / FAILED / OUTDATED / FLAGGED; ảnh / thuyết minh)
+    Web -> API : GET /media:quote → POST /media:generate {only, parts}
+    API -> DB : Bỏ qua ảnh DONE hợp lệ và ảnh do Editor tải lên (BR-14);\nHOLD; job cha + job con cho các shot được chọn
+    API --> Web : 202 → tiến độ theo shot (UC-05.07b, SSE media.progress)
+end
+note over Editor, NAR
+  Bước này **chỉ** sinh ảnh + thuyết minh.
+  Nhạc nền và SFX được thêm trong trình chỉnh sửa (UC-06.01).
+end note
+@enduml

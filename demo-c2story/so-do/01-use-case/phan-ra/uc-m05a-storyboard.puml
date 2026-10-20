@@ -21,18 +21,17 @@ actor "Editor" as Editor
 rectangle "M05 Sinh tư liệu - phần Storyboard" {
     usecase "UC-05.01\nTạo bản nháp storyboard" as UC1
     usecase "UC-05.01a\nTách câu & kiểm tra phủ kín" as UC1a
-    usecase "UC-05.02\nQuản lý bản nháp" as UC2
-    usecase "UC-05.02a\nĐổi tên / nhân bản / xóa" as UC2a
-    usecase "UC-05.02b\nSo sánh hai bản nháp" as UC2b
+    usecase "UC-05.02\nQuản lý bản nháp" as UC2 #DDDDDD
+    usecase "UC-05.02a\nĐổi tên / nhân bản / xóa" as UC2a #DDDDDD
+    usecase "UC-05.02b\nSo sánh hai bản nháp" as UC2b #DDDDDD
     usecase "UC-05.02c\nĐặt bản nháp hiện hành" as UC2c
     usecase "UC-05.03\nChia lại shot (nhiều / ít hơn)" as UC3
-    usecase "UC-05.04\nThiết lập Chapter rules" as UC4
-    usecase "UC-05.05\nChỉ đạo lại cả chương (Re-direct)" as UC5
+    usecase "UC-05.04\nThiết lập Chapter rules" as UC4 #DDDDDD
+    usecase "UC-05.05\nChỉ đạo lại cả chương (Re-direct)" as UC5 #DDDDDD
     usecase "UC-05.06\nBiên tập shot" as UC6
     usecase "UC-05.06a\nSửa brief, thời điểm, caption" as UC6a
     usecase "UC-05.06b\nGắn cast / item / location" as UC6b
     usecase "UC-05.06c\nTách / gộp / xóa shot" as UC6c
-    usecase "UC-05.06d\nDời ranh giới đoạn nguồn" as UC6d
     usecase "UC-05.06e\nViết lại brief một shot bằng\nAI" as UC6e
     usecase "UC-05.06f\nTự khớp tên với tài sản" as UC6f
 }
@@ -47,17 +46,16 @@ Editor --> UC6
 UC1 ..> UC1a : <<include>>
 UC3 ..> UC1a : <<include>>
 UC6c ..> UC1a : <<include>>
-UC6d ..> UC1a : <<include>>
 UC2 <.. UC2a : <<extend>>
 UC2 <.. UC2b : <<extend>>
 UC2 <.. UC2c : <<extend>>
 UC6 <.. UC6a : <<extend>>
 UC6 <.. UC6b : <<extend>>
 UC6 <.. UC6c : <<extend>>
-UC6 <.. UC6d : <<extend>>
 UC6 <.. UC6e : <<extend>>
 UC6 <.. UC6f : <<extend>>
 UC1 --> LLM
 UC5 --> LLM
 UC6e --> LLM
+caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

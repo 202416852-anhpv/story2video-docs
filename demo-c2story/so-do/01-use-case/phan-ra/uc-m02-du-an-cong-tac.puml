@@ -29,14 +29,14 @@ rectangle "M02 Quản lý dự án & cộng tác" {
     usecase "UC-02.03\nTạo dự án trống" as UC3
     usecase "UC-02.04\nCài đặt dự án" as UC4
     usecase "UC-02.05\nXóa dự án" as UC5
-    usecase "UC-02.06\nTạo / thu hồi link mời" as UC6
-    usecase "UC-02.07\nQuản lý thành viên" as UC7
-    usecase "UC-02.08\nTham gia dự án qua link" as UC8
+    usecase "UC-02.06\nTạo / thu hồi link mời" as UC6 #DDDDDD
+    usecase "UC-02.07\nQuản lý thành viên" as UC7 #DDDDDD
+    usecase "UC-02.08\nTham gia dự án qua link" as UC8 #DDDDDD
     usecase "UC-02.09\nXem bản đồ quy trình (Map)" as UC9
-    usecase "UC-02.10\nXử lý xung đột khi lưu" as UC10
-    usecase "UC-02.10a\nLưu bản của tôi thành nháp" as UC10a
-    usecase "UC-02.10b\nTải bản của người khác" as UC10b
-    usecase "UC-02.11\nNhân bản dự án" as UC11
+    usecase "UC-02.10\nXử lý xung đột khi lưu" as UC10 #DDDDDD
+    usecase "UC-02.10a\nLưu bản của tôi thành nháp" as UC10a #DDDDDD
+    usecase "UC-02.10b\nTải bản của người khác" as UC10b #DDDDDD
+    usecase "UC-02.11\nNhân bản dự án" as UC11 #DDDDDD
 }
 
 User --> UC1
@@ -57,4 +57,5 @@ note right of UC1
   Nhánh 2c: tìm theo tiêu đề, lọc In Progress / Done
   (trạng thái suy ra từ trạng thái chương)
 end note
+caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

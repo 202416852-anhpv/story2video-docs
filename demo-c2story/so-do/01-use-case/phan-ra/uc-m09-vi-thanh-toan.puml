@@ -14,25 +14,24 @@ skinparam rectangle {
     BorderColor #37474F
 }
 left to right direction
-title M09 - Credit & thanh toán
+title M09 - Ví & thanh toán
 
 actor "Guest" as Guest
 actor "User" as User
 User -|> Guest
 
-rectangle "M09 Credit & thanh toán" {
+rectangle "M09 Ví & thanh toán" {
     usecase "UC-09.01\nXem bảng giá" as UC1
-    usecase "UC-09.02\nĐăng ký gói" as UC2
-    usecase "UC-09.03\nMua gói credit" as UC3
+    usecase "UC-09.02\nĐăng ký gói" as UC2 #DDDDDD
+    usecase "UC-09.03\nNạp tiền vào ví" as UC3
     usecase "UC-09.03a\nThanh toán qua checkout" as UC3a
-    usecase "UC-09.04\nQuản lý thanh toán" as UC4
-    usecase "UC-09.05\nXem số dư credit" as UC5
-    usecase "UC-09.06\nXem lịch sử tiêu credit" as UC6
-    usecase "UC-09.07\nNhận credit hằng ngày" as UC7
+    usecase "UC-09.04\nQuản lý thanh toán" as UC4 #DDDDDD
+    usecase "UC-09.05\nXem số dư ví" as UC5
+    usecase "UC-09.06\nXem lịch sử chi tiêu" as UC6
     usecase "UC-09.08\nXử lý webhook thanh toán" as UC8
-    usecase "UC-09.08a\nCập nhật gói & nạp credit (ledger)" as UC8a
+    usecase "UC-09.08a\nGhi nạp tiền vào sổ cái" as UC8a
 }
-rectangle "Payment Gateway\n(Stripe)" as PAY
+rectangle "Payment Gateway\n(Stripe test mode)" as PAY
 
 Guest --> UC1
 User --> UC2
@@ -40,11 +39,11 @@ User --> UC3
 User --> UC4
 User --> UC5
 User --> UC6
-User --> UC7
 UC2 ..> UC3a : <<include>>
 UC3 ..> UC3a : <<include>>
 UC8 ..> UC8a : <<include>>
 UC3a --> PAY
 UC4 --> PAY
 PAY --> UC8
+caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

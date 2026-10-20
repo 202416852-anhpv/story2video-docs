@@ -1,0 +1,41 @@
+@startuml UC_M10_QuanTri_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M10 - Quản trị (MVP)
+
+actor "Admin" as Admin
+
+rectangle "M10 Quản trị" {
+    usecase "UC-10.01\nCấu hình bảng giá" as UC1
+    usecase "UC-10.03\nQuản lý provider & mô hình AI" as UC3
+    usecase "UC-10.04\nQuản lý danh mục style" as UC4
+    usecase "UC-10.05\nQuản lý danh mục giọng đọc" as UC5
+    usecase "UC-10.09\nGhi audit log" as UC9
+    usecase "UC-10.11\nQuản lý danh sách mời beta" as UC11
+    usecase "UC-10.12\nÁp trần chi tiêu AI hằng ngày" as UC12
+}
+rectangle "Email service" as MAIL
+
+Admin --> UC1
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC11
+UC11 ..> UC9 : <<include>>
+UC12 --> MAIL
+UC1 ..> UC9 : <<include>>
+@enduml

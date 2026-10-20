@@ -2,10 +2,10 @@
 !theme plain
 skinparam defaultFontName "Segoe UI"
 title Trạng thái Job
-[*] --> QUEUED : tạo + HOLD credit
+[*] --> QUEUED : tạo (trong trần ngày) + HOLD giá ước tính
 QUEUED --> RUNNING : worker nhận
 QUEUED --> CANCELLED : người dùng hủy / RELEASE
-RUNNING --> SUCCEEDED : xong / CAPTURE
+RUNNING --> SUCCEEDED : xong / CAPTURE chi phí thực × 110%\n+ RELEASE phần dư
 RUNNING --> RETRYING : lỗi tạm thời
 RETRYING --> RUNNING : backoff hết
 RETRYING --> FAILED : quá 3 lần / RELEASE

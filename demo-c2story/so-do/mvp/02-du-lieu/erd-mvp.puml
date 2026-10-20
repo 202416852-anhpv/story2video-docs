@@ -1,0 +1,620 @@
+@startuml ERD_StoryStudio_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+title ERD - phạm vi MVP
+' Mô hình dữ liệu vật lý - PostgreSQL. Xem tai-lieu/04-mo-hinh-du-lieu.md
+' Mọi bảng có thêm created_at, updated_at (timestamptz) - không vẽ để gọn
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 70
+hide circle
+hide empty members
+
+package "Tài khoản & thanh toán" #EEF5FF {
+    entity users {
+        * id : uuid <<PK>>
+        --
+        * sso_subject : text <<UQ>>
+        email : citext
+        display_name : text
+        avatar_url : text
+        locale : text
+        * role : user_role
+        * status : user_status
+        gateway_customer_id : text
+        last_login_at : timestamptz
+        consented_at : timestamptz
+        consent_version : text
+        deletion_requested_at : timestamptz
+    }
+    entity user_sessions {
+        * id : uuid <<PK>>
+        --
+        * user_id : uuid <<FK>>
+        * session_hash : text <<UQ>>
+        sso_sid : text
+        refresh_token_enc : bytea
+        id_token_hint_enc : bytea
+        * expires_at : timestamptz
+        revoked_at : timestamptz
+        last_seen_at : timestamptz
+    }
+    entity beta_invites {
+        * id : uuid <<PK>>
+        --
+        * email : citext <<UQ>>
+        invited_by : uuid <<FK>>
+        note : text
+        used_by_user_id : uuid <<FK>>
+        revoked_at : timestamptz
+    }
+    entity payments {
+        * id : uuid <<PK>>
+        --
+        * user_id : uuid <<FK>>
+        * kind : payment_kind
+        plan_id : uuid <<FK>>
+        * amount_micro : bigint
+        * currency : text
+        * status : text
+        gateway_ref : text
+    }
+    entity payment_events {
+        * id : uuid <<PK>>
+        --
+        * gateway_event_id : text <<UQ>>
+        * type : text
+        payload : jsonb
+        processed_at : timestamptz
+    }
+    entity wallets {
+        * user_id : uuid <<PK,FK>>
+        --
+        * available_micro : bigint
+        * held_micro : bigint
+        * topup_total_micro : bigint
+        * version : int
+    }
+    entity wallet_ledger_entries {
+        * id : uuid <<PK>>
+        --
+        * user_id : uuid <<FK>>
+        * entry_type : ledger_type
+        * amount_micro : bigint
+        job_id : uuid <<FK>>
+        payment_id : uuid <<FK>>
+        project_id : uuid <<FK>>
+        actor_id : uuid <<FK>>
+        reason : text
+    }
+    entity audit_logs {
+        * id : uuid <<PK>>
+        --
+        * actor_id : uuid <<FK>>
+        * action : text
+        * target_type : text
+        target_id : uuid
+        before : jsonb
+        after : jsonb
+        reason : text
+        ip : inet
+    }
+}
+
+package "Dự án & bản thảo" #F3FFF0 {
+    entity projects {
+        * id : uuid <<PK>>
+        --
+        * owner_id : uuid <<FK>>
+        * title : text
+        cover_media_id : uuid <<FK>>
+        style_id : uuid <<FK>>
+        image_model_id : uuid <<FK>>
+        language : text
+        target_shot_seconds : int
+        * aspect_ratio : text
+        visibility : text
+        art_direction : text
+        current_source_id : uuid <<FK>>
+        workflow_step : smallint
+        * version : int
+        deleted_at : timestamptz
+    }
+    entity project_members {
+        * project_id : uuid <<PK,FK>>
+        * user_id : uuid <<PK,FK>>
+        --
+        * role : member_role
+        joined_at : timestamptz
+        last_active_at : timestamptz
+    }
+    entity source_texts {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * content : text
+        char_count : int
+        * sha256 : text
+        normalization_log : jsonb
+        original_media_id : uuid <<FK>>
+    }
+    entity chapters {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * order_index : int
+        * title : text
+        * content : text
+        char_count : int
+        content_sha256 : text
+        * media_status : chapter_media_status
+        current_storyboard_id : uuid <<FK>>
+        locked_by_job_id : uuid <<FK>>
+        last_edited_by : uuid <<FK>>
+        * version : int
+    }
+    entity chapter_versions {
+        * id : uuid <<PK>>
+        --
+        * chapter_id : uuid <<FK>>
+        * version : int
+        title : text
+        * content : text
+        edited_by : uuid <<FK>>
+    }
+}
+
+package "Thế giới truyện" #FFF8E8 {
+    entity styles {
+        * id : uuid <<PK>>
+        --
+        * code : text <<UQ>>
+        * name : text
+        description : text
+        prompt_fragment : text
+        preview_media_id : uuid <<FK>>
+        active : bool
+    }
+    entity story_assets {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * kind : asset_kind
+        * name : text
+        aliases : text[]
+        appearance : text
+        facts : text
+        current_image_id : uuid <<FK>>
+        use_exact_image : bool
+        source_library_asset_id : uuid <<FK>>
+        * version : int
+    }
+    entity story_asset_group_members {
+        * group_asset_id : uuid <<PK,FK>>
+        * member_asset_id : uuid <<PK,FK>>
+        --
+    }
+    entity asset_images {
+        * id : uuid <<PK>>
+        --
+        * story_asset_id : uuid <<FK>>
+        * media_id : uuid <<FK>>
+        style_id : uuid <<FK>>
+        prompt_snapshot : text
+        job_id : uuid <<FK>>
+    }
+    entity visual_rules {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * name : text
+        * instruction : text
+        * scope : text
+        chapter_id : uuid <<FK>>
+        active : bool
+        order_index : int
+    }
+    entity timeline_events {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * chapter_id : uuid <<FK>>
+        day_label : text
+        season : text
+        story_date : text
+        summary : text
+        order_index : int
+        chrono_index : int
+    }
+    entity relationships {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * asset_a_id : uuid <<FK>>
+        * asset_b_id : uuid <<FK>>
+        label : text
+        dynamic : text
+        from_chapter_id : uuid <<FK>>
+    }
+}
+
+package "Sinh tư liệu" #F5EEFF {
+    entity storyboard_drafts {
+        * id : uuid <<PK>>
+        --
+        * chapter_id : uuid <<FK>>
+        * project_id : uuid <<FK>>
+        * name : text
+        * kind : text
+        boundary_fixes : int
+        created_by : uuid <<FK>>
+    }
+    entity shots {
+        * id : uuid <<PK>>
+        --
+        * draft_id : uuid <<FK>>
+        * project_id : uuid <<FK>>
+        * order_index : int
+        title : text
+        focus : text
+        time_of_day : text
+        story_date : text
+        brief : jsonb
+        caption : text
+        * source_start : int
+        * source_end : int
+        * source_hash : text
+        current_illustration_id : uuid <<FK>>
+        current_narration_id : uuid <<FK>>
+        * version : int
+    }
+    entity shot_asset_refs {
+        * id : uuid <<PK>>
+        --
+        * shot_id : uuid <<FK>>
+        story_asset_id : uuid <<FK>>
+        * raw_name : text
+        * role : text
+    }
+    entity illustrations {
+        * id : uuid <<PK>>
+        --
+        * shot_id : uuid <<FK>>
+        media_id : uuid <<FK>>
+        * status : media_status
+        * edit_kind : text
+        instruction : text
+        prompt_snapshot : text
+        shot_version : int
+        parent_illustration_id : uuid <<FK>>
+        job_id : uuid <<FK>>
+    }
+    entity narration_settings {
+        * project_id : uuid <<PK,FK>>
+        --
+        language : text
+        voice_id : uuid <<FK>>
+        speed : numeric
+        pitch : numeric
+        sentence_pause_ms : int
+        paragraph_pause_ms : int
+        symbol_rules : jsonb
+        wer_threshold : numeric
+        multi_voice : bool
+    }
+    entity voices {
+        * id : uuid <<PK>>
+        --
+        * provider_id : uuid <<FK>>
+        * code : text
+        * name : text
+        language : text
+        gender : text
+        sample_media_id : uuid <<FK>>
+        min_plan_code : text
+        sample_wer : numeric
+        enabled : bool
+    }
+    entity pronunciation_entries {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * written : text
+        * spoken : text
+        * kind : text
+        case_sensitive : bool
+    }
+    entity narrations {
+        * id : uuid <<PK>>
+        --
+        * shot_id : uuid <<FK>>
+        * project_id : uuid <<FK>>
+        * version_no : int
+        * source_hash : text
+        spoken_text : text
+        ssml : text
+        normalization_log : jsonb
+        voice_id : uuid <<FK>>
+        media_id : uuid <<FK>>
+        duration_ms : int
+        word_timings : jsonb
+        wer : numeric
+        mismatches : jsonb
+        * status : narration_status
+        flagged_at : timestamptz
+        accepted_by : uuid <<FK>>
+        accepted_at : timestamptz
+        job_id : uuid <<FK>>
+    }
+}
+
+package "Trình chỉnh sửa & xuất video" #FFEFEF {
+    entity timelines {
+        * id : uuid <<PK>>
+        --
+        * project_id : uuid <<FK>>
+        * scope : text
+        chapter_id : uuid <<FK>>
+        * aspect_ratio : text
+        framing : text
+        subtitle_style : jsonb
+        master : jsonb
+        * status : timeline_status
+        * version : int
+        updated_by : uuid <<FK>>
+    }
+    entity timeline_tracks {
+        * id : uuid <<PK>>
+        --
+        * timeline_id : uuid <<FK>>
+        * kind : track_kind
+        name : text
+        * order_index : int
+        muted : bool
+        solo : bool
+        hidden : bool
+        locked : bool
+        volume : numeric
+    }
+    entity timeline_items {
+        * id : uuid <<PK>>
+        --
+        * track_id : uuid <<FK>>
+        * kind : item_kind
+        * start_ms : int
+        * duration_ms : int
+        source_in_ms : int
+        shot_id : uuid <<FK>>
+        illustration_id : uuid <<FK>>
+        narration_id : uuid <<FK>>
+        audio_asset_id : uuid <<FK>>
+        media_id : uuid <<FK>>
+        text : text
+        text_style : jsonb
+        motion : jsonb
+        transition_in : jsonb
+        color : jsonb
+        volume : numeric
+        volume_keyframes : jsonb
+        fade_in_ms : int
+        fade_out_ms : int
+        ducking_db : numeric
+        playback_rate : numeric
+        user_modified : bool
+        sync_flag : text
+    }
+    entity audio_assets {
+        * id : uuid <<PK>>
+        --
+        owner_user_id : uuid <<FK>>
+        * kind : text
+        * title : text
+        genre : text
+        mood : text
+        tags : text[]
+        * media_id : uuid <<FK>>
+        duration_ms : int
+        waveform : jsonb
+        * license : text
+        license_note : text
+        published : bool
+    }
+    entity renders {
+        * id : uuid <<PK>>
+        --
+        * timeline_id : uuid <<FK>>
+        * timeline_version : int
+        * project_id : uuid <<FK>>
+        render_group_id : uuid
+        part_no : int
+        * version_no : int
+        is_primary : bool
+        * resolution : text
+        * aspect_ratio : text
+        watermark : bool
+        * status : render_status
+        progress : int
+        media_id : uuid <<FK>>
+        subtitle_srt_media_id : uuid <<FK>>
+        subtitle_vtt_media_id : uuid <<FK>>
+        narration_audio_media_id : uuid <<FK>>
+        duration_ms : int
+        * coverage_chars : int
+        * total_chars : int
+        * timeline_snapshot : jsonb
+        job_id : uuid <<FK>>
+    }
+}
+
+package "Director, job & hạ tầng" #EEEEEE {
+    entity jobs {
+        * id : uuid <<PK>>
+        --
+        project_id : uuid <<FK>>
+        * user_id : uuid <<FK>>
+        * type : text
+        * status : job_status
+        priority : smallint
+        target_type : text
+        target_id : uuid
+        params : jsonb
+        result : jsonb
+        error_code : text
+        error_message : text
+        attempts : int
+        held_micro : bigint
+        charged_micro : bigint
+        * idempotency_key : text <<UQ>>
+        parent_job_id : uuid <<FK>>
+        heartbeat_at : timestamptz
+        started_at : timestamptz
+        finished_at : timestamptz
+    }
+    entity system_settings {
+        * key : text <<PK>>
+        --
+        * value : jsonb
+        updated_by : uuid <<FK>>
+    }
+    entity ai_providers {
+        * id : uuid <<PK>>
+        --
+        * code : text <<UQ>>
+        * kind : provider_kind
+        enabled : bool
+        priority : int
+        * config_ref : text
+    }
+    entity ai_models {
+        * id : uuid <<PK>>
+        --
+        * provider_id : uuid <<FK>>
+        * code : text
+        display_name : text
+        capabilities : jsonb
+        unit_cost_usd : numeric
+        enabled : bool
+        user_selectable : bool
+    }
+    entity ai_usage_records {
+        * id : uuid <<PK>>
+        --
+        * job_id : uuid <<FK>>
+        provider_id : uuid <<FK>>
+        model : text
+        * unit : text
+        * quantity : numeric
+        cost_usd : numeric
+        latency_ms : int
+        request_id : text
+    }
+    entity price_rules {
+        * id : uuid <<PK>>
+        --
+        * operation : text
+        * formula : jsonb
+        * effective_from : timestamptz
+        effective_to : timestamptz
+        created_by : uuid <<FK>>
+    }
+    entity media_files {
+        * id : uuid <<PK>>
+        --
+        owner_user_id : uuid <<FK>>
+        owner_project_id : uuid <<FK>>
+        * storage_key : text <<UQ>>
+        * mime : text
+        bytes : bigint
+        width : int
+        height : int
+        duration_ms : int
+        sha256 : text
+        storage_class : text
+    }
+    entity outbox_events {
+        * id : uuid <<PK>>
+        --
+        * aggregate_type : text
+        * aggregate_id : uuid
+        * event_type : text
+        * payload : jsonb
+        published_at : timestamptz
+    }
+    entity idempotency_keys {
+        * key : text <<PK>>
+        * user_id : uuid <<PK,FK>>
+        --
+        * request_hash : text
+        response_status : int
+        response_body : jsonb
+        * expires_at : timestamptz
+    }
+}
+
+users ||--o{ user_sessions
+users ||--o{ payments
+users ||--|| wallets
+users ||--o{ wallet_ledger_entries
+payments |o--o{ wallet_ledger_entries
+jobs |o--o{ wallet_ledger_entries
+users |o--o{ beta_invites : invited by
+users ||--o{ audit_logs : actor
+users ||--o{ projects : owns
+projects ||--|{ project_members
+users ||--o{ project_members
+projects ||--o{ source_texts
+projects ||--o{ chapters
+chapters ||--o{ chapter_versions
+styles |o--o{ projects
+ai_models |o--o{ projects : image model
+projects ||--o{ story_assets
+story_assets ||--o{ story_asset_group_members
+story_assets ||--o{ asset_images
+projects ||--o{ visual_rules
+chapters ||--o{ timeline_events
+projects ||--o{ relationships
+story_assets ||--o{ relationships
+chapters ||--o{ storyboard_drafts
+storyboard_drafts ||--|{ shots
+shots ||--o{ shot_asset_refs
+story_assets |o--o{ shot_asset_refs
+shots ||--o{ illustrations
+projects ||--|| narration_settings
+voices |o--o{ narration_settings
+ai_providers ||--o{ voices
+projects ||--o{ pronunciation_entries
+shots ||--o{ narrations
+voices |o--o{ narrations
+projects ||--o{ timelines
+chapters |o--o{ timelines
+timelines ||--|{ timeline_tracks
+timeline_tracks ||--o{ timeline_items
+shots |o--o{ timeline_items
+illustrations |o--o{ timeline_items
+narrations |o--o{ timeline_items
+audio_assets |o--o{ timeline_items
+users |o--o{ audio_assets : uploads
+timelines ||--o{ renders
+projects |o--o{ jobs
+users ||--o{ jobs
+jobs |o--o{ jobs : parent
+jobs ||--o{ ai_usage_records
+ai_providers ||--o{ ai_models
+ai_providers |o--o{ ai_usage_records
+users ||--o{ idempotency_keys
+media_files ||--o{ illustrations
+media_files |o--o{ narrations
+media_files |o--o{ renders
+media_files ||--o{ asset_images
+media_files ||--o{ audio_assets
+
+' Bố cục lưới 2 hàng
+users -[hidden]right- projects
+projects -[hidden]right- story_assets
+jobs -[hidden]right- storyboard_drafts
+storyboard_drafts -[hidden]right- timelines
+users -[hidden]down- jobs
+chapters -[hidden]down- storyboard_drafts
+caption Nền xám: bảng sau MVP (ERD chỉ gồm MVP: so-do/mvp/02-du-lieu/erd-mvp.puml)
+@enduml

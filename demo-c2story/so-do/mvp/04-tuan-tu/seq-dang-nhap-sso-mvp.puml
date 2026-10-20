@@ -1,0 +1,97 @@
+@startuml Seq_DangNhapSSO_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign left
+autonumber
+title UC-01.01 (MVP): Đăng nhập / đăng xuất qua SSO - closed beta
+
+actor "Người dùng" as U
+participant "Web App" as Web
+participant "API (auth module)\n= OIDC Relying Party" as API
+database PostgreSQL as DB
+participant "SSO\n(Keycloak; SSO Vbee)" as SSO
+
+== Đăng nhập ==
+U -> Web : Mở ứng dụng hoặc một trang cần đăng nhập
+Web -> API : GET /auth/login?returnTo=<đường dẫn>
+API -> API : Tạo state, nonce, code_verifier (PKCE)\nlưu tạm (cookie ký / Redis, 10 phút)
+API --> U : 302 → SSO authorization_endpoint\n(client_id, redirect_uri, scope=openid email profile,\nstate, nonce, code_challenge)
+U -> SSO : Đăng nhập (hoặc đăng ký) trên trang SSO
+note right of SSO
+  Mọi màn hình đăng ký, đăng nhập,
+  quên mật khẩu, MFA thuộc SSO.
+  Ứng dụng không phát triển lại.
+end note
+SSO --> U : 302 → /auth/callback?code&state
+U -> API : GET /auth/callback?code&state
+API -> API : UC-01.01a: so state với state đã lưu (dùng một lần)
+alt state thiếu / không khớp / đã dùng
+    API --> U : Từ chối, ghi log bảo mật → "Đăng nhập không thành công"
+else state khớp
+    API -> SSO : POST token_endpoint (code, code_verifier, client_secret)
+    alt SSO báo lỗi / quá 10 s không phản hồi
+        API --> U : Trang lỗi thân thiện, gợi ý thử lại sau
+    else nhận được token
+        SSO --> API : id_token, access_token, refresh_token
+        API -> SSO : GET jwks_uri (có cache; làm mới khi gặp kid lạ)
+        API -> API : Xác thực id_token: chữ ký, iss, aud, exp, iat, nonce
+        note right
+          Adapter OAuth 2.0 (nếu Vbee không có OIDC):
+          GET userinfo bằng access_token thay cho id_token (ADR-20)
+        end note
+        alt id_token không hợp lệ
+            API --> U : Từ chối, ghi log bảo mật, không tạo phiên
+        else hợp lệ
+            API -> DB : UC-01.01b: tìm users theo sso_subject (JIT)
+            alt chưa có hồ sơ
+                API -> DB : email có trong beta_invites (chưa thu hồi)?
+                alt không được mời (BR-30)
+                    API --> U : 403 NOT_INVITED → "Bạn chưa được mời tham gia beta"\n(không tạo hồ sơ, không tạo phiên)
+                else được mời
+                    API -> DB : BEGIN; INSERT users + wallets;\nledger TRIAL_GRANT $2 (BR-28);\nbeta_invites.used_by_user_id; COMMIT
+                end
+            else đã có
+                API -> DB : UPDATE email, tên, avatar, role từ claims; last_login_at
+            end
+            alt users.status = LOCKED
+                API --> U : Thông báo tài khoản bị khóa, không tạo phiên
+            else bình thường
+                API -> DB : INSERT user_sessions (refresh_token mã hóa, sso_sid)
+                alt chưa đồng ý hoặc thông báo đổi phiên bản (UC-01.01d)
+                    API --> U : Set-Cookie session; 302 → /consent
+                    U -> Web : Đọc thông báo xử lý dữ liệu, tích "Đồng ý"
+                    Web -> API : POST /me:consent {noticeVersion}
+                    API -> DB : UPDATE users.consented_at, consent_version
+                    note right of API : "Không đồng ý" → đăng xuất (BR-31)
+                end
+                API -> API : UC-01.01c: returnTo là đường dẫn nội bộ?\n(bắt đầu bằng "/", không "//", không scheme / host)
+                API --> U : 302 → returnTo (hợp lệ) hoặc /projects
+            end
+        end
+    end
+end
+
+== Gia hạn phiên (≤ 15 phút) ==
+API -> SSO : refresh_token grant (khi access sắp hết hạn)
+alt SSO từ chối (tài khoản khóa / thu hồi)
+    API -> DB : revoke session, users.status = LOCKED nếu SSO báo vô hiệu
+    API --> Web : 401 → yêu cầu đăng nhập lại
+end
+
+== Đăng xuất ==
+U -> Web : "Đăng xuất"
+Web -> API : POST /auth/logout
+API -> DB : Lấy id_token_hint (giải mã), revoke user_sessions, xóa token đã lưu
+alt SSO có end_session_endpoint (UC-01.02a)
+    API --> Web : { logoutUrl: end_session_endpoint?id_token_hint&post_logout_redirect_uri }
+    Web -> SSO : Chuyển hướng logoutUrl
+    SSO --> U : Kết thúc phiên SSO → 302 về trang chủ ứng dụng
+else không có end_session_endpoint
+    API --> Web : 200 (chỉ đăng xuất cục bộ)\nGhi chú "Bạn vẫn đăng nhập ở các ứng dụng khác dùng chung SSO"
+end
+
+note over U, SSO
+  MVP không có back-channel logout (UC-01.07) và tự yêu cầu xóa dữ liệu (UC-01.06):
+  phiên hết hiệu lực ở lần gia hạn kế tiếp; Admin xóa dữ liệu thủ công.
+end note
+@enduml

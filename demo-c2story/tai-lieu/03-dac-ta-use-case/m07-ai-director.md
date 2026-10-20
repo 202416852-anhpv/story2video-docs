@@ -1,6 +1,7 @@
 # M07 — AI Director
 
 > Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m07-ai-director.puml`, `../../so-do/04-tuan-tu/seq-director.puml`, `../../so-do/06-trang-thai/state-director-plan.puml`. Yêu cầu: FR-DIR-01..09. Director dùng **cùng quyền và cùng bảng giá** như thao tác tay; **không có công cụ ghi văn bản truyện** (BR-21).
+> **Toàn bộ phân hệ nằm ngoài MVP** (QĐ-04): chỉ làm nếu MVP xong sớm. Khi làm, điểm duyệt thuyết minh (UC-07.06) dùng nghe & đánh dấu (UC-05.18) cho tới khi có kiểm chứng ASR; mọi thao tác tốn phí tính theo chi phí thực × 110% (BR-01).
 
 ---
 
@@ -16,6 +17,7 @@
 | Kích hoạt | Gửi tin nhắn trong panel Director |
 | Quan hệ | được mở rộng bởi UC-07.01a..d |
 | Truy vết | FR-DIR-01..03, 08; NFR-SEC-08 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor gửi tin nhắn.
@@ -42,6 +44,7 @@
 | Hậu điều kiện | **Thành công:** lệnh đủ tham số và quay lại UC-07.01 bước 3. **Tối thiểu:** không tool nào chạy khi còn thiếu tham số |
 | Kích hoạt | LLM trả về yêu cầu làm rõ thay vì tool call |
 | Truy vết | FR-DIR-01..03; NFR-SEC-08 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Director hỏi lại ngắn gọn về tham số còn thiếu và gợi ý lựa chọn lấy từ trạng thái dự án (danh sách chương, shot).
@@ -60,22 +63,23 @@
 |---|---|
 | Loại | extend của UC-07.01 (điểm mở rộng: bước 3) |
 | Tác nhân | Editor / Director |
-| Mô tả | Mọi thao tác tốn credit phải được Editor xác nhận bằng thẻ đề xuất trước khi tạo job (tool proposal) |
+| Mô tả | Mọi thao tác tốn phí phải được Editor xác nhận bằng thẻ đề xuất trước khi tạo job (tool proposal) |
 | Tiền điều kiện | LLM đề xuất một tool tốn phí; Editor có quyền Editor trong dự án |
-| Hậu điều kiện | **Thành công:** chỉ khi Editor đồng ý mới tạo job; credit trừ vào ví người xác nhận. **Tối thiểu:** chưa xác nhận thì không giữ credit và không tạo job |
+| Hậu điều kiện | **Thành công:** chỉ khi Editor đồng ý mới tạo job; tiền trừ vào ví người xác nhận. **Tối thiểu:** chưa xác nhận thì không giữ tiền và không tạo job |
 | Kích hoạt | Director đề xuất tool tốn phí |
 | Truy vết | ADR-19; BR-01, BR-03; NFR-SEC-08; 04 §3.6 `director_tool_proposals`; API 2.7 `…/tool-proposals/{tpid}:confirm` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
-1. Hệ thống tạo `director_tool_proposals` ở trạng thái `PENDING` (tool, tham số, giá theo `price_rules`); chưa giữ credit, chưa tạo job.
+1. Hệ thống tạo `director_tool_proposals` ở trạng thái `PENDING` (tool, tham số, giá theo `price_rules`); chưa giữ tiền, chưa tạo job.
 2. Hệ thống gửi `tool_proposal` qua SSE; giao diện hiện thẻ gồm thao tác, phạm vi, giá và số dư.
 3. Editor bấm Đồng ý: client gọi `:confirm` kèm `Idempotency-Key`.
-4. Hệ thống kiểm tra quyền, giữ credit của người xác nhận (UC-05.17, BR-03), tạo job, đặt `CONFIRMED` kèm `decided_by`, `decided_at`, `job_id`.
+4. Hệ thống kiểm tra quyền, giữ tiền của người xác nhận (UC-05.17, BR-03), tạo job, đặt `CONFIRMED` kèm `decided_by`, `decided_at`, `job_id`.
 5. Kết quả được stream về chat (`tool_result`).
 
 **Luồng thay thế / ngoại lệ**
 - **3a.** Editor bấm Hủy: đặt `REJECTED`, Director ghi nhận và hỏi có muốn thay đổi lệnh.
-- **4a.** Không đủ credit: `402`; thẻ giữ `PENDING` để xác nhận lại sau khi nạp credit hoặc bị hủy.
+- **4a.** Không đủ số dư: `402`; thẻ giữ `PENDING` để xác nhận lại sau khi nạp tiền hoặc bị hủy.
 - **4b.** Giá đã đổi kể từ lúc đề xuất: hệ thống tính lại và yêu cầu xác nhận với giá mới [ĐX].
 - **3b.** Thẻ quá hạn (`EXPIRED`): không xác nhận được; Director đề xuất lại khi Editor yêu cầu.
 
@@ -88,9 +92,10 @@
 | Tác nhân | Editor / Director |
 | Mô tả | Director từ chối sửa, viết lại hoặc tóm tắt văn bản truyện vì nguyên tắc thuyết minh nguyên văn |
 | Tiền điều kiện | Editor yêu cầu thay đổi nội dung văn bản truyện ("viết lại đoạn này", "tóm tắt chương cho video ngắn hơn"…) |
-| Hậu điều kiện | **Thành công:** văn bản truyện không đổi; Editor biết cách đạt mục đích. **Tối thiểu:** không tool call, không tốn credit |
+| Hậu điều kiện | **Thành công:** văn bản truyện không đổi; Editor biết cách đạt mục đích. **Tối thiểu:** không tool call, không tốn phí |
 | Kích hoạt | LLM nhận ra ý định sửa hoặc tóm tắt văn bản truyện |
 | Truy vết | BR-19, BR-21; NFR-INT-02, NFR-SEC-08 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Director giải thích: audio đọc đúng từng chữ truyện, AI chỉ minh họa, không có quyền ghi vào văn bản.
@@ -115,6 +120,7 @@
 | Hậu điều kiện | **Thành công:** nội dung được Editor chấp nhận đã được áp dụng. **Tối thiểu:** văn bản truyện, đoạn nguồn và thuyết minh không bao giờ bị ghi |
 | Kích hoạt | Yêu cầu như "viết giúp Visual Rule cho cảnh đêm" |
 | Truy vết | BR-21; NFR-INT-02; 08 §5 (Visual Rule: tên ≤ 80, nội dung ≤ 1.000 ký tự; caption ≤ 300) |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor nêu yêu cầu soạn nội dung.
@@ -140,10 +146,11 @@
 | Mức | Tóm tắt (summary) |
 | Mô tả | Director chạy tuần tự bước 2 → 4 của luồng chính và dựng bản nháp timeline |
 | Tiền điều kiện | Dự án có văn bản |
-| Hậu điều kiện | **Thành công:** mọi chương "Sẵn sàng dựng" và có bản nháp timeline. **Tối thiểu:** kế hoạch lưu bền vững; bước dở tiếp tục được; credit job lỗi được hoàn |
+| Hậu điều kiện | **Thành công:** mọi chương "Sẵn sàng dựng" và có bản nháp timeline. **Tối thiểu:** kế hoạch lưu bền vững; bước dở tiếp tục được; tiền giữ cho job lỗi được hoàn |
 | Kích hoạt | Bật "Tự động" trong panel Director |
 | Quan hệ | include UC-07.02a; được mở rộng bởi UC-07.03..06 |
 | Truy vết | FR-DIR-04..07; BR-09 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor bật chế độ tự động.
@@ -158,7 +165,7 @@
 10. Plan `COMPLETED`; Director báo "Mọi chương đã sẵn sàng dựng video", gợi ý mở trình chỉnh sửa để thêm nhạc nền, SFX và xuất.
 
 **Luồng thay thế / ngoại lệ**
-- **\*a.** Thiếu credit cho bước kế tiếp: plan `AWAITING_INPUT(INSUFFICIENT_CREDITS)` kèm link nạp credit.
+- **\*a.** Thiếu số dư cho bước kế tiếp: plan `AWAITING_INPUT(INSUFFICIENT_BALANCE)` kèm link nạp tiền.
 - **\*b.** Một job lỗi sau retry: ghi note, bỏ qua mục đó, tiếp tục; cuối plan liệt kê mục lỗi.
 - **\*c.** Editor tạm dừng hoặc thoát: UC-07.07.
 - **10a.** Editor yêu cầu "xuất luôn": Director chạy UC-06.16 với timeline nháp (chưa có nhạc/SFX) sau khi Editor xác nhận.
@@ -175,19 +182,20 @@
 | Hậu điều kiện | **Thành công:** `director_plans` phản ánh đúng trạng thái dự án; bước đã xong bị bỏ qua. **Tối thiểu:** kế hoạch bền vững, tiếp tục được sau khi tạm dừng hoặc lỗi |
 | Kích hoạt | UC-07.02 bước 2; sau mỗi job xong hoặc lỗi; sau mỗi điểm duyệt |
 | Truy vết | FR-DIR-04..07; BR-09; 04 §3.6 `director_plans`; API 2.7 `GET/POST /projects/{pid}/director/plan`, sự kiện `director.plan` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Hệ thống đọc trạng thái dự án: có style chưa, số chương, tài sản đã duyệt và có ảnh chưa, giọng đọc, `media_status` từng chương, shot `NEEDS_REVIEW`, timeline.
 2. Hệ thống đánh dấu từng bước (`pickStyle`, `split`, `cast`, `pickVoice`, `media`, `verify`, `draftTimeline`) là đã xong, cần làm hoặc bỏ qua.
 3. Bước đầu tiên chưa xong là `current_step`.
-4. Hệ thống ước tính credit còn lại: ảnh tham chiếu còn thiếu cộng báo giá `media:quote` của các chương chưa sẵn sàng.
-5. Hệ thống lưu `step_state`, `estimated_remaining_credits` và tăng `version`.
+4. Hệ thống ước tính số tiền còn cần: ảnh tham chiếu còn thiếu cộng báo giá `media:quote` của các chương chưa sẵn sàng.
+5. Hệ thống lưu `step_state`, `estimated_remaining_micro` và tăng `version`.
 6. Sau mỗi job xong, job lỗi hoặc điểm duyệt, hệ thống tính lại và phát `director.plan {status, currentStep, awaitingReason?}`.
 
 **Luồng thay thế / ngoại lệ**
 - **1a.** Editor sửa tay ngoài Director: lần tính lại sau đó phản ánh thay đổi, bước đã được Editor làm xong bị bỏ qua.
 - **3a.** Mọi bước đã xong: đặt plan `COMPLETED`.
-- **4a.** Không đủ credit cho bước kế tiếp: plan `AWAITING_INPUT (INSUFFICIENT_CREDITS)` (UC-07.02 nhánh *a).
+- **4a.** Không đủ số dư cho bước kế tiếp: plan `AWAITING_INPUT (INSUFFICIENT_BALANCE)` (UC-07.02 nhánh *a).
 
 ---
 
@@ -203,6 +211,7 @@
 | Kích hoạt | Plan `AWAITING_INPUT(PICK_STYLE)` |
 | Quan hệ | extend UC-07.02 |
 | Truy vết | FR-DIR-05; BR-09 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Director mở Styles Library và thông báo cần chọn style.
@@ -223,6 +232,7 @@
 | Kích hoạt | Plan `AWAITING_INPUT(REVIEW_CAST)` |
 | Quan hệ | extend UC-07.02 |
 | Truy vết | FR-DIR-05; BR-09 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Director hiện "Review your cast & places" (UC-04.01a) kèm tổng giá ảnh tham chiếu.
@@ -243,6 +253,7 @@
 | Kích hoạt | Plan `AWAITING_INPUT(PICK_VOICE)` |
 | Quan hệ | extend UC-07.02 |
 | Truy vết | FR-DIR-05 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Director mở Cài đặt thuyết minh (UC-05.11) với gợi ý giọng theo ngôn ngữ truyện.
@@ -262,6 +273,7 @@
 | Kích hoạt | Plan `AWAITING_INPUT(REVIEW_NARRATION)` |
 | Quan hệ | extend UC-07.02 |
 | Truy vết | FR-DIR-05; BR-23 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Director liệt kê shot cần duyệt kèm từ lệch.
@@ -281,11 +293,12 @@
 | Hậu điều kiện | **Thành công:** plan ở `PAUSED`, `RUNNING` hoặc `CANCELLED`; kết quả đã có được giữ |
 | Kích hoạt | Nút Pause / Continue / Exit auto |
 | Truy vết | FR-DIR-06 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. *Pause:* hệ thống không tạo job mới; job đang chạy được để xong; plan `PAUSED`.
 2. *Continue:* hệ thống tính lại bước kế tiếp (UC-07.02a), plan `RUNNING`.
-3. *Exit:* plan `CANCELLED`; job `QUEUED` bị hủy và hoàn credit; mọi kết quả đã có được giữ.
+3. *Exit:* plan `CANCELLED`; job `QUEUED` bị hủy và hoàn tiền; mọi kết quả đã có được giữ.
 
 **Luồng thay thế / ngoại lệ**
 - **\*a.** Tải lại trang hoặc đăng nhập máy khác: trạng thái plan được khôi phục từ DB.
@@ -303,8 +316,9 @@
 | Hậu điều kiện | **Thành công:** hiển thị tiến độ realtime |
 | Kích hoạt | Mở panel Director |
 | Truy vết | FR-DIR-06, 08 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor mở panel Director.
-2. Hệ thống hiển thị dải bước (pickStyle → … → draftTimeline), bước hiện tại, số chương/shot xong, lỗi, credit đã dùng và ước tính còn lại, các Director note.
+2. Hệ thống hiển thị dải bước (pickStyle → … → draftTimeline), bước hiện tại, số chương/shot xong, lỗi, tiền đã dùng và ước tính còn lại, các Director note.
 3. Editor bấm một mục lỗi để đi tới màn hình xử lý.

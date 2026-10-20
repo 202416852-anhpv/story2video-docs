@@ -4,7 +4,7 @@ skinparam defaultFontName "Segoe UI"
 title CoverageValidator (UC-05.01a): bảo đảm các shot phủ kín văn bản chương (BR-20)
 
 start
-:Nhận chapter.content (kèm version) và shots[] = {startSentence, endSentence}\ntừ LLM hoặc từ thao tác của Editor (tách / gộp / dời ranh giới);
+:Nhận chapter.content (kèm version) và shots[] = {startSentence, endSentence}\ntừ LLM hoặc từ thao tác của Editor (tách / gộp / xóa shot ở storyboard;\ndời ranh giới shot ở Workspace, UC-03.02a);
 :Tách câu tất định → sentences[i] = [start, end);
 :Sắp shots theo startSentence;
 :Kẹp chỉ số vào [0, n-1];\nbỏ shot rỗng (endSentence < startSentence);

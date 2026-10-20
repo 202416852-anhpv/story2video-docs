@@ -1,0 +1,55 @@
+@startuml Act_GiuTruTien
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Vòng đời tiền của một job tốn phí (BR-01, BR-02, BR-29, WR-01..05) - dùng chung cho MVP và bản đầy đủ
+
+start
+:Nhận yêu cầu + Idempotency-Key;
+if (Key đã xử lý?) then (có)
+  :Trả lại kết quả cũ;
+  stop
+endif
+:Giới hạn kỹ thuật (≤ 30 yêu cầu LLM/phút, BR-32);
+:PriceEstimator: giá ước tính tối đa x\n= đơn giá provider × giới hạn đầu ra × 1,10;
+if (Chi tiêu AI hôm nay + tiền đang giữ + x > trần ngày? (BR-29)) then (có)
+  :503 DAILY_BUDGET_EXCEEDED;\nemail cảnh báo Admin (1 lần/ngày);
+  stop
+endif
+partition "Giao dịch DB #1" {
+  :SELECT wallets FOR UPDATE;
+  if (available_micro >= x?) then (không)
+    :ROLLBACK;
+    :402 INSUFFICIENT_BALANCE;
+    stop
+  endif
+  :ledger HOLD(x);\navailable -= x; held += x;
+  :INSERT jobs(QUEUED, held_micro = x) + outbox;
+  :COMMIT;
+}
+:Relay outbox → BullMQ;
+:Worker chạy job;\nUsageMeter ghi ai_usage_records (cost_usd);
+if (Kết quả?) then (thành công)
+  partition "Giao dịch DB #2" {
+    :Lưu đầu ra;
+    :c = min(Σ cost_usd × 1,10, x);
+    :ledger CAPTURE(c); ledger RELEASE(x − c);\nheld -= x; available += x − c;
+    :jobs SUCCEEDED, charged_micro = c;
+  }
+else (thất bại / hủy / vi phạm)
+  partition "Giao dịch DB #2" {
+    :ledger RELEASE(x); held -= x; available += x;
+    :jobs FAILED / CANCELLED;
+  }
+endif
+:Publish SSE job.updated, wallet.updated;
+stop
+
+floating note right
+  Reconciler mỗi 5 phút:
+  job RUNNING mất heartbeat > 10 phút
+  → FAILED + RELEASE.
+  Reconciler hằng ngày:
+  Σ sổ cái == số dư ví; mỗi job CAPTURE + RELEASE = HOLD
+  (IC-05), lệch → cảnh báo P1.
+end note
+@enduml

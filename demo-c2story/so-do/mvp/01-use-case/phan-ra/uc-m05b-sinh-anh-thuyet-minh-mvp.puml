@@ -1,0 +1,79 @@
+@startuml UC_M05b_SinhTuLieu_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M05b - Sinh tư liệu: ảnh + thuyết minh nguyên văn (MVP)
+
+actor "Editor" as Editor
+
+rectangle "M05 Sinh tư liệu" {
+    usecase "UC-05.07\nSinh tư liệu chương" as UC1
+    usecase "UC-05.07a\nDựng storyboard tự động" as UC1a
+    usecase "UC-05.07b\nXem tiến độ theo shot" as UC1b
+    usecase "UC-05.07c\nSinh lại phần thiếu / lỗi" as UC1c
+    usecase "UC-05.08\nXem Tư liệu dự án (media bin)" as UC2
+    usecase "UC-05.09\nSinh ảnh shot" as UC3
+    usecase "UC-05.10\nSửa ảnh" as UC4
+    usecase "UC-05.10a\nSửa ảnh theo mô tả (Describe\n→ Edit)" as UC4a
+    usecase "UC-05.10c\nKhôi phục phiên bản ảnh" as UC4c
+    usecase "UC-05.11\nCài đặt thuyết minh" as UC5
+    usecase "UC-05.11a\nNghe thử giọng" as UC5a
+    usecase "UC-05.12\nQuản lý từ điển phát âm" as UC6
+    usecase "UC-05.13\nSinh thuyết minh nguyên văn" as UC7
+    usecase "UC-05.13a\nCắt đoạn nguồn & kiểm tra hash" as UC7a
+    usecase "UC-05.13b\nChuẩn hóa phát âm (SSML)" as UC7b
+    usecase "UC-05.17\nGiữ / trừ / hoàn tiền" as UC11
+    usecase "UC-05.18\nNghe & đánh dấu cần sinh lại" as UC12
+}
+rectangle "Image Provider" as IMG
+rectangle "TTS Provider" as TTS
+rectangle "STT / Aligner" as STT
+
+Editor --> UC1
+Editor --> UC2
+Editor --> UC4
+Editor --> UC5
+Editor --> UC6
+Editor --> UC12
+UC1 ..> UC1a : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC7 : <<include>>
+UC1 ..> UC11 : <<include>>
+UC1 <.. UC1b : <<extend>>
+UC1 <.. UC1c : <<extend>>
+UC4 <.. UC4a : <<extend>>
+UC4 <.. UC4c : <<extend>>
+UC5 <.. UC5a : <<extend>>
+UC7 ..> UC7a : <<include>>
+UC7 ..> UC7b : <<include>>
+UC3 --> IMG
+UC4 --> IMG
+UC5a --> TTS
+UC7 --> TTS
+UC7 --> STT
+
+legend right
+  **Đầu ra của bước 4 chỉ gồm ảnh + thuyết minh nguyên văn.**
+  Kiểm chứng WER (UC-05.13c, UC-05.14) sau MVP; MVP dùng UC-05.18.
+  Nhạc nền và SFX được thêm ở trình chỉnh sửa (M06).
+  Khi mọi shot có ảnh và thuyết minh DONE → chương "Sẵn sàng dựng"
+  → hệ thống dựng bản nháp timeline.
+endlegend
+note right of UC4
+  Nhánh 1a: thay bằng ảnh tự tải lên (edit_kind = UPLOAD).
+  Miễn phí, không tạo job, không bị sinh hàng loạt ghi đè (BR-14)
+end note
+@enduml

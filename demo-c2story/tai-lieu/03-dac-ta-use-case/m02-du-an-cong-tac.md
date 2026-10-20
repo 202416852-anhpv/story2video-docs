@@ -15,6 +15,7 @@
 | Hậu điều kiện | **Thành công:** danh sách hiển thị đúng quyền |
 | Kích hoạt | Mở `/projects` |
 | Truy vết | FR-PRJ-01 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. User mở trang Projects.
@@ -35,11 +36,12 @@
 |---|---|
 | Tác nhân chính | User (trở thành Owner) |
 | Mô tả | Bước 1 của luồng chính: đưa văn bản truyện vào hệ thống để tạo dự án, **giữ nguyên từng chữ** |
-| Tiền điều kiện | Đã đăng nhập |
+| Tiền điều kiện | Đã đăng nhập; chưa vượt giới hạn số dự án của tài khoản Free (BR-27) |
 | Hậu điều kiện | **Thành công:** có Project, ProjectMember(OWNER), SourceText (kèm `sha256`), Chapter #1 chứa toàn văn. **Tối thiểu:** không tạo dự án dở dang khi lỗi |
 | Kích hoạt | Bấm "Import your story" |
 | Quan hệ | include UC-02.02a |
-| Truy vết | FR-PRJ-02, FR-PRJ-03; BR-19, BR-21 |
+| Truy vết | FR-PRJ-02, FR-PRJ-03; FR-BIL-12; BR-19, BR-21, BR-27 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. User dán văn bản hoặc chọn file (.txt, .md, .docx).
@@ -50,7 +52,9 @@
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** File sai định dạng, > 2 MB hoặc > 500.000 ký tự: báo lỗi, giữ nguyên form.
+- **1a.** Tài khoản Free đã có 1 dự án: `403 FREE_LIMIT_REACHED`, hiện thông báo giới hạn và gợi ý nạp tiền (UC-09.03).
 - **2b.** File .docx có định dạng (đậm, nghiêng, bảng): chỉ giữ văn bản, không bỏ chữ nào.
+- **2c.** Văn bản có ký hiệu trình bày (`*Bố*`, `[…]`, `# …`, `---`): giữ nguyên trong chương; chỉ bỏ khi đọc (08 §6).
 - **4a.** Lỗi DB: rollback, hiện lỗi, giữ nội dung trên form để thử lại.
 - Ghi chú: **không** có tùy chọn "AI viết lại" (BR-19, BR-21).
 
@@ -66,6 +70,7 @@
 | Hậu điều kiện | **Thành công:** có văn bản sạch về kỹ thuật kèm `char_count`, `sha256`, `normalization_log`. **Tối thiểu:** không lưu gì khi kiểm tra thất bại |
 | Kích hoạt | UC-02.02 bước 2; UC-03.01b bước 3 |
 | Truy vết | FR-PRJ-02, FR-PRJ-03; BR-19, BR-21; NFR-SEC-10, NFR-INT-05; 08 §5 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Hệ thống kiểm tra MIME thật (không tin phần mở rộng), kích thước file ≤ 2 MB, số ký tự ≤ 500.000.
@@ -89,10 +94,11 @@
 |---|---|
 | Tác nhân chính | User |
 | Mô tả | Tạo dự án không có văn bản để viết trực tiếp trong Workspace |
-| Tiền điều kiện | Đã đăng nhập; chưa vượt giới hạn số dự án của gói |
+| Tiền điều kiện | Đã đăng nhập; chưa vượt giới hạn số dự án của tài khoản Free (BR-27) |
 | Hậu điều kiện | **Thành công:** Project + ProjectMember(OWNER) + một chương trống |
 | Kích hoạt | Bấm "Tạo dự án trống" |
-| Truy vết | FR-PRJ-04 |
+| Truy vết | FR-PRJ-04; FR-BIL-12; BR-27 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. User nhập tiêu đề, chọn style và tỷ lệ khung hình.
@@ -100,7 +106,7 @@
 3. Hệ thống mở Workspace (UC-03.02).
 
 **Luồng thay thế / ngoại lệ**
-- **1a.** Gói Free đã có 1 dự án: hiện thông báo giới hạn và gợi ý nâng gói (UC-09.02).
+- **1a.** Tài khoản Free đã có 1 dự án: `403 FREE_LIMIT_REACHED`, hiện thông báo giới hạn và gợi ý nạp tiền (UC-09.03).
 
 ---
 
@@ -115,6 +121,7 @@
 | Hậu điều kiện | **Thành công:** `projects` cập nhật (version tăng); thay đổi áp dụng cho các lần sinh **sau** |
 | Kích hoạt | Mở Settings |
 | Truy vết | FR-PRJ-07; BR-04 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Owner mở Settings.
@@ -140,12 +147,13 @@
 | Hậu điều kiện | **Thành công:** dự án soft delete, mọi thành viên mất quyền ngay; xóa cứng cùng media sau 30 ngày. **Tối thiểu:** không xóa khi chưa xác nhận |
 | Kích hoạt | Chọn "Xóa" ở danh sách dự án hoặc Settings |
 | Truy vết | FR-PRJ-01; BR-04; 04 §5 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Owner chọn "Xóa dự án".
 2. Hệ thống hiện hệ quả (số chương, tư liệu, bản xuất, thành viên bị ảnh hưởng).
 3. Owner nhập tên dự án để xác nhận.
-4. Hệ thống hủy các job `QUEUED` (hoàn credit), đặt `deleted_at`, thông báo cho thành viên.
+4. Hệ thống hủy các job `QUEUED` (RELEASE toàn bộ tiền đang giữ), đặt `deleted_at`, thông báo cho thành viên (khi có cộng tác, sau MVP). Tài khoản Free được tạo dự án mới sau khi xóa.
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Có job đang `RUNNING`: chờ job kết thúc rồi mới xóa, hoặc Owner chọn "Hủy và xóa".
@@ -160,10 +168,11 @@
 |---|---|
 | Tác nhân chính | Owner |
 | Mô tả | Tạo link để người khác tham gia làm Editor, hoặc thu hồi link |
-| Tiền điều kiện | Là Owner; số thành viên chưa vượt giới hạn gói |
+| Tiền điều kiện | Là Owner; số thành viên chưa vượt giới hạn (định nghĩa khi có gói đăng ký) |
 | Hậu điều kiện | **Thành công:** có InviteLink hiệu lực (DB chỉ lưu SHA-256 token), hoặc link bị thu hồi |
 | Kích hoạt | Bấm "Share" |
 | Truy vết | FR-PRJ-08; NFR-SEC-04 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Owner bấm "Share".
@@ -172,7 +181,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Owner chọn "Thu hồi link": link cũ vô hiệu ngay; thành viên hiện có không bị ảnh hưởng; Owner có thể tạo link mới.
-- **2b.** Đã đạt giới hạn thành viên của gói: hiện thông báo và gợi ý nâng gói.
+- **2b.** Đã đạt giới hạn thành viên: hiện thông báo.
 
 ---
 
@@ -187,6 +196,7 @@
 | Hậu điều kiện | **Thành công:** thành viên bị xóa mất quyền ở lần gọi API kế tiếp (`403`) |
 | Kích hoạt | Mở "Collaborators" |
 | Truy vết | FR-PRJ-09; BR-17 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Owner mở danh sách thành viên (tên, email, vai trò, ngày tham gia, lần sửa cuối).
@@ -194,7 +204,7 @@
 3. Hệ thống xóa ProjectMember, phát sự kiện `member.changed`, gửi email thông báo.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** Editor bị xóa đang có job chạy: job hoàn tất, credit tính cho Editor đó, nhưng người đó không xem được kết quả (BR-17).
+- **2a.** Editor bị xóa đang có job chạy: job hoàn tất, tiền tính cho Editor đó, nhưng người đó không xem được kết quả (BR-17).
 - **2b.** Owner không thể tự xóa chính mình; muốn rời thì phải xóa dự án.
 
 ---
@@ -210,6 +220,7 @@
 | Hậu điều kiện | **Thành công:** ProjectMember(EDITOR) được tạo; người dùng vào Studio |
 | Kích hoạt | Mở `/invite/{token}` |
 | Truy vết | FR-PRJ-08, FR-AUTH-03 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. User mở link mời.
@@ -230,11 +241,12 @@
 | Mục | Nội dung |
 |---|---|
 | Tác nhân chính | Editor |
-| Mô tả | Xem 6 bước của luồng chính và vị trí hiện tại của dự án |
+| Mô tả | Xem 6 bước của luồng chính và vị trí hiện tại của dự án. Trang tĩnh, đứng **đầu** thứ tự cắt giảm (✂1, QĐ-61) |
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** hiển thị tiến độ từng bước; điều hướng tới bước được chọn |
 | Kích hoạt | Mở `?v=map` |
 | Truy vết | FR-PRJ-06 |
+| Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
 1. Editor mở Map.
@@ -250,12 +262,13 @@
 | Mục | Nội dung |
 |---|---|
 | Tác nhân chính | Editor |
-| Mô tả | Hai người cùng sửa một đối tượng (chương, shot, timeline); người lưu sau chọn cách xử lý, không mất dữ liệu |
+| Mô tả | Hai người cùng sửa một đối tượng (chương, shot, timeline); người lưu sau chọn cách xử lý, không mất dữ liệu. **MVP** chỉ có Owner nên `409` chỉ xảy ra khi Owner mở hai tab: giao diện báo "Dữ liệu đã thay đổi ở tab khác" và tải lại (BR-05); hộp thoại đầy đủ dưới đây làm sau MVP |
 | Tiền điều kiện | Editor A và B cùng mở đối tượng ở `version = n` |
 | Hậu điều kiện | **Thành công:** không có ghi đè ngầm; dữ liệu của cả hai được giữ. **Tối thiểu:** bản của người lưu sau không bị mất |
 | Kích hoạt | API trả `409 VERSION_CONFLICT` khi lưu |
 | Quan hệ | được mở rộng bởi UC-02.10a, UC-02.10b; được mở rộng từ UC-03.04..08 |
 | Truy vết | FR-PRJ-11, FR-EDT-18; BR-05 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. B lưu đối tượng với `If-Match: n`. Hệ thống ghi, tăng `version = n+1`, phát sự kiện realtime.
@@ -275,6 +288,7 @@
 | Hậu điều kiện | **Thành công:** bản của A được lưu bất biến; A đang làm việc trên bản `n+1`. **Tối thiểu:** nếu không lưu được bản nháp thì A không mất thay đổi chưa lưu |
 | Kích hoạt | A chọn "Lưu bản của tôi" trong hộp thoại xung đột UC-02.10 bước 4 |
 | Truy vết | FR-PRJ-11, FR-EDT-18; BR-05, BR-10; D-03; UC-03.12, UC-06.14 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Hệ thống tạo bản lưu từ nội dung A đang soạn. Chương: tạo Archive `source = CONFLICT`, tên `Conflict draft — <đối tượng> — <thời gian>`. Timeline: tạo `timeline_versions` có tên. Đối tượng khác (vd. shot): lưu các trường A đã sửa dạng văn bản trong Archive [ĐX].
@@ -299,6 +313,7 @@
 | Hậu điều kiện | **Thành công:** A đang làm việc trên bản `n+1`; thay đổi chưa lưu của A bị bỏ theo lựa chọn của A. **Tối thiểu:** không bỏ gì nếu A chưa xác nhận |
 | Kích hoạt | A chọn "Dùng bản của người khác" trong hộp thoại xung đột UC-02.10 bước 4 |
 | Truy vết | FR-PRJ-11; BR-05 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Giao diện nêu rõ số thay đổi chưa lưu sẽ mất và yêu cầu A xác nhận.
@@ -324,6 +339,7 @@
 | Hậu điều kiện | **Thành công:** dự án mới (User là Owner) có cùng văn bản, chương, Story Assets (dùng chung ảnh gốc), storyboard, ảnh và thuyết minh; **không** sao chép timeline đã chỉnh, bản xuất và thành viên |
 | Kích hoạt | Chọn "Duplicate" |
 | Truy vết | FR-PRJ-13 (C) |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Owner chọn "Nhân bản" và đặt tên mới.

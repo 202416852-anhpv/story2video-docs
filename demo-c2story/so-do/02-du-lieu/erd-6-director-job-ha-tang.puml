@@ -8,7 +8,7 @@ hide empty members
 title ERD 6 - Director, job & hạ tầng
 
 package "Director, job & hạ tầng" #EEEEEE {
-    entity director_plans {
+    entity director_plans #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -17,10 +17,10 @@ package "Director, job & hạ tầng" #EEEEEE {
         current_step : text
         awaiting_reason : text
         step_state : jsonb
-        estimated_remaining_credits : int
+        estimated_remaining_micro : bigint
         * version : int
     }
-    entity director_messages {
+    entity director_messages #DDDDDD {
         * id : uuid <<PK>>
         --
         * project_id : uuid <<FK>>
@@ -30,13 +30,13 @@ package "Director, job & hạ tầng" #EEEEEE {
         content : text
         tool_call : jsonb
     }
-    entity director_tool_proposals {
+    entity director_tool_proposals #DDDDDD {
         * id : uuid <<PK>>
         --
         * message_id : uuid <<FK>>
         * tool : text
         * args : jsonb
-        credit_cost : int
+        estimated_cost_micro : bigint
         * status : text
         decided_by : uuid <<FK>>
         decided_at : timestamptz
@@ -57,12 +57,19 @@ package "Director, job & hạ tầng" #EEEEEE {
         error_code : text
         error_message : text
         attempts : int
-        credit_cost : int
+        held_micro : bigint
+        charged_micro : bigint
         * idempotency_key : text <<UQ>>
         parent_job_id : uuid <<FK>>
         heartbeat_at : timestamptz
         started_at : timestamptz
         finished_at : timestamptz
+    }
+    entity system_settings {
+        * key : text <<PK>>
+        --
+        * value : jsonb
+        updated_by : uuid <<FK>>
     }
     entity ai_providers {
         * id : uuid <<PK>>
@@ -141,16 +148,16 @@ package "Director, job & hạ tầng" #EEEEEE {
 package "Bảng thuộc phân hệ khác" #FFFFFF {
     entity asset_images #EEEEEE
     entity audio_assets #EEEEEE
-    entity credit_ledger_entries #EEEEEE
     entity illustrations #EEEEEE
     entity narrations #EEEEEE
     entity projects #EEEEEE
     entity renders #EEEEEE
     entity users #EEEEEE
     entity voices #EEEEEE
+    entity wallet_ledger_entries #EEEEEE
 }
 
-jobs |o--o{ credit_ledger_entries
+jobs |o--o{ wallet_ledger_entries
 ai_models |o--o{ projects : image model
 ai_providers ||--o{ voices
 projects ||--o{ director_plans

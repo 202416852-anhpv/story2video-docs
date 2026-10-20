@@ -22,7 +22,7 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         * version : int
         updated_by : uuid <<FK>>
     }
-    entity timeline_versions {
+    entity timeline_versions #DDDDDD {
         * id : uuid <<PK>>
         --
         * timeline_id : uuid <<FK>>
@@ -67,6 +67,7 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         fade_in_ms : int
         fade_out_ms : int
         ducking_db : numeric
+        playback_rate : numeric
         user_modified : bool
         sync_flag : text
     }
@@ -85,17 +86,6 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         * license : text
         license_note : text
         published : bool
-    }
-    entity sfx_suggestions {
-        * id : uuid <<PK>>
-        --
-        * timeline_id : uuid <<FK>>
-        * shot_id : uuid <<FK>>
-        * at_ms : int
-        * query : text
-        audio_asset_id : uuid <<FK>>
-        * status : text
-        job_id : uuid <<FK>>
     }
     entity renders {
         * id : uuid <<PK>>
@@ -143,9 +133,6 @@ illustrations |o--o{ timeline_items
 narrations |o--o{ timeline_items
 audio_assets |o--o{ timeline_items
 users |o--o{ audio_assets : uploads
-timelines ||--o{ sfx_suggestions
-shots ||--o{ sfx_suggestions
-audio_assets |o--o{ sfx_suggestions
 timelines ||--o{ renders
 media_files |o--o{ renders
 media_files ||--o{ audio_assets

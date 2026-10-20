@@ -3,7 +3,7 @@
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 autonumber
-title UC-07.02: AI Director tự động (bước 2 → 4, dựng bản nháp timeline)
+title UC-07.02: AI Director tự động (bước 2 → 4, dựng bản nháp timeline) (sau MVP)
 actor Editor
 participant "Web App" as Web
 participant "API / Director module" as DIR
@@ -16,7 +16,7 @@ Web -> DIR : POST /director/plan
 DIR -> DB : INSERT director_plans(RUNNING)
 loop tới khi COMPLETED / PAUSED / AWAITING_INPUT
     DIR -> DB : UC-07.02a: đọc trạng thái dự án
-    DIR -> DIR : nextStep() = bước đầu tiên chưa xong;\nước tính credit còn lại → step_state, estimated_remaining_credits
+    DIR -> DIR : nextStep() = bước đầu tiên chưa xong;\nước tính số tiền còn cần → step_state, estimated_remaining_micro
     alt pickStyle (chưa có style)
         DIR -> DB : plan AWAITING_INPUT(reason=PICK_STYLE)
         DIR --> Web : SSE director.plan + mở Styles Library
@@ -30,7 +30,7 @@ loop tới khi COMPLETED / PAUSED / AWAITING_INPUT
         DIR --> Web : "Review your cast & places" + tổng giá ảnh tham chiếu
         Editor -> Web : Duyệt cast
         Web -> DIR : plan:submit-input {approvedAssetIds}
-        DIR -> JOBS : GENERATE_ASSET_IMAGE × n (HOLD credit)
+        DIR -> JOBS : GENERATE_ASSET_IMAGE × n (HOLD giá ước tính)
     else pickVoice
         DIR -> DB : plan AWAITING_INPUT(reason=PICK_VOICE)
         Editor -> Web : Nghe thử, chọn giọng
@@ -50,8 +50,8 @@ opt Editor bấm Pause
     Web -> DIR : plan:pause
     DIR -> DB : PAUSED (job đang chạy được để xong)
 end
-opt thiếu credit
-    DIR -> DB : AWAITING_INPUT(reason=INSUFFICIENT_CREDITS)
+opt thiếu số dư
+    DIR -> DB : AWAITING_INPUT(reason=INSUFFICIENT_BALANCE)
 end
 DIR -> DB : plan COMPLETED
 DIR --> Web : "Mọi chương đã sẵn sàng dựng video"\n→ Editor mở trình chỉnh sửa: nhạc nền, SFX, xuất
@@ -80,19 +80,19 @@ else tool_call miễn phí, vd. rewrite_shot(2,3,"trời tối hơn")
     DIR --> Web : tool_result + phản hồi
 else tool_call tốn phí (UC-07.01b)
     LLM --> DIR : tool_call
-    DIR -> DB : director_tool_proposals(PENDING) — chưa HOLD credit, chưa tạo job
+    DIR -> DB : director_tool_proposals(PENDING) — chưa HOLD tiền, chưa tạo job
     DIR --> Web : tool_proposal (thao tác, phạm vi, giá, số dư)
     alt Editor đồng ý
         Web -> DIR : POST tool-proposals/{tpid}:confirm (Idempotency-Key)
-        DIR -> DB : HOLD credit của người xác nhận (BR-03);\nproposal CONFIRMED (decided_by, job_id)
+        DIR -> DB : HOLD tiền của người xác nhận (BR-03);\nproposal CONFIRMED (decided_by, job_id)
         DIR -> JOBS : tạo job như thao tác tay
         JOBS --> DIR : xong
         DIR --> Web : tool_result + phản hồi
     else Editor hủy
         Web -> DIR : từ chối
         DIR -> DB : proposal REJECTED
-    else không đủ credit
-        DIR --> Web : 402 INSUFFICIENT_CREDITS (proposal giữ PENDING)
+    else không đủ số dư
+        DIR --> Web : 402 INSUFFICIENT_BALANCE (proposal giữ PENDING)
     end
 end
 @enduml

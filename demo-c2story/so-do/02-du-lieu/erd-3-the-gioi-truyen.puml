@@ -18,7 +18,7 @@ package "Thế giới truyện" #FFF8E8 {
         preview_media_id : uuid <<FK>>
         active : bool
     }
-    entity library_assets {
+    entity library_assets #DDDDDD {
         * id : uuid <<PK>>
         --
         * owner_id : uuid <<FK>>
@@ -71,7 +71,7 @@ package "Thế giới truyện" #FFF8E8 {
         active : bool
         order_index : int
     }
-    entity chapter_rules {
+    entity chapter_rules #DDDDDD {
         * id : uuid <<PK>>
         --
         * chapter_id : uuid <<FK>>

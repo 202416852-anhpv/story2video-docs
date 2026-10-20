@@ -1,8 +1,9 @@
 # M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn
 
 > Bước 4 của luồng chính. Đầu ra **chỉ gồm ảnh + thuyết minh nguyên văn**; nhạc nền và SFX được thêm ở M06.
-> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m05a-storyboard.puml` (UC-05.01..06), `uc-m05b-sinh-anh-thuyet-minh.puml` (UC-05.07..17); `../../so-do/04-tuan-tu/seq-sinh-tu-lieu.puml`, `seq-storyboard-sinh-anh.puml`, `seq-thuyet-minh-nguyen-van.puml`; `../../so-do/05-hoat-dong/act-phu-kin-van-ban.puml`, `act-giu-tru-credit.puml`.
-> Yêu cầu: FR-MED-01..05, FR-BOK-01..10/13/16, FR-NAR-01..09. Quy tắc: BR-07, BR-08, BR-11, BR-19..BR-22.
+> Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m05a-storyboard.puml` (UC-05.01..06), `uc-m05b-sinh-anh-thuyet-minh.puml` (UC-05.07..17); `../../so-do/04-tuan-tu/seq-sinh-tu-lieu.puml`, `seq-storyboard-sinh-anh.puml`, `seq-thuyet-minh-nguyen-van.puml`; `../../so-do/05-hoat-dong/act-phu-kin-van-ban.puml`, `act-giu-tru-tien.puml`.
+> Yêu cầu: FR-MED-01..05, FR-BOK-01..10/13/16, FR-NAR-01..09. Quy tắc: BR-01, BR-02, BR-07, BR-08, BR-11, BR-19..BR-22, BR-29, BR-33, BR-34.
+> **Thay đổi theo sổ quyết định:** dời ranh giới shot chuyển sang Workspace (UC-03.02a, QĐ-52) nên bỏ UC-05.06d; bỏ "Fix a spot" (UC-05.10b, QĐ-51); kiểm chứng WER từng shot (UC-05.13c, UC-05.14) sang sau MVP, thay bằng nghe & đánh dấu thủ công (UC-05.18, QĐ-54); tiền tính theo chi phí thực × 110% (QĐ-31).
 
 ---
 
@@ -20,11 +21,12 @@
 | Kích hoạt | "Create storyboard draft", hoặc tự động trong UC-05.07 |
 | Quan hệ | include UC-05.01a |
 | Truy vết | FR-BOK-01, 01a, 05; BR-20; ADR-11 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Hệ thống dựng ngữ cảnh: văn bản chương, Story Assets (tên, bí danh, facts), timeline truyện, Visual Rules, Chapter rules, thời lượng mục tiêu mỗi ảnh.
 2. Hệ thống tách câu tất định và đánh số câu.
-3. Job `STORYBOARD_DRAFT`: LLM nhận danh sách câu, trả Shot[] gồm `startSentence`, `endSentence`, title, focus, cast, items, location, thời điểm, ngày, brief (Subject/Environment/Composition/Camera/Lighting/Mood/Details), caption. LLM **không chép lại văn bản**.
+3. Job `STORYBOARD_DRAFT` (tính phí theo BR-01; khi chạy trong UC-05.07 thì nằm trong giá ước tính tổng): LLM nhận danh sách câu, trả Shot[] gồm `startSentence`, `endSentence`, title, focus, cast, items, location, thời điểm, ngày, brief (Subject/Environment/Composition/Camera/Lighting/Mood/Details), caption. LLM **không chép lại văn bản**.
 4. Hệ thống thực hiện **UC-05.01a**.
 5. Hệ thống ánh xạ tên sang tài sản (tên + bí danh); tên không khớp đánh dấu "chưa liên kết".
 6. Hệ thống lưu bản nháp, các shot (`source_start`, `source_end`, `source_hash`) và hiển thị đoạn nguồn nguyên văn bên cạnh mỗi shot.
@@ -39,13 +41,14 @@
 
 | Mục | Nội dung |
 |---|---|
-| Loại | include của UC-05.01, UC-05.03, UC-05.06c, UC-05.06d |
+| Loại | include của UC-05.01, UC-05.03, UC-05.06c, UC-03.02a |
 | Tác nhân | Hệ thống (`CoverageValidator`) |
 | Mô tả | Đổi chỉ số câu do LLM hoặc Editor đưa ra thành ranh giới ký tự và bảo đảm các shot phủ kín **100%** văn bản chương (IC-08, BR-20) |
-| Tiền điều kiện | Chương có văn bản; có danh sách shot với chỉ số câu (từ LLM ở UC-05.01 bước 3, hoặc từ thao tác của Editor ở UC-05.03, UC-05.06c, UC-05.06d) |
+| Tiền điều kiện | Chương có văn bản; có danh sách shot với chỉ số câu (từ LLM ở UC-05.01 bước 3, hoặc từ thao tác của Editor ở UC-05.03, UC-05.06c, UC-03.02a) |
 | Hậu điều kiện | **Thành công:** các shot phủ kín chương, không chồng lấn, không sót; mỗi shot có `source_start`, `source_end`, `source_hash`. **Tối thiểu:** không lưu bản nháp vi phạm phủ kín |
 | Kích hoạt | UC-05.01 bước 4; mỗi thao tác đổi ranh giới shot |
 | Truy vết | BR-20; IC-08; NFR-INT-01; ADR-11; API 2.5 `…/storyboards/{did}/coverage`; `so-do/05-hoat-dong/act-phu-kin-van-ban.puml` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Hệ thống lấy bảng câu của chương (tách tất định, mỗi câu có offset `[start, end)`).
@@ -76,6 +79,7 @@
 | Kích hoạt | Mở danh sách bản nháp trong `?v=storyboard:<chapterId>` |
 | Quan hệ | được mở rộng bởi UC-05.02a..c |
 | Truy vết | FR-BOK-02 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor mở danh sách bản nháp (tên, loại, số shot, ngày, nhãn "Current").
@@ -93,6 +97,7 @@
 | Hậu điều kiện | **Thành công:** danh sách bản nháp cập nhật; vẫn đúng một bản hiện hành (BR-07). **Tối thiểu:** không bao giờ xóa bản hiện hành |
 | Kích hoạt | Menu "…" của một bản nháp trong danh sách UC-05.02 |
 | Truy vết | BR-07, BR-12; API 2.5 `PATCH/DELETE …/storyboards/{did}`, `:duplicate` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor chọn một bản nháp và một hành động.
@@ -117,6 +122,7 @@
 | Hậu điều kiện | **Thành công:** Editor thấy khác biệt giữa hai bản. **Tối thiểu:** không thay đổi dữ liệu |
 | Kích hoạt | Chọn hai bản nháp và bấm "Compare" |
 | Truy vết | FR-BOK-02; API 2.5 `GET …/storyboards/{did}/shots` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor chọn hai bản nháp A và B của cùng chương.
@@ -140,6 +146,7 @@
 | Hậu điều kiện | **Thành công:** `chapters.current_storyboard_id` trỏ bản mới (đúng một bản hiện hành, BR-07, IC-03). **Tối thiểu:** lỗi thì giữ nguyên bản hiện hành cũ |
 | Kích hoạt | Bấm "Set as current" |
 | Truy vết | BR-07, BR-12; IC-03; UC-06.15; API 2.5 `POST …/storyboards/{did}:set-current` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor chọn một bản nháp và bấm "Set as current".
@@ -167,11 +174,12 @@
 | Kích hoạt | "Re-split shots" |
 | Quan hệ | include UC-05.01a |
 | Truy vết | FR-BOK-03 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor chọn "Nhiều hơn" hoặc "Ít hơn".
-2. Hệ thống chạy UC-05.01 bước 1–6 với tham số tương ứng, tạo bản nháp mới (chưa hiện hành).
-3. Editor so sánh (UC-05.02b) rồi quyết định có đặt làm hiện hành (UC-05.02c) hay không.
+2. Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống chạy UC-05.01 bước 1–6 với tham số tương ứng, tạo bản nháp mới (chưa hiện hành).
+3. Hệ thống hiện bản mới cạnh bản hiện hành; Editor chọn "Dùng bản này" (đặt hiện hành, UC-05.02c) hoặc "Giữ bản cũ". Bản không dùng vẫn được lưu. So sánh chi tiết (UC-05.02b) và quản lý nhiều bản nháp: sau MVP.
 
 ---
 
@@ -186,6 +194,7 @@
 | Hậu điều kiện | **Thành công:** `chapter_rules` cập nhật; áp cho các lần tạo/viết lại brief sau |
 | Kích hoạt | "Chapter rules · show" |
 | Truy vết | FR-BOK-04; BR-08 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor mở Chapter rules, thêm/sửa/xóa/sắp xếp chỉ dẫn.
@@ -204,6 +213,7 @@
 | Hậu điều kiện | **Thành công:** brief mọi shot được cập nhật (version tăng); ảnh cũ giữ nguyên đến khi sinh lại |
 | Kích hoạt | "Re-direct" |
 | Truy vết | FR-BOK-07 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor tùy chọn nhập ghi chú, bấm "Re-direct".
@@ -222,11 +232,12 @@
 | Tiền điều kiện | Bản nháp tồn tại |
 | Hậu điều kiện | **Thành công:** shot cập nhật (If-Match); phủ kín vẫn 100% |
 | Kích hoạt | Chọn một shot trong Storyboard |
-| Quan hệ | được mở rộng bởi UC-05.06a..f |
-| Truy vết | FR-BOK-05, 06 |
+| Quan hệ | được mở rộng bởi UC-05.06a, UC-05.06b, UC-05.06c, UC-05.06e, UC-05.06f |
+| Truy vết | FR-BOK-01b, 05, 06 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
-1. Editor chọn shot; hệ thống hiển thị các trường minh họa và đoạn nguồn (chỉ đọc).
+1. Editor chọn shot; hệ thống hiển thị các trường minh họa và đoạn nguồn (chỉ đọc). Dời ranh giới giữa hai shot làm ở Workspace (UC-03.02a), không có nút ◀ ▶ ở đây.
 2. Editor thực hiện một use case con; hệ thống lưu.
 
 **Luồng thay thế / ngoại lệ**
@@ -244,6 +255,7 @@
 | Hậu điều kiện | **Thành công:** shot được lưu với `version` mới. **Tối thiểu:** văn bản truyện và thuyết minh không bị đổi |
 | Kích hoạt | Sửa một trường trong panel shot |
 | Truy vết | FR-BOK-05, FR-BOK-06; BR-21; 08 §5; API 2.5 `PATCH …/shots/{shid}` (If-Match) |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor sửa một hoặc nhiều trường: tiêu đề, focus, 7 trường của brief (Subject, Environment, Composition, Camera, Lighting, Mood, Details), thời điểm trong ngày, ngày trong truyện, caption (≤ 300 ký tự).
@@ -268,6 +280,7 @@
 | Hậu điều kiện | **Thành công:** `shot_asset_refs` của shot được cập nhật (vai trò `CAST`, `ITEM`, `LOCATION`). **Tối thiểu:** ảnh hiện có không đổi |
 | Kích hoạt | Sửa mục Cast / Items / Location trong panel shot |
 | Truy vết | FR-BOK-05, FR-BOK-08; BR-16; 04 §3.4 `shot_asset_refs` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor thêm tài sản vào Cast, Items hoặc Location bằng cách chọn từ danh sách Story Assets, hoặc gỡ tài sản đã gắn.
@@ -293,6 +306,7 @@
 | Hậu điều kiện | **Thành công:** các shot vẫn phủ kín 100% chương (IC-08); thuyết minh của shot bị đổi đoạn nguồn chuyển `OUTDATED`. **Tối thiểu:** lỗi thì giữ nguyên cấu trúc cũ |
 | Kích hoạt | "Split here" giữa hai câu; "Merge up/down"; "Delete shot" |
 | Truy vết | BR-06, BR-12, BR-20; IC-08, IC-09; 08 §5 (1–40 shot); API 2.5 `:split`, `:merge-up`, `:merge-down`, `DELETE …/shots/{shid}` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor chọn thao tác trên một shot.
@@ -310,55 +324,31 @@
 - **6a.** Chương đang bị khóa: `423 RESOURCE_LOCKED`.
 - **6b.** `409`: xử lý theo UC-02.10.
 
-### UC-05.06d Dời ranh giới đoạn nguồn
-<a id="uc-0506d"></a>
-
-| Mục | Nội dung |
-|---|---|
-| Loại | extend của UC-05.06; include UC-05.01a |
-| Tác nhân | Editor |
-| Mô tả | Dời ranh giới giữa hai shot kề nhau theo từng câu để đoạn nguồn chia hợp lý hơn |
-| Tiền điều kiện | Hai shot liền kề trong cùng bản nháp; chương không bị khóa |
-| Hậu điều kiện | **Thành công:** hai shot đổi đoạn nguồn, phủ kín vẫn 100%; thuyết minh của cả hai shot `OUTDATED`. **Tối thiểu:** lỗi thì giữ ranh giới cũ |
-| Kích hoạt | Bấm ◀ hoặc ▶ ở ranh giới giữa hai shot |
-| Truy vết | BR-06, BR-20; IC-08, IC-09; 08 §5; API 2.5 `POST …/storyboards/{did}:move-boundary` |
-
-**Luồng chính**
-1. Editor bấm ◀ hoặc ▶ ở ranh giới giữa shot trái và shot phải, mỗi lần dời một câu.
-2. Giao diện xem trước câu nào chuyển sang shot nào và độ dài đọc mới của hai shot.
-3. Editor xác nhận; hệ thống gọi `:move-boundary {leftShotId, rightShotId, deltaSentences}`.
-4. Hệ thống thực hiện **UC-05.01a** và cập nhật `source_start`, `source_end`, `source_hash` của hai shot.
-5. Thuyết minh của hai shot chuyển `OUTDATED`; ảnh được giữ nguyên (brief không đổi). Hệ thống phát `shot.updated` và đồng bộ timeline (UC-06.15).
-
-**Luồng thay thế / ngoại lệ**
-- **2a.** Dời làm một shot rỗng (không còn câu nào): chặn.
-- **2b.** Đoạn nguồn mới của một shot đọc quá 30 giây (khoảng 450 ký tự tiếng Việt): cảnh báo, vẫn cho phép.
-- **3a.** `409`: xử lý theo UC-02.10.
-- **3b.** Chương đang bị khóa: `423 RESOURCE_LOCKED`.
-
 ### UC-05.06e Viết lại brief một shot bằng AI
 <a id="uc-0506e"></a>
 
 | Mục | Nội dung |
 |---|---|
-| Loại | extend của UC-05.06 |
+| Loại | extend của UC-05.06; được include bởi UC-03.02a |
 | Tác nhân | Editor / LLM |
 | Mô tả | Nhờ AI viết lại **brief minh họa** của một shot theo ghi chú; đoạn nguồn không bao giờ bị đụng tới |
-| Tiền điều kiện | Shot thuộc bản nháp; chưa vượt giới hạn tần suất (ví dụ 60 lần mỗi giờ mỗi dự án) |
+| Tiền điều kiện | Shot thuộc bản nháp; đủ số dư cho giá ước tính; chưa vượt giới hạn kỹ thuật (BR-32) |
 | Hậu điều kiện | **Thành công:** brief của shot được thay bằng bản mới. **Tối thiểu:** đoạn nguồn, caption và thuyết minh không đổi |
 | Kích hoạt | Bấm "Rewrite this shot" |
-| Truy vết | FR-BOK-06; BR-21; NFR-INT-02; 08 §3.2 (`REWRITE_SHOT`, 0 credit, có giới hạn tần suất); API 2.5 `POST …/shots/{shid}:rewrite` |
+| Truy vết | FR-BOK-06; BR-21; NFR-INT-02; 08 §3.2 (`REWRITE_SHOT`); API 2.5 `POST …/shots/{shid}:rewrite` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor nhập ghi chú (ví dụ "trời tối hơn") và bấm gửi.
-2. Hệ thống tạo job `REWRITE_SHOT` (không tốn credit).
+2. Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17) và tạo job `REWRITE_SHOT`. Khi được gọi từ UC-03.02a, bước xác nhận đã làm ở đó.
 3. Worker gửi LLM brief hiện tại, ghi chú, tài sản của shot, style, Art Direction và Visual Rules; đoạn nguồn chỉ được đưa vào làm ngữ cảnh đọc.
 4. LLM trả brief mới theo schema 7 trường; hệ thống chỉ ghi vào trường `brief` (không có đường ghi vào đoạn nguồn).
 5. Shot được cập nhật, `version` tăng; ảnh hiện tại được đánh dấu "brief đã đổi" và hệ thống gợi ý sinh lại ảnh (UC-05.09) kèm giá.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** Vượt giới hạn tần suất: `429` kèm `Retry-After`.
-- **4a.** LLM trả sai schema: thử lại tối đa 2 lần; vẫn lỗi thì job `FAILED`, brief cũ giữ nguyên.
+- **2a.** Vượt giới hạn kỹ thuật (≤ 30 yêu cầu LLM/phút): `429` kèm `Retry-After`.
+- **2b.** Không đủ số dư: `402`; chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED`.
+- **4a.** LLM trả sai schema: thử lại tối đa 2 lần; vẫn lỗi thì job `FAILED`, brief cũ giữ nguyên, tiền giữ được hoàn.
 - **4b.** Nội dung bị moderation chặn: job `FAILED` với `CONTENT_POLICY` (451); không tự sửa để vượt bộ lọc (BR-18).
 - **5a.** `409`: shot đã đổi trong lúc job chạy; kết quả không ghi đè, Editor chọn áp dụng hoặc bỏ (UC-02.10).
 
@@ -374,6 +364,7 @@
 | Hậu điều kiện | **Thành công:** các tham chiếu khớp duy nhất được liên kết. **Tối thiểu:** không liên kết nhầm khi khớp mơ hồ |
 | Kích hoạt | Bấm "Scan the chapter text and auto-match" hoặc từ cảnh báo ở UC-05.01 nhánh 5a |
 | Truy vết | FR-BOK-08; BR-16; API 2.5 `POST …/storyboards/{did}:auto-link-assets` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor bấm "Scan the chapter text and auto-match".
@@ -395,26 +386,29 @@
 
 | Mục | Nội dung |
 |---|---|
-| Tác nhân chính / phụ | Editor / LLM, Image Provider, TTS, STT/Aligner |
+| Tác nhân chính / phụ | Editor / LLM, Image Provider, TTS, Aligner |
 | Mô tả | Bước 4 của luồng: một thao tác sinh **ảnh + thuyết minh nguyên văn** cho mọi shot của một hoặc nhiều chương |
 | Tiền điều kiện | Chương có văn bản; dự án có style; đã chọn giọng đọc (UC-05.11); khuyến nghị tài sản đã có ảnh tham chiếu |
-| Hậu điều kiện | **Thành công:** mọi shot có ảnh `DONE` và thuyết minh `VERIFIED`/`ACCEPTED`; chương "Sẵn sàng dựng"; có bản nháp timeline (UC-06.01a). **Tối thiểu:** phần thành công được giữ; credit phần lỗi được hoàn |
+| Hậu điều kiện | **Thành công:** mọi shot có ảnh `DONE` và thuyết minh `DONE`; chương "Sẵn sàng dựng"; có bản nháp timeline (UC-06.01a). **Tối thiểu:** phần thành công được giữ; tiền giữ cho phần lỗi được hoàn |
 | Kích hoạt | Bấm "Sinh tư liệu" |
 | Quan hệ | include UC-05.07a, UC-05.09, UC-05.13, UC-05.17; được mở rộng bởi UC-05.07b, UC-05.07c |
-| Truy vết | FR-MED-01..05; BR-11; seq-sinh-tu-lieu |
+| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu |
+| Giai đoạn | P2 |
 
 **Luồng chính**
 1. Editor chọn một hoặc nhiều chương, bấm "Sinh tư liệu".
-2. Hệ thống ước tính số shot (theo storyboard hiện có hoặc độ dài chương) và hiện **một** báo giá tổng: ảnh × giá ảnh + ký tự × giá TTS.
-3. Editor xác nhận; hệ thống thực hiện **UC-05.17** (giữ credit) và tạo job cha `GENERATE_MEDIA_CHAPTER`.
+2. Hệ thống ước tính số shot (theo storyboard hiện có hoặc độ dài chương) và hiện **một** giá ước tính tối đa: storyboard (nếu chưa có) + số ảnh × đơn giá ảnh + số ký tự × đơn giá TTS, đã gồm phí 10%.
+3. Editor xác nhận; hệ thống thực hiện **UC-05.17** (giữ tiền) và tạo job cha `GENERATE_MEDIA_CHAPTER`.
 4. Chương chưa có storyboard hiện hành: thực hiện **UC-05.07a**.
 5. Với mỗi shot, chạy song song **UC-05.09** (ảnh) và **UC-05.13** (thuyết minh).
-6. Mọi shot đạt: hệ thống đánh dấu chương "Sẵn sàng dựng", dựng bản nháp timeline, thông báo `chapter.media-ready`.
+6. Mọi shot có ảnh và thuyết minh `DONE`: hệ thống đánh dấu chương "Sẵn sàng dựng", dựng bản nháp timeline, thông báo `chapter.media-ready` kèm số tiền thực đã trừ và số đã hoàn.
+7. Editor có thể nghe và đánh dấu shot cần sinh lại (UC-05.18); việc này không bắt buộc.
 
 **Luồng thay thế / ngoại lệ**
-- **3a.** Không đủ credit: `402`; gợi ý nạp credit (UC-09.03) hoặc chọn ít chương hơn.
-- **4a.** Số shot thực tế khác ước tính: điều chỉnh phần credit đã giữ (giữ thêm hoặc trả lại).
-- **5a.** Còn ảnh lỗi hoặc thuyết minh `NEEDS_REVIEW`: chương "Cần xử lý", liệt kê shot; Editor xử lý qua UC-05.10, UC-05.14 hoặc UC-05.07c.
+- **3a.** Không đủ số dư: `402`; gợi ý nạp tiền (UC-09.03) hoặc chọn ít chương hơn.
+- **3b.** Chạm trần chi tiêu AI trong ngày: `503 DAILY_BUDGET_EXCEEDED`, không tạo job (BR-29).
+- **4a.** Số shot thực tế khác ước tính: điều chỉnh phần tiền đã giữ (giữ thêm hoặc trả lại).
+- **5a.** Còn ảnh hoặc thuyết minh lỗi: chương "Cần xử lý", liệt kê shot; Editor xử lý qua UC-05.10 hoặc UC-05.07c.
 - **\*a.** Editor sửa văn bản chương trong lúc job chạy: chương bị khóa (BR-12) đến khi job xong.
 
 ### UC-05.07a Dựng storyboard tự động
@@ -428,14 +422,15 @@
 | Tiền điều kiện | Chương có văn bản, không bị khóa; chưa có storyboard hiện hành |
 | Hậu điều kiện | **Thành công:** chương có một bản nháp hiện hành gồm N shot phủ kín 100%. **Tối thiểu:** lỗi thì chương ở trạng thái cần xử lý, không có bản nháp dở dang |
 | Kích hoạt | UC-05.07 bước 4; UC-07.02 bước `media` |
-| Truy vết | FR-BOK-01; BR-07, BR-20; 08 §3.2 (`STORYBOARD_DRAFT`, 0 credit); API 2.5 `POST …/media:generate` |
+| Truy vết | FR-BOK-01; BR-07, BR-20; 08 §3.2 (`STORYBOARD_DRAFT`, nằm trong giá ước tính của UC-05.07); API 2.5 `POST …/media:generate` |
+| Giai đoạn | P2 |
 
 **Luồng chính**
 1. Hệ thống kiểm tra chương đã có storyboard hiện hành hay chưa; nếu có thì bỏ qua use case này.
 2. Hệ thống lấy thời lượng mục tiêu mỗi ảnh từ `projects.target_shot_seconds` (mặc định 15 giây).
 3. Hệ thống chạy UC-05.01 (job con `STORYBOARD_DRAFT`, `kind = INITIAL`).
 4. Hệ thống đặt bản nháp làm hiện hành (BR-07).
-5. Hệ thống trả số shot thực tế cho UC-05.07 để điều chỉnh phần credit đã giữ (UC-05.07 nhánh 4a).
+5. Hệ thống trả số shot thực tế cho UC-05.07 để điều chỉnh phần tiền đã giữ (UC-05.07 nhánh 4a).
 
 **Luồng thay thế / ngoại lệ**
 - **3a.** Job lỗi sau retry (UC-05.01 nhánh 3a): chương `NEEDS_ATTENTION`, không sinh ảnh và thuyết minh cho chương này; các chương khác trong cùng lượt vẫn chạy.
@@ -453,12 +448,13 @@
 | Hậu điều kiện | **Thành công:** Editor thấy trạng thái của từng shot. **Tối thiểu:** không thay đổi dữ liệu |
 | Kích hoạt | Mở bảng tiến độ sau khi bấm "Sinh tư liệu" |
 | Truy vết | FR-MED-01..05; API 2.5 `GET …/media?chapterId=`; API 3 sự kiện `media.progress` |
+| Giai đoạn | P2 |
 
 **Luồng chính**
 1. Hệ thống tải ảnh chụp ban đầu từ media bin (`GET /projects/{pid}/media?chapterId=`).
-2. Hệ thống hiển thị bảng: mỗi shot một hàng, hai cột Ảnh và Thuyết minh với trạng thái (`PENDING`, `GENERATING`, `DONE`, `FAILED` cho ảnh; thêm `VERIFIED`, `NEEDS_REVIEW`, `ACCEPTED`, `OUTDATED` cho thuyết minh).
+2. Hệ thống hiển thị bảng: mỗi shot một hàng, hai cột Ảnh và Thuyết minh với trạng thái (`PENDING`, `GENERATING`, `DONE`, `FAILED`; thêm `OUTDATED` và cờ "cần sinh lại" cho thuyết minh).
 3. Hệ thống cập nhật bảng qua SSE: `media.progress`, `illustration.ready`, `narration.updated`, `job.updated`.
-4. Editor lọc các shot "Cần xử lý" và mở từng shot để xử lý: ảnh lỗi (UC-05.10), thuyết minh cần xem lại (UC-05.14), sinh lại phần thiếu (UC-05.07c).
+4. Editor lọc các shot "Cần xử lý" hoặc đã đánh dấu và mở từng shot để xử lý: ảnh lỗi (UC-05.10), nghe thuyết minh (UC-05.18), sinh lại phần thiếu (UC-05.07c).
 
 **Luồng thay thế / ngoại lệ**
 - **3a.** Mất kết nối SSE: client nối lại với `Last-Event-ID`; nếu thiếu sự kiện thì tải lại ảnh chụp ở bước 1.
@@ -472,23 +468,24 @@
 | Loại | extend của UC-05.07 |
 | Tác nhân | Editor |
 | Mô tả | Chỉ sinh lại những phần còn thiếu, bị lỗi hoặc đã lỗi thời, không đụng tới phần đã đạt |
-| Tiền điều kiện | Chương có shot thiếu, lỗi hoặc `OUTDATED`; chương không bị khóa; đủ credit |
-| Hậu điều kiện | **Thành công:** các shot được chọn có tư liệu đạt; chương tiến tới "Sẵn sàng dựng" khi mọi shot đạt. **Tối thiểu:** tư liệu đã đạt không bị ghi đè; credit phần lỗi được hoàn |
+| Tiền điều kiện | Chương có shot thiếu, lỗi, `OUTDATED` hoặc được đánh dấu cần sinh lại; chương không bị khóa; đủ số dư |
+| Hậu điều kiện | **Thành công:** các shot được chọn có tư liệu đạt; chương tiến tới "Sẵn sàng dựng" khi mọi shot đạt. **Tối thiểu:** tư liệu đã đạt không bị ghi đè; tiền giữ cho phần lỗi được hoàn |
 | Kích hoạt | Bấm "Sinh lại phần thiếu / lỗi" ở bảng tiến độ hoặc chương "Cần xử lý" |
-| Truy vết | BR-11, BR-12, BR-14; CR-05; API 2.5 `GET …/media:quote`, `POST …/media:generate {only, parts}` |
+| Truy vết | BR-11, BR-12, BR-14; WR-05; API 2.5 `GET …/media:quote`, `POST …/media:generate {only, parts}` |
+| Giai đoạn | P2 |
 
 **Luồng chính**
-1. Editor chọn phạm vi: chỉ phần thiếu, chỉ phần lỗi hoặc chỉ `OUTDATED`; chỉ ảnh, chỉ thuyết minh hoặc cả hai.
+1. Editor chọn phạm vi: chỉ phần thiếu, chỉ phần lỗi, chỉ `OUTDATED` hoặc chỉ shot được đánh dấu; chỉ ảnh, chỉ thuyết minh hoặc cả hai.
 2. Hệ thống xác định danh sách shot và phần cần chạy. Ảnh đã `DONE` hợp lệ và ảnh do Editor tải lên (BR-14) không nằm trong danh sách.
-3. Hệ thống hiển thị báo giá (`media:quote`); Editor xác nhận.
-4. Hệ thống giữ credit (UC-05.17) và tạo job cha, mỗi shot một hoặc hai job con (ảnh, thuyết minh).
+3. Hệ thống hiển thị giá ước tính (`media:quote`); Editor xác nhận.
+4. Hệ thống giữ tiền (UC-05.17) và tạo job cha, mỗi shot một hoặc hai job con (ảnh, thuyết minh).
 5. Các job con chạy như bước 5 của UC-05.07; tiến độ hiển thị ở UC-05.07b.
 6. Khi mọi shot đạt, chương "Sẵn sàng dựng" và timeline được đồng bộ (UC-06.15).
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Không có gì cần sinh trong phạm vi đã chọn: báo "Không có phần nào cần sinh lại", không tạo job.
-- **3a.** Không đủ credit: `402`; gợi ý chọn phạm vi nhỏ hơn hoặc nạp credit (UC-09.03).
-- **5a.** Vẫn còn shot lỗi hoặc `NEEDS_REVIEW`: chương ở "Cần xử lý", liệt kê shot (UC-05.07 nhánh 5a).
+- **3a.** Không đủ số dư: `402`; gợi ý chọn phạm vi nhỏ hơn hoặc nạp tiền (UC-09.03).
+- **5a.** Vẫn còn shot lỗi: chương ở "Cần xử lý", liệt kê shot (UC-05.07 nhánh 5a).
 - ***a.** Chương đang bị job khác khóa: `423 RESOURCE_LOCKED`.
 
 ---
@@ -503,12 +500,13 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** hiển thị tư liệu và trạng thái |
 | Kích hoạt | Mở "Tư liệu" |
-| Truy vết | FR-MED-03 |
+| Truy vết | FR-MED-03; FR-BOK-13 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor mở Tư liệu dự án.
-2. Hệ thống liệt kê chương (trạng thái), mỗi shot: ảnh hiện hành, nút nghe thuyết minh, đoạn văn nguồn, thời lượng, WER, trạng thái.
-3. Editor lọc theo trạng thái ("Cần xử lý", `OUTDATED`) hoặc mở shot để sửa (UC-05.10, UC-05.14).
+2. Hệ thống liệt kê chương (trạng thái), mỗi shot: ảnh hiện hành, nút nghe thuyết minh, đoạn văn nguồn, thời lượng, trạng thái, cờ "cần sinh lại".
+3. Editor lọc theo trạng thái ("Cần xử lý", `OUTDATED`, đã đánh dấu) hoặc mở shot để sửa (UC-05.10, UC-05.18).
 
 ---
 
@@ -519,20 +517,21 @@
 |---|---|
 | Tác nhân chính / phụ | Editor (hoặc UC-05.07) / Image Provider |
 | Mô tả | Sinh ảnh minh họa cho một shot, giữ nhất quán nhân vật bằng ảnh tham chiếu |
-| Tiền điều kiện | Shot có brief; đủ credit |
-| Hậu điều kiện | **Thành công:** Illustration phiên bản mới `DONE`, đặt làm hiện hành; credit trừ. **Tối thiểu:** lỗi thì hoàn credit |
+| Tiền điều kiện | Shot có brief; đủ số dư |
+| Hậu điều kiện | **Thành công:** Illustration phiên bản mới `DONE`, đặt làm hiện hành; tiền trừ. **Tối thiểu:** lỗi thì hoàn tiền |
 | Kích hoạt | "Generate" trên shot, hoặc UC-05.07 |
 | Quan hệ | được include bởi UC-05.07; include UC-05.17 |
 | Truy vết | FR-BOK-09; BR-08; seq-storyboard-sinh-anh |
+| Giai đoạn | P1 |
 
 **Luồng chính**
-1. Hệ thống thực hiện UC-05.17 (giữ 1 credit) và tạo job `GENERATE_SHOT_IMAGE`.
+1. Hệ thống hiện giá ước tính (khi Editor bấm trên một shot), thực hiện UC-05.17 (giữ tiền) và tạo job `GENERATE_SHOT_IMAGE`.
 2. Worker ghép prompt theo BR-08: style → Art Direction → Visual Rules → Chapter rules → brief + facts; đính kèm ảnh tham chiếu cast/location/item; tỷ lệ theo khung hình dự án.
 3. Moderation đầu vào; gọi Image Provider (retry tối đa 3 lần).
-4. Moderation đầu ra; lưu ảnh; tạo Illustration; trừ credit; phát `illustration.ready`.
+4. Moderation đầu ra; lưu ảnh; tạo Illustration; trừ chi phí thực × 110%, hoàn phần dư; phát `illustration.ready`.
 
 **Luồng thay thế / ngoại lệ**
-- **3a.** Lỗi sau 3 lần thử hoặc vi phạm chính sách: Illustration `FAILED`, hoàn credit, shot có nút "Retry".
+- **3a.** Lỗi sau 3 lần thử hoặc vi phạm chính sách: Illustration `FAILED`, hoàn tiền, shot có nút "Retry".
 
 ---
 
@@ -543,19 +542,20 @@
 |---|---|
 | Tác nhân chính / phụ | Editor / Image Provider |
 | Mô tả | Chỉnh ảnh shot mà không phải sinh lại từ đầu |
-| Tiền điều kiện | Shot có ảnh (hoặc ảnh lỗi để Retry); đủ credit |
+| Tiền điều kiện | Shot có ảnh (hoặc ảnh lỗi để Retry); đủ số dư |
 | Hậu điều kiện | **Thành công:** Illustration phiên bản mới (giữ phiên bản cũ) |
 | Kích hoạt | "Edit" trên ảnh |
-| Quan hệ | include UC-05.17 (trừ nhánh 1a); được mở rộng bởi UC-05.10a..c |
+| Quan hệ | include UC-05.17 (trừ nhánh 1a); được mở rộng bởi UC-05.10a, UC-05.10c |
 | Truy vết | FR-BOK-10; BR-14; NFR-SEC-10 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor mở ảnh và chọn cách sửa (use case con).
-2. Hệ thống hiện giá (1 credit), giữ credit, gửi yêu cầu.
-3. Hệ thống lưu ảnh mới làm hiện hành, trừ credit; timeline đồng bộ ảnh mới (UC-06.15).
+2. Hệ thống hiện giá ước tính, giữ tiền, gửi yêu cầu.
+3. Hệ thống lưu ảnh mới làm hiện hành, trừ chi phí thực × 110%; timeline đồng bộ ảnh mới (UC-06.15).
 
 **Luồng thay thế / ngoại lệ**
-- **1a.** Editor chọn "Thay bằng ảnh của tôi" và tải ảnh lên (PNG/JPEG/WebP ≤ 10 MB, cạnh ngắn ≥ 512 px; kiểm tra MIME, malware, bỏ EXIF theo NFR-SEC-10). Bước 2 bỏ qua: **không tốn credit**, không tạo job, không gọi Image Provider. Hệ thống lưu Illustration phiên bản mới (`edit_kind = UPLOAD`, `status = DONE`), giữ phiên bản cũ, đặt làm hiện hành và đồng bộ timeline (UC-06.15). Ảnh này không bị sinh ảnh hàng loạt ghi đè (BR-14). Ảnh lệch tỷ lệ dự án được xử lý bằng khung hình ở UC-06.06.
+- **1a.** Editor chọn "Thay bằng ảnh của tôi" và tải ảnh lên (PNG/JPEG/WebP ≤ 10 MB, cạnh ngắn ≥ 512 px; kiểm tra MIME, malware, bỏ EXIF theo NFR-SEC-10). Bước 2 bỏ qua: **miễn phí**, không tạo job, không gọi Image Provider. Hệ thống lưu Illustration phiên bản mới (`edit_kind = UPLOAD`, `status = DONE`), giữ phiên bản cũ, đặt làm hiện hành và đồng bộ timeline (UC-06.15). Ảnh này không bị sinh ảnh hàng loạt ghi đè (BR-14). Ảnh lệch tỷ lệ dự án được xử lý bằng khung hình ở UC-06.06.
 
 ### UC-05.10a Sửa ảnh theo mô tả (Describe → Edit)
 <a id="uc-0510a"></a>
@@ -565,50 +565,24 @@
 | Loại | extend của UC-05.10 |
 | Tác nhân | Editor / Image Provider |
 | Mô tả | Sửa ảnh shot bằng cách mô tả thay đổi bằng lời, không sinh lại từ đầu |
-| Tiền điều kiện | Shot có ảnh hiện hành `DONE`; đủ credit (1 credit) |
-| Hậu điều kiện | **Thành công:** Illustration mới (`edit_kind = EDIT`) trở thành ảnh hiện hành; ảnh cũ giữ làm phiên bản trước. **Tối thiểu:** lỗi thì hoàn credit và giữ ảnh cũ làm hiện hành |
+| Tiền điều kiện | Shot có ảnh hiện hành `DONE`; đủ số dư cho giá ước tính |
+| Hậu điều kiện | **Thành công:** Illustration mới (`edit_kind = EDIT`) trở thành ảnh hiện hành; ảnh cũ giữ làm phiên bản trước. **Tối thiểu:** lỗi thì hoàn tiền và giữ ảnh cũ làm hiện hành |
 | Kích hoạt | Chọn "Describe → Edit" trên ảnh |
-| Truy vết | FR-BOK-10; BR-01, BR-02, BR-15, BR-18; 08 §3.2 (`IMAGE_EDIT`, 1 credit); API 2.5 `POST …/illustrations/{iid}:edit` |
+| Truy vết | FR-BOK-10; BR-01, BR-02, BR-15, BR-18; 08 §3.2 (`IMAGE_EDIT`); API 2.5 `POST …/illustrations/{iid}:edit` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor mở ảnh hiện hành và chọn "Describe → Edit".
 2. Editor nhập mô tả thay đổi (ví dụ "đổi sang ánh chiều").
-3. Hệ thống hiển thị giá 1 credit; Editor xác nhận; hệ thống giữ credit (UC-05.17) và tạo job `EDIT_IMAGE`.
+3. Hệ thống hiển thị giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17) và tạo job `EDIT_IMAGE`.
 4. Worker chạy moderation đầu vào, gửi ảnh gốc cùng hướng dẫn tới Image Provider (retry tối đa 3 lần), rồi chạy moderation đầu ra.
-5. Hệ thống lưu Illustration mới (`parent_illustration_id` = ảnh gốc, `instruction` = mô tả), đặt làm hiện hành, CAPTURE credit, phát `illustration.ready`.
+5. Hệ thống lưu Illustration mới (`parent_illustration_id` = ảnh gốc, `instruction` = mô tả), đặt làm hiện hành, CAPTURE chi phí thực × 110%, phát `illustration.ready`.
 6. Timeline được đồng bộ ảnh mới (UC-06.15).
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Mô tả rỗng: không cho gửi.
-- **3a.** Không đủ credit: `402`.
-- **4a.** Lỗi sau 3 lần thử hoặc vi phạm chính sách (451): Illustration `FAILED`, RELEASE credit, ảnh cũ vẫn là ảnh hiện hành, shot có nút "Retry".
-
-### UC-05.10b Sửa vùng tô trên ảnh (Fix a spot)
-<a id="uc-0510b"></a>
-
-| Mục | Nội dung |
-|---|---|
-| Loại | extend của UC-05.10 |
-| Tác nhân | Editor / Image Provider |
-| Mô tả | Sửa riêng một vùng của ảnh bằng cách tô vùng đó và mô tả điều muốn thấy (inpainting) |
-| Tiền điều kiện | Shot có ảnh hiện hành `DONE`; đủ credit (1 credit) |
-| Hậu điều kiện | **Thành công:** Illustration mới (`edit_kind = INPAINT`, có `mask_media_id`) trở thành ảnh hiện hành, chỉ vùng được tô thay đổi. **Tối thiểu:** lỗi thì hoàn credit và giữ ảnh cũ |
-| Kích hoạt | Chọn "Fix a spot" trên ảnh |
-| Truy vết | FR-BOK-10; BR-01, BR-02, BR-15, BR-18; 08 §3.2 (`IMAGE_EDIT`); API 2.5 `POST …/illustrations/{iid}:edit` với `mask` |
-
-**Luồng chính**
-1. Editor chọn "Fix a spot".
-2. Editor tô vùng cần sửa bằng cọ (chỉnh cỡ cọ, xóa nét tô).
-3. Editor mô tả điều muốn thấy trong vùng đã tô.
-4. Hệ thống hiển thị giá 1 credit; Editor xác nhận; hệ thống giữ credit và lưu mask vào `media_files`.
-5. Job `INPAINT_IMAGE` gửi ảnh gốc, mask và mô tả tới Image Provider; moderation hai chiều như UC-05.10a.
-6. Hệ thống lưu Illustration mới, đặt làm hiện hành, CAPTURE credit, phát `illustration.ready` và đồng bộ timeline (UC-06.15).
-
-**Luồng thay thế / ngoại lệ**
-- **2a.** Mask rỗng: không cho gửi.
-- **2b.** Vùng tô phủ gần hết ảnh: gợi ý dùng Describe → Edit (UC-05.10a) hoặc sinh lại [ĐX].
-- **3a.** Không đủ credit: `402`.
-- **5a.** Lỗi hoặc vi phạm chính sách: Illustration `FAILED`, RELEASE credit, ảnh cũ giữ làm hiện hành.
+- **3a.** Không đủ số dư: `402`.
+- **4a.** Lỗi sau 3 lần thử hoặc vi phạm chính sách (451): Illustration `FAILED`, RELEASE tiền đã giữ, ảnh cũ vẫn là ảnh hiện hành, shot có nút "Retry".
 
 ### UC-05.10c Khôi phục phiên bản ảnh
 <a id="uc-0510c"></a>
@@ -617,16 +591,17 @@
 |---|---|
 | Loại | extend của UC-05.10 |
 | Tác nhân | Editor |
-| Mô tả | Quay lại một phiên bản ảnh cũ của shot, không tốn credit |
+| Mô tả | Quay lại một phiên bản ảnh cũ của shot, không tốn phí |
 | Tiền điều kiện | Shot có từ hai phiên bản ảnh trở lên |
 | Hậu điều kiện | **Thành công:** `shots.current_illustration_id` trỏ phiên bản được chọn. **Tối thiểu:** mọi phiên bản khác giữ nguyên |
 | Kích hoạt | Mở lịch sử ảnh của shot |
 | Truy vết | D-04; BR-15; API 2.5 `POST …/illustrations/{iid}:make-current` |
+| Giai đoạn | P1 |
 
 **Luồng chính**
-1. Editor mở lịch sử ảnh của shot; hệ thống liệt kê các Illustration theo thời gian kèm ảnh thu nhỏ, loại (`GENERATE`, `EDIT`, `INPAINT`, `RETRY`, `UPLOAD`), mô tả và thời điểm.
+1. Editor mở lịch sử ảnh của shot; hệ thống liệt kê các Illustration theo thời gian kèm ảnh thu nhỏ, loại (`GENERATE`, `EDIT`, `RETRY`, `UPLOAD`), mô tả và thời điểm.
 2. Editor chọn một phiên bản và bấm "Make current".
-3. Hệ thống cập nhật `shots.current_illustration_id` (không tạo bản ghi mới, không tốn credit).
+3. Hệ thống cập nhật `shots.current_illustration_id` (không tạo bản ghi mới, không tốn phí).
 4. Hệ thống phát `illustration.ready` và đồng bộ timeline (UC-06.15).
 
 **Luồng thay thế / ngoại lệ**
@@ -642,20 +617,23 @@
 | Mục | Nội dung |
 |---|---|
 | Tác nhân chính | Editor |
-| Mô tả | Chọn ngôn ngữ, giọng đọc, tốc độ, cao độ, khoảng nghỉ, ngưỡng WER |
+| Mô tả | Chọn ngôn ngữ, giọng đọc, tốc độ, cao độ, khoảng nghỉ, quy tắc đọc ký hiệu trình bày |
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** `narration_settings` cập nhật; áp cho các lần sinh sau |
 | Kích hoạt | Mở "Cài đặt thuyết minh", hoặc điểm duyệt UC-07.05 |
 | Quan hệ | được mở rộng bởi UC-05.11a |
-| Truy vết | FR-NAR-01 |
+| Truy vết | FR-NAR-01, 03; BR-19; 08 §6; API 2.5 `PUT …/narration-settings` |
+| Giai đoạn | P2 |
 
 **Luồng chính**
-1. Editor chọn ngôn ngữ (Auto hoặc cụ thể) và giọng trong danh mục.
-2. Editor chỉnh tốc độ (0,8–1,3×), cao độ, nghỉ câu/đoạn, ngưỡng WER (0,01–0,10).
-3. Hệ thống lưu.
+1. Editor chọn ngôn ngữ (Auto, tiếng Việt hoặc tiếng Anh) và giọng trong danh mục.
+2. Editor chỉnh tốc độ (0,8–1,3×), cao độ, nghỉ câu/đoạn.
+3. Editor xem danh sách quy tắc ký hiệu SYM-01..05 (mẫu, ví dụ, cách đọc) và bật/tắt từng quy tắc cho dự án; mặc định bật tất cả.
+4. Hệ thống lưu.
 
 **Luồng thay thế / ngoại lệ**
-- **3a.** Đổi giọng khi đã có thuyết minh: hỏi có sinh lại toàn bộ không (hiện giá); nếu không thì chỉ áp cho shot sinh mới.
+- **4a.** Đổi giọng, tốc độ hoặc quy tắc ký hiệu khi đã có thuyết minh: hỏi có sinh lại toàn bộ không (hiện giá ước tính); nếu không thì chỉ áp cho shot sinh mới.
+- ***a.** Ngưỡng WER chỉ hiện khi bật kiểm chứng ASR (sau MVP).
 
 ### UC-05.11a Nghe thử giọng
 <a id="uc-0511a"></a>
@@ -666,21 +644,22 @@
 | Tác nhân | Editor / TTS |
 | Mô tả | Nghe thử một giọng đọc trước khi chọn, bằng mẫu có sẵn hoặc bằng một câu trong truyện |
 | Tiền điều kiện | Là thành viên dự án; danh mục giọng có ít nhất một giọng đang bật |
-| Hậu điều kiện | **Thành công:** Editor nghe được giọng. **Tối thiểu:** không lưu gì, không tốn credit |
+| Hậu điều kiện | **Thành công:** Editor nghe được giọng. **Tối thiểu:** không lưu gì; nghe mẫu có sẵn thì miễn phí |
 | Kích hoạt | Bấm ▶ cạnh một giọng |
-| Truy vết | FR-NAR-01; 08 §3.3 (`PRONUNCIATION_PREVIEW`, 0 credit); API 2.5 `GET /voices`, `POST …/pronunciations:preview` |
+| Truy vết | FR-NAR-01; 08 §3.3 (`PRONUNCIATION_PREVIEW`); API 2.5 `GET /voices`, `POST …/pronunciations:preview` |
+| Giai đoạn | P2 |
 
 **Luồng chính**
 1. Editor bấm ▶ cạnh một giọng trong danh mục.
 2. *Mẫu có sẵn:* hệ thống phát audio mẫu (`voices.sample_media_id`).
-3. *Câu trong truyện:* Editor chọn hoặc nhập một câu (≤ 200 ký tự); hệ thống gọi `pronunciations:preview {text}` và phát audio ngắn.
+3. *Câu trong truyện:* Editor chọn hoặc nhập một câu (≤ 200 ký tự); hệ thống hiện giá ước tính (rất nhỏ), gọi `pronunciations:preview {text}` và phát audio ngắn (tính phí TTS theo BR-01).
 4. Editor so sánh các giọng và chọn một giọng ở UC-05.11 bước 1.
 
 **Luồng thay thế / ngoại lệ**
 - **3a.** Câu dài hơn 200 ký tự: cắt ở ranh giới câu hoặc báo lỗi.
-- **3b.** Vượt giới hạn tần suất: `429` kèm `Retry-After`.
+- **3b.** Vượt giới hạn kỹ thuật: `429` kèm `Retry-After`.
 - **3c.** TTS lỗi: báo lỗi chung, Editor thử lại hoặc nghe mẫu có sẵn.
-- **1a.** Giọng yêu cầu gói cao hơn (`min_plan_code`): hiện nhãn gói; vẫn nghe thử được, nhưng chọn dùng thì cần nâng cấp.
+- **1a.** *(Sau MVP)* Giọng chỉ dành cho gói cao hơn (`min_plan_code`): hiện nhãn gói; vẫn nghe thử được, nhưng chọn dùng thì cần nâng cấp.
 
 ---
 
@@ -693,8 +672,9 @@
 | Mô tả | Khai báo cách đọc tên riêng, từ mượn, từ Hán Việt; **chỉ ảnh hưởng audio, không đổi chữ** |
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** `pronunciation_entries` cập nhật; dùng ở lần sinh thuyết minh sau |
-| Kích hoạt | Mở "Từ điển phát âm" hoặc từ một từ bị đánh dấu lệch (UC-05.14) |
-| Truy vết | FR-NAR-04; BR-19 |
+| Kích hoạt | Mở "Từ điển phát âm" hoặc từ một shot đang nghe ở UC-05.18 |
+| Truy vết | FR-NAR-04; BR-19. Vị trí ✂5 trong thứ tự cắt giảm (QĐ-05, QĐ-80) |
+| Giai đoạn | P2 ✂5 |
 
 **Luồng chính**
 1. Editor thêm mục: từ viết, cách đọc, kiểu (alias / phoneme), phân biệt hoa thường.
@@ -711,25 +691,28 @@
 
 | Mục | Nội dung |
 |---|---|
-| Tác nhân chính / phụ | Editor (hoặc UC-05.07) / TTS, STT/Aligner |
-| Mô tả | Tạo audio đọc **đúng từng chữ** đoạn nguồn của shot và kiểm chứng |
-| Tiền điều kiện | Shot có đoạn nguồn; đã chọn giọng; đủ credit |
-| Hậu điều kiện | **Thành công:** Narration `VERIFIED` hoặc `NEEDS_REVIEW` kèm `word_timings`, WER. **Tối thiểu:** không có audio nào sinh từ văn bản khác đoạn nguồn; lỗi thì hoàn credit |
+| Tác nhân chính / phụ | Editor (hoặc UC-05.07) / TTS, Aligner |
+| Mô tả | Tạo audio đọc **đúng từng chữ** đoạn nguồn của shot, kèm timestamp từng từ để dựng phụ đề |
+| Tiền điều kiện | Shot có đoạn nguồn; đã chọn giọng; đủ số dư |
+| Hậu điều kiện | **Thành công:** Narration `DONE` kèm `word_timings`; cờ "cần sinh lại" (nếu có) được xóa. **Tối thiểu:** không có audio nào sinh từ văn bản khác đoạn nguồn; lỗi thì hoàn tiền |
 | Kích hoạt | UC-05.07, hoặc "Sinh lại thuyết minh" trên shot |
-| Quan hệ | include UC-05.13a, UC-05.13b, UC-05.13c, UC-05.17 |
-| Truy vết | FR-NAR-02, 03, 06, 07; BR-19, BR-22; ADR-12; seq-thuyet-minh-nguyen-van |
+| Quan hệ | include UC-05.13a, UC-05.13b, UC-05.17; include UC-05.13c khi bật kiểm chứng ASR (sau MVP) |
+| Truy vết | FR-NAR-02, 03, 06; BR-19, BR-22, BR-34; ADR-12; seq-thuyet-minh-nguyen-van |
+| Giai đoạn | P2 |
 
 **Luồng chính**
-1. Hệ thống giữ credit theo số ký tự (UC-05.17), tạo job `NARRATE_SEGMENT`.
+1. Hệ thống giữ tiền theo số ký tự (UC-05.17), tạo job `NARRATE_SEGMENT`.
 2. Thực hiện **UC-05.13a**.
 3. Thực hiện **UC-05.13b**.
 4. Gọi TTS (chia theo câu nếu vượt giới hạn, rồi nối audio); lưu audio.
-5. Thực hiện **UC-05.13c**.
-6. Lưu Narration (phiên bản mới, đặt làm hiện hành), trừ credit, phát `narration.updated`.
+5. Lấy `word_timings` từ TTS nếu provider trả timestamp; nếu không, Aligner chạy forced alignment giữa audio và `text`.
+6. Lưu Narration `DONE` (phiên bản mới, đặt làm hiện hành, `flagged_at` rỗng), trừ chi phí thực × 110% và hoàn phần dư, phát `narration.updated`.
+7. *(Sau MVP)* Thực hiện **UC-05.13c** trước bước 6; trạng thái là `VERIFIED` hoặc `NEEDS_REVIEW` thay cho `DONE`.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** Hash không khớp: `OUTDATED`, hoàn credit, dừng.
-- **4a.** TTS lỗi hoặc vi phạm chính sách: retry; vẫn lỗi thì `FAILED`, hoàn credit. Văn bản **không** được tự sửa để vượt bộ lọc (BR-18).
+- **2a.** Hash không khớp: `OUTDATED`, hoàn tiền, dừng.
+- **4a.** TTS lỗi hoặc vi phạm chính sách: retry; vẫn lỗi thì `FAILED`, hoàn tiền. Văn bản **không** được tự sửa để vượt bộ lọc (BR-18).
+- **5a.** Aligner lỗi sau retry: Narration `FAILED`, hoàn tiền; shot có nút "Sinh lại".
 
 ### UC-05.13a Cắt đoạn nguồn & kiểm tra hash
 <a id="uc-0513a"></a>
@@ -743,6 +726,7 @@
 | Hậu điều kiện | **Thành công:** có `text` đúng bằng đoạn nguồn, sẵn sàng cho UC-05.13b. **Tối thiểu:** không bao giờ có văn bản đọc nào đến từ client hoặc từ LLM |
 | Kích hoạt | UC-05.13 bước 2 |
 | Truy vết | BR-19; IC-09; D-05; NFR-INT-02 |
+| Giai đoạn | P2 |
 
 **Luồng chính**
 1. Hệ thống đọc `chapters.content` hiện tại của chương.
@@ -751,7 +735,7 @@
 4. Khớp: hệ thống chuyển `text` cho UC-05.13b.
 
 **Luồng thay thế / ngoại lệ**
-- **4a.** Không khớp (chương đã đổi sau khi chia shot): Narration `OUTDATED`, RELEASE credit, phát `narration.updated`, dừng (UC-05.13 nhánh 2a).
+- **4a.** Không khớp (chương đã đổi sau khi chia shot): Narration `OUTDATED`, RELEASE tiền đã giữ, phát `narration.updated`, dừng (UC-05.13 nhánh 2a).
 - ***a.** Không có API nào nhận văn bản đọc từ client; use case này là nơi duy nhất hình thành `text`.
 
 ### UC-05.13b Chuẩn hóa phát âm (SSML)
@@ -765,31 +749,37 @@
 | Tiền điều kiện | Có `text` từ UC-05.13a; dự án có `narration_settings` và từ điển phát âm |
 | Hậu điều kiện | **Thành công:** có `ssml` và `normalization_log`; `text` gốc không đổi. **Tối thiểu:** không gọi TTS khi kiểm tra ngược thất bại |
 | Kích hoạt | UC-05.13 bước 3 |
-| Truy vết | BR-19; FR-NAR-04; NFR-INT-02; 04 §3.4 `pronunciation_entries` |
+| Truy vết | BR-19; FR-NAR-03, 04; NFR-INT-02; 08 §6; 04 §3.4 `pronunciation_entries`, `narration_settings.symbol_rules` |
+| Giai đoạn | P2 |
 
 **Luồng chính**
-1. Hệ thống áp quy tắc tất định lên bản đọc: bỏ ký hiệu markdown, đọc số, ngày và đơn vị, ngắt nghỉ theo dấu câu với độ dài nghỉ câu và nghỉ đoạn từ `narration_settings`.
+1. Hệ thống áp quy tắc tất định lên bản đọc: các quy tắc ký hiệu SYM-01..05 đang bật của dự án (08 §6: `*Bố*` đọc "Bố", `[Về ăn cơm]` đọc "Về ăn cơm", `# Hồi 2` đọc "Hồi 2", dòng `---` thành khoảng lặng 0,5 s); đọc số, ngày và đơn vị; ngắt nghỉ theo dấu câu với độ dài nghỉ câu và nghỉ đoạn từ `narration_settings`.
 2. Hệ thống áp từ điển phát âm bằng SSML `alias` hoặc `phoneme` (tôn trọng `case_sensitive`).
 3. Hệ thống ghi `normalization_log` liệt kê các biến đổi đã áp.
-4. Hệ thống kiểm tra ngược: gỡ thẻ SSML và đảo các alias thì phải ra đúng `text`, chỉ khác ở các biến đổi mức phát âm được phép (BR-19).
+4. Hệ thống kiểm tra ngược: gỡ thẻ SSML và đảo các alias thì phải ra đúng `text`, chỉ khác ở các biến đổi mức phát âm được phép (BR-19), tức là chỉ thiếu các ký tự ký hiệu đã bỏ theo quy tắc đang bật.
 5. Hệ thống trả `ssml` cho bước gọi TTS của UC-05.13.
 
 **Luồng thay thế / ngoại lệ**
-- **4a.** Kiểm tra ngược thất bại (có từ bị thêm, bớt hoặc đổi): không gọi TTS, Narration `FAILED`, RELEASE credit, cảnh báo P1 vì đây là lỗi vi phạm bất biến [ĐX].
+- **4a.** Kiểm tra ngược thất bại (có từ bị thêm, bớt hoặc đổi): không gọi TTS, Narration `FAILED`, RELEASE tiền đã giữ, cảnh báo P1 vì đây là lỗi vi phạm bất biến [ĐX].
 - **2a.** Mục từ điển lỗi cú pháp phoneme: bỏ qua mục đó, ghi vào `normalization_log` và cảnh báo trong kết quả.
+- **1a.** Đoạn nguồn chỉ gồm dòng phân cách (SYM-05): không gọi TTS; tạo Narration `DONE` là khoảng lặng 0,5 s, không có `word_timings`, không có phụ đề (BR-22).
+- **1b.** Quy tắc ký hiệu bị tắt ở dự án: ký hiệu được giữ trong bản đọc và gửi nguyên cho TTS.
 
 ### UC-05.13c Kiểm chứng lời đọc (WER)
 <a id="uc-0513c"></a>
 
+> **Sau MVP** (FR-NAR-07, mức S; QĐ-54). Trong MVP, WER ≤ 3% được bảo đảm ở khâu chọn provider (`EVAL-wer-golden`, P0) và người dùng nghe, đánh dấu ở UC-05.18.
+
 | Mục | Nội dung |
 |---|---|
-| Loại | include của UC-05.13 (bước 5) |
+| Loại | include của UC-05.13 (bước 7, sau MVP) |
 | Tác nhân | Hệ thống / STT và Aligner |
 | Mô tả | Chứng minh audio đọc đúng nguyên văn bằng căn chỉnh từng từ và chép lại bằng STT để tính WER |
 | Tiền điều kiện | Đã có audio của shot và `text` gốc |
 | Hậu điều kiện | **Thành công:** Narration có `word_timings`, `wer`, `mismatches` và trạng thái `VERIFIED` hoặc `NEEDS_REVIEW`. **Tối thiểu:** không để shot đạt khi chưa kiểm chứng |
-| Kích hoạt | UC-05.13 bước 5 |
-| Truy vết | FR-NAR-06, FR-NAR-07; BR-22, BR-23; NFR-INT-03; ADR-12; API 2.5 `GET …/shots/{shid}/narration` |
+| Kích hoạt | UC-05.13 bước 7 |
+| Truy vết | FR-NAR-07; BR-22, BR-23; NFR-INT-03; ADR-12; API 2.5 `GET …/shots/{shid}/narration` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Aligner thực hiện forced alignment giữa audio và `text`, tạo `word_timings` (từ, thời điểm bắt đầu và kết thúc, offset ký tự).
@@ -800,13 +790,15 @@
 6. `word_timings` được lưu để dựng phụ đề nguyên văn (BR-22).
 
 **Luồng thay thế / ngoại lệ**
-- **1a.** Aligner hoặc STT lỗi sau retry: Narration `FAILED`, RELEASE credit [ĐX].
-- **5a.** WER lớn hơn 10%: luôn `NEEDS_REVIEW`; không shot nào quá 10% được qua mà không có người duyệt (NFR-INT-03).
+- **1a.** Aligner hoặc STT lỗi sau retry: Narration `FAILED`, RELEASE tiền đã giữ [ĐX].
+- **5a.** WER lớn hơn 10%: luôn `NEEDS_REVIEW`; không shot nào quá 10% được qua mà không có người duyệt.
 
 ---
 
 <a id="uc-0514"></a>
 ## UC-05.14 Duyệt shot cần xem lại (NEEDS_REVIEW)
+
+> **Sau MVP**, đi cùng UC-05.13c. Trong MVP dùng UC-05.18.
 
 | Mục | Nội dung |
 |---|---|
@@ -816,7 +808,8 @@
 | Hậu điều kiện | **Thành công:** shot thành `VERIFIED` (sau khi sinh lại) hoặc `ACCEPTED` |
 | Kích hoạt | Mở shot từ danh sách "Cần xử lý" hoặc điểm duyệt UC-07.06 |
 | Quan hệ | được mở rộng bởi UC-05.14a |
-| Truy vết | FR-NAR-07, 08; BR-23 |
+| Truy vết | FR-NAR-07; BR-23 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor mở shot; hệ thống phát audio, tô đỏ các từ lệch (mong đợi / nghe được).
@@ -838,7 +831,8 @@
 | Tiền điều kiện | Narration của shot ở trạng thái `NEEDS_REVIEW` |
 | Hậu điều kiện | **Thành công:** Narration `ACCEPTED` với `accepted_by`, `accepted_at`; shot đủ điều kiện xuất (BR-23). **Tối thiểu:** không chấp nhận khi Narration đã thay đổi |
 | Kích hoạt | Bấm "Accept" ở UC-05.14 nhánh 2a |
-| Truy vết | FR-NAR-08; BR-23; API 2.5 `POST …/shots/{shid}/narration:accept` |
+| Truy vết | FR-NAR-07; BR-23; API 2.5 `POST …/shots/{shid}/narration:accept` |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor nghe audio và xem các chỗ lệch (`mismatches`).
@@ -860,10 +854,11 @@
 |---|---|
 | Tác nhân chính / phụ | Editor / LLM |
 | Mô tả | Đọc lời thoại trong ngoặc kép bằng giọng riêng của từng nhân vật; **nội dung vẫn nguyên văn** |
-| Tiền điều kiện | Gói Creator trở lên; có nhân vật trong Story Assets |
+| Tiền điều kiện | Có nhân vật trong Story Assets (sau MVP; điều kiện gói định nghĩa khi có gói đăng ký) |
 | Hậu điều kiện | **Thành công:** `character_voices` cập nhật; `narration_settings.multi_voice = true` |
 | Kích hoạt | Mở "Giọng nhân vật" |
 | Truy vết | FR-NAR-05 (C) |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor bật đa giọng và gán giọng cho từng nhân vật.
@@ -886,6 +881,7 @@
 | Hậu điều kiện | **Thành công:** link tải ZIP (hết hạn 15 phút) |
 | Kích hoạt | "Tải ZIP ảnh" |
 | Truy vết | FR-BOK-16 |
+| Giai đoạn | Sau |
 
 **Luồng chính**
 1. Editor chọn phạm vi (chương / dự án).
@@ -895,24 +891,58 @@
 ---
 
 <a id="uc-0517"></a>
-## UC-05.17 Giữ / trừ / hoàn credit
+## UC-05.17 Giữ / trừ / hoàn tiền
 
 | Mục | Nội dung |
 |---|---|
 | Tác nhân chính | Hệ thống (được include bởi các use case tốn phí) |
 | Mức | Chức năng con |
-| Mô tả | Bảo đảm credit chính xác cho mọi job AI: giữ khi tạo job, trừ khi thành công, hoàn khi thất bại |
+| Mô tả | Bảo đảm tiền chính xác cho mọi job AI: giữ giá ước tính tối đa khi tạo job, trừ chi phí thực × 110% khi thành công và hoàn phần dư, hoàn toàn bộ khi thất bại |
 | Tiền điều kiện | Có giá theo `price_rules` hiệu lực |
-| Hậu điều kiện | **Thành công:** ledger có HOLD và đúng một trong CAPTURE / RELEASE cho mỗi job. **Tối thiểu:** không bao giờ trừ credit cho job thất bại |
+| Hậu điều kiện | **Thành công:** sổ cái có đúng một HOLD cho mỗi job; khi job kết thúc, CAPTURE + RELEASE bằng số đã HOLD và CAPTURE ≤ HOLD (IC-05). **Tối thiểu:** không bao giờ trừ tiền cho job thất bại; không bao giờ trừ quá số đã giữ |
 | Kích hoạt | Tạo job tốn phí |
-| Truy vết | BR-01, BR-02, BR-03; CR-01..05; IC-04, IC-05; act-giu-tru-credit |
+| Truy vết | FR-BIL-11; BR-01, BR-02, BR-03, BR-29; WR-01..05; IC-04, IC-05; act-giu-tru-tien |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Hệ thống kiểm tra `Idempotency-Key`; trùng thì trả kết quả cũ.
-2. Tính giá, khóa `credit_balances` (`FOR UPDATE`) của **người kích hoạt** (BR-03).
-3. Giữ theo thứ tự bucket SUBSCRIPTION → BONUS → PACK; ghi ledger HOLD; tạo job + outbox trong cùng giao dịch.
-4. Khi job thành công: CAPTURE. Khi thất bại, bị hủy hoặc vi phạm chính sách: RELEASE về đúng bucket.
+2. Hệ thống tính **giá ước tính tối đa** `x` từ `price_rules` (đơn giá provider × giới hạn đầu ra × 1,10).
+3. Hệ thống kiểm tra trần chi tiêu AI trong ngày (BR-29).
+4. Trong một giao dịch: khóa `wallets` (`FOR UPDATE`) của **người kích hoạt** (BR-03), kiểm tra `available ≥ x`, ghi HOLD `x`, tạo job (`held_micro = x`) + outbox.
+5. Khi job thành công: tính `c = min(Σ ai_usage_records.cost_usd × 1,10, x)`; ghi CAPTURE `c` và RELEASE `x − c` cùng giao dịch với kết quả job; đặt `jobs.charged_micro = c`.
+6. Khi job thất bại, bị hủy hoặc vi phạm chính sách: RELEASE `x`.
+7. Hệ thống phát `wallet.updated`.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** Không đủ credit: `402 INSUFFICIENT_CREDITS` kèm số còn thiếu.
+- **3a.** Chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED`; không giữ tiền, không tạo job.
+- **4a.** Không đủ số dư: `402 INSUFFICIENT_BALANCE` kèm số còn thiếu.
+- **5a.** Chi phí thực × 110% lớn hơn số đã giữ (ước tính sai): chỉ trừ bằng số đã giữ, phần chênh do hệ thống chịu, ghi cảnh báo để chỉnh giới hạn đầu ra trong `price_rules` [ĐX].
+- **5b.** Provider không trả số liệu sử dụng: dùng đơn giá × đơn vị đo được (số ảnh, số ký tự) để tính chi phí thực.
 - **\*a.** Job mất heartbeat > 10 phút: reconciler đặt `FAILED` và RELEASE.
+
+---
+
+<a id="uc-0518"></a>
+## UC-05.18 Nghe & đánh dấu cần sinh lại
+
+| Mục | Nội dung |
+|---|---|
+| Tác nhân chính | Editor |
+| Mô tả | Kiểm chứng lời đọc **thủ công**: nghe thuyết minh từng shot, đánh dấu shot đọc sai để sinh lại sau. Không bắt buộc nghe hết mới được xuất video |
+| Tiền điều kiện | Shot có thuyết minh `DONE` |
+| Hậu điều kiện | **Thành công:** `narrations.flagged_at` được đặt hoặc xóa theo lựa chọn. **Tối thiểu:** không đổi audio, không tốn phí |
+| Kích hoạt | Bấm "Nghe" trên shot ở bảng tiến độ, media bin hoặc storyboard |
+| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag` |
+| Giai đoạn | P2 |
+
+**Luồng chính**
+1. Editor bấm "Nghe"; hệ thống phát audio và tô sáng theo `word_timings` từng từ trên đoạn nguồn.
+2. Editor nghe thấy đọc sai (bỏ chữ, đọc nhầm tên riêng): bấm "Đánh dấu cần sinh lại".
+3. Hệ thống ghi `flagged_at`, phát `narration.updated`; shot hiện nhãn "Cần sinh lại".
+4. Khi đã đánh dấu xong, Editor chọn "Sinh lại shot đã đánh dấu" (UC-05.07c với phạm vi `FLAGGED`, hiện giá ước tính) hoặc thêm cách đọc vào từ điển phát âm (UC-05.12) rồi sinh lại.
+5. Sinh lại thành công thì cờ được xóa (UC-05.13 bước 6).
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Editor đổi ý: bấm "Bỏ đánh dấu"; hệ thống xóa `flagged_at`.
+- **4a.** Editor không sinh lại: vẫn xuất được video; báo cáo điều kiện xuất hiện cảnh báo "N shot được đánh dấu cần sinh lại" (UC-06.16a, BR-34).
+- ***a.** Thuyết minh chuyển `OUTDATED` (văn bản hoặc ranh giới shot đổi): cờ được xóa khi sinh lại.

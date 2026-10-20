@@ -1,0 +1,36 @@
+@startuml State_NarrationRender_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+title Trạng thái thuyết minh (mỗi shot) và bản xuất video (MVP)
+
+state Narration {
+    [*] --> PENDING : shot mới / chưa sinh
+    PENDING --> GENERATING : sinh (HOLD giá ước tính)
+    GENERATING --> DONE : audio + word_timings\n(CAPTURE chi phí thực × 110%)
+    GENERATING --> FAILED : TTS / Aligner lỗi sau retry,\nkiểm tra ngược SSML thất bại,\nvi phạm chính sách (RELEASE)
+    DONE --> GENERATING : sinh lại (đã đánh dấu,\ntừ điển phát âm, đổi giọng)
+    FAILED --> GENERATING : thử lại
+    DONE --> OUTDATED : đoạn nguồn đổi hash
+    OUTDATED --> GENERATING : sinh lại
+}
+note right of DONE
+  Cờ "cần sinh lại" (flagged_at) do Editor đặt
+  ở UC-05.18 không đổi trạng thái (BR-34).
+end note
+
+state Render {
+    [*] --> QUEUED : readiness OK (coverage 100%)\nFree: còn lượt và phút trong tháng
+    QUEUED --> RENDERING
+    RENDERING --> READY : encode xong\n(Free: watermark, cộng lượt + phút)
+    RENDERING --> FAILED_R : lỗi encode
+    QUEUED --> CANCELLED : hủy
+    RENDERING --> CANCELLED : hủy
+    READY --> [*]
+    FAILED_R --> [*]
+    CANCELLED --> [*]
+}
+note bottom of Render
+  Render chỉ được tạo khi mọi shot trên timeline có
+  Narration DONE và không OUTDATED (BR-23)
+end note
+@enduml

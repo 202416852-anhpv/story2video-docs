@@ -27,24 +27,21 @@ rectangle "M06 Trình chỉnh sửa & xuất video" {
     usecase "UC-06.04\nĐặt hiệu ứng Ken Burns &\nđiểm tập trung" as UC4
     usecase "UC-06.05\nĐặt chuyển cảnh" as UC5
     usecase "UC-06.06\nChọn khung hình & tinh chỉnh\nmàu" as UC6
-    usecase "UC-06.07\nThêm overlay chữ / logo,\nclip tiêu đề & kết" as UC7
+    usecase "UC-06.07\nThêm overlay chữ / logo,\nclip tiêu đề & kết" as UC7 #DDDDDD
     usecase "UC-06.08\nĐịnh kiểu phụ đề" as UC8
     usecase "UC-06.09\nThêm nhạc nền" as UC9
     usecase "UC-06.10\nThêm SFX" as UC10
     usecase "UC-06.11\nTìm trong thư viện âm thanh" as UC11
     usecase "UC-06.11a\nTải nhạc / SFX lên" as UC11a
-    usecase "UC-06.11b\nSinh nhạc / SFX bằng AI" as UC11b
-    usecase "UC-06.11c\nGợi ý SFX theo đoạn văn" as UC11c
-    usecase "UC-06.12\nTrộn âm & chuẩn hóa loudness" as UC12
+    usecase "UC-06.12\nTrộn âm & chuẩn hóa loudness" as UC12 #DDDDDD
     usecase "UC-06.13\nXem trước" as UC13
-    usecase "UC-06.14\nXem lịch sử & khôi phục\nphiên bản timeline" as UC14
+    usecase "UC-06.14\nXem lịch sử & khôi phục\nphiên bản timeline" as UC14 #DDDDDD
     usecase "UC-06.15\nĐồng bộ khi tư liệu thay đổi" as UC15
     usecase "UC-06.16\nXuất video MP4" as UC16
     usecase "UC-06.16a\nKiểm tra điều kiện\n& độ phủ 100%" as UC16a
-    usecase "UC-06.16b\nChia video thành phần" as UC16b
+    usecase "UC-06.16b\nChia video thành phần" as UC16b #DDDDDD
     usecase "UC-06.17\nTải MP4 / SRT / audio" as UC17
 }
-rectangle "Music / SFX Provider\n(tùy chọn)" as MUS
 rectangle "Render Worker" as RW
 
 Editor --> UC1
@@ -68,17 +65,19 @@ UC2 ..> UC2a : <<include>>
 UC9 ..> UC11 : <<include>>
 UC10 ..> UC11 : <<include>>
 UC11 <.. UC11a : <<extend>>
-UC11 <.. UC11b : <<extend>>
-UC10 <.. UC11c : <<extend>>
 UC16 ..> UC16a : <<include>>
 UC16 <.. UC16b : <<extend>>
-UC11b --> MUS
-UC11c --> MUS
 UC16 --> RW
 note right of UC6
   Nhánh *a: bật/tắt vùng an toàn và lưới căn chỉnh (chỉ khi chỉnh sửa, không vào video xuất)
 end note
 note right of UC8
   Có preset dựng sẵn (hằng số dùng chung, không lưu DB)
+  Phụ đề hiện nguyên ký hiệu trình bày (BR-22)
 end note
+note right of UC2
+  Clip thuyết minh: chỉ dời, chỉnh âm lượng,
+  đổi tốc độ 0,8×–1,25× (BR-24)
+end note
+caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

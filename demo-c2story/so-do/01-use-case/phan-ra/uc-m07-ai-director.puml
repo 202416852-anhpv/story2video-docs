@@ -19,19 +19,19 @@ title M07 - AI Director
 actor "Editor" as Editor
 
 rectangle "M07 AI Director" {
-    usecase "UC-07.01\nRa lệnh bằng chat" as UC1
-    usecase "UC-07.01a\nHỏi lại khi lệnh mơ hồ" as UC1a
-    usecase "UC-07.01b\nXác nhận thao tác tốn phí" as UC1b
-    usecase "UC-07.01c\nTừ chối sửa / tóm tắt văn\nbản" as UC1c
-    usecase "UC-07.01d\nViết nội dung hộ người dùng" as UC1d
-    usecase "UC-07.02\nChạy chế độ tự động" as UC2
-    usecase "UC-07.02a\nLập & cập nhật kế hoạch bước" as UC2a
-    usecase "UC-07.03\nChọn style (điểm duyệt)" as UC3
-    usecase "UC-07.04\nDuyệt cast (điểm duyệt)" as UC4
-    usecase "UC-07.05\nChọn giọng (điểm duyệt)" as UC5
-    usecase "UC-07.06\nDuyệt thuyết minh (điểm duyệt)" as UC6
-    usecase "UC-07.07\nTạm dừng / tiếp tục / thoát" as UC7
-    usecase "UC-07.08\nXem tiến độ & Director note" as UC8
+    usecase "UC-07.01\nRa lệnh bằng chat" as UC1 #DDDDDD
+    usecase "UC-07.01a\nHỏi lại khi lệnh mơ hồ" as UC1a #DDDDDD
+    usecase "UC-07.01b\nXác nhận thao tác tốn phí" as UC1b #DDDDDD
+    usecase "UC-07.01c\nTừ chối sửa / tóm tắt văn\nbản" as UC1c #DDDDDD
+    usecase "UC-07.01d\nViết nội dung hộ người dùng" as UC1d #DDDDDD
+    usecase "UC-07.02\nChạy chế độ tự động" as UC2 #DDDDDD
+    usecase "UC-07.02a\nLập & cập nhật kế hoạch bước" as UC2a #DDDDDD
+    usecase "UC-07.03\nChọn style (điểm duyệt)" as UC3 #DDDDDD
+    usecase "UC-07.04\nDuyệt cast (điểm duyệt)" as UC4 #DDDDDD
+    usecase "UC-07.05\nChọn giọng (điểm duyệt)" as UC5 #DDDDDD
+    usecase "UC-07.06\nDuyệt thuyết minh (điểm duyệt)" as UC6 #DDDDDD
+    usecase "UC-07.07\nTạm dừng / tiếp tục / thoát" as UC7 #DDDDDD
+    usecase "UC-07.08\nXem tiến độ & Director note" as UC8 #DDDDDD
 }
 rectangle "LLM Provider" as LLM
 
@@ -59,4 +59,5 @@ legend right
   Nhạc nền, SFX và xuất video do Editor thực hiện.
   Tại mỗi **điểm duyệt**, Director dừng và Editor trả lời.
 endlegend
+caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

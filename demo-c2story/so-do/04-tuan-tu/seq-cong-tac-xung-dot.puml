@@ -3,7 +3,7 @@
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
 autonumber
-title UC-02.06 + UC-02.10: Mời cộng tác và xử lý xung đột khi lưu
+title UC-02.06 + UC-02.10: Mời cộng tác và xử lý xung đột khi lưu (sau MVP)
 actor Owner
 actor "Editor A" as A
 actor "Editor B" as B

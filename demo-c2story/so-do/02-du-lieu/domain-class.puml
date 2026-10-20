@@ -13,21 +13,30 @@ package "Định danh & Thanh toán" {
         email
         displayName
         locale
+        consentedAt
+        consentVersion
     }
-    class Subscription {
+    class BetaInvite {
+        email
+        revokedAt
+    }
+    class Subscription #DDDDDD {
         plan
         status
         periodEnd
     }
-    class CreditWallet {
-        subscriptionCredits
-        packCredits
-        held
-        +hold(amount, job)
-        +capture(job)
+    class Wallet {
+        availableMicro
+        heldMicro
+        topupTotalMicro
+        +isPaid() : topupTotal > 0
+        +grantTrial($2)
+        +topup(amount)
+        +hold(estimate, job)
+        +capture(actualCost × 1,10, job)
         +release(job)
     }
-    class LibraryAsset
+    class LibraryAsset #DDDDDD
 }
 
 package "Dự án" {
@@ -41,7 +50,7 @@ package "Dự án" {
         artDirection
         workflowStep : 1..6
         +importSource(text)
-        +invite() : InviteLink
+        +invite() : InviteLink (sau MVP)
     }
     class Membership {
         role : OWNER | EDITOR
@@ -57,8 +66,8 @@ package "Dự án" {
         +mergeIntoPrevious()
         +moveBoundary(delta)
     }
-    class Archive <<immutable>>
-    class Note
+    class Archive <<immutable>> #DDDDDD
+    class Note #DDDDDD
 }
 
 package "Thế giới truyện" {
@@ -77,7 +86,7 @@ package "Thế giới truyện" {
         instruction
         scope
     }
-    class ChapterRule
+    class ChapterRule #DDDDDD
     class TimelineEvent {
         dayLabel
         season
@@ -93,7 +102,7 @@ package "Sinh tư liệu" {
         name
         isCurrent
         +resplit(more|fewer)
-        +redirect()
+        +redirect() (sau MVP)
     }
     class Shot {
         sourceStart
@@ -112,13 +121,13 @@ package "Sinh tư liệu" {
         version
         status
         +edit(prompt)
-        +inpaint(mask, prompt)
     }
     class NarrationSettings {
         voice
         language
         speed
-        werThreshold
+        symbolRules
+        werThreshold (sau MVP)
     }
     class PronunciationEntry {
         written
@@ -127,10 +136,11 @@ package "Sinh tư liệu" {
     class Narration {
         sourceHash
         wordTimings
-        wer
-        status
-        +verify()
-        +accept()
+        status : DONE|FAILED|OUTDATED…
+        flaggedAt
+        +flag() / +unflag()
+        +verify() (sau MVP)
+        +accept() (sau MVP)
     }
 }
 
@@ -159,6 +169,7 @@ package "Trình chỉnh sửa video" {
         transitionIn
         volume
         duckingDb
+        playbackRate : 0,8–1,25 cho thuyết minh
     }
     class AudioAsset {
         kind : MUSIC|SFX
@@ -171,36 +182,33 @@ package "Trình chỉnh sửa video" {
         coverage
         timelineSnapshot
     }
-    class SfxSuggestion {
-        atMs
-        query
-        status : PROPOSED|ACCEPTED|REJECTED
-    }
 }
 
 package "Tự động hóa" {
-    class DirectorPlan {
+    class DirectorPlan #DDDDDD {
         status
         currentStep
         +continue()
         +pause()
         +exit()
     }
-    class DirectorMessage
-    class ToolProposal {
+    class DirectorMessage #DDDDDD
+    class ToolProposal #DDDDDD {
         tool
-        creditCost
+        estimatedCostMicro
         status : PENDING|CONFIRMED|REJECTED
     }
     class Job {
         type
         status
-        creditCost
+        heldMicro
+        chargedMicro
         attempts
     }
 }
 
-User "1" -- "1" CreditWallet
+User "1" -- "1" Wallet
+User "0..1" -- "0..1" BetaInvite : được mời
 User "1" -- "0..1" Subscription
 User "1" -- "*" LibraryAsset
 User "1" -- "*" Membership
@@ -238,8 +246,6 @@ TimelineItem "*" --> "0..1" Illustration : ảnh
 TimelineItem "*" --> "0..1" Narration : thuyết minh (khóa)
 TimelineItem "*" --> "0..1" AudioAsset : nhạc / SFX
 Timeline "1" *-- "*" Render
-Timeline "1" *-- "*" SfxSuggestion
-SfxSuggestion ..> AudioAsset
 DirectorPlan ..> Job : spawns
 
 ' Bố cục lưới: hàng 1 Identity | Project | Automation ; hàng 2 Story World | Sinh tư liệu | Trình chỉnh sửa
@@ -251,7 +257,8 @@ Shot -[hidden]right- Timeline
 
 legend right
   **Phụ thuộc không vẽ để đỡ rối**
-  • Job giữ / trừ / hoàn credit trên CreditWallet
+  • Job giữ giá ước tính / trừ chi phí thực × 110% / hoàn phần dư trên Wallet
+  • Nền xám: lớp chỉ dùng sau MVP
   • Job sinh ra Illustration, Narration, Render
   • LibraryAsset được sao chép thành StoryAsset khi thêm vào dự án
 endlegend

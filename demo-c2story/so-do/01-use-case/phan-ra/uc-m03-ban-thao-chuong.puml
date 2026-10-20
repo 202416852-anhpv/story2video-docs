@@ -23,6 +23,7 @@ rectangle "M03 Bản thảo & chương" {
     usecase "UC-03.01a\nSao chép toàn văn" as UC1a
     usecase "UC-03.01b\nNhập lại (Re-import)" as UC1b
     usecase "UC-03.02\nSoạn thảo trong Workspace" as UC2
+    usecase "UC-03.02a\nDời ranh giới shot" as UC2a
     usecase "UC-03.03\nGợi ý chia chương bằng AI" as UC3
     usecase "UC-03.04\nChia chương tại vị trí" as UC4
     usecase "UC-03.05\nGộp chương vào chương trước" as UC5
@@ -30,13 +31,13 @@ rectangle "M03 Bản thảo & chương" {
     usecase "UC-03.07\nThêm / xóa / đổi tên chương" as UC7
     usecase "UC-03.08\nSắp xếp lại chương" as UC8
     usecase "UC-03.09\nTái cấu trúc nguyên tử" as UC9
-    usecase "UC-03.10\nTìm & thay thế" as UC10
-    usecase "UC-03.10a\nXem trước số kết quả" as UC10a
-    usecase "UC-03.11\nLưu Archive" as UC11
-    usecase "UC-03.12\nXem / sao chép / xóa Archive" as UC12
-    usecase "UC-03.13\nQuản lý ghi chú (Notes)" as UC13
-    usecase "UC-03.13a\nGắn ghi chú vào chương / shot" as UC13a
-    usecase "UC-03.14\nXem & khôi phục phiên bản chương" as UC14
+    usecase "UC-03.10\nTìm & thay thế" as UC10 #DDDDDD
+    usecase "UC-03.10a\nXem trước số kết quả" as UC10a #DDDDDD
+    usecase "UC-03.11\nLưu Archive" as UC11 #DDDDDD
+    usecase "UC-03.12\nXem / sao chép / xóa Archive" as UC12 #DDDDDD
+    usecase "UC-03.13\nQuản lý ghi chú (Notes)" as UC13 #DDDDDD
+    usecase "UC-03.13a\nGắn ghi chú vào chương / shot" as UC13a #DDDDDD
+    usecase "UC-03.14\nXem & khôi phục phiên bản chương" as UC14 #DDDDDD
 }
 rectangle "LLM Provider" as LLM
 
@@ -52,6 +53,7 @@ Editor --> UC13
 Editor --> UC14
 UC1 <.. UC1a : <<extend>>
 UC1 <.. UC1b : <<extend>>
+UC2 <.. UC2a : <<extend>>
 UC2 <.. UC4 : <<extend>>
 UC2 <.. UC5 : <<extend>>
 UC2 <.. UC6 : <<extend>>
@@ -63,4 +65,6 @@ UC3 ..> UC9 : <<include>>
 UC10 ..> UC10a : <<include>>
 UC13 <.. UC13a : <<extend>>
 UC3 --> LLM
+UC2a --> LLM
+caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

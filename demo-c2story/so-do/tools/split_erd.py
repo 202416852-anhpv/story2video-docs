@@ -3,13 +3,13 @@ import os; os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..
 src=open('erd.puml',encoding='utf-8').read()
 # entities grouped by package
 pk_re=re.compile(r'package "([^"]+)" (#\w+) \{(.*?)\n\}\n',re.S)
-ent_re=re.compile(r'    entity (\w+) \{.*?\n    \}\n',re.S)
+ent_re=re.compile(r'    entity (\w+)(?: #\w+)? \{.*?\n    \}\n',re.S)
 packages={}
 for name,color,body in pk_re.findall(src):
     packages[name]=(color,{m.group(1):m.group(0) for m in ent_re.finditer(body+"\n")})
 rels=[l for l in src.splitlines() if re.match(r'^\w+ [|}o.]{2}--[|{o.]{2} \w+',l)]
 groups=[
- ('erd-1-tai-khoan-credit','ERD 1 - Tài khoản, credit & thanh toán',['Tài khoản & thanh toán']),
+ ('erd-1-tai-khoan-vi','ERD 1 - Tài khoản, ví & thanh toán',['Tài khoản & thanh toán']),
  ('erd-2-du-an-ban-thao','ERD 2 - Dự án & bản thảo',['Dự án & bản thảo']),
  ('erd-3-the-gioi-truyen','ERD 3 - Thế giới truyện',['Thế giới truyện']),
  ('erd-4-sinh-tu-lieu','ERD 4 - Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn',['Sinh tư liệu']),

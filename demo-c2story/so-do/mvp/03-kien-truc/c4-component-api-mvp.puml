@@ -1,0 +1,42 @@
+@startuml C4_Component_API_MVP
+!include <C4/C4_Component>
+title API Server - Components (C4 L3) - MVP
+LAYOUT_LEFT_RIGHT()
+
+Container(web, "Web App", "Next.js")
+ContainerDb(db, "PostgreSQL")
+ContainerDb(redis, "Redis")
+System_Ext(sso, "SSO (Keycloak / Vbee)")
+System_Ext(pay, "Stripe (test mode)")
+
+Container_Boundary(api, "API Server (NestJS modular monolith)") {
+    Component(auth, "auth (M01)", "Module", "IdentityProviderPort (OIDC / OAuth 2.0 userinfo), phiên BFF, danh sách mời, JIT hồ sơ + tiền dùng thử, đồng ý dữ liệu")
+    Component(projects, "projects (M02)", "Module", "Dự án, cài đặt, Map, giới hạn Free")
+    Component(manu, "manuscript (M03)", "Module", "Chương, tái cấu trúc nguyên tử, dời ranh giới shot (Workspace). **Duy nhất được ghi văn bản truyện**")
+    Component(world, "world (M04)", "Module", "Story assets, art direction, visual rules, story timeline, relationships")
+    Component(media, "media (M05)", "Module", "Điều phối Sinh tư liệu; storyboard, illustration, narration (ký hiệu SYM, nghe & đánh dấu); media_status")
+    Component(editor, "editor (M06)", "Module", "Timeline apply-ops + BR-24 (tốc độ 0,8–1,25×), sync-media, âm thanh tải lên, render (watermark, hạn mức Free), tải")
+    Component(billing, "billing (M09)", "Module", "Ví USD, sổ cái, tiền dùng thử, nạp tiền sandbox, webhook")
+    Component(adminm, "admin (M10)", "Module", "Seed cấu hình, danh sách mời, trần chi tiêu ngày")
+    Component(platform, "platform", "Shared", "authz, jobs (BudgetGuard + HOLD + outbox), idempotency, rate limit, realtime SSE, audit, storage")
+}
+
+Rel(web, auth, "Đăng nhập / phiên / đồng ý")
+Rel(web, editor, "apply-ops, preview data")
+Rel(web, media, "Sinh tư liệu, media bin")
+Rel(web, manu, "Workspace, dời ranh giới shot")
+Rel(auth, sso, "OIDC / OAuth 2.0")
+Rel(auth, billing, "Tạo ví + TRIAL_GRANT")
+Rel(pay, billing, "Webhook")
+Rel(manu, media, "Viết lại brief 2 shot")
+Rel(media, world, "Tài sản, rules (đọc)")
+Rel(media, manu, "Đoạn nguồn (đọc)")
+Rel(media, editor, "createDraftTimeline")
+Rel(editor, media, "Tư liệu hiện hành (đọc)")
+Rel(media, platform, "Tạo job, HOLD tiền")
+Rel(editor, platform, "Tạo job render")
+Rel(platform, billing, "hold / capture / release")
+Rel(platform, adminm, "Trần chi tiêu ngày")
+Rel(platform, db, "SQL")
+Rel(platform, redis, "Pub/Sub, rate limit")
+@enduml

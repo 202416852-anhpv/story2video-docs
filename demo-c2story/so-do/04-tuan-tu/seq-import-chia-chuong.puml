@@ -16,6 +16,7 @@ participant "LLM Provider" as LLM
 == Import ==
 Editor -> Web : Dán văn bản hoặc tải file (.txt / .md / .docx), đặt tiêu đề, chọn "Giữ nguyên văn"
 Web -> API : POST /projects:import
+API -> DB : Free đã có 1 dự án? → 403 FREE_LIMIT_REACHED
 API -> API : UC-02.02a: kiểm MIME thật, ≤ 2 MB, ≤ 500.000 ký tự;\ntrích văn bản; chuẩn hóa NFC + xuống dòng + bỏ ký tự điều khiển\n(KHÔNG đổi chữ); ghi normalization_log; tính sha256
 alt không đạt kiểm tra
     API --> Web : 400 VALIDATION_ERROR (lý do cụ thể), giữ nguyên form
@@ -28,15 +29,15 @@ end
 == Gợi ý chia chương ==
 Editor -> Web : "Suggest chapter splits"
 Web -> API : POST /projects/{pid}/source:suggest-splits\nIdempotency-Key
-API -> DB : INSERT jobs(SUGGEST_SPLITS, QUEUED) + outbox
-API --> Web : 202 {jobId}
+API -> DB : BudgetGuard; HOLD giá ước tính;\nINSERT jobs(SUGGEST_SPLITS, QUEUED) + outbox
+API --> Web : 202 {jobId, estimatedCostUsd}
 API -> Q : enqueue (outbox relay)
 Q -> W : job
 W -> GW : complete(schema = SplitSuggestion[])
 GW -> LLM : văn bản đã đánh số đoạn
 LLM --> GW : [{startParagraph, title}]
 GW --> W : kết quả hợp lệ schema
-W -> DB : jobs.result, SUCCEEDED
+W -> DB : jobs.result, SUCCEEDED; CAPTURE chi phí thực × 110%, RELEASE dư
 W -> API : publish job.updated
 API --> Web : SSE job.updated
 Web -> Editor : Đánh dấu điểm chia đề xuất
@@ -45,7 +46,9 @@ Web -> Editor : Đánh dấu điểm chia đề xuất
 Editor -> Web : Chấp nhận (bỏ chọn vài điểm)
 Web -> API : POST /chapters:restructure\n{operations[], ifMatch}
 API -> DB : BEGIN; SELECT chapters FOR UPDATE
-alt version khớp & chương không bị khóa
+alt Free và kết quả > 3 chương
+    API --> Web : 403 FREE_LIMIT_REACHED (BR-27)
+else version khớp & chương không bị khóa
     API -> DB : UPDATE/INSERT chapters, order_index (deferred unique)\nversion++, narrations của shot bị ảnh hưởng → OUTDATED; COMMIT
     API --> Web : 200 {chapters[], outdatedShotIds[]}
     API -> API : publish chapters.restructured
@@ -58,7 +61,7 @@ else chương đang khóa
 end
 
 == Nhập lại văn bản (Re-import, UC-03.01b) ==
-Editor -> Web : "Re-import" (xem cảnh báo hậu quả, nên lưu Archive trước)
+Editor -> Web : "Re-import" (xem cảnh báo hậu quả; lưu Archive trước: sau MVP)
 Web -> API : PUT /projects/{pid}/source (văn bản mới)
 API -> API : UC-02.02a (kiểm tra + chuẩn hóa)
 alt có chương đang bị khóa bởi job

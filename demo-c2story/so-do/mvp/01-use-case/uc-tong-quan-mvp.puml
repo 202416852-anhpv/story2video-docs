@@ -1,0 +1,60 @@
+@startuml UC_TongQuan_StoryStudio_MVP
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+left to right direction
+title AI Story Studio - Tổng quan use case (MVP, closed beta)
+
+actor "Guest" as Guest
+actor "User\n(email trong danh sách mời)" as User
+actor "Owner" as Owner
+actor "Admin" as Admin
+Owner -|> User
+User -|> Guest
+
+rectangle "AI Story Studio - MVP" {
+    usecase "M01 Tích hợp SSO & hồ sơ\n(danh sách mời, đồng ý dữ liệu, $2 dùng thử)" as M01
+    usecase "M09 Ví & thanh toán\n(ví USD, nạp tiền sandbox, giới hạn Free)" as M09
+    usecase "M02 Quản lý dự án\n(chỉ Owner)" as M02
+    usecase "M03 Bản thảo & chương\n(+ dời ranh giới shot)" as M03
+    usecase "M04 Thế giới truyện" as M04
+    usecase "M05 Sinh tư liệu\n(ảnh + thuyết minh nguyên văn,\nnghe & đánh dấu)" as M05
+    usecase "M06 Trình chỉnh sửa & xuất video\n(nhạc / SFX tải lên, watermark Free)" as M06
+    usecase "M10 Quản trị\n(seed, CLI danh sách mời, trần $10/ngày)" as M10
+}
+
+rectangle "SSO\n(Keycloak; SSO Vbee)" as IdP
+rectangle "Stripe test mode" as Pay
+rectangle "AI Gateway\n(LLM / Image / TTS / Aligner)" as AI
+
+Guest --> M01
+User --> M09
+Owner --> M02
+Owner --> M03
+Owner --> M04
+Owner --> M05
+Owner --> M06
+Admin --> M10
+
+M01 --> IdP
+M09 --> Pay
+M03 --> AI
+M04 --> AI
+M05 --> AI
+
+legend right
+  **Ngoài MVP:** M07 AI Director, M08 Thư viện tài sản,
+  cộng tác (Editor, link mời, xung đột), gói đăng ký,
+  giao diện quản trị.
+  **Quan hệ:** M06 <<include>> M05; mọi thao tác AI
+  giữ / trừ / hoàn tiền trên ví (M09), chặn bởi trần ngày (M10).
+endlegend
+@enduml
