@@ -22,7 +22,7 @@
 | BR-15 | Mỗi lần sinh lại ảnh hoặc clip tạo phiên bản mới; phiên bản cũ giữ 90 ngày. | M05/M06 | P1 | ĐX |
 | BR-16 | Gỡ tài sản khỏi dự án không xóa ảnh đã sinh của shot; shot giữ `raw_name` và chuyển sang "chưa liên kết". | M04 | P1 | SL |
 | BR-17 | Xóa thành viên thì job đang chạy của người đó vẫn hoàn tất, nhưng người đó không xem được kết quả. | M02 | Sau | ĐX |
-| BR-18 | Nội dung bị moderation chặn: job `FAILED` với `CONTENT_POLICY`, RELEASE toàn bộ tiền đã giữ, không lưu đầu ra. **Không tự sửa văn bản để vượt bộ lọc.** | M10 | P1 | ĐX |
+| BR-18 | Nội dung bị moderation chặn: job `FAILED` với `CONTENT_POLICY`, RELEASE toàn bộ tiền đã giữ, không lưu đầu ra. **Không tự sửa văn bản truyện để vượt bộ lọc** và không tự động thử lại. Brief ảnh do AI viết không phải văn bản truyện: người dùng được sửa brief (UC-05.06) rồi sinh lại; prompt storyboard hướng dẫn tả gián tiếp cảnh bạo lực, nhạy cảm. | M10 | P1 | ĐX, QĐ-113 |
 | **BR-19** | **Thuyết minh nguyên văn:** văn bản đưa vào TTS là đúng `chapter.content[sourceStart:sourceEnd]`. Chỉ được biến đổi ở mức phát âm: SSML break/alias/phoneme, **bỏ ký hiệu trình bày nhưng giữ chữ bên trong** (§6), đọc số. Không thêm, bớt, đổi, sắp xếp lại hay tóm tắt từ. | M05 | P2 | ĐX (yêu cầu khách hàng), QĐ-56 |
 | **BR-20** | **Phủ kín:** các shot của storyboard hiện hành chia văn bản chương thành đoạn liên tục, không chồng lấn, không bỏ sót; mọi thao tác trên shot (tách, gộp, xóa, dời ranh giới) giữ nguyên bất biến này. | M05 | P1 | ĐX |
 | **BR-21** | **Chỉ tác giả sửa văn bản:** văn bản chương chỉ thay đổi bởi thao tác trực tiếp của Owner/Editor (gõ, Find & replace, Re-import, khôi phục phiên bản). Không AI nào (Director, phân tích, storyboard) có quyền ghi văn bản chương. | M03/M07 | P1 | ĐX |
@@ -34,8 +34,8 @@
 | BR-27 | **Trạng thái tài khoản:** *Free* hoặc *Đã nạp tiền*. "Đã nạp tiền" bật khi **tổng nạp tiền thật > 0** (tiền dùng thử không tính). Free bị giới hạn theo §3.3 và render có watermark; Đã nạp tiền bỏ giới hạn và watermark. Video đã render khi còn Free giữ watermark; render lại để có bản không watermark. | M09 | P1, P3 | QĐ-35, QĐ-36, QĐ-38 |
 | BR-28 | **Tiền dùng thử:** tặng **$2 một lần** khi tạo hồ sơ (UC-01.01b), ghi bút toán `TRIAL_GRANT`, khác loại với `TOPUP`. Không tặng lại khi xóa và tạo lại hồ sơ cùng `sso_subject` hoặc cùng email. | M09 | P1 | QĐ-37, QĐ-38 |
 | BR-29 | **Trần chi tiêu AI toàn hệ thống** mỗi ngày (closed beta: **$10**, cấu hình được). Trần tính trên **chi phí thật của provider** (chưa cộng phí 10%): chi phí đã phát sinh trong ngày cộng chi phí ước tính của các job đang chạy cộng job mới không được vượt trần, nếu vượt thì **từ chối job tốn phí mới** (`503 DAILY_BUDGET_EXCEEDED`); job đang chạy vẫn hoàn tất; gửi cảnh báo cho Admin. Kiểm tra và giữ chỗ phải **nguyên tử** (một câu cập nhật có điều kiện trên bộ đếm của ngày, cùng giao dịch với HOLD; ADR-25), để các yêu cầu đồng thời không thể cùng vượt trần. Ngày tính theo giờ Việt Nam (UTC+7); job tính vào ngày nó được tạo. | M10 | P2 | QĐ-39 |
-| BR-30 | **Closed beta:** chỉ email có trong danh sách mời mới tạo được hồ sơ (so khớp không phân biệt hoa thường). Không có trong danh sách thì không tạo hồ sơ, không tạo phiên, không tặng tiền dùng thử. Người đã có hồ sơ vẫn đăng nhập được khi bị gỡ khỏi danh sách. Tắt quy tắc bằng cấu hình khi mở rộng. | M01 | P0 | QĐ-25 |
-| BR-31 | **Đồng ý xử lý dữ liệu cá nhân:** lần đăng nhập đầu (hoặc khi nội dung thông báo đổi phiên bản), người dùng phải đồng ý trước khi dùng ứng dụng. Thông báo nêu dữ liệu thu thập (email, tên, truyện, file tải lên), mục đích (đồ án tốt nghiệp), thời hạn xóa (sau ngày bảo vệ). Lưu thời điểm và phiên bản đã đồng ý. Không đồng ý thì đăng xuất. | M01 | P0 | QĐ-26 |
+| BR-30 | **Closed beta:** chỉ email có trong danh sách mời mới tạo được hồ sơ (so khớp không phân biệt hoa thường). Không có trong danh sách thì không tạo hồ sơ, không tạo phiên, không tặng tiền dùng thử. Người đã có hồ sơ vẫn đăng nhập được khi bị gỡ khỏi danh sách. Tắt quy tắc bằng cấu hình khi mở rộng. | M01 | P1 | QĐ-25 |
+| BR-31 | **Đồng ý xử lý dữ liệu cá nhân:** lần đăng nhập đầu (hoặc khi nội dung thông báo đổi phiên bản), người dùng phải đồng ý trước khi dùng ứng dụng. Thông báo nêu dữ liệu thu thập (email, tên, truyện, file tải lên), mục đích (đồ án tốt nghiệp), thời hạn xóa (sau ngày bảo vệ). Lưu thời điểm và phiên bản đã đồng ý. Không đồng ý thì đăng xuất. | M01 | P1 | QĐ-26 |
 | BR-32 | **Giới hạn kỹ thuật** (không liên quan tính phí): ≤ 30 yêu cầu LLM/phút/người; ≤ 8 job ảnh, 8 job TTS và 1 job render đồng thời/người. Vượt thì `429` kèm `Retry-After`. | M10 | P1 | QĐ-33 |
 | BR-33 | **Dời ranh giới shot** chỉ làm ở Workspace, theo câu, giữa hai shot liền kề của storyboard hiện hành. Sau khi dời, AI viết lại brief của 2 shot bị ảnh hưởng: hệ thống hiện giá ước tính, Editor xác nhận thì mới dời và tạo job; hủy thì không dời. Thuyết minh của 2 shot chuyển `OUTDATED`. | M03/M05 | P2 | QĐ-52 |
 | BR-34 | **Kiểm chứng thủ công:** mỗi shot có "Nghe" và "Đánh dấu cần sinh lại". Đánh dấu chỉ là ghi nhớ cho người dùng; không chặn xuất (BR-23) nhưng hiện cảnh báo trong báo cáo điều kiện xuất. Sinh lại thuyết minh thì xóa đánh dấu. | M05 | P2 | QĐ-54 |
@@ -89,7 +89,7 @@
 | `EXPORT_ZIP`, tải nhạc lên, thay ảnh bằng ảnh tải lên, nghe mẫu giọng có sẵn | — | Miễn phí | P3 / Sau |
 
 > Đã bỏ: `MUSIC_AI`, `SFX_AI`, `SFX_SUGGEST` (QĐ-57); bảng giá credit cũ và "1 credit ≈ 1 ảnh".
-> **Ước lượng tham khảo:** một chương 10.000 ký tự (khoảng 10 ảnh + 12 phút audio) tốn khoảng $0,5–1 tiền AI thực; $2 dùng thử đủ khoảng 1 chương (QĐ-37). Số liệu thật lấy từ PoC ở P0.
+> **Ước lượng tham khảo:** một chương 10.000 ký tự (khoảng 12 phút audio; ở mật độ mặc định 3 ảnh/phút là khoảng 36 ảnh, QĐ-112) cần đo lại ở P0. Ước lượng cũ "10 ảnh, $0,5–1" dựa trên mật độ quá thấp (1 ảnh mỗi 72 s). Ngưỡng: ≤ $0,15/phút video (BO-06); $2 dùng thử phải đủ khoảng 1 chương (QĐ-37), nếu không thì PO điều chỉnh theo QĐ-112. Số liệu thật lấy từ `EVAL-cost-per-minute` ở P0.
 
 ### 3.3 Trạng thái tài khoản (thay cho gói trong MVP)
 
@@ -113,10 +113,13 @@
 | WR-06 | TOPUP: chỉ ghi khi webhook của cổng xác nhận thanh toán (sandbox); `available += x`, `topup_total += x`. Số nạp tối thiểu $1, tối đa $100 mỗi lần [ĐX]. | P3 |
 | WR-07 | Hoàn tiền thanh toán (refund/chargeback, sau MVP): ghi `REFUND` âm; số dư âm thì khóa thao tác tốn phí đến khi bù. | Sau |
 | WR-08 | Admin điều chỉnh (sau MVP): `ADJUST` kèm `reason` bắt buộc và `actor_id`. | Sau |
+| WR-09 | **Chi phí của lần thử lỗi do hệ thống chịu:** khi job được thử lại (lỗi tạm thời của provider, worker chết rồi giao lại), CAPTURE chỉ tính chi phí thực của **lần thử thành công** × 110% (≤ HOLD). Chi phí các lần thử lỗi vẫn ghi `ai_usage_records` và tính vào trần chi tiêu ngày, nhưng không trừ vào ví người dùng (ADR-29). | P1 |
 
 Sơ đồ: `../so-do/05-hoat-dong/act-giu-tru-tien.puml`.
 
 ## 5. Quy tắc kiểm tra dữ liệu
+
+> "Ký tự" trong các giới hạn văn bản dưới đây là **code unit UTF-16** trên văn bản NFC (04 D-10); với tiếng Việt thông thường trùng với số ký tự nhìn thấy.
 
 | Trường | Ràng buộc |
 |---|---|

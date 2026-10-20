@@ -20,7 +20,7 @@ rectangle "Studio dự án (MVP)" {
     package "M02 Dự án" as P2 {
         usecase "UC-02.02 Import truyện" as UC02
         usecase "UC-02.04 Cài đặt dự án" as UCset
-        usecase "UC-02.09 Xem Map (✂1)" as UCmap
+        usecase "UC-02.09 Xem Map (✂2)" as UCmap
     }
     package "M03 Bản thảo" as P3 {
         usecase "UC-03.03 Chia chương" as UC05
@@ -29,7 +29,7 @@ rectangle "Studio dự án (MVP)" {
     package "M04 Thế giới truyện" as P4 {
         usecase "UC-04.01 Story Assets" as UC07
         usecase "UC-04.10 Visual Rules" as UC08
-        usecase "Timeline (✂4) & Relationships (✂3)" as UCtl
+        usecase "Timeline (✂5) & Relationships (✂4)" as UCtl
     }
     package "M05 Sinh tư liệu" as P5 {
         usecase "UC-05.07 Sinh tư liệu chương" as UC11
@@ -58,6 +58,6 @@ legend right
   **Phụ thuộc giữa các gói** (<<include>>)
   • M05 dùng tài sản của M04 (giữ nhất quán)
   • M06 dựng video từ ảnh + thuyết minh của M05
-  • ✂n: vị trí trong thứ tự cắt giảm (QĐ-05)
+  • ✂n: vị trí trong thứ tự cắt giảm (QĐ-05, QĐ-116)
 endlegend
 @enduml

@@ -5,6 +5,8 @@
 ## 1. Lộ trình phát hành
 
 > **Phiên bản 1.13 (2026-10-20):** áp các khuyến nghị đánh giá PM (QĐ-90..99): có khung chạy đầu-cuối sớm, rủi ro editor/render được đưa lên trước, cân lại khối lượng P1/P2, thêm thứ tự cắt giảm tầng 2 và kịch bản tối thiểu, đo vận tốc sớm, tính lịch Tết và thi, gán vai trò, bảng rủi ro có người chịu trách nhiệm.
+>
+> **Phiên bản 1.16 (2026-10-20):** áp đánh giá AI Engineering (QĐ-110..118): cách đo cụ thể cho các ngưỡng AI ở P0 (§1.5), thêm 4 mã EVAL, chốt mật độ ảnh và chi phí/phút ở M0, rủi ro moderation R-21, nạp tiền sandbox lên ✂1, ablation cho báo cáo.
 
 ### 1.1 Bối cảnh và năng lực
 
@@ -24,53 +26,53 @@ MVP = hết P3 (QĐ-03). Thứ tự làm theo nguyên tắc **rủi ro trước*
 
 | Giai đoạn | Tuần | Mục tiêu | Phạm vi chính |
 |---|---|---|---|
-| **P0 — Nền tảng & PoC** | T1–T4 | Chọn provider bằng số liệu; khung hệ thống; kiểm chứng hạ tầng | Repo, CI/CD, docker-compose (Keycloak, MinIO, ClamAV); `platform` (jobs + HOLD + outbox, idempotency, rate limit, SSE, audit); AI Gateway + **mock adapter**; schema lõi; M01: đăng nhập Keycloak qua `IdentityProviderPort`, danh sách mời, đồng ý dữ liệu, JIT; CLI `admin:invites`. **PoC:** ảnh (2–3 provider), TTS (2–3, gồm Vbee AIVoice), aligner tiếng Việt; golden set. **Benchmark render** FFmpeg/Remotion trên cấu hình máy staging dự kiến (QĐ-98) |
-| **P1 — Nhập truyện → thế giới truyện → ảnh** | T5–T11 | Bước 1–3 và ảnh; có video thô đầu-cuối | M02 (danh sách, import, tạo trống, cài đặt, xóa); M03 (văn bản gốc, Workspace, chia/gộp/dời/sắp xếp chương, tái cấu trúc nguyên tử); M04 (phân tích tài sản, CRUD, ảnh tham chiếu, ảnh tải lên, style, Art Direction, Visual Rules); M05 (storyboard phủ kín, biên tập shot, chia lại, sinh/sửa/thay ảnh, media bin); M09 (ví, $2 dùng thử, giữ/trừ/hoàn, giới hạn Free dự án/chương); M10 (seed); **khung chạy đầu-cuối** (mốc M1) |
-| **P2 — Thuyết minh, sinh tư liệu, spike editor** | T12–T16 (Tết ở T15–T16) | Hoàn tất bước 4; gỡ rủi ro editor | Cài đặt thuyết minh, ký hiệu SYM, TTS + timestamp, từ điển phát âm ✂5, nghe & đánh dấu, "Sinh tư liệu", sinh lại chọn lọc, dời ranh giới shot ở Workspace, khóa chương; **dời từ P1:** Timeline truyện ✂4, Relationships ✂3, Dashboard, tài khoản SSO, sao chép/nhập lại văn bản gốc, xem số dư ví, **trần chi tiêu ngày**; **spike editor/render** (mốc M3) |
-| **P3 — Trình chỉnh sửa, xuất video, thanh toán, Vbee** | T17–T24 | Bước 5–6; sẵn sàng closed beta | M06 (timeline, thuyết minh khóa + đổi tốc độ, phụ đề, nhạc/SFX tải lên, Ken Burns, chuyển cảnh, preview, render, watermark & hạn mức Free, tải xuống); M09 (Pricing, nạp tiền sandbox, webhook, lịch sử chi tiêu); i18n; Map ✂1; **SSO Vbee** (§1.6) |
+| **P0 — Nền tảng & PoC** | T1–T4 | Chọn provider bằng số liệu; khung hệ thống; kiểm chứng hạ tầng | Repo, CI/CD, docker-compose (Keycloak, MinIO, ClamAV); ADR chốt ở tuần 1: **ADR-26** (offset UTF-16), **ADR-27** (Kysely), **ADR-28** (semaphore), **ADR-29** (nguồn sự thật của job); `platform` (jobs nhận việc an toàn + HOLD, idempotency, rate limit, SSE, audit); AI Gateway + **mock adapter**; schema lõi; nền tảng kiểm thử §2.3; M01: đăng nhập Keycloak qua `IdentityProviderPort`, JIT hồ sơ (chưa bật danh sách mời); OpenAPI viết tay cho M01. **PoC:** ảnh (2–3 provider), TTS (2–3, gồm Vbee AIVoice), aligner tiếng Việt; golden set kèm **nhãn tay cho eval** (rubric ngoại hình, bản ghi giọng người cho WER nền, danh sách khó, biên từ; QĐ-110, 111, 115); **tỷ lệ ảnh bị từ chối** (QĐ-113); chốt **mật độ ảnh** và đo **chi phí AI/phút video** (QĐ-112); đo hệ số ký tự/token tiếng Việt cho `PriceEstimator`. **Benchmark render** FFmpeg/Remotion trên cấu hình máy staging (QĐ-98) |
+| **P1 — Nhập truyện → thế giới truyện → ảnh** | T5–T11 | Bước 1–3 và ảnh; có video thô đầu-cuối | M02 (danh sách, import, tạo trống, cài đặt, xóa); M03 (văn bản gốc, Workspace, chia/gộp/dời/sắp xếp chương, tái cấu trúc nguyên tử); M04 (phân tích tài sản + `EVAL-asset-extraction` (QĐ-114), CRUD, ảnh tham chiếu, ảnh tải lên, style, Art Direction, Visual Rules); M05 (storyboard phủ kín, biên tập shot, chia lại, sinh/sửa/thay ảnh, media bin); M09 (ví, $2 dùng thử, giữ/trừ/hoàn, giới hạn Free dự án/chương); M10 (seed); **danh sách mời + màn hình đồng ý dữ liệu** (dời từ P0, QĐ-100); **khung chạy đầu-cuối** (mốc M1) |
+| **P2 — Thuyết minh, sinh tư liệu, spike editor** | T12–T16 (Tết ở T15–T16) | Hoàn tất bước 4; gỡ rủi ro editor | Cài đặt thuyết minh, ký hiệu SYM, TTS + timestamp, từ điển phát âm ✂6, nghe & đánh dấu, "Sinh tư liệu", sinh lại chọn lọc, dời ranh giới shot ở Workspace, khóa chương; **dời từ P1:** Timeline truyện ✂5, Relationships ✂4, Dashboard, tài khoản SSO, sao chép/nhập lại văn bản gốc, xem số dư ví, **trần chi tiêu ngày**; **spike editor/render** (mốc M3) |
+| **P3 — Trình chỉnh sửa, xuất video, thanh toán, Vbee** | T17–T24 | Bước 5–6; sẵn sàng closed beta | M06 (timeline, thuyết minh khóa + đổi tốc độ, phụ đề, nhạc/SFX tải lên, Ken Burns, chuyển cảnh, preview, render, watermark & hạn mức Free, tải xuống); M09 (Pricing, nạp tiền sandbox, webhook, lịch sử chi tiêu); i18n; Map ✂2; **SSO Vbee** (§1.6) |
 | UAT closed beta | T25–T27 | Thử nghiệm với người dùng thật | §1.8 |
 | Dự phòng | T28–T30 | | Còn **2 tuần thực** sau khi trừ Tết (1 tuần) và UAT (3 tuần). Trễ thì dùng dự phòng trước, UAT rút tối thiểu còn 2 tuần |
 | Báo cáo & bảo vệ | Tháng 8–9 | | Hoàn thiện báo cáo từ các bản nháp đã viết dần (§1.10); xóa dữ liệu beta sau ngày bảo vệ |
 | **Sau MVP** | — | Hướng phát triển | Như bản đầy đủ: Director, thư viện, cộng tác, lịch sử phiên bản, kiểm chứng ASR, overlay/màu, thư viện âm thanh, gói đăng ký, giao diện admin… |
 
-Phân bổ story (theo [11](11-product-backlog.md)): P0 8 · P1 49 · P2 21 · P3 26. So với bản 1.12 (P1 58 · P2 12), 9 use case đã được dời từ P1 sang P2 (QĐ-93).
+Phân bổ story (theo [11](11-product-backlog.md)): P0 6 · P1 51 · P2 21 · P3 26. So với bản 1.12 (P1 58 · P2 12), 9 use case đã được dời từ P1 sang P2 (QĐ-93); bản 1.15 dời UC-01.01d và UC-10.11 từ P0 sang P1 để giảm tải back-end ở P0 (QĐ-100).
 
 **Các mốc (milestone):**
 
 | Mốc | Tuần | Tiêu chí đạt | Nếu không đạt |
 |---|---|---|---|
-| **M0** Kết thúc P0 | T4 | Provider ảnh và TTS đã chọn (theo §1.5, gồm quy tắc dự phòng); benchmark render trên máy staging có số liệu; đăng nhập + danh sách mời chạy được | Kéo dài P0 tối đa 1 tuần, lấy từ dự phòng |
+| **M0** Kết thúc P0 | T4 | Provider ảnh và TTS đã chọn (theo §1.5, gồm quy tắc dự phòng); mọi dòng của bảng P0 §1.5 có số liệu (ảnh, TTS, moderation, timestamp, chi phí/phút); mật độ ảnh đã chốt (QĐ-112); benchmark render trên máy staging có số liệu; đăng nhập Keycloak + JIT chạy được; ADR-26..29 đã chốt; nền tảng kiểm thử §2.3 chạy trong CI | Kéo dài P0 tối đa 1 tuần, lấy từ dự phòng |
 | **M1** Khung chạy đầu-cuối | T6 | Một chương mẫu đi hết import → storyboard → ảnh → TTS → **MP4 có phụ đề** bằng FFmpeg, không cần giao diện editor; provider thật trên staging | Ưu tiên tuyệt đối sprint T7 cho tới khi đạt; đánh dấu R-15 là "đang xảy ra" |
 | **M2** Đo vận tốc | T8 | Có vận tốc trung bình sprint T5–T8; toàn bộ story MVP đã có story point; dự báo ngày xong P3 | Áp thứ tự cắt giảm ngay (§1.4) |
-| **M3** Spike editor/render | T14 | Prototype timeline (kéo thả, khóa thuyết minh) + Remotion Player; render cùng `timeline_snapshot` lệch preview ≤ 1 khung hình trên 3 chương mẫu | Kích hoạt ✂9 (preview bằng render nháp) trước khi vào P3 |
+| **M3** Spike editor/render | T14 | Prototype timeline (kéo thả, khóa thuyết minh) + Remotion Player; render cùng `timeline_snapshot` lệch preview ≤ 1 khung hình trên 3 chương mẫu. **Đồng thời chốt engine render:** nếu không đạt hoặc phải kích hoạt ✂9 thì render bằng **FFmpeg thuần** (`zoompan` cho Ken Burns, `xfade` cho chuyển cảnh, phụ đề ASS), bỏ Remotion và Chromium khỏi Render Worker | Kích hoạt ✂9 trước khi vào P3 |
 | **M4** Kết thúc P1 / P2 | T11 / T16 | Tiêu chí §1.5; kiểm tra 80% (§1.4) | Áp thứ tự cắt giảm |
 | **M5** Sẵn sàng beta | T24 | Luồng 6 bước chạy trên staging; danh sách mời, trần ngày, đồng ý dữ liệu bật | UAT lùi tối đa 1 tuần |
 
-### 1.3 Thứ tự cắt giảm (QĐ-05, QĐ-91)
+### 1.3 Thứ tự cắt giảm (QĐ-05, QĐ-91, QĐ-116)
 
-Cắt theo thứ tự; mỗi mục là một khối độc lập, cắt không làm hỏng luồng 6 bước. Tiết kiệm ước tính tính bằng tuần-người (tn) [ĐX], hiệu chỉnh lại ở M2.
+Cắt theo thứ tự; mỗi mục là một khối độc lập, cắt không làm hỏng luồng 6 bước. Tiết kiệm ước tính tính bằng tuần-người (tn) [ĐX], hiệu chỉnh lại ở M2. Bản 1.16 đưa nạp tiền sandbox lên ✂1 và dời các mục tầng 1 cũ xuống một bậc (QĐ-116).
 
-**Tầng 1 — tính năng phụ (QĐ-05)**
+**Tầng 1 — tính năng phụ (QĐ-05, QĐ-116)**
 
 | Thứ tự | Phần bị cắt | FR / UC | Tiết kiệm | Ảnh hưởng |
 |---|---|---|---|---|
-| ✂1 | Map | FR-PRJ-06, UC-02.09 | 0,5 tn | Người mới khó định hướng hơn |
-| ✂2 | Phụ đề preset, chuyển cảnh nâng cao | FR-EDT-11 (preset), FR-EDT-07 (nâng cao) | 1 tn | Còn cut, crossfade, định kiểu tay |
-| ✂3 | Relationships | FR-WLD-09, UC-04.08 | 1,5 tn | Prompt mất ngữ cảnh quan hệ |
-| ✂4 | Timeline truyện | FR-WLD-08, UC-04.07, UC-04.09 | 1,5 tn | Prompt mất ngữ cảnh mùa/thời điểm |
-| ✂5 | Từ điển phát âm | FR-NAR-04, UC-05.12 | 1,5 tn | Mất biện pháp chính cho R-06 (QĐ-80) |
-| | **Cộng tầng 1** | | **≈ 6 tn** | |
+| ✂1 | Nạp tiền sandbox + webhook | FR-BIL-03, 09; UC-09.03, 09.03a, 09.08, 09.08a | 2 tn | Admin cộng tiền bằng CLI `admin:wallet topup` (ghi bút toán `TOPUP` có `reason`, vẫn làm tài khoản thành "Đã nạp tiền"); BO-05 đo bằng câu hỏi khảo sát beta |
+| ✂2 | Map | FR-PRJ-06, UC-02.09 | 0,5 tn | Người mới khó định hướng hơn |
+| ✂3 | Phụ đề preset, chuyển cảnh nâng cao | FR-EDT-11 (preset), FR-EDT-07 (nâng cao) | 1 tn | Còn cut, crossfade, định kiểu tay |
+| ✂4 | Relationships | FR-WLD-09, UC-04.08 | 1,5 tn | Prompt mất ngữ cảnh quan hệ |
+| ✂5 | Timeline truyện | FR-WLD-08, UC-04.07, UC-04.09 | 1,5 tn | Prompt mất ngữ cảnh mùa/thời điểm |
+| ✂6 | Từ điển phát âm | FR-NAR-04, UC-05.12 | 1,5 tn | Mất biện pháp chính cho R-06 (QĐ-80) |
+| | **Cộng tầng 1** | | **≈ 8 tn** | |
 
 **Tầng 2 — giảm độ hoàn thiện của phần lớn (QĐ-91)**
 
 | Thứ tự | Phần bị cắt | FR / UC | Thay bằng | Tiết kiệm |
 |---|---|---|---|---|
-| ✂6 | Nạp tiền sandbox + webhook | FR-BIL-03, 09; UC-09.03, 09.03a, 09.08, 09.08a | Admin cộng tiền bằng CLI `admin:wallet topup` (ghi bút toán `TOPUP` có `reason`, vẫn làm tài khoản thành "Đã nạp tiền") | 2 tn |
 | ✂7 | Giới hạn Free + watermark | FR-BIL-12, FR-EDT-21 (phần Free) | Mọi người dùng beta không giới hạn; trần ngày vẫn bảo vệ ngân sách | 1,5 tn |
 | ✂8 | Dời ranh giới shot ở Workspace | FR-BOK-01b, UC-03.02a | Chỉnh shot bằng tách / gộp / xóa ở storyboard | 1 tn |
 | ✂9 | Preview thời gian thực bằng Remotion Player | FR-EDT-17, UC-06.13 | Xem trước bằng render nháp 480p (job render nhanh); bỏ yêu cầu NFR-PERF-11, 13 | 3 tn |
 | ✂10 | Undo/redo đầy đủ, nhiều track nhạc/SFX, Ken Burns nhiều pha | FR-EDT-02, 03, 06 (một phần) | 1 track nhạc + 1 track SFX; undo 20 bước trong phiên; một pha chuyển động | 2 tn |
-| | **Cộng tầng 2** | | | **≈ 9,5 tn** |
+| | **Cộng tầng 2** | | | **≈ 7,5 tn** |
 
 **Tầng 3 — kịch bản tối thiểu (cần PO duyệt, QĐ-91)**
 
@@ -87,17 +89,22 @@ Dùng khi M2 dự báo khoảng hở > 15 tn sau khi đã áp tầng 1–2: **b�
 | **M4 (T11, T16)** | So điểm đã xong với kế hoạch giai đoạn | < 80% → áp thứ tự cắt giảm tiếp theo |
 | Sau mỗi lần cắt | Ghi vào [sổ quyết định](../quyet-dinh.md); đổi dòng Giai đoạn của UC thành "Sau"; chạy `gen_mvp.py`, `gen_backlog.py` | |
 
-### 1.5 Tiêu chí kết thúc giai đoạn (QĐ-07, QĐ-97)
+### 1.5 Tiêu chí kết thúc giai đoạn (QĐ-07, QĐ-97, QĐ-110..115)
 
 Mỗi giai đoạn: demo được luồng chính; test trong RTM (§4) của các UC thuộc giai đoạn đều pass; không còn lỗi mức High; PO ký nghiệm thu.
 
 **P0 — chọn provider:**
 
-| Loại | Ngưỡng đạt | Nếu **không provider nào** đạt (quy tắc dự phòng) |
-|---|---|---|
-| Ảnh | ≤ 10% shot sai ngoại hình trên golden set | Chọn provider có tỷ lệ thấp nhất nếu ≤ 15% (ngưỡng BO-02), ghi khoảng hở vào báo cáo; > 15% thì thử thêm 1 provider (tối đa 1 tuần, từ dự phòng) rồi chọn tốt nhất |
-| TTS | WER ≤ 3% (vi và en) | Chọn provider có WER thấp nhất nếu ≤ 5%; **đưa từ điển phát âm ra khỏi thứ tự cắt giảm** (bắt buộc làm ở P2) và ghi R-06 là "đang xảy ra"; > 5% thì PO quyết định có chấp nhận hay đổi giọng/ngôn ngữ ưu tiên |
-| Render | 1 phút video 720p render ≤ 2 phút trên máy staging (QĐ-98) | Giảm độ phân giải Free/nháp, giới hạn độ dài một lần render, hoặc nâng cấu hình máy (báo PO chi phí) |
+| Loại | Ngưỡng đạt | Cách đo | Nếu **không provider nào** đạt (quy tắc dự phòng) |
+|---|---|---|---|
+| Ảnh | ≤ 10% shot sai ngoại hình trên golden set | `EVAL-consistency`: ≥ 150 shot mỗi provider; rubric 4 thuộc tính (khuôn mặt, tóc, trang phục, tuổi/vóc dáng); 2 người chấm độc lập, Cohen's κ ≥ 0,6; báo cáo khoảng tin cậy 95%, tách shot 1 nhân vật / ≥ 2 nhân vật (QĐ-110) | Chọn provider có tỷ lệ thấp nhất nếu ≤ 15% (ngưỡng BO-02), ghi khoảng hở vào báo cáo; > 15% thì thử thêm 1 provider (tối đa 1 tuần, từ dự phòng) rồi chọn tốt nhất |
+| Ảnh bị từ chối | ≤ 5% shot golden set bị provider chặn vì chính sách nội dung | `EVAL-refusal-rate` trên cùng các shot của `EVAL-consistency` (QĐ-113) | Thêm hướng dẫn tả gián tiếp vào prompt storyboard rồi đo lại; vẫn > 5% thì tính vào tiêu chí chọn provider và ghi R-21 là "đang xảy ra" |
+| TTS | WER hiệu chỉnh ≤ 3% (vi và en); danh sách khó đọc đúng ≥ 95% | `EVAL-wer-golden`: WER theo âm tiết sau chuẩn hóa hai phía, trừ WER nền của ASR trên bản ghi giọng người; danh sách khoảng 100 tên riêng, Hán Việt, số, từ mượn chấm bằng tai (QĐ-111) | Chọn provider có WER hiệu chỉnh thấp nhất nếu ≤ 5%; **đưa từ điển phát âm ra khỏi thứ tự cắt giảm** (bắt buộc làm ở P2) và ghi R-06 là "đang xảy ra"; > 5% thì PO quyết định có chấp nhận hay đổi giọng/ngôn ngữ ưu tiên |
+| Timestamp | Sai lệch biên từ trung vị ≤ 100 ms, p95 ≤ 250 ms; aligner tự host ≤ 0,5× thời lượng audio trên máy staging | `EVAL-alignment`: nhãn tay khoảng 200 từ mỗi ngôn ngữ; áp cho cả timestamp của TTS (QĐ-115) | Ưu tiên provider TTS có timestamp đạt ngưỡng; không có thì nới p95 ≤ 400 ms và ghi vào báo cáo |
+| Chi phí | Chi phí AI ≤ $0,15/phút video (BO-06) ở mật độ ảnh đã chốt (mặc định 3 ảnh/phút) | `EVAL-cost-per-minute`: chạy luồng đầy đủ trên 2 chương golden, cộng `ai_usage_records` (QĐ-112) | PO chọn: giảm mật độ (≥ 2 ảnh/phút), đổi provider rẻ hơn, hoặc nâng BO-06; kiểm lại $2 dùng thử còn đủ 1 chương |
+| Render | 1 phút video 720p render ≤ 2 phút trên máy staging (QĐ-98) | `BENCH-render` | Giảm độ phân giải Free/nháp, giới hạn độ dài một lần render, hoặc nâng cấu hình máy (báo PO chi phí) |
+
+Phần chấm và gán nhãn (khoảng 1 tn) do PO/BA và frontend làm, không lấy công của back-end & AI (QĐ-118). Chi phí sinh ảnh, TTS cho eval nằm trong ngân sách PoC $200.
 
 ### 1.6 Tích hợp SSO Vbee (QĐ-21..23)
 
@@ -116,12 +123,12 @@ Mỗi giai đoạn: demo được luồng chính; test trong RTM (§4) của cá
 |---|---|---|
 | P0 (PoC) | ≤ $200 | Golden set có kiểm soát; ghi `ai_usage_records` |
 | P1–P3 | ≤ $50/tháng | Mock adapter cho dev/CI; provider thật khi demo, mốc M1 và E2E hằng tuần. Trước khi có trần chi tiêu ngày (P2), đặt **giới hạn chi tiêu trên console của từng provider** |
-| UAT | ≤ $200 | Danh sách mời; $2 dùng thử/người; trần $10/ngày |
+| UAT | ≤ $200 | Danh sách mời; $2 dùng thử/người; trần $10/ngày. Gồm ≤ $30 cho ablation (QĐ-117) |
 | Hạ tầng | Ưu đãi sinh viên | Cấu hình máy staging chọn theo **benchmark render ở P0**; NFR-PERF-10 (1080p ≤ 1× thời lượng trên 8 vCPU) là mục tiêu sau MVP, MVP dùng ngưỡng §1.5. Chi phí nâng cấu hình (nếu cần) báo PO trước T8 |
 
 ### 1.8 UAT: closed beta (QĐ-71)
 
-- **T25–T27**, 10–20 người được mời; mỗi người làm ít nhất 1 chương bằng $2 dùng thử; có thể nạp tiền sandbox (hoặc Admin cộng tiền nếu ✂6).
+- **T25–T27**, 10–20 người được mời; mỗi người làm ít nhất 1 chương bằng $2 dùng thử; có thể nạp tiền sandbox (hoặc Admin cộng tiền nếu ✂1).
 - **Chuẩn bị từ T20:** chốt danh sách người mời, nội dung thông báo đồng ý dữ liệu, phiếu khảo sát, chương mẫu cho người chưa có truyện.
 - **Thu thập:** phiếu khảo sát, log sử dụng, chỉ số BO-01..BO-06.
 - Đợt 2 mở rộng nếu còn thời gian. Dữ liệu beta xóa sau ngày bảo vệ.
@@ -143,7 +150,7 @@ Kế hoạch sprint và dự báo ở M2 dùng năng lực sau khi trừ bảng 
 | P1 | Phân tích yêu cầu, thiết kế (lấy từ 01–08 và `so-do/mvp/`) |
 | P2 | Thiết kế chi tiết luồng sinh tư liệu và thuyết minh nguyên văn |
 | P3 | Cài đặt, kiểm thử (RTM, kết quả test) |
-| UAT | Đánh giá với người dùng, chỉ số BO, hạn chế và hướng phát triển |
+| UAT | Đánh giá với người dùng, chỉ số BO, **ablation** (`EVAL-consistency` trên 2–3 chương golden với 4 cấu hình: đầy đủ / bỏ ảnh tham chiếu / bỏ Visual Rules / bỏ Timeline truyện + Relationships; QĐ-117), hạn chế và hướng phát triển |
 
 Mỗi bản nháp là một story trong sprint cuối giai đoạn (khoảng 1 ngày công).
 
@@ -155,11 +162,10 @@ Mỗi bản nháp là một story trong sprint cuối giai đoạn (khoảng 1 n
 
 | Vai trò | Người | Phụ trách chính | Dự phòng (bus factor) |
 |---|---|---|---|
-| PO / trưởng nhóm | *(TV1)* | Phạm vi, ưu tiên, nghiệm thu, **đầu mối Vbee**, ngân sách AI, giảng viên hướng dẫn | TV2 |
-| Phụ trách backend & AI | *(TV1 hoặc TV2)* | `platform`, AI Gateway, M05, M09 (ví), M01, PoC provider | TV3 |
-| Phụ trách frontend & editor | *(TV2)* | Studio, **M06 trình chỉnh sửa**, Remotion, spike M3 | TV1 |
-| Phụ trách DevOps & chất lượng | *(TV3)* | CI/CD, staging, benchmark render, test E2E hằng tuần, RTM, M02–M04 | TV2 |
-| BA | *(PO kiêm)* | Đặc tả, sổ quyết định, backlog, báo cáo đồ án | — |
+| PO / trưởng nhóm + BA | *(TV3)* | Phạm vi, ưu tiên, nghiệm thu, **đầu mối Vbee**, ngân sách AI, giảng viên hướng dẫn, đặc tả, sổ quyết định, báo cáo đồ án; **gán nhãn và chấm eval** cùng frontend (QĐ-118). **Không giữ vai trò back-end** (QĐ-101) | TV2 |
+| Phụ trách backend & AI | *(TV1)* | `platform`, AI Gateway, M05, M09 (ví), M01, PoC provider, ADR-26..29, OpenAPI của các module back-end | TV3 |
+| Phụ trách frontend & editor | *(TV2)* | Studio, **M06 trình chỉnh sửa**, Remotion, spike M3; người chấm thứ hai của eval P0 (QĐ-118) | TV1 |
+| Phụ trách DevOps & chất lượng | *(TV3, cùng PO)* | CI/CD, staging, benchmark render, test E2E hằng tuần, RTM; M02–M04 chia với TV1 khi P1 quá tải | TV1 |
 
 Mỗi module có một người chính và một người review cố định để không có phần chỉ một người hiểu.
 
@@ -182,6 +188,17 @@ Mỗi module có một người chính và một người review cố định đ
 - Review code bởi ít nhất 1 người; không còn cảnh báo bảo mật mức High.
 - Đã cập nhật i18n (vi, en).
 - Nếu thay đổi use case: cập nhật dòng Truy vết và Giai đoạn của UC, chạy `python3 so-do/tools/gen_mvp.py` và `python3 tools/gen_backlog.py`.
+
+### 2.3 Nền tảng kiểm thử (QĐ-102)
+
+| Mức | Công cụ | Ghi chú |
+|---|---|---|
+| UT, PBT | Vitest + **fast-check** | Package `@studio/timeline-rules`, `SentenceSegmenter`, `NormalizationMap`, `PriceEstimator`, sổ cái chạy hoàn toàn trong bộ nhớ |
+| IT | Vitest + **Testcontainers** (PostgreSQL 16, Redis 7, MinIO) | Mỗi bộ test một schema sạch, migration Kysely chạy trước; provider AI là mock adapter |
+| Mock adapter | Fixture **ghi lại từ phản hồi thật** của provider ở P0 (kể cả phản hồi lỗi, timeout, rate limit) | Đổi provider thì ghi lại fixture; tránh mock "xanh giả" |
+| Contract | `IT-openapi-contract` so spec sinh từ code với `openapi/*.yaml` viết tay; `UT-snapshot-schema` kiểm `timeline_snapshot` | 06 §1.2, 12 §3 |
+| E2E | **Playwright** trên staging; hằng tuần với provider thật, còn lại với mock | Có ngân sách riêng trong $50/tháng |
+| Đồng thời | Test bắn song song có kiểm soát (`IT-daily-budget-concurrency`, `IT-user-concurrency`, `IT-job-redelivery`) | Chạy trên Testcontainers, không mock DB |
 
 ## 3. User story & tiêu chí chấp nhận mẫu (Gherkin)
 
@@ -374,7 +391,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-02.06 Tạo / thu hồi link mời | Sau | FR-PRJ-08 | — | seq-cong-tac-xung-dot | IT-invite-link |
 | UC-02.07 Quản lý thành viên | Sau | FR-PRJ-09 | — | — | IT-member-remove |
 | UC-02.08 Tham gia dự án qua link | Sau | FR-AUTH-03; FR-PRJ-08 | — | — | IT-invite-link, E2E-collab-conflict |
-| UC-02.09 Xem bản đồ quy trình (Map) | P3 ✂1 | FR-PRJ-06 | BO-01 | — | E2E-project-map |
+| UC-02.09 Xem bản đồ quy trình (Map) | P3 ✂2 | FR-PRJ-06 | BO-01 | — | E2E-project-map |
 | UC-02.10 Xử lý xung đột khi lưu | Sau | FR-EDT-18; FR-PRJ-11 | BO-03 | seq-cong-tac-xung-dot | E2E-collab-conflict, IT-chapter-save-optimistic-lock |
 | UC-02.11 Nhân bản dự án | Sau | FR-PRJ-13 | — | — | IT-project-duplicate |
 
@@ -401,15 +418,15 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 
 | Use case | GĐ | Yêu cầu chức năng | Mục tiêu KD | Sơ đồ | Test chính |
 |---|---|---|---|---|---|
-| UC-04.01 Phân tích tài sản bằng AI | P1 | FR-WLD-01 | BO-01, BO-02 | — | IT-analyze-assets |
+| UC-04.01 Phân tích tài sản bằng AI | P1 | FR-WLD-01 | BO-01, BO-02 | — | IT-analyze-assets, EVAL-asset-extraction |
 | UC-04.02 Quản lý Story Assets | P1 | FR-WLD-02, 03, 05, 11, 12; FR-LIB-05 | BO-02 | — | IT-story-asset-crud |
 | UC-04.03 Sinh ảnh tham chiếu | P1 | FR-WLD-03 | BO-02, BO-06 | — | EVAL-consistency, IT-wallet-refund |
 | UC-04.04 Dùng ảnh tải lên nguyên bản | P1 | FR-WLD-04 | BO-02 | — | IT-exact-image-upload |
 | UC-04.05 Chọn style dự án | P1 | FR-WLD-06 | BO-02 | — | IT-regenerate-all |
 | UC-04.06 Thiết lập Art Direction | P1 | FR-WLD-07 | BO-02 | — | UT-prompt-compiler-order |
-| UC-04.07 Xem dòng thời gian truyện | P2 ✂4 | FR-WLD-08 | BO-02 | — | IT-story-timeline |
-| UC-04.08 Xem đồ thị quan hệ | P2 ✂3 | FR-WLD-09 | BO-02 | — | IT-relationship-graph |
-| UC-04.09 Phân tích lại (Re-analyse) | P2 ✂3 ✂4 | FR-WLD-08, 09 | BO-02 | — | IT-story-timeline, IT-relationship-graph |
+| UC-04.07 Xem dòng thời gian truyện | P2 ✂5 | FR-WLD-08 | BO-02 | — | IT-story-timeline |
+| UC-04.08 Xem đồ thị quan hệ | P2 ✂4 | FR-WLD-09 | BO-02 | — | IT-relationship-graph |
+| UC-04.09 Phân tích lại (Re-analyse) | P2 ✂4 ✂5 | FR-WLD-08, 09 | BO-02 | — | IT-story-timeline, IT-relationship-graph |
 | UC-04.10 Quản lý Visual Rules | P1 | FR-WLD-10 | BO-02 | — | UT-prompt-compiler-order |
 | UC-04.11 Xuất ZIP ảnh tài sản | Sau | FR-WLD-11 | — | — | IT-asset-zip-export |
 
@@ -423,17 +440,17 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-05.04 Thiết lập Chapter rules | Sau | FR-BOK-04 | BO-02 | — | UT-prompt-compiler-order |
 | UC-05.05 Chỉ đạo lại cả chương (Re-direct) | Sau | FR-BOK-07 | BO-01 | — | IT-redirect-preserves-source |
 | UC-05.06 Biên tập shot | P1 | FR-BOK-05, 06, 08; FR-NAR-09 | BO-02, BO-03 | — | PBT-coverage-validator, IT-auto-link-assets |
-| UC-05.07 Sinh tư liệu chương | P2 | FR-BOK-01; FR-MED-01..05; FR-BIL-11 | BO-01, BO-06 | seq-sinh-tu-lieu, seq-storyboard-sinh-anh | E2E-generate-media-chapter, IT-quote-total, IT-daily-budget-cap |
+| UC-05.07 Sinh tư liệu chương | P2 | FR-BOK-01; FR-MED-01..05; FR-BIL-11 | BO-01, BO-06 | seq-sinh-tu-lieu, seq-storyboard-sinh-anh | E2E-generate-media-chapter, IT-quote-total, IT-daily-budget-cap, IT-user-concurrency, IT-chapter-lock-release, EVAL-cost-per-minute |
 | UC-05.08 Xem Tư liệu dự án (media bin) | P1 | FR-BOK-13; FR-MED-03 | BO-01 | — | E2E-generate-media-chapter |
-| UC-05.09 Sinh ảnh shot | P1 | FR-BOK-09 | BO-02 | seq-storyboard-sinh-anh | E2E-shot-image, IT-wallet-refund |
+| UC-05.09 Sinh ảnh shot | P1 | FR-BOK-09 | BO-02 | seq-storyboard-sinh-anh | E2E-shot-image, IT-wallet-refund, EVAL-consistency, EVAL-refusal-rate |
 | UC-05.10 Sửa ảnh | P1 | FR-BOK-10 | BO-02 | seq-storyboard-sinh-anh | E2E-shot-image |
 | UC-05.11 Cài đặt thuyết minh | P2 | FR-NAR-01, 03 | BO-04 | — | IT-narration-settings, IT-symbol-rules |
-| UC-05.12 Quản lý từ điển phát âm | P2 ✂5 | FR-NAR-04 | BO-04 | — | IT-pronunciation-dictionary |
-| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden, UT-normalization-map, PBT-normalization-map, UT-timing-map |
+| UC-05.12 Quản lý từ điển phát âm | P2 ✂6 | FR-NAR-04 | BO-04 | — | IT-pronunciation-dictionary |
+| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden, EVAL-alignment, UT-normalization-map, PBT-normalization-map, UT-timing-map |
 | UC-05.14 Duyệt shot cần xem lại (NEEDS_REVIEW) | Sau | FR-NAR-07 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van, state-narration-render | E2E-needs-review |
 | UC-05.15 Gán giọng theo nhân vật | Sau | FR-NAR-05 | BO-04 | — | IT-multi-voice |
 | UC-05.16 Tải ZIP ảnh | Sau | FR-BOK-16 | — | — | IT-asset-zip-export |
-| UC-05.17 Giữ / trừ / hoàn tiền | P1 | FR-BIL-11 | BO-06 | act-giu-tru-tien | PBT-wallet-ledger, IT-wallet-refund, IT-daily-budget-cap, IT-daily-budget-concurrency |
+| UC-05.17 Giữ / trừ / hoàn tiền | P1 | FR-BIL-11 | BO-06 | act-giu-tru-tien | PBT-wallet-ledger, IT-wallet-refund, IT-daily-budget-cap, IT-daily-budget-concurrency, IT-job-redelivery |
 | UC-05.18 Nghe & đánh dấu cần sinh lại | P2 | FR-NAR-08 | BO-03, BO-04 | seq-thuyet-minh-nguyen-van, state-narration-render | E2E-listen-flag, IT-render-readiness |
 
 ### 4.6 M06 — Trình chỉnh sửa & xuất video
@@ -444,10 +461,10 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-06.02 Thao tác timeline | P3 | FR-EDT-03, 04, 18, 20 | BO-01, BO-03 | seq-chinh-sua-xuat-video | UT-timeline-ops, UT-narration-track-locked, UT-narration-speed, IT-narration-rate-variant |
 | UC-06.03 Quản lý track | P3 | FR-EDT-02, 15 | BO-01 | — | UT-timeline-ops |
 | UC-06.04 Đặt hiệu ứng Ken Burns & điểm tập trung | P3 | FR-EDT-06 | BO-01 | — | UT-visual-effects |
-| UC-06.05 Đặt chuyển cảnh | P3 (nâng cao ✂2) | FR-EDT-07 | BO-01 | — | UT-visual-effects |
+| UC-06.05 Đặt chuyển cảnh | P3 (nâng cao ✂3) | FR-EDT-07 | BO-01 | — | UT-visual-effects |
 | UC-06.06 Chọn khung hình & tinh chỉnh màu | P3 | FR-EDT-08, 09 | BO-01 | — | UT-visual-effects |
 | UC-06.07 Thêm overlay chữ / logo, clip tiêu đề & kết | Sau | FR-EDT-05, 10 | BO-01 | — | UT-overlay-title |
-| UC-06.08 Định kiểu phụ đề | P3 (preset ✂2) | FR-EDT-11 | BO-03 | — | IT-subtitle-verbatim |
+| UC-06.08 Định kiểu phụ đề | P3 (preset ✂3) | FR-EDT-11 | BO-03 | — | IT-subtitle-verbatim |
 | UC-06.09 Thêm nhạc nền | P3 | FR-EDT-13 | BO-01 | — | E2E-editor-sfx-music |
 | UC-06.10 Thêm SFX | P3 | FR-EDT-14 | BO-01 | — | E2E-editor-sfx-music |
 | UC-06.11 Tìm trong thư viện âm thanh | P3 | FR-EDT-12, 14, 27 | BO-01 | seq-chinh-sua-xuat-video | E2E-editor-sfx-music, IT-audio-upload |
@@ -487,11 +504,11 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 |---|---|---|---|---|---|
 | UC-09.01 Xem bảng giá | P3 | FR-BIL-01 | BO-05 | — | IT-pricing-page |
 | UC-09.02 Đăng ký gói | Sau | FR-BIL-02 | BO-05 | seq-thanh-toan, state-subscription | IT-webhook-idempotent |
-| UC-09.03 Nạp tiền vào ví | P3 ✂6 | FR-BIL-03 | BO-05 | seq-thanh-toan | E2E-topup-sandbox, IT-webhook-idempotent |
+| UC-09.03 Nạp tiền vào ví | P3 ✂1 | FR-BIL-03 | BO-05 | seq-thanh-toan | E2E-topup-sandbox, IT-webhook-idempotent |
 | UC-09.04 Quản lý thanh toán | Sau | FR-BIL-04 | BO-05 | seq-thanh-toan | IT-webhook-idempotent |
 | UC-09.05 Xem số dư ví | P2 | FR-BIL-05, 12 | BO-05 | — | IT-wallet-balance |
 | UC-09.06 Xem lịch sử chi tiêu | P3 | FR-BIL-06, 08 | BO-05, BO-06 | — | IT-spend-history, REC-ledger |
-| UC-09.08 Xử lý webhook thanh toán | P3 ✂6 | FR-BIL-09 | BO-05 | seq-thanh-toan | IT-webhook-idempotent, REC-ledger |
+| UC-09.08 Xử lý webhook thanh toán | P3 ✂1 | FR-BIL-09 | BO-05 | seq-thanh-toan | IT-webhook-idempotent, REC-ledger |
 
 ### 4.10 M10 — Quản trị
 
@@ -507,7 +524,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-10.08 Điều chỉnh số dư người dùng | Sau | FR-ADM-05 | BO-06 | — | IT-admin-audit, REC-ledger |
 | UC-10.09 Ghi audit log | P1 | — | — | — | IT-admin-audit |
 | UC-10.10 Xem báo cáo | Sau | FR-ADM-06 | BO-05, BO-06 | — | IT-admin-reports |
-| UC-10.11 Quản lý danh sách mời beta | P0 | FR-AUTH-11 | BO-06 | seq-dang-nhap-sso | IT-invite-gate, IT-admin-audit |
+| UC-10.11 Quản lý danh sách mời beta | P1 | FR-AUTH-11 | BO-06 | seq-dang-nhap-sso | IT-invite-gate, IT-admin-audit |
 | UC-10.12 Áp trần chi tiêu AI hằng ngày | P2 | FR-ADM-07 | BO-06 | act-giu-tru-tien | IT-daily-budget-cap, IT-daily-budget-concurrency |
 
 ### 4.11 Yêu cầu xuyên suốt và yêu cầu chưa có use case
@@ -519,6 +536,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | FR-PRJ-12 | Đẩy thay đổi của người khác theo thời gian thực | Sau | — | Xuyên suốt (SSE); trạng thái job vẫn đẩy qua SSE trong MVP | IT-realtime-events |
 | FR-DIR-09 | Director đánh giá kết quả một bước và đề xuất sửa | Sau | BO-02 | **Chưa có use case.** Cần bổ sung use case con của UC-07.02 trước khi làm | — |
 | BR-32 | Giới hạn kỹ thuật (≤ 30 yêu cầu LLM/phút/người, job đồng thời) | P0 | — | Middleware rate limit ở `platform` | IT-rate-limit |
+| 06 §1.2 | Hợp đồng API của các endpoint MVP | P0 | — | OpenAPI viết trước, so trong CI (06 §1.2) | IT-openapi-contract |
 | Mốc M1 | Khung chạy đầu-cuối luồng 6 bước (không editor) | P1 | BO-01, BO-03 | Ghép UC-02.02, UC-05.07, UC-06.16 ở mức tối giản (§1.2) | E2E-walking-skeleton |
 
 ### 4.12 Độ phủ
@@ -583,7 +601,9 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `IT-chapter-version-restore` | IT |  | Khôi phục phiên bản chương tạo phiên bản mới, không xóa lịch sử |
 | `IT-analyze-assets` | IT | ✓ | Job `ANALYZE_ASSETS` map-reduce trả danh sách đúng schema; không tạo tài sản khi chưa duyệt |
 | `IT-story-asset-crud` | IT | ✓ | Tạo/sửa/gỡ Story Asset: giữ `id`, tăng `version`, `409` khi xung đột, giới hạn 200 tài sản, IC-13 cho nhóm |
-| `EVAL-consistency` | EVAL | ✓ | Golden set: tỷ lệ shot sai ngoại hình nhân vật ≤ 15% (BO-02) |
+| `EVAL-consistency` | EVAL | ✓ | Golden set: tỷ lệ shot sai ngoại hình nhân vật ≤ 10% khi chọn provider, ≤ 15% (BO-02); ≥ 150 shot, rubric 4 thuộc tính, 2 người chấm, κ ≥ 0,6, khoảng tin cậy 95%, tách shot 1 / ≥ 2 nhân vật (QĐ-110) |
+| `EVAL-refusal-rate` | EVAL | ✓ | Tỷ lệ shot golden set bị provider ảnh chặn vì chính sách nội dung ≤ 5% (QĐ-113) |
+| `EVAL-asset-extraction` | EVAL | ✓ | `ANALYZE_ASSETS` so với nhãn tay: recall nhân vật có tên ≥ 90%, precision ≥ 80%; chạy khi đổi prompt hoặc mô hình (QĐ-114) |
 | `IT-exact-image-upload` | IT | ✓ | Ảnh tải lên qua kiểm tra MIME, kích thước, malware, EXIF; "use exact" không bao giờ bị vẽ lại (BR-14) |
 | `IT-regenerate-all` | IT | ✓ | Regenerate all bỏ qua tài sản "use exact"; hoàn tiền giữ cho phần job lỗi |
 | `UT-prompt-compiler-order` | UT | ✓ | Prompt ảnh ghép đúng thứ tự style → Art Direction → Visual Rules → mô tả → facts (BR-08) |
@@ -608,13 +628,18 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `UT-normalization-map` | UT | ✓ | `NormalizationMap` phủ kín cả S và bản đọc, đơn điệu; ghép lại đúng S (12 §2.2) |
 | `PBT-normalization-map` | PBT | ✓ | S ngẫu nhiên có ký hiệu, số, mục từ điển: bất biến 12 §2.2 và ánh xạ bản đọc → S đơn điệu |
 | `UT-timing-map` | UT | ✓ | Ca MAP-01..08: ánh xạ thời gian từ bản đọc về văn bản gốc và dựng cue phụ đề (12 §2.3–2.5) |
-| `EVAL-wer-golden` | EVAL | ✓ | WER trung bình ≤ 3% trên golden set vi/en với provider và giọng đã chọn (P0; chạy lại khi đổi provider, giọng, quy tắc chuẩn hóa) |
+| `EVAL-wer-golden` | EVAL | ✓ | WER hiệu chỉnh (WER theo âm tiết sau chuẩn hóa hai phía − WER nền của ASR trên bản ghi giọng người) ≤ 3% trên golden set vi/en; danh sách khó đọc đúng ≥ 95% (QĐ-111; P0, chạy lại khi đổi provider, giọng, quy tắc chuẩn hóa) |
+| `EVAL-alignment` | EVAL | ✓ | Timestamp của TTS hoặc aligner so với nhãn tay biên từ: trung vị ≤ 100 ms, p95 ≤ 250 ms; aligner tự host ≤ 0,5× thời lượng audio trên máy staging (QĐ-115) |
+| `EVAL-cost-per-minute` | EVAL | ✓ | Chi phí AI/phút video trên 2 chương golden ở mật độ ảnh đã chốt ≤ $0,15 (BO-06, QĐ-112) |
 | `E2E-needs-review` | E2E |  | (Sau MVP) Shot vượt ngưỡng WER chuyển NEEDS_REVIEW, tô đỏ chỗ lệch, khóa xuất cho tới khi xử lý |
 | `E2E-listen-flag` | E2E | ✓ | Nghe thuyết minh tô sáng theo từ; đánh dấu / bỏ đánh dấu; sinh lại phạm vi FLAGGED xóa cờ; cờ không chặn xuất (BR-34) |
 | `IT-multi-voice` | IT |  | Gán giọng theo nhân vật chỉ áp cho lời thoại trong ngoặc kép; văn bản không đổi |
 | `PBT-wallet-ledger` | PBT | ✓ | Mọi chuỗi giữ/trừ/hoàn: số dư = tổng sổ cái, không âm, CAPTURE ≤ HOLD, CAPTURE + RELEASE = HOLD, không trừ hai lần (BR-02, IC-05) |
 | `IT-daily-budget-cap` | IT | ✓ | Chạm trần chi tiêu ngày: job tốn phí mới bị 503 DAILY_BUDGET_EXCEEDED, job đang chạy vẫn xong, Admin nhận 1 email; qua 00:00 giờ Việt Nam thì mở lại (BR-29) |
 | `IT-daily-budget-concurrency` | IT | ✓ | 50 yêu cầu đồng thời quanh ngưỡng trần: `spent + reserved` không bao giờ vượt `cap`; hết chỗ thì 503; thiếu số dư thì trả chỗ ngân sách (IC-18, ADR-25) |
+| `IT-user-concurrency` | IT | ✓ | Một người dùng tạo 20 job ảnh: không quá 8 job chạy cùng lúc; job vượt slot bị trì hoãn không tăng `attempts`; worker chết thì reconciler đặt lại bộ đếm (BR-32, ADR-28) |
+| `IT-job-redelivery` | IT | ✓ | Giao lại job đã RUNNING/SUCCEEDED cho worker khác: không gọi provider lần hai, không trừ tiền hai lần; job thành công ở lần thử 3 chỉ CAPTURE chi phí lần 3, mọi lần thử đều có `ai_usage_records` (ADR-29, WR-09) |
+| `IT-chapter-lock-release` | IT | ✓ | Job cha kết thúc (thành công, lỗi, hủy) mở khóa chương trong cùng giao dịch; worker chết thì reconciler mở khóa (BR-12, ADR-29) |
 | `UT-narration-track-locked` | UT | ✓ | Clip thuyết minh không cắt, trim, xóa, đổi thứ tự được (BR-24) |
 | `UT-narration-speed` | UT | ✓ | Đổi tốc độ clip thuyết minh 0,8–1,25× co giãn ảnh, phụ đề, dời clip sau; ngoài khoảng trả NARRATION_LOCKED (BR-24, IC-17) |
 | `IT-narration-rate-variant` | IT | ✓ | Đổi tốc độ tạo file dẫn xuất giữ cao độ, thời lượng = gốc / tốc độ ± 1 khung hình; dùng lại cache; chưa có file thì không xuất được (ADR-24, IC-17) |
@@ -656,6 +681,7 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `IT-permission-matrix` | IT | ✓ | Mọi endpoint theo ma trận quyền 08 §2: Owner, Editor, người ngoài dự án, Admin |
 | `IT-realtime-events` | IT |  | Thay đổi chương và trạng thái job của người khác tới client qua SSE ≤ 2 s (NFR-PERF-03) |
 | `IT-rate-limit` | IT | ✓ | Quá 30 yêu cầu LLM/phút/người hoặc quá số job đồng thời trả 429 kèm Retry-After (BR-32) |
+| `IT-openapi-contract` | IT | ✓ | Spec sinh từ code khớp `openapi/*.yaml` viết tay cho mọi endpoint MVP; mỗi endpoint khai báo đủ mã lỗi (06 §1.2) |
 | `IT-admin-reports` | IT |  | (Sau MVP) Báo cáo chi tiêu, chi phí AI theo provider, phí thu khớp ai_usage_records |
 
 ## 5. Bảng rủi ro triển khai (QĐ-96)
@@ -667,15 +693,16 @@ Xác suất (X) và tác động (T): **C** cao, **TB** trung bình, **T** thấ
 | R-12 | Năng lực không đủ cho MVP | C | C | Vận tốc 2 sprint liên tiếp < 70% kế hoạch; dự báo M2 vượt T24 | Thứ tự cắt giảm 3 tầng (§1.3); kiểm soát tiến độ (§1.4) | PO |
 | R-15 | Render / preview không đạt (chậm, lệch khung, máy staging yếu) | TB | C | Benchmark P0 vượt ngưỡng §1.5; M1 không ra MP4; M3 lệch > 1 khung hình | Khung chạy đầu-cuối T6; spike M3; ✂9; nâng cấu hình máy | Frontend & editor |
 | R-14 | Vbee giao tài liệu muộn hoặc chỉ có OAuth 2.0 | C | TB | Không phản hồi ở T6; hết T9 chưa có tài liệu | Lịch liên hệ §1.6; adapter tách riêng; giữ Keycloak | PO |
-| R-06 | TTS tiếng Việt đọc sai tên riêng, Hán Việt, số | TB | C | Không provider nào đạt WER ≤ 3% ở P0; người dùng beta đánh dấu > 10% shot | Quy tắc dự phòng §1.5; nghe & đánh dấu; từ điển phát âm (thoát khỏi ✂5 nếu WER > 3%) | Backend & AI |
+| R-06 | TTS tiếng Việt đọc sai tên riêng, Hán Việt, số | TB | C | Không provider nào đạt WER hiệu chỉnh ≤ 3% ở P0; người dùng beta đánh dấu > 10% shot | Quy tắc dự phòng §1.5; nghe & đánh dấu; từ điển phát âm (thoát khỏi ✂6 nếu WER > 3%) | Backend & AI |
 | R-02b | Provider ảnh không giữ được nhân vật | TB | TB | Tỷ lệ sai ngoại hình > 10% ở P0 | Quy tắc dự phòng §1.5; tăng ảnh tham chiếu; Visual Rules | Backend & AI |
-| R-01 | Chi phí AI vượt ngân sách | TB | TB | Chi tiêu tuần > 30% hạn mức tháng; chạm trần ngày ≥ 3 lần/tuần khi beta | Mock adapter; giới hạn console provider; trần ngày; danh sách mời | PO |
+| R-01 | Chi phí AI vượt ngân sách | TB | TB | `EVAL-cost-per-minute` ở M0 > $0,15/phút; chi tiêu tuần > 30% hạn mức tháng; chạm trần ngày ≥ 3 lần/tuần khi beta | Mock adapter; giới hạn console provider; trần ngày; danh sách mời | PO |
 | R-16 | Mất năng lực do Tết, thi, ốm, một thành viên rời nhóm | C | TB | Thành viên vắng > 1 tuần ngoài §1.9 | Bảng lịch §1.9; người dự phòng theo vai trò §2.1; dùng tuần dự phòng | PO |
 | R-17 | Báo cáo đồ án dồn cuối, không kịp | TB | C | Bản nháp chương của giai đoạn chưa xong khi kết thúc giai đoạn | Viết dần §1.10 | BA |
 | R-18 | Ước tính giá thấp hơn chi phí thực (trừ kịch số đã giữ) | TB | T | > 5% job có CAPTURE = HOLD | Chỉnh giới hạn đầu ra trong seed theo số liệu PoC | Backend & AI |
 | R-19 | Closed beta ít người tham gia | TB | TB | T22 chưa đủ 10 email đồng ý tham gia | Mời từ T20; chương mẫu sẵn; nhờ giảng viên giới thiệu | PO |
 | R-07 | LLM chia shot kém / sai schema / vượt context | TB | T | > 20% ranh giới bị validator sửa; job lỗi schema > 5% | Validator tất định; retry có phản hồi; xử lý theo chương | Backend & AI |
 | R-20 | Sổ cái ví sai lệch | T | C | Reconciler báo lệch ≠ 0 | Property-based test; reconciler hằng ngày; cảnh báo P1 | Backend & AI |
+| R-21 | Provider ảnh từ chối cảnh trong văn học (bạo lực, nghèo đói, tình dục) | C | TB | `EVAL-refusal-rate` > 5% ở P0; > 10% job ảnh `CONTENT_POLICY` một tuần khi beta | Hướng dẫn tả gián tiếp trong prompt storyboard; người dùng sửa brief (BR-18); tính tỷ lệ từ chối vào tiêu chí chọn provider | Backend & AI |
 
 ## 6. Quyết định đã chốt và câu hỏi còn mở
 
@@ -686,5 +713,5 @@ Mọi câu hỏi của 4 vòng chốt phạm vi và kế hoạch đã được t
 | # | Câu hỏi | Ai trả lời | Hạn |
 |---|---|---|---|
 | 1 | Tài liệu tích hợp SSO Vbee: endpoint, có OIDC không, cách cấp `client_id`/`client_secret`, back-channel logout, người liên hệ | PO liên hệ đội Vbee | Hết tháng thứ 2 |
-| 2 | Kết quả PoC: provider ảnh và TTS được chọn, đơn giá thực để điền `price_rules` | Nhóm | Cuối P0 |
+| 2 | Kết quả PoC: provider ảnh và TTS được chọn, đơn giá thực để điền `price_rules`, mật độ ảnh và chi phí/phút video (QĐ-112) | Nhóm | Cuối P0 |
 | 3 | Nội dung chính thức của thông báo đồng ý xử lý dữ liệu (phiên bản 1) | PO soạn, nhóm duyệt | Trước closed beta |

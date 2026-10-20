@@ -295,7 +295,7 @@
 | Kích hoạt | MVP: lệnh `pnpm admin:invites add\|remove\|list <email> [--note]`. Sau MVP: `/admin/invites` |
 | Quan hệ | include UC-10.09 |
 | Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites` |
-| Giai đoạn | P0 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Admin chạy `add` với một hoặc nhiều email (hoặc file CSV), kèm ghi chú (ví dụ "nhóm khảo sát 1").

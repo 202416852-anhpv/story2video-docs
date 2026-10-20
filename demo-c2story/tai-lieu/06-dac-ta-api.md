@@ -50,6 +50,13 @@
 | 451 | `CONTENT_POLICY` | Nội dung vi phạm chính sách |
 | 503 | `DAILY_BUDGET_EXCEEDED` | Chạm trần chi tiêu AI toàn hệ thống trong ngày (BR-29); thử lại sau 00:00 giờ Việt Nam |
 
+### 1.2 Phạm vi MVP và OpenAPI viết trước
+
+- **Endpoint thuộc MVP** là mọi dòng ở §2 **không** có nhãn *(sau MVP)* (ở dòng hoặc ở tiêu đề mục). Hiện có **80 / 119** dòng endpoint thuộc MVP; phần quản trị §2.9 trong MVP là lệnh CLI/seed, không có endpoint HTTP.
+- **Viết trước (design-first):** với mỗi module, file `openapi/<module>.yaml` (OpenAPI 3.1) cho các endpoint MVP được viết và review **trước** khi code, trong sprint đầu của giai đoạn chứa module đó (M01 ở P0; M02–M05 ở P1–P2; M06, M09 ở P3). Schema request/response dùng chung các định nghĩa ở §1.1 (lỗi), [12 §3](12-dac-ta-ky-thuat-loi.md) (`timeline_snapshot`) và quy ước tiền (chuỗi thập phân USD).
+- **Kiểm trong CI:** spec sinh từ code (NestJS Swagger) được so với file viết tay; khác biệt không có trong file viết tay làm CI thất bại (`IT-openapi-contract`). Client Web App sinh kiểu TypeScript từ file viết tay.
+- Mỗi endpoint trong file OpenAPI liệt kê đủ mã lỗi có thể trả (theo bảng §1.1) và yêu cầu `Idempotency-Key` / `If-Match` nếu có.
+
 ## 2. Danh mục endpoint
 
 Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của dự án (MVP: chỉ Owner), `O` = Owner, `A` = Admin. Cột **Job** đánh ✓ nếu endpoint trả `202` và tính phí theo BR-01. Mọi endpoint có ✓ nhận `?dryRun=true` để chỉ trả giá ước tính `{ estimatedCostUsd, breakdown[] }` mà không tạo job.
@@ -249,7 +256,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 
 ## 3. Sự kiện realtime (SSE)
 
-`GET /projects/{pid}/events` dùng `Last-Event-ID` để nối lại. Các loại sự kiện:
+`GET /projects/{pid}/events`. **MVP:** không phát lại sự kiện đã lỡ (không có kho sự kiện, ADR-23); khi nối lại, client tải lại ảnh chụp trạng thái (vd. `GET …/media`, `GET …/timelines/{tlid}`, `GET /me/wallet`) rồi nghe tiếp. **Sau MVP:** hỗ trợ `Last-Event-ID` để phát lại từ outbox. Các loại sự kiện:
 
 | `event` | `data` |
 |---|---|

@@ -409,7 +409,7 @@
 - **3b.** Chạm trần chi tiêu AI trong ngày: `503 DAILY_BUDGET_EXCEEDED`, không tạo job (BR-29).
 - **4a.** Số shot thực tế khác ước tính: điều chỉnh phần tiền đã giữ (giữ thêm hoặc trả lại).
 - **5a.** Còn ảnh hoặc thuyết minh lỗi: chương "Cần xử lý", liệt kê shot; Editor xử lý qua UC-05.10 hoặc UC-05.07c.
-- **\*a.** Editor sửa văn bản chương trong lúc job chạy: chương bị khóa (BR-12) đến khi job xong.
+- **\*a.** Editor sửa văn bản chương trong lúc job chạy: chương bị khóa (BR-12) đến khi job xong. Khóa được mở trong cùng giao dịch kết thúc job cha (thành công, lỗi hay hủy); nếu worker chết, reconciler mở khóa trong ≤ 15 phút (05 §6.1 bước 8, ADR-29).
 
 ### UC-05.07a Dựng storyboard tự động
 <a id="uc-0507a"></a>
@@ -673,8 +673,8 @@
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** `pronunciation_entries` cập nhật; dùng ở lần sinh thuyết minh sau |
 | Kích hoạt | Mở "Từ điển phát âm" hoặc từ một shot đang nghe ở UC-05.18 |
-| Truy vết | FR-NAR-04; BR-19. Vị trí ✂5 trong thứ tự cắt giảm (QĐ-05, QĐ-80) |
-| Giai đoạn | P2 ✂5 |
+| Truy vết | FR-NAR-04; BR-19. Vị trí ✂6 trong thứ tự cắt giảm (QĐ-05, QĐ-80) |
+| Giai đoạn | P2 ✂6 |
 
 **Luồng chính**
 1. Editor thêm mục: từ viết, cách đọc, kiểu (alias / phoneme), phân biệt hoa thường.
@@ -918,6 +918,8 @@
 - **4a.** Không đủ số dư: ROLLBACK cả phần giữ chỗ ngân sách, `402 INSUFFICIENT_BALANCE` kèm số còn thiếu.
 - **5a.** Chi phí thực × 110% lớn hơn số đã giữ (ước tính sai): chỉ trừ bằng số đã giữ, phần chênh do hệ thống chịu, ghi cảnh báo để chỉnh giới hạn đầu ra trong `price_rules` [ĐX].
 - **5b.** Provider không trả số liệu sử dụng: dùng đơn giá × đơn vị đo được (số ảnh, số ký tự) để tính chi phí thực.
+- **5c.** Job thành công sau một hoặc nhiều lần thử lỗi: chỉ tính chi phí của lần thử thành công; chi phí các lần lỗi do hệ thống chịu (WR-09).
+- **5d.** Job bị giao lại cho worker khác khi đã kết thúc: câu nhận việc không trúng dòng nào, worker bỏ qua; không gọi provider và không trừ tiền lần nữa (ADR-29).
 - **\*a.** Job mất heartbeat > 10 phút: reconciler đặt `FAILED` và RELEASE.
 
 ---

@@ -17,6 +17,7 @@
 | D-07 | Bảng thuộc dự án có `project_id` (trực tiếp hoặc qua bảng cha) để phân quyền; RLS của Postgres là lớp bảo vệ thứ hai [ĐX], **sau MVP** (ADR-23). |
 | D-08 | Xóa mềm (`deleted_at`) cho `projects`, `library_assets`; người dùng xóa dữ liệu dùng `users.status = DELETED` + `deletion_requested_at`. |
 | D-09 | **Tiền lưu bằng số nguyên micro-USD** (`bigint`, 1 USD = 1.000.000) ở mọi cột hậu tố `_micro`; không dùng số thực cho tiền. Chi phí thực của provider (`ai_usage_records.cost_usd`) giữ kiểu `numeric` để không mất độ chính xác khi nhân 110% (QĐ-30, QĐ-31). |
+| D-10 | **Mọi offset và độ dài văn bản tính theo code unit UTF-16** (chỉ số chuỗi JavaScript) trên văn bản NFC: `shots.source_start/end`, `word_timings.charStart/End`, cue phụ đề, `char_count` của `chapters`, `source_texts`, `archives` (ADR-26). Giá trị do **ứng dụng** tính và ghi; **không** dùng `char_length()` / `substring()` của Postgres (đếm code point) để so khớp hay cắt văn bản. Thành phần ngoài TypeScript (Alignment Worker Python) nhận và trả offset đã đổi sang UTF-16 qua hàm chuyển đổi dùng chung có test. Giới hạn "ký tự" ở 08 §5 cũng đếm theo đơn vị này. |
 
 ## 2. Kiểu liệt kê (enum)
 
@@ -124,7 +125,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `jobs` | id PK, project_id FK?, user_id FK (người trả tiền), type, status, priority, target_type, target_id, params, result, error_code?, error_message?, attempts, held_micro (giá ước tính đã giữ), charged_micro? (số đã trừ = chi phí thực × 110%, ≤ `held_micro`), budget_day?, budget_reserved_micro? (chỗ đã giữ trong trần ngày, tính theo chi phí provider chưa cộng phí; ADR-25), idempotency_key UQ, parent_job_id FK?, heartbeat_at?, started_at?, finished_at? | Job cha `GENERATE_MEDIA_CHAPTER` có job con. UC-05.07, UC-05.17, UC-10.07 |
 | `ai_providers` | id PK, code UQ, kind, enabled, priority, config_ref | `config_ref` = **tên** secret, không lưu key. UC-10.03 |
 | `ai_models` | id PK, provider_id FK, code, display_name, capabilities, unit_cost_usd, enabled, user_selectable | UC-10.03 |
-| `ai_usage_records` | id PK, job_id FK, provider_id FK?, model, unit (`TOKENS`/`IMAGES`/`SECONDS`/`CHARS`), quantity, cost_usd, latency_ms, request_id | Đối soát chi phí. UC-10.10 |
+| `ai_usage_records` | id PK, job_id FK, provider_id FK?, model, unit (`TOKENS`/`IMAGES`/`SECONDS`/`CHARS`), quantity, cost_usd, latency_ms, request_id, attempt, succeeded | Mỗi lần gọi provider một dòng, kể cả lần lỗi; `attempt` = lần thử của job (ADR-29). CAPTURE chỉ tính các dòng `succeeded` của lần thử thành công (WR-09); tổng mọi dòng tính vào `daily_ai_budgets.spent_micro`. Đối soát chi phí. UC-10.10 |
 | `price_rules` | id PK, operation, formula, effective_from, effective_to?, created_by FK? | `formula` gồm hệ số (1,10), cơ sở tính chi phí và giới hạn đầu ra để ước tính (08 §3.2). Có phiên bản theo ngày hiệu lực; MVP nạp từ file seed. UC-10.01 |
 | `daily_ai_budgets` | day PK (ngày giờ Việt Nam), cap_micro, reserved_micro, spent_micro, alert_80_sent_at?, alert_100_sent_at? | **Bộ đếm nguyên tử** cho trần chi tiêu ngày (BR-29, IC-18): giữ chỗ bằng một câu `UPDATE … WHERE spent + reserved + x ≤ cap` trong cùng giao dịch với HOLD. Tạo dòng của ngày khi cần (`INSERT … ON CONFLICT DO NOTHING`). UC-05.17, UC-10.12 |
 | `system_settings` | key PK, value, updated_by FK? | Cấu hình vận hành: `daily_ai_budget_usd` (mặc định 10, BR-29), `beta_invite_only` (true, BR-30), `consent_notice_version`, `vnd_rate`. MVP sửa bằng file seed/CLI. UC-10.11, UC-10.12 |
@@ -143,7 +144,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | IC-05 | Mỗi job tốn phí có đúng một HOLD; khi kết thúc, tổng CAPTURE + RELEASE bằng số đã HOLD, và CAPTURE ≤ HOLD | Service + reconciler định kỳ (`act-giu-tru-tien`) |
 | IC-06 | `payments`: `kind = TOPUP` thì `plan_id` NULL; `kind = SUBSCRIPTION` thì `plan_id` NOT NULL | CHECK |
 | IC-07 | `payment_events.gateway_event_id` duy nhất | Unique index |
-| **IC-08** | **Phủ kín:** shot của mỗi bản nháp, sắp theo `order_index`: `shot[0].source_start = 0`, `shot[i].source_end = shot[i+1].source_start`, `shot[last].source_end = char_length(chapter.content)` | Service (CoverageValidator) trong cùng giao dịch ghi; constraint trigger DEFERRABLE sau MVP (ADR-23) |
+| **IC-08** | **Phủ kín:** shot của mỗi bản nháp, sắp theo `order_index`: `shot[0].source_start = 0`, `shot[i].source_end = shot[i+1].source_start`, `shot[last].source_end = chapters.char_count` (độ dài UTF-16, D-10) | Service (CoverageValidator) trong cùng giao dịch ghi; constraint trigger DEFERRABLE sau MVP (ADR-23) |
 | **IC-09** | `narrations` khác `OUTDATED` phải có `source_hash = shots.source_hash` | Service đặt `OUTDATED` khi chương đổi |
 | **IC-10** | Timeline của chương: mỗi shot hiện hành có đúng 1 item `IMAGE` và 1 item `NARRATION`; item `NARRATION` đúng thứ tự, không chồng lấn, `duration_ms` = độ dài audio; item `IMAGE` phủ trọn khoảng đọc của shot | Service kiểm tra mỗi lần `apply-ops` (BR-24) |
 | **IC-11** | Render chỉ được tạo khi `coverage_chars = total_chars` và IC-10 thỏa | Service (UC-06.16a) |

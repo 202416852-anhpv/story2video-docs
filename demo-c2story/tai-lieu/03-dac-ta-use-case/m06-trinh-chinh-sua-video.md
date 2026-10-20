@@ -173,8 +173,8 @@
 | Tiền điều kiện | Có ≥ 2 clip ảnh liền kề |
 | Hậu điều kiện | **Thành công:** `transition_in` cập nhật; vị trí clip thuyết minh không đổi |
 | Kích hoạt | Kéo chuyển cảnh từ thư viện vào mối nối, hoặc chọn mối nối |
-| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂2 trong thứ tự cắt giảm |
-| Giai đoạn | P3 (nâng cao ✂2) |
+| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm |
+| Giai đoạn | P3 (nâng cao ✂3) |
 
 **Luồng chính**
 1. Editor kéo kiểu chuyển cảnh vào mối nối: cơ bản cut, crossfade; nâng cao fade, fade-to-black/white, slide, wipe, zoom.
@@ -243,8 +243,8 @@
 | Tiền điều kiện | Có clip thuyết minh có `word_timings` |
 | Hậu điều kiện | **Thành công:** `subtitle_style` cập nhật |
 | Kích hoạt | Bảng "Phụ đề" |
-| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂2 trong thứ tự cắt giảm |
-| Giai đoạn | P3 (preset ✂2) |
+| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm |
+| Giai đoạn | P3 (preset ✂3) |
 
 **Luồng chính**
 1. Editor bật phụ đề (kiểu cả câu, ≤ 2 dòng, ≤ 42 ký tự/dòng). Có thể áp một **mẫu preset** dựng sẵn (hằng số dùng chung, không lưu DB) làm điểm xuất phát; hệ thống chỉ sao chép giá trị vào `subtitle_style`, nên đổi preset sau này không ảnh hưởng timeline cũ.

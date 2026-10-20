@@ -65,7 +65,7 @@
 | **Closed beta** | Đợt UAT 10–20 người dùng được mời riêng, khoảng 3 tuần |
 | **Danh sách mời** | Email được Admin cho phép tạo hồ sơ trong closed beta (BR-30) |
 | **MVP** | Phạm vi sản phẩm tới hết giai đoạn P3 (QĐ-03) |
-| **Thứ tự cắt giảm (✂n)** | Thứ tự bỏ tính năng khi trễ tiến độ: Map → phụ đề preset + chuyển cảnh nâng cao → Relationships → Timeline truyện → từ điển phát âm (QĐ-05) |
+| **Thứ tự cắt giảm (✂n)** | Thứ tự bỏ tính năng khi trễ tiến độ. Tầng 1: nạp tiền sandbox (thay bằng Admin cộng tiền) → Map → phụ đề preset + chuyển cảnh nâng cao → Relationships → Timeline truyện → từ điển phát âm (QĐ-05, QĐ-116); tầng 2 ✂7–✂10 và tầng 3 ở 09 §1.3 (QĐ-91) |
 | **Golden set** | Bộ chương mẫu nhóm tự chuẩn bị (tác phẩm hết thời hạn bảo hộ, Project Gutenberg, chương tự viết) để chọn provider và chạy eval |
 | **Mock adapter** | Adapter giả lập provider AI, trả fixture, dùng cho dev và CI để không tốn tiền |
 | **Hold / Capture / Release** | Giữ giá ước tính / trừ chi phí thực × 110% / hoàn phần dư của một job |

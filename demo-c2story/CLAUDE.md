@@ -47,7 +47,7 @@ Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, 5 tu�
 - `quyet-dinh.md` là sổ quyết định (`QĐ-xx`); mọi thay đổi phạm vi/kế hoạch ghi vào đây trước, các tài liệu khác dẫn mã QĐ ở cột Nguồn.
 - Mỗi UC có mục **Truy vết** (FR, BR, IC, NFR, API, sơ đồ); RTM gộp Truy vết của UC gốc và UC con.
 - Tiền tố mã: `FR-<PHÂN HỆ>-NN`, `BR-NN`, `IC-NN` (ràng buộc dữ liệu), `WR-NN` (quy tắc ví, 08 §4), `SYM-NN` (ký hiệu trình bày, 08 §6), `NFR-*`, `ADR-NN`, `UC-<phân hệ>.<số>[chữ]`. Nguồn thông tin: `[QS]` quan sát, `[SL]` suy luận, `[ĐX]` đề xuất của BA.
-- Ký hiệu giai đoạn: `P0`–`P3` thuộc MVP, `Sau` = sau MVP, `✂n` = vị trí trong thứ tự cắt giảm (`09` §1.3: ✂1–5 tầng 1, ✂6–10 tầng 2).
+- Ký hiệu giai đoạn: `P0`–`P3` thuộc MVP, `Sau` = sau MVP, `✂n` = vị trí trong thứ tự cắt giảm (`09` §1.3: ✂1–6 tầng 1, ✂7–10 tầng 2; QĐ-116).
 - Lịch sử phiên bản ở README §8; thêm một dòng khi có thay đổi đáng kể.
 
 ## Nguyên tắc nghiệp vụ không được phá
@@ -55,6 +55,8 @@ Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, 5 tu�
 - **Thuyết minh nguyên văn** (BR-19..BR-25): văn bản TTS = đúng đoạn nguồn của shot; các shot phủ kín 100% chương; AI không bao giờ ghi vào văn bản truyện; track thuyết minh khóa (chỉ dời, chỉnh âm lượng, đổi tốc độ 0,8–1,25×).
 - **Tốc độ đọc**: clip thuyết minh đổi tốc độ bằng file audio dẫn xuất sinh ở server, preview và render cùng phát ở tốc độ 1,0 (ADR-24); không dùng `playbackRate` của trình duyệt.
 - **Trần chi tiêu ngày** phải giữ chỗ nguyên tử trên `daily_ai_budgets` cùng giao dịch với HOLD (ADR-25), không đọc-rồi-so-sánh.
+- **Offset văn bản** luôn là code unit UTF-16 trên văn bản NFC (ADR-26); không dùng `char_length()` của Postgres cho phủ kín hay cắt văn bản.
+- **Job**: bảng `jobs` là nguồn sự thật, BullMQ chỉ vận chuyển; nhận việc bằng `UPDATE … WHERE status IN (…)`; giới hạn đồng thời theo người dùng bằng semaphore Redis, không dùng BullMQ Pro groups (ADR-28, ADR-29).
 - **Tiền**: không còn "credit". Ví USD lưu micro-USD; giá = chi phí thực của provider × 110%; giữ giá ước tính tối đa → trừ chi phí thực → hoàn phần dư; tài khoản Free / Đã nạp tiền; trần chi tiêu AI $10/ngày.
 - **MVP chỉ có Owner**; Editor, cộng tác, AI Director (M07), thư viện (M08) là sau MVP nhưng đặc tả vẫn giữ.
 - Đã bỏ hẳn (không đưa lại trừ khi có QĐ mới): Fix a spot/inpainting, AI sinh nhạc/SFX, gợi ý SFX, credit hằng ngày, các UC-05.06d, 05.10b, 06.11b, 06.11c, 09.07.

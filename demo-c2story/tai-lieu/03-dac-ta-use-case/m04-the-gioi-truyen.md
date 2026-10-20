@@ -346,7 +346,7 @@
 | Kích hoạt | Mở `?v=timeline` |
 | Quan hệ | được mở rộng bởi UC-04.09 |
 | Truy vết | FR-WLD-08 |
-| Giai đoạn | P2 ✂4 |
+| Giai đoạn | P2 ✂5 |
 
 **Luồng chính**
 1. Editor mở Story timeline.
@@ -371,7 +371,7 @@
 | Kích hoạt | Mở `?v=relationships` |
 | Quan hệ | được mở rộng bởi UC-04.09 |
 | Truy vết | FR-WLD-09 |
-| Giai đoạn | P2 ✂3 |
+| Giai đoạn | P2 ✂4 |
 
 **Luồng chính**
 1. Editor mở Relationship graph.
@@ -392,7 +392,7 @@
 | Kích hoạt | "Re-analyse" |
 | Quan hệ | extend UC-04.07, UC-04.08 |
 | Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; 08 §3.2 (`STORY_META`) |
-| Giai đoạn | P2 ✂3 ✂4 |
+| Giai đoạn | P2 ✂4 ✂5 |
 
 **Luồng chính**
 1. Editor bấm "Re-analyse".

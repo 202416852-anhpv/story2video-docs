@@ -76,7 +76,7 @@ Sau bảng là **Luồng chính** (đánh số `1, 2, 3…`) và **Luồng thay 
 
 ## 5. Danh mục use case
 
-Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 thuộc MVP, "Sau" là sau MVP, ✂n là vị trí trong thứ tự cắt giảm (✂1–✂5 tầng 1, ✂6–✂10 tầng 2; [09 §1.3](../09-ke-hoach-phat-trien.md)). Tên use case lấy từ tiêu đề đặc tả.
+Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 thuộc MVP, "Sau" là sau MVP, ✂n là vị trí trong thứ tự cắt giảm (✂1–✂6 tầng 1, ✂7–✂10 tầng 2; [09 §1.3](../09-ke-hoach-phat-trien.md)). Tên use case lấy từ tiêu đề đặc tả.
 
 ### M01 — Tích hợp SSO & hồ sơ ([m01-tich-hop-sso.md](m01-tich-hop-sso.md))
 
@@ -86,7 +86,7 @@ Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 th
 | [UC-01.01a](m01-tich-hop-sso.md#uc-0101a) | Xác thực ID token | Con (include/extend) | P0 |
 | [UC-01.01b](m01-tich-hop-sso.md#uc-0101b) | Tạo / đồng bộ hồ sơ cục bộ (JIT) | Con (include/extend) | P0 |
 | [UC-01.01c](m01-tich-hop-sso.md#uc-0101c) | Quay về trang đã yêu cầu | Con (include/extend) | P0 |
-| [UC-01.01d](m01-tich-hop-sso.md#uc-0101d) | Đồng ý xử lý dữ liệu cá nhân | Con (include/extend) | P0 |
+| [UC-01.01d](m01-tich-hop-sso.md#uc-0101d) | Đồng ý xử lý dữ liệu cá nhân | Con (include/extend) | P1 |
 | [UC-01.02](m01-tich-hop-sso.md#uc-0102) | Đăng xuất | Gốc | P0 |
 | [UC-01.02a](m01-tich-hop-sso.md#uc-0102a) | Kết thúc phiên SSO | Con (include/extend) | P0 |
 | [UC-01.03](m01-tich-hop-sso.md#uc-0103) | Xem Dashboard | Gốc | P2 |
@@ -108,7 +108,7 @@ Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 th
 | [UC-02.06](m02-du-an-cong-tac.md#uc-0206) | Tạo / thu hồi link mời | Gốc | Sau |
 | [UC-02.07](m02-du-an-cong-tac.md#uc-0207) | Quản lý thành viên | Gốc | Sau |
 | [UC-02.08](m02-du-an-cong-tac.md#uc-0208) | Tham gia dự án qua link | Gốc | Sau |
-| [UC-02.09](m02-du-an-cong-tac.md#uc-0209) | Xem bản đồ quy trình (Map) | Gốc | P3 ✂1 |
+| [UC-02.09](m02-du-an-cong-tac.md#uc-0209) | Xem bản đồ quy trình (Map) | Gốc | P3 ✂2 |
 | [UC-02.10](m02-du-an-cong-tac.md#uc-0210) | Xử lý xung đột khi lưu | Gốc | Sau |
 | [UC-02.10a](m02-du-an-cong-tac.md#uc-0210a) | Lưu bản của tôi thành nháp | Con (include/extend) | Sau |
 | [UC-02.10b](m02-du-an-cong-tac.md#uc-0210b) | Tải bản của người khác | Con (include/extend) | Sau |
@@ -155,9 +155,9 @@ Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 th
 | [UC-04.04](m04-the-gioi-truyen.md#uc-0404) | Dùng ảnh tải lên nguyên bản | Gốc | P1 |
 | [UC-04.05](m04-the-gioi-truyen.md#uc-0405) | Chọn style dự án | Gốc | P1 |
 | [UC-04.06](m04-the-gioi-truyen.md#uc-0406) | Thiết lập Art Direction | Gốc | P1 |
-| [UC-04.07](m04-the-gioi-truyen.md#uc-0407) | Xem dòng thời gian truyện | Gốc | P2 ✂4 |
-| [UC-04.08](m04-the-gioi-truyen.md#uc-0408) | Xem đồ thị quan hệ | Gốc | P2 ✂3 |
-| [UC-04.09](m04-the-gioi-truyen.md#uc-0409) | Phân tích lại (Re-analyse) | Gốc | P2 ✂3 ✂4 |
+| [UC-04.07](m04-the-gioi-truyen.md#uc-0407) | Xem dòng thời gian truyện | Gốc | P2 ✂5 |
+| [UC-04.08](m04-the-gioi-truyen.md#uc-0408) | Xem đồ thị quan hệ | Gốc | P2 ✂4 |
+| [UC-04.09](m04-the-gioi-truyen.md#uc-0409) | Phân tích lại (Re-analyse) | Gốc | P2 ✂4 ✂5 |
 | [UC-04.10](m04-the-gioi-truyen.md#uc-0410) | Quản lý Visual Rules | Gốc | P1 |
 | [UC-04.11](m04-the-gioi-truyen.md#uc-0411) | Xuất ZIP ảnh tài sản | Gốc | Sau |
 
@@ -191,7 +191,7 @@ Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 th
 | [UC-05.10c](m05-sinh-tu-lieu.md#uc-0510c) | Khôi phục phiên bản ảnh | Con (include/extend) | P1 |
 | [UC-05.11](m05-sinh-tu-lieu.md#uc-0511) | Cài đặt thuyết minh | Gốc | P2 |
 | [UC-05.11a](m05-sinh-tu-lieu.md#uc-0511a) | Nghe thử giọng | Con (include/extend) | P2 |
-| [UC-05.12](m05-sinh-tu-lieu.md#uc-0512) | Quản lý từ điển phát âm | Gốc | P2 ✂5 |
+| [UC-05.12](m05-sinh-tu-lieu.md#uc-0512) | Quản lý từ điển phát âm | Gốc | P2 ✂6 |
 | [UC-05.13](m05-sinh-tu-lieu.md#uc-0513) | Sinh thuyết minh nguyên văn | Gốc | P2 |
 | [UC-05.13a](m05-sinh-tu-lieu.md#uc-0513a) | Cắt đoạn nguồn & kiểm tra hash | Con (include/extend) | P2 |
 | [UC-05.13b](m05-sinh-tu-lieu.md#uc-0513b) | Chuẩn hóa phát âm (SSML) | Con (include/extend) | P2 |
@@ -213,10 +213,10 @@ Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 th
 | [UC-06.02a](m06-trinh-chinh-sua-video.md#uc-0602a) | Kiểm tra khóa thuyết minh | Con (include/extend) | P3 |
 | [UC-06.03](m06-trinh-chinh-sua-video.md#uc-0603) | Quản lý track | Gốc | P3 |
 | [UC-06.04](m06-trinh-chinh-sua-video.md#uc-0604) | Đặt hiệu ứng Ken Burns & điểm tập trung | Gốc | P3 |
-| [UC-06.05](m06-trinh-chinh-sua-video.md#uc-0605) | Đặt chuyển cảnh | Gốc | P3 (nâng cao ✂2) |
+| [UC-06.05](m06-trinh-chinh-sua-video.md#uc-0605) | Đặt chuyển cảnh | Gốc | P3 (nâng cao ✂3) |
 | [UC-06.06](m06-trinh-chinh-sua-video.md#uc-0606) | Chọn khung hình & tinh chỉnh màu | Gốc | P3 |
 | [UC-06.07](m06-trinh-chinh-sua-video.md#uc-0607) | Thêm overlay chữ / logo, clip tiêu đề & kết | Gốc | Sau |
-| [UC-06.08](m06-trinh-chinh-sua-video.md#uc-0608) | Định kiểu phụ đề | Gốc | P3 (preset ✂2) |
+| [UC-06.08](m06-trinh-chinh-sua-video.md#uc-0608) | Định kiểu phụ đề | Gốc | P3 (preset ✂3) |
 | [UC-06.09](m06-trinh-chinh-sua-video.md#uc-0609) | Thêm nhạc nền | Gốc | P3 |
 | [UC-06.10](m06-trinh-chinh-sua-video.md#uc-0610) | Thêm SFX | Gốc | P3 |
 | [UC-06.11](m06-trinh-chinh-sua-video.md#uc-0611) | Tìm trong thư viện âm thanh | Gốc | P3 |
@@ -266,13 +266,13 @@ Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 th
 |---|---|---|---|
 | [UC-09.01](m09-vi-thanh-toan.md#uc-0901) | Xem bảng giá | Gốc | P3 |
 | [UC-09.02](m09-vi-thanh-toan.md#uc-0902) | Đăng ký gói | Gốc | Sau |
-| [UC-09.03](m09-vi-thanh-toan.md#uc-0903) | Nạp tiền vào ví | Gốc | P3 ✂6 |
-| [UC-09.03a](m09-vi-thanh-toan.md#uc-0903a) | Thanh toán qua checkout | Con (include/extend) | P3 ✂6 |
+| [UC-09.03](m09-vi-thanh-toan.md#uc-0903) | Nạp tiền vào ví | Gốc | P3 ✂1 |
+| [UC-09.03a](m09-vi-thanh-toan.md#uc-0903a) | Thanh toán qua checkout | Con (include/extend) | P3 ✂1 |
 | [UC-09.04](m09-vi-thanh-toan.md#uc-0904) | Quản lý thanh toán | Gốc | Sau |
 | [UC-09.05](m09-vi-thanh-toan.md#uc-0905) | Xem số dư ví | Gốc | P2 |
 | [UC-09.06](m09-vi-thanh-toan.md#uc-0906) | Xem lịch sử chi tiêu | Gốc | P3 |
-| [UC-09.08](m09-vi-thanh-toan.md#uc-0908) | Xử lý webhook thanh toán | Gốc | P3 ✂6 |
-| [UC-09.08a](m09-vi-thanh-toan.md#uc-0908a) | Ghi nạp tiền vào sổ cái | Con (include/extend) | P3 ✂6 |
+| [UC-09.08](m09-vi-thanh-toan.md#uc-0908) | Xử lý webhook thanh toán | Gốc | P3 ✂1 |
+| [UC-09.08a](m09-vi-thanh-toan.md#uc-0908a) | Ghi nạp tiền vào sổ cái | Con (include/extend) | P3 ✂1 |
 
 ### M10 — Quản trị ([m10-quan-tri.md](m10-quan-tri.md))
 
@@ -290,7 +290,7 @@ Cột **GĐ**: giai đoạn ([09 §1](../09-ke-hoach-phat-trien.md)); P0–P3 th
 | [UC-10.08](m10-quan-tri.md#uc-1008) | Điều chỉnh số dư người dùng | Gốc | Sau |
 | [UC-10.09](m10-quan-tri.md#uc-1009) | Ghi audit log | Gốc | P1 |
 | [UC-10.10](m10-quan-tri.md#uc-1010) | Xem báo cáo | Gốc | Sau |
-| [UC-10.11](m10-quan-tri.md#uc-1011) | Quản lý danh sách mời beta | Gốc | P0 |
+| [UC-10.11](m10-quan-tri.md#uc-1011) | Quản lý danh sách mời beta | Gốc | P1 |
 | [UC-10.12](m10-quan-tri.md#uc-1012) | Áp trần chi tiêu AI hằng ngày | Gốc | P2 |
 
 ### Tổng hợp

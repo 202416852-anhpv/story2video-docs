@@ -2,7 +2,7 @@
 
 > Theo cấu trúc ISO/IEC/IEEE 29148:2018. Yêu cầu phi chức năng ở [07](07-yeu-cau-phi-chuc-nang.md). Quyết định nguồn ở [sổ quyết định](../quyet-dinh.md).
 > Ưu tiên MoSCoW: **M** (Must) bắt buộc trong MVP; **S** (Should) làm nếu kịp trong MVP hoặc sau MVP; **C** (Could) sau MVP.
-> **GĐ** (giai đoạn, [09 §1](09-ke-hoach-phat-trien.md)): **P0–P3** thuộc MVP; **Sau** là sau MVP (không làm trong đồ án trừ khi MVP xong sớm); **Bỏ** là đã loại khỏi phạm vi. Ký hiệu **✂n** là vị trí thứ n trong thứ tự cắt giảm khi trễ tiến độ: ✂1–✂5 tầng 1 (QĐ-05), ✂6–✂10 tầng 2 (QĐ-91), xem [09 §1.3](09-ke-hoach-phat-trien.md).
+> **GĐ** (giai đoạn, [09 §1](09-ke-hoach-phat-trien.md)): **P0–P3** thuộc MVP; **Sau** là sau MVP (không làm trong đồ án trừ khi MVP xong sớm); **Bỏ** là đã loại khỏi phạm vi. Ký hiệu **✂n** là vị trí thứ n trong thứ tự cắt giảm khi trễ tiến độ: ✂1–✂6 tầng 1 (QĐ-05, QĐ-116), ✂7–✂10 tầng 2 (QĐ-91), xem [09 §1.3](09-ke-hoach-phat-trien.md).
 > Nguồn: **QS** (quan sát) / **SL** (suy luận) / **ĐX** (đề xuất) / **QĐ-xx** (quyết định đã chốt).
 
 ## 1. Giới thiệu
@@ -30,11 +30,11 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | Phân hệ | Trong MVP | Sau MVP |
 |---|---|---|
 | M01 SSO | Đăng nhập, đăng xuất, hồ sơ (Keycloak → Vbee), danh sách mời beta, màn hình đồng ý xử lý dữ liệu | Back-channel logout, tự yêu cầu xóa dữ liệu (làm thủ công) |
-| M02 Dự án | Danh sách, import, tạo trống, cài đặt, xóa, Map ✂1 | Link mời, thành viên, xung đột giữa nhiều người, realtime, nhân bản |
+| M02 Dự án | Danh sách, import, tạo trống, cài đặt, xóa, Map ✂2 | Link mời, thành viên, xung đột giữa nhiều người, realtime, nhân bản |
 | M03 Bản thảo | Văn bản gốc, Workspace, chia/gộp/dời/sắp xếp chương, tái cấu trúc nguyên tử, dời ranh giới shot | Find & replace, Archives, Notes, lịch sử phiên bản chương |
-| M04 Thế giới truyện | Phân tích tài sản, CRUD tài sản, ảnh tham chiếu, ảnh tải lên, style, Art Direction, Visual Rules, Timeline truyện ✂4, Relationships ✂3 | Thư viện, xuất ZIP |
-| M05 Sinh tư liệu | Storyboard phủ kín, biên tập shot, sinh/sửa ảnh, TTS nguyên văn, quy tắc ký hiệu, từ điển phát âm ✂5, nghe & đánh dấu, "Sinh tư liệu", media bin | Quản lý nhiều bản nháp, chapter rules, re-direct, đa giọng, kiểm chứng ASR, ZIP ảnh |
-| M06 Trình chỉnh sửa | Track video/thuyết minh/phụ đề/nhạc/SFX, Ken Burns, chuyển cảnh cơ bản (nâng cao ✂2), phụ đề (preset ✂2), tải nhạc lên, ducking, preview, render, tải MP4/SRT | Overlay, tinh chỉnh màu, keyframe, lịch sử phiên bản timeline, thư viện âm thanh, trộn âm nâng cao, chia video |
+| M04 Thế giới truyện | Phân tích tài sản, CRUD tài sản, ảnh tham chiếu, ảnh tải lên, style, Art Direction, Visual Rules, Timeline truyện ✂5, Relationships ✂4 | Thư viện, xuất ZIP |
+| M05 Sinh tư liệu | Storyboard phủ kín, biên tập shot, sinh/sửa ảnh, TTS nguyên văn, quy tắc ký hiệu, từ điển phát âm ✂6, nghe & đánh dấu, "Sinh tư liệu", media bin | Quản lý nhiều bản nháp, chapter rules, re-direct, đa giọng, kiểm chứng ASR, ZIP ảnh |
+| M06 Trình chỉnh sửa | Track video/thuyết minh/phụ đề/nhạc/SFX, Ken Burns, chuyển cảnh cơ bản (nâng cao ✂3), phụ đề (preset ✂3), tải nhạc lên, ducking, preview, render, tải MP4/SRT | Overlay, tinh chỉnh màu, keyframe, lịch sử phiên bản timeline, thư viện âm thanh, trộn âm nâng cao, chia video |
 | M07 AI Director | — | Toàn bộ |
 | M08 Thư viện cá nhân | — | Toàn bộ |
 | M09 Ví & thanh toán | Ví USD, tiền dùng thử, giữ/trừ/hoàn, giới hạn Free, nạp tiền sandbox, lịch sử chi tiêu | Gói đăng ký, hóa đơn, portal |
@@ -60,8 +60,8 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-AUTH-08 | Đổi ngôn ngữ giao diện (vi, en), lưu ở hồ sơ cục bộ; mặc định lấy claim `locale` nếu có. | S | P3 | QS |
 | FR-AUTH-09 | Dashboard hiển thị trạng thái tài khoản (Free / Đã nạp tiền), số dư ví, phần Free đã dùng trong tháng (lượt render, phút video), số dự án; link "Quản lý tài khoản" mở trang hồ sơ của SSO. | M | P2 | QS, QĐ-35 |
 | FR-AUTH-10 | Khi phát hiện tài khoản bị xóa hoặc vô hiệu ở SSO (lúc đăng nhập hoặc gia hạn phiên), ứng dụng khóa hồ sơ cục bộ. Người dùng **tự yêu cầu xóa dữ liệu** (lên lịch xóa dự án sau 30 ngày): sau MVP; trong đồ án, Admin xóa thủ công theo yêu cầu và xóa toàn bộ dữ liệu beta sau ngày bảo vệ. | M | P0 / Sau | ĐX, QĐ-24 |
-| FR-AUTH-11 | **Danh sách mời closed beta:** Admin thêm/gỡ email được mời. Đăng nhập SSO thành công nhưng email không có trong danh sách và chưa có hồ sơ: hiện "Bạn chưa được mời tham gia beta", không tạo hồ sơ, không tặng tiền (BR-30). Tắt được bằng cấu hình khi mở rộng. | M | P0 | QĐ-25 |
-| FR-AUTH-12 | **Đồng ý xử lý dữ liệu cá nhân:** lần đăng nhập đầu (hoặc khi đổi phiên bản thông báo) hiện màn hình nêu dữ liệu thu thập, mục đích, thời hạn xóa; lưu thời điểm và phiên bản đồng ý; không đồng ý thì đăng xuất (BR-31). | M | P0 | QĐ-26 |
+| FR-AUTH-11 | **Danh sách mời closed beta:** Admin thêm/gỡ email được mời. Đăng nhập SSO thành công nhưng email không có trong danh sách và chưa có hồ sơ: hiện "Bạn chưa được mời tham gia beta", không tạo hồ sơ, không tặng tiền (BR-30). Tắt được bằng cấu hình khi mở rộng. | M | P1 | QĐ-25 |
+| FR-AUTH-12 | **Đồng ý xử lý dữ liệu cá nhân:** lần đăng nhập đầu (hoặc khi đổi phiên bản thông báo) hiện màn hình nêu dữ liệu thu thập, mục đích, thời hạn xóa; lưu thời điểm và phiên bản đồng ý; không đồng ý thì đăng xuất (BR-31). | M | P1 | QĐ-26 |
 | FR-AUTH-13 | **Kết nối SSO Vbee** thay Keycloak qua cùng cổng `IdentityProviderPort` (ADR-20): cấu hình discovery hoặc endpoint thủ công, ánh xạ claims. Nếu Vbee chỉ có OAuth 2.0: lấy thông tin qua userinfo, không có back-channel logout. Hạn có tài liệu từ Vbee: hết tháng thứ 2; quá hạn thì giữ Keycloak (QĐ-22). | M | P3 | QĐ-21, QĐ-23 |
 
 ### 2.2 M02 — Quản lý dự án & cộng tác (PRJ) · lõi
@@ -73,7 +73,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-PRJ-03 | Import **luôn giữ nguyên văn**. Hệ thống chỉ chuẩn hóa kỹ thuật không làm đổi chữ: chuẩn Unicode NFC, thống nhất ký tự xuống dòng, bỏ ký tự điều khiển vô hình. Không có tùy chọn AI viết lại (BR-19, BR-21). *Khác với hệ thống tham chiếu.* | M | P1 | ĐX |
 | FR-PRJ-04 | Tạo dự án trống rồi viết trực tiếp trong Workspace. | M | P1 | QS |
 | FR-PRJ-05 | Bố cục Studio: thanh trái gồm các nhóm Write (Workspace, Split into chapters), Your world (Story Assets, Timeline, Relationships, Visual Rules), Make·Media (Sinh tư liệu, Storyboard, Ảnh, Thuyết minh theo chương), Make·Video (Trình chỉnh sửa, Renders), danh sách chương, Settings. Vùng giữa là các tab có thể đóng. Màn hình hiện tại thể hiện trên URL (`?v=<view>[:<id>]`) để chia sẻ link. Find & replace, Archives, Project Assets, panel Notes/Director: sau MVP. | M | P1 | QS |
-| FR-PRJ-06 | Map overview: sơ đồ chặng (1 Nhập truyện → 2 Chia chương → 3 Thế giới truyện → 4 Sinh tư liệu → 5 Chỉnh sửa video → 6 Xuất & tải), làm nổi bật chặng hiện tại; bấm một chặng để chuyển tới. Trang tĩnh, khoảng 1–2 ngày công. | S | P3 ✂1 | QS (điều chỉnh), QĐ-61 |
+| FR-PRJ-06 | Map overview: sơ đồ chặng (1 Nhập truyện → 2 Chia chương → 3 Thế giới truyện → 4 Sinh tư liệu → 5 Chỉnh sửa video → 6 Xuất & tải), làm nổi bật chặng hiện tại; bấm một chặng để chuyển tới. Trang tĩnh, khoảng 1–2 ngày công. | S | P3 ✂2 | QS (điều chỉnh), QĐ-61 |
 | FR-PRJ-07 | Settings (chỉ Owner): style, mô hình ảnh, ngôn ngữ, thời lượng mục tiêu mỗi ảnh (mặc định 15 s đọc), hiển thị, **tỷ lệ khung hình video mục tiêu (16:9 / 9:16 / 1:1)**. Ảnh shot được sinh theo tỷ lệ này. Lưu ngay khi chọn. | M | P1 | QS + ĐX |
 | FR-PRJ-08 | Share (chỉ Owner): tạo, sao chép và thu hồi link mời; ai mở link sẽ tham gia làm Editor. | S | Sau | QS, QĐ-04 |
 | FR-PRJ-09 | Collaborators: Owner xem danh sách thành viên, xóa thành viên. | S | Sau | QS, QĐ-04 |
@@ -109,8 +109,8 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-WLD-05 | Gỡ tài sản khỏi Story Assets / khỏi dự án (BR-16). | M | P1 | QS, QĐ-59 |
 | FR-WLD-06 | Set style cho dự án; "Regenerate all (n)" sinh lại mọi ảnh tham chiếu theo style hiện tại (hiện tổng giá trước khi chạy). | M | P1 | QS |
 | FR-WLD-07 | Art direction: văn bản phong cách bổ sung lên style dự án, áp cho mọi tài sản và mọi ảnh. | M | P1 | QS |
-| FR-WLD-08 | Story timeline: AI gán cho mỗi chương nhãn ngày, mùa và tóm tắt; hiển thị theo tỷ lệ thời gian; Re-analyse. Hai chế độ xem: **theo mạch truyện** (thứ tự chương) và **theo thứ tự thời gian** (theo nhãn ngày/mùa, cho truyện có hồi tưởng). Prompt storyboard dùng dữ liệu này để dựng bối cảnh. | M | P2 ✂4 | QS + ĐX, QĐ-04 |
-| FR-WLD-09 | Relationship graph: AI trích cặp nhân vật, nhãn quan hệ và diễn biến; hiển thị dạng đồ thị; Re-analyse. | M | P2 ✂3 | QS, QĐ-04 |
+| FR-WLD-08 | Story timeline: AI gán cho mỗi chương nhãn ngày, mùa và tóm tắt; hiển thị theo tỷ lệ thời gian; Re-analyse. Hai chế độ xem: **theo mạch truyện** (thứ tự chương) và **theo thứ tự thời gian** (theo nhãn ngày/mùa, cho truyện có hồi tưởng). Prompt storyboard dùng dữ liệu này để dựng bối cảnh. | M | P2 ✂5 | QS + ĐX, QĐ-04 |
+| FR-WLD-09 | Relationship graph: AI trích cặp nhân vật, nhãn quan hệ và diễn biến; hiển thị dạng đồ thị; Re-analyse. | M | P2 ✂4 | QS, QĐ-04 |
 | FR-WLD-10 | Visual Rules: tạo, sửa, xóa luật (tên, nội dung, phạm vi toàn dự án hoặc chương); áp theo BR-08. | M | P1 | QS |
 | FR-WLD-11 | Project Assets (hộp thoại quản trị đầy đủ): thêm, gỡ, bí danh, nhóm; xuất ZIP ảnh tài sản. | S | Sau | QS |
 | FR-WLD-12 | Thêm tài sản có sẵn từ thư viện cá nhân (M08); xóa vĩnh viễn khỏi thư viện (xác nhận 2 bước). | S | Sau | QS, QĐ-59 |
@@ -162,7 +162,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-NAR-01 | Cài đặt thuyết minh của dự án: ngôn ngữ (Auto theo truyện hoặc chọn; tiếng Việt, tiếng Anh), **giọng đọc** (chọn từ danh mục, nghe mẫu), tốc độ (0,8–1,3×), cao độ, khoảng nghỉ giữa câu và giữa đoạn, **bật/tắt từng quy tắc ký hiệu** ([08 §6](08-quy-tac-nghiep-vu.md)). | M | P2 | ĐX, QĐ-56 |
 | FR-NAR-02 | **Văn bản TTS = đúng đoạn nguồn của shot** (`chapter.content[sourceStart:sourceEnd]`). Người dùng không có ô nào để sửa lời đọc trong phân hệ này; muốn đổi lời thì phải sửa chính văn bản chương (BR-19, BR-21). | M | P2 | ĐX |
 | FR-NAR-03 | **Chuẩn hóa chỉ cho phát âm, không đổi văn bản:** quy tắc tất định áp lên *bản đọc*: bỏ ký hiệu trình bày theo [08 §6](08-quy-tac-nghiep-vu.md) nhưng **giữ chữ bên trong** (`*Bố*` đọc "Bố"); dòng phân cách thành khoảng lặng 0,5 s; đọc số, ngày, đơn vị; ngắt nghỉ theo dấu câu. Văn bản hiển thị và phụ đề vẫn là nguyên văn. Mọi quy tắc được ghi log để truy vết. | M | P2 | ĐX, QĐ-56 |
-| FR-NAR-04 | **Từ điển phát âm theo dự án:** cặp *từ viết → cách đọc* (tên riêng, từ mượn, từ Hán Việt). Chỉ ảnh hưởng audio (SSML alias/phoneme), không đổi chữ. | S | P2 ✂5 | ĐX |
+| FR-NAR-04 | **Từ điển phát âm theo dự án:** cặp *từ viết → cách đọc* (tên riêng, từ mượn, từ Hán Việt). Chỉ ảnh hưởng audio (SSML alias/phoneme), không đổi chữ. | S | P2 ✂6 | ĐX |
 | FR-NAR-05 | **Đa giọng (tùy chọn):** gán giọng riêng cho lời thoại trong ngoặc kép của từng nhân vật (nhận diện bằng LLM, người dùng duyệt). Nội dung đọc vẫn nguyên văn; chỉ đổi giọng. MVP đọc một giọng kể. | C | Sau | ĐX, QĐ-60 |
 | FR-NAR-06 | Sinh thuyết minh cho một shot, một chương hoặc cả dự án; hiện giá ước tính theo số ký tự trước khi chạy. Đoạn vượt giới hạn provider được chia theo câu rồi nối audio. Lấy timestamp từng từ (từ TTS hoặc forced alignment) để dựng phụ đề. | M | P2 | ĐX |
 | FR-NAR-07 | **Kiểm chứng lời đọc bằng ASR:** sau TTS, chạy STT so với văn bản nguồn, tính WER và đánh dấu các từ lệch. WER ≤ ngưỡng (mặc định 3%) thì `VERIFIED`, ngược lại `NEEDS_REVIEW`; shot `NEEDS_REVIEW` được nghe lại, sửa từ điển và sinh lại, hoặc **chấp nhận thủ công** (ghi người và thời điểm). Trong MVP, WER ≤ 3% được bảo đảm ở khâu chọn provider (`EVAL-wer-golden`). | S | Sau | ĐX, QĐ-54 |
@@ -188,11 +188,11 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | Mã | Yêu cầu | Ưu tiên | GĐ | Nguồn |
 |---|---|---|---|---|
 | FR-EDT-06 | **Hiệu ứng chuyển động ảnh (Ken Burns):** none, zoom in/out, pan bốn hướng; cường độ; điểm tập trung chọn trên ảnh; nhiều pha cho clip dài. Keyframe vị trí/tỷ lệ (nâng cao): sau MVP. | M | P3 (một phần ✂10) | ĐX |
-| FR-EDT-07 | **Chuyển cảnh** giữa hai clip ảnh: cơ bản cut, crossfade; nâng cao fade, fade-to-black/white, slide, wipe, zoom; thời lượng 0–1,5 s; kéo thả từ thư viện chuyển cảnh; áp hàng loạt. Chuyển cảnh không làm thay đổi vị trí clip thuyết minh. | M | P3 (nâng cao ✂2) | ĐX |
+| FR-EDT-07 | **Chuyển cảnh** giữa hai clip ảnh: cơ bản cut, crossfade; nâng cao fade, fade-to-black/white, slide, wipe, zoom; thời lượng 0–1,5 s; kéo thả từ thư viện chuyển cảnh; áp hàng loạt. Chuyển cảnh không làm thay đổi vị trí clip thuyết minh. | M | P3 (nâng cao ✂3) | ĐX |
 | FR-EDT-08 | **Khung hình:** ảnh lệch tỷ lệ video thì crop (theo điểm tập trung), fit (viền màu) hoặc nền mờ; tỷ lệ video 16:9 / 9:16 / 1:1 theo dự án. Preview có công tắc bật/tắt **vùng an toàn và lưới căn chỉnh** (chỉ hiển thị khi chỉnh sửa, không vẽ vào video xuất). | M | P3 | ĐX |
 | FR-EDT-09 | **Tinh chỉnh hình ảnh:** độ sáng, tương phản, bão hòa, nhiệt độ màu, bộ lọc màu (preset); áp cho một clip, nhiều clip hoặc toàn video. | C | Sau | ĐX |
 | FR-EDT-10 | **Overlay chữ:** nội dung, font (hỗ trợ tiếng Việt), cỡ, màu, viền/bóng, vị trí, hiệu ứng xuất hiện/biến mất; overlay hình (logo). | S | Sau | ĐX |
-| FR-EDT-11 | **Phụ đề:** bật/tắt; luôn hiển thị **nguyên văn kể cả ký hiệu trình bày** (BR-22), ngắt dòng theo timestamp (≤ 2 dòng, ≤ 42 ký tự/dòng, theo chuẩn Netflix); kiểu cả câu; font, cỡ, màu, nền, vị trí trong vùng an toàn. **Mẫu preset** dựng sẵn (hằng số trong package TS dùng chung, không lưu DB) để áp một lần rồi tinh chỉnh tiếp; áp preset chỉ sao chép giá trị vào `subtitle_style`. Nội dung phụ đề **không sửa được** trong trình chỉnh sửa, chỉ sửa kiểu. | M | P3 (preset ✂2) | ĐX, QĐ-56 |
+| FR-EDT-11 | **Phụ đề:** bật/tắt; luôn hiển thị **nguyên văn kể cả ký hiệu trình bày** (BR-22), ngắt dòng theo timestamp (≤ 2 dòng, ≤ 42 ký tự/dòng, theo chuẩn Netflix); kiểu cả câu; font, cỡ, màu, nền, vị trí trong vùng an toàn. **Mẫu preset** dựng sẵn (hằng số trong package TS dùng chung, không lưu DB) để áp một lần rồi tinh chỉnh tiếp; áp preset chỉ sao chép giá trị vào `subtitle_style`. Nội dung phụ đề **không sửa được** trong trình chỉnh sửa, chỉ sửa kiểu. | M | P3 (preset ✂3) | ĐX, QĐ-56 |
 
 #### 2.6.3 Âm thanh: nhạc nền & SFX
 
@@ -258,12 +258,12 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 |---|---|---|---|---|
 | FR-BIL-01 | Trang Pricing: cách tính giá (chi phí thực × 110%), đơn giá tham khảo từng thao tác, giới hạn Free và quyền lợi khi đã nạp tiền, tiền dùng thử $2, FAQ. | M | P3 | QS, QĐ-31 |
 | FR-BIL-02 | Đăng ký gói tháng/năm qua checkout có host của cổng thanh toán. | S | Sau | QS, QĐ-35 |
-| FR-BIL-03 | **Nạp tiền vào ví** (USD, $1–$100 mỗi lần) qua checkout có host của cổng thanh toán ở **chế độ sandbox**. Tiền chỉ vào ví khi webhook xác nhận. | M | P3 ✂6 | QS, QĐ-30 |
+| FR-BIL-03 | **Nạp tiền vào ví** (USD, $1–$100 mỗi lần) qua checkout có host của cổng thanh toán ở **chế độ sandbox**. Tiền chỉ vào ví khi webhook xác nhận. | M | P3 ✂1 | QS, QĐ-30 |
 | FR-BIL-04 | Manage Billing qua portal của cổng: nâng/hạ gói, đổi thẻ, hóa đơn, hủy gói. | S | Sau | QS |
 | FR-BIL-05 | **Ví USD** một số dư cho mỗi người dùng: khả dụng, đang giữ, tổng đã nạp thật; lưu bằng micro-USD; hiển thị USD (tùy chọn quy đổi VND). Trạng thái tài khoản Free / Đã nạp tiền suy từ tổng đã nạp (BR-27). | M | P1 | ĐX, QĐ-30 |
 | FR-BIL-06 | Sổ cái ví chỉ ghi thêm (append-only); mỗi bút toán có loại (`TRIAL_GRANT`, `TOPUP`, `HOLD`, `CAPTURE`, `RELEASE`, …), số tiền, job hoặc thanh toán liên quan, dự án, người thực hiện. | M | P1 | ĐX, QĐ-38 |
 | FR-BIL-08 | Người dùng xem lịch sử chi tiêu theo dự án và theo loại thao tác, kèm chi phí thực và phí 10%. | S | P3 | ĐX |
-| FR-BIL-09 | Webhook thanh toán xử lý idempotent theo event id; xác thực chữ ký. | M | P3 ✂6 | ĐX |
+| FR-BIL-09 | Webhook thanh toán xử lý idempotent theo event id; xác thực chữ ký. | M | P3 ✂1 | ĐX |
 | FR-BIL-10 | **Tiền dùng thử $2** một lần khi tạo hồ sơ, bút toán `TRIAL_GRANT`, không làm tài khoản thành "Đã nạp tiền" (BR-28). | M | P1 | QĐ-37 |
 | FR-BIL-11 | **Giữ / trừ / hoàn** cho mọi job AI: giữ giá ước tính tối đa, trừ chi phí thực × 110%, hoàn phần dư; job lỗi hoàn toàn bộ (BR-02). | M | P1 | QĐ-32 |
 | FR-BIL-12 | **Giới hạn tài khoản Free:** 1 dự án, 3 chương, 3 lần render/tháng, 10 phút video/tháng, 720p có watermark; vượt giới hạn thì báo rõ và gợi ý nạp tiền (BR-27). | M | P1, P3 ✂7 | QĐ-36 |

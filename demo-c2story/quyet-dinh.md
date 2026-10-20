@@ -2,7 +2,7 @@
 
 > Ghi các quyết định đã chốt của nhóm (ngày, nội dung, lý do). Không cần duyệt riêng; khi bất đồng, PO quyết định cuối (QĐ-50).
 > Nguồn: 4 vòng câu hỏi chốt phạm vi và kế hoạch ngày 2026-10-20 (file câu hỏi đã được xóa sau khi chốt; nội dung trả lời được ghi đầy đủ ở đây). Mã ở cột Nguồn: **A/B/C/D…** = vòng 1, **V2 / V3 / V4 + số câu** = vòng 2–4.
-> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13.
+> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16.
 
 ## 1. Bối cảnh, năng lực, lộ trình
 
@@ -98,7 +98,33 @@ Nguồn: đánh giá kế hoạch với vai trò Project Manager, nhóm đồng 
 | QĐ-98 | **Benchmark render trên máy staging ở P0** để chọn cấu hình; ngưỡng MVP 1 phút 720p ≤ 2 phút; NFR-PERF-10 thành mục tiêu sau MVP | 09 §1.5, §1.7; 07 |
 | QĐ-99 | **Viết báo cáo đồ án dần** theo từng giai đoạn; nghi thức sprint gọn (≤ 10% thời gian); công viết test nằm trong story point | 09 §1.10, §2 |
 
-## 8. Rủi ro đã chấp nhận
+## 8. Điều chỉnh theo đánh giá back-end (2026-10-20)
+
+| Mã | Quyết định | Tài liệu |
+|---|---|---|
+| QĐ-100 | Dời **danh sách mời** (UC-10.11) và **màn hình đồng ý dữ liệu** (UC-01.01d) từ P0 sang P1 để giảm tải back-end ở P0; closed beta bắt đầu T25 nên không ảnh hưởng. P0 chốt ADR-26..29 ở tuần 1 | 09 §1.2, 02, 03, 08 |
+| QĐ-101 | PO / BA **không giữ vai trò back-end**; back-end & AI giao cho một thành viên riêng | 09 §2.1 |
+| QĐ-102 | Nền tảng kiểm thử: Vitest + fast-check, Testcontainers, fixture ghi từ provider thật, Playwright, OpenAPI viết trước so trong CI | 09 §2.3, 06 §1.2 |
+
+Các quyết định kỹ thuật kèm theo ghi ở 05 §9: ADR-26 (offset UTF-16), ADR-27 (Kysely), ADR-28 (semaphore theo người dùng), ADR-29 (bảng `jobs` là nguồn sự thật, chi phí lần thử lỗi do hệ thống chịu).
+
+## 9. Điều chỉnh theo đánh giá AI Engineering (2026-10-20)
+
+Nguồn: đánh giá kế hoạch với vai trò AI Engineer. Ý chính: các ngưỡng chất lượng AI đã có số nhưng chưa có cách đo; mô hình chi phí dựa vào mật độ ảnh thấp. Chi tiết ở [09 §1.5](tai-lieu/09-ke-hoach-phat-trien.md). Nhóm duyệt ngày 2026-10-20, kể cả việc QĐ-116 thay thứ tự cắt giảm của QĐ-05, QĐ-61. Các ngưỡng số trong QĐ-110..117 là **ngưỡng tạm**, hiệu chỉnh ở M0 theo số liệu PoC (ghi QĐ mới nếu đổi).
+
+| Mã | Quyết định | Tài liệu |
+|---|---|---|
+| QĐ-110 | **Giao thức chấm `EVAL-consistency`:** ≥ 150 shot có nhân vật trên golden set cho mỗi provider ảnh. Rubric 4 thuộc tính so với ảnh tham chiếu: khuôn mặt, tóc, trang phục, tuổi/vóc dáng. Shot "sai ngoại hình" khi có ít nhất một nhân vật lệch một thuộc tính. 2 người chấm độc lập, ghi Cohen's κ; κ < 0,6 thì sửa rubric và chấm lại; bất đồng do người thứ ba (PO) quyết. Báo cáo tỷ lệ kèm khoảng tin cậy 95% (Wilson), **tách shot 1 nhân vật và shot ≥ 2 nhân vật**. Ngưỡng ≤ 10% / 15% giữ nguyên, áp cho tỷ lệ chung | 09 §1.5, §4.13; 01 BO-02 |
+| QĐ-111 | **Cách đo WER:** tính trên âm tiết (token tách bằng khoảng trắng); hai phía chuẩn hóa NFC, chữ thường, bỏ dấu câu, đọc số theo đúng quy tắc của `SpeechNormalizer`, giữ dấu thanh. Đo **WER nền** của ASR trên bản ghi giọng người (tiếng Việt: nhóm tự đọc khoảng 20 phút trên golden set; tiếng Anh: bản LibriVox của chương Gutenberg). Ngưỡng ≤ 3% áp cho **WER hiệu chỉnh = WER(TTS) − WER nền**. Thêm **danh sách khó** (khoảng 100 tên riêng, từ Hán Việt, số, từ mượn) chấm bằng tai: đọc đúng ≥ 95% | 09 §1.5; 05 §7; 07 NFR-INT-03; 01 BO-04 |
+| QĐ-112 | **Mật độ ảnh là tham số sản phẩm**, chốt ở P0: mặc định khoảng **3 ảnh/phút** (một ảnh khoảng 20 s, khớp cảnh báo ảnh > 30 s ở R-08), đặt trong prompt template storyboard. M0 phải có **chi phí AI/phút video đo thật** ở mật độ đã chốt. Vượt $0,15/phút (BO-06) thì PO chọn một trong ba: giảm mật độ (không thấp hơn 2 ảnh/phút), đổi provider rẻ hơn, hoặc nâng BO-06; đồng thời kiểm lại $2 dùng thử còn đủ 1 chương không | 09 §1.5; 08 §3.2; 01 BO-06 |
+| QĐ-113 | **Moderation:** đo **tỷ lệ ảnh bị provider từ chối** trên golden set ở P0 và dùng làm tiêu chí chọn provider (≤ 5% shot). Làm rõ BR-18: chỉ **văn bản truyện** là không được sửa; brief do AI viết được người dùng sửa (UC-05.06) rồi sinh lại, và prompt storyboard hướng dẫn tả gián tiếp cảnh bạo lực, nhạy cảm. Không tự động thử lại để vượt bộ lọc. Thêm R-21 | 08 BR-18; 09 §1.5, §5; 01 §8 |
+| QĐ-114 | Thêm **`EVAL-asset-extraction`**: golden set có nhãn tay danh sách nhân vật (kèm bí danh), địa điểm, vật quan trọng. Ngưỡng: recall nhân vật có tên ≥ 90%, precision ≥ 80%. BA gán nhãn ở P0–P1; chạy khi xong UC-04.01 và mỗi lần đổi prompt hoặc mô hình | 09 §4.5, §4.13; 07 NFR-MNT-06 |
+| QĐ-115 | Thêm **`EVAL-alignment`** ở P0, áp cho cả timestamp do TTS trả và aligner tự host: so với nhãn tay biên từ (khoảng 200 từ mỗi ngôn ngữ), sai lệch trung vị ≤ 100 ms, p95 ≤ 250 ms. Aligner tự host phải chạy ≤ 0,5× thời lượng audio trên máy staging (CPU). Không đạt thì ưu tiên provider TTS có timestamp | 09 §1.5, §4.13; 05 §7.3 |
+| QĐ-116 | **Đổi thứ tự cắt giảm:** nạp tiền sandbox + webhook (✂6 cũ) lên **✂1**, thay bằng Admin cộng tiền qua CLI. Lý do: tiền sandbox không đo được ý định trả tiền thật, và việc này không phải trọng tâm AI của đồ án. Đánh số lại: Map ✂1→✂2, preset/chuyển cảnh ✂2→✂3, Relationships ✂3→✂4, Timeline truyện ✂4→✂5, từ điển phát âm ✂5→✂6; ✂7–✂10 giữ nguyên. Tầng 1 thành ✂1–✂6, tầng 2 thành ✂7–✂10. Thay phần "Map ở **đầu** thứ tự cắt giảm" của QĐ-61. Nếu cắt ✂1, BO-05 đo bằng câu hỏi khảo sát beta | 09 §1.3; 02; 03; 01 BO-05 |
+| QĐ-117 | **Ablation cho báo cáo** trong cửa sổ UAT (T25–T27): chạy `EVAL-consistency` trên 2–3 chương golden với 4 cấu hình: đầy đủ / bỏ ảnh tham chiếu / bỏ Visual Rules / bỏ Timeline truyện + Relationships. `PromptCompiler` có cờ cấu hình bật/tắt từng phần ngữ cảnh, chỉ dùng cho eval. Ngân sách ≤ $30, lấy từ khoản UAT | 09 §1.7, §1.10; 05 §7.1 |
+| QĐ-118 | Phần việc chấm và gán nhãn của QĐ-110, 111, 114, 115 (khoảng 1 tuần-người) giao cho **PO/BA và frontend**, không giao cho back-end & AI ở P0 | 09 §2.1 |
+
+## 10. Rủi ro đã chấp nhận
 
 | Mã | Nội dung | Nguồn |
 |---|---|---|

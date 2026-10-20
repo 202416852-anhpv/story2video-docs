@@ -66,7 +66,7 @@
 | Kích hoạt | Bấm "Nạp tiền" trên Pricing, Dashboard, hoặc từ thông báo thiếu số dư (`402`) hay vượt giới hạn Free (`403 FREE_LIMIT_REACHED`) |
 | Quan hệ | include UC-09.03a |
 | Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions` |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
 1. User chọn số tiền (gợi ý $2, $5, $10 hoặc nhập số khác).
@@ -90,7 +90,7 @@
 | Hậu điều kiện | **Thành công:** User hoàn tất thanh toán trên cổng và cổng phát webhook cho UC-09.08. **Tối thiểu:** hủy hoặc thất bại thì không có thay đổi nào về ví |
 | Kích hoạt | UC-09.03 bước 2 |
 | Truy vết | ADR-08; FR-BIL-03; NFR-SEC-07; API 2.8 `POST /billing/topup-sessions` |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
 1. Client gọi `POST /billing/topup-sessions` với `{amountUsd}`.
@@ -190,7 +190,7 @@
 | Kích hoạt | `POST /webhooks/stripe` |
 | Quan hệ | include UC-09.08a |
 | Truy vết | FR-BIL-09; NFR-SEC-07; IC-07 |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
 1. Cổng gửi event.
@@ -216,7 +216,7 @@
 | Hậu điều kiện | **Thành công:** `payments` và ví khớp với cổng; mọi thay đổi số dư có bút toán. **Tối thiểu:** lỗi thì rollback toàn bộ để cổng gửi lại |
 | Kích hoạt | UC-09.08 bước 4 |
 | Truy vết | FR-BIL-03, FR-BIL-09; WR-01..08; IC-06, IC-07 |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
 1. Hệ thống xác định người dùng và `payments` từ `client_reference_id` và `metadata.paymentId` của event.

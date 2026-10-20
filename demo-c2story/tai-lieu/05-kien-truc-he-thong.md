@@ -52,7 +52,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-container.puml`.
 | Container | Công nghệ đề xuất | Trách nhiệm |
 |---|---|---|
 | **Web App** | Next.js 15 (React, TS), TanStack Query, TipTap (Workspace), Zustand (store trình chỉnh sửa), **Remotion Player** (preview), WebAudio, Tailwind | Studio, trình chỉnh sửa timeline, media bin, Director chat, Pricing, Admin |
-| **API Server** | NestJS (Node.js 22, TS), REST + OpenAPI 3.1, SSE | Phiên BFF/OIDC, phân quyền, nghiệp vụ M01–M10, tạo job, ví USD, trần chi tiêu, webhook, realtime |
+| **API Server** | NestJS (Node.js 22, TS), REST + OpenAPI 3.1 (viết trước, 06 §1.2), SSE; truy cập DB bằng **Kysely** + SQL viết tay cho đường tiền và tái cấu trúc (ADR-27) | Phiên BFF/OIDC, phân quyền, nghiệp vụ M01–M10, tạo job, ví USD, trần chi tiêu, webhook, realtime |
 | **Job Workers** | Node.js + BullMQ (Flows cho job cha/con) | Queue `orchestrator`, `llm`, `image`, `tts`, `export`: gọi AI Gateway, lưu kết quả, quyết toán tiền theo chi phí thực |
 | **Alignment Worker** | Python, WhisperX / Montreal Forced Aligner (GPU tùy chọn) | Queue `align`: forced alignment (word timings) khi TTS không trả timestamp; STT + WER cho bộ đánh giá P0 và kiểm chứng từng shot (sau MVP) |
 | **Media Processing Worker** | Node.js + FFmpeg, ClamAV | Queue `media-proc`: quét virus, bỏ EXIF, chuyển mã audio tải lên (≤ 100 MB, ≤ 15 phút), sinh waveform, chuẩn hóa loudness bản nghe thử, ZIP (sau MVP) |
@@ -131,19 +131,23 @@ Sơ đồ: `seq-storyboard-sinh-anh`, `act-giu-tru-tien`, `state-job`.
    - `jobs (QUEUED, held_micro, budget_day)`, ghi `outbox_events (job.created)` *(sau MVP; MVP enqueue sau commit, ADR-23)*.
 4. API trả `202 {jobId, estimatedCostUsd}`.
 5. MVP: sau khi commit, API enqueue BullMQ và publish Redis → SSE; reconciler bắt job `QUEUED` quá 1 phút chưa có trong queue (ADR-23). Sau MVP: Scheduler (outbox relay) đọc `outbox_events` chưa publish → enqueue + publish.
-6. Worker nhận job: `RUNNING`, cập nhật `heartbeat_at` mỗi 30 s; `UsageMeter` ghi `ai_usage_records` cho mỗi lần gọi provider.
+6. Worker nhận job (ADR-29): **bảng `jobs` là nguồn sự thật duy nhất**, BullMQ chỉ là kênh vận chuyển, `bullmq.jobId = jobs.id`.
+   - Nhận việc bằng câu `UPDATE jobs SET status='RUNNING', attempts=attempts+1, heartbeat_at=now() WHERE id=:id AND status IN ('QUEUED','RETRYING') RETURNING attempts`; không trúng dòng nào (job đã chạy hoặc đã kết thúc, ví dụ bị giao lại) thì ack và bỏ qua.
+   - Kiểm semaphore theo người dùng (ADR-28); hết slot thì trả job về trạng thái chờ (delay 3 s) mà không tăng `attempts`.
+   - Cập nhật `heartbeat_at` mỗi 30 s. `UsageMeter` ghi `ai_usage_records` cho **mọi** lần gọi provider, kèm `attempt` và `request_id`; với provider hỗ trợ khóa chống trùng thì gửi `idempotency = jobId:attempt`.
+   - Kết quả và chuyển trạng thái được commit vào DB **trước**, rồi mới ack BullMQ.
 7. Thành công: một giao dịch ghi kết quả + CAPTURE `min(Σ cost_usd × 1,10, held)` + RELEASE phần dư + `SUCCEEDED` + `daily_ai_budgets` của `budget_day`: `reserved -= x_cost`, `spent += Σ cost_usd`. Thất bại vĩnh viễn: RELEASE toàn bộ + `FAILED` + `reserved -= x_cost`, `spent += Σ cost_usd` (lần gọi lỗi vẫn có thể tốn tiền provider).
-8. Reconciler (5 phút): job `RUNNING` có heartbeat > 10 phút → `FAILED` + RELEASE + trả chỗ ngân sách. Reconciler hằng ngày: Σ sổ cái = số dư ví, IC-05 (NFR-REL-03); `spent_micro` khớp Σ `ai_usage_records` của ngày, lệch thì sửa và cảnh báo.
+8. Reconciler (5 phút): job `RUNNING` có heartbeat > 10 phút → `FAILED` + RELEASE + trả chỗ ngân sách + **mở khóa chương** nếu `chapters.locked_by_job_id` trỏ tới job đó (hoặc tới job đã kết thúc); job `QUEUED` quá 1 phút không có trong BullMQ thì đẩy lại. Reconciler hằng ngày: Σ sổ cái = số dư ví, IC-05 (NFR-REL-03); `spent_micro` khớp Σ `ai_usage_records` của ngày, lệch thì sửa và cảnh báo.
 
 ### 6.2 Điều phối "Sinh tư liệu" (bước 4)
 
 Sơ đồ: `../so-do/04-tuan-tu/seq-sinh-tu-lieu.puml`, `../so-do/06-trang-thai/state-chapter-media.puml`.
 
 - **BullMQ Flow:** job cha `GENERATE_MEDIA_CHAPTER` (queue `orchestrator`) → (nếu cần) `STORYBOARD_DRAFT` → fan-out mỗi shot hai job con song song `GENERATE_SHOT_IMAGE` và `NARRATE_SEGMENT`. `NARRATE_SEGMENT` sinh tiếp `VERIFY_NARRATION` (queue `align`).
-- **Giới hạn đồng thời:** theo người dùng (8 ảnh, 8 TTS) và theo provider (rate limit); dùng BullMQ group/rate limiter.
+- **Giới hạn đồng thời:** theo người dùng (8 ảnh, 8 TTS, 1 render; BR-32) bằng **semaphore Redis tự làm** (ADR-28); theo provider bằng rate limiter có sẵn của BullMQ bản mã nguồn mở (giới hạn cho cả queue, mỗi provider một queue khi cần). Không dùng tính năng group của BullMQ Pro.
 - **Tiền:** HOLD tổng theo giá ước tính; khi biết số shot thực tế thì điều chỉnh HOLD; mỗi job con CAPTURE/RELEASE phần của mình theo chi phí thực (WR-05).
 - **Trạng thái chương:** `DRAFT → GENERATING` khi bắt đầu; job cha khi mọi con xong: mọi ảnh và thuyết minh `DONE` → `READY_TO_EDIT` và gọi `editor.createDraftTimeline(chapterId)`; còn lỗi → `NEEDS_ATTENTION`. Shot được đánh dấu cần sinh lại không đổi trạng thái chương (BR-34).
-- **Khóa chương** (BR-12) trong lúc job cha chạy: `chapters.locked_by_job_id`.
+- **Khóa chương** (BR-12) trong lúc job cha chạy: `chapters.locked_by_job_id`. Khóa được mở trong **cùng giao dịch** kết thúc job cha (thành công, lỗi, hủy); reconciler mở các khóa trỏ tới job đã kết thúc hoặc mất heartbeat, nên chương không bị kẹt khi worker chết.
 
 ### 6.3 Đường ống thuyết minh nguyên văn
 
@@ -200,7 +204,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-component-editor.puml`, `../so-do/04-tuan-t
 
 ### 6.6 Realtime
 
-Mọi thay đổi cần đẩy đi được ghi vào `outbox_events` trong giao dịch nghiệp vụ → relay publish Redis kênh `project:{id}` → API giữ kết nối SSE gửi về client (có `Last-Event-ID` để nối lại). Sự kiện: `job.updated`, `media.progress`, `chapter.media-ready`, `chapter.updated`, `chapters.restructured`, `illustration.ready`, `narration.updated`, `timeline.updated`, `render.progress`, `render.ready`, `director.plan`, `member.changed` (06 §3).
+**MVP (ADR-23):** sau khi commit giao dịch nghiệp vụ, API/worker publish lên Redis kênh `project:{id}` → API giữ kết nối SSE gửi về client. Không có kho sự kiện nên **không phát lại** theo `Last-Event-ID`: client nối lại thì tải lại ảnh chụp trạng thái (vd. `GET …/media`, `GET …/timelines/{id}`) rồi nghe tiếp. **Sau MVP:** sự kiện ghi vào `outbox_events` cùng giao dịch → relay publish → hỗ trợ phát lại theo `Last-Event-ID`. Sự kiện: `job.updated`, `media.progress`, `chapter.media-ready`, `chapter.updated`, `chapters.restructured`, `illustration.ready`, `narration.updated`, `timeline.updated`, `render.progress`, `render.ready`, `wallet.updated`, `director.plan`, `member.changed` (06 §3).
 
 ## 7. AI Gateway (C4 Level 3)
 
@@ -211,17 +215,17 @@ Sơ đồ: `../so-do/03-kien-truc/c4-component-ai.puml`.
 | Thành phần | Trách nhiệm |
 |---|---|
 | `ContextBuilder` | Ngữ cảnh truyện cho LLM: chương, tóm tắt cuốn chiếu chỉ dùng nội bộ, tài sản, timeline truyện |
-| `PromptCompiler` | Ghép prompt ảnh theo BR-08 (style → Art Direction → Visual Rules → Chapter rules → brief + facts); lưu `prompt_snapshot` |
+| `PromptCompiler` | Ghép prompt ảnh theo BR-08 (style → Art Direction → Visual Rules → Chapter rules → brief + facts); lưu `prompt_snapshot`. Có cờ cấu hình tắt từng phần ngữ cảnh (ảnh tham chiếu, Visual Rules, timeline truyện, quan hệ), chỉ dùng cho ablation (QĐ-117) |
 | `SentenceSegmenter` | Tách câu tất định có offset ([12 §1](12-dac-ta-ky-thuat-loi.md)) |
 | `CoverageValidator` | Kiểm tra và sửa ranh giới đoạn nguồn (BR-20) |
 | `SpeechNormalizer` | Đoạn nguồn → SSML; áp quy tắc ký hiệu SYM-01..05 (08 §6); không đổi chữ; sinh `NormalizationMap` để ánh xạ timestamp về văn bản gốc ([12 §2](12-dac-ta-ky-thuat-loi.md)) |
-| `WerScorer` | Chuẩn hóa hai phía, tính WER và vị trí lệch (bộ đánh giá P0; kiểm chứng từng shot sau MVP) |
+| `WerScorer` | Chuẩn hóa hai phía (NFC, chữ thường, bỏ dấu câu, đọc số theo `SpeechNormalizer`, giữ dấu thanh), tính WER theo âm tiết và vị trí lệch; trừ WER nền của ASR (QĐ-111). Bộ đánh giá P0; kiểm chứng từng shot sau MVP |
 | `ModerationFilter` | Kiểm duyệt văn bản đầu vào, ảnh/audio đầu ra |
 | `ProviderRouter` | Chọn provider/mô hình theo loại tác vụ, ưu tiên, sẵn sàng; fallback; circuit breaker |
 | `RetryPolicy` | Backoff + jitter, tối đa 3 lần |
 | `Adapters` | `LlmPort`, `ImagePort`, `TtsPort`, `AlignerPort`, `SttPort`; mỗi port có adapter thật và adapter **mock** (fixture, không gọi mạng) chọn bằng cấu hình (NFR-MNT-02) |
-| `UsageMeter` | Ghi `ai_usage_records` (provider, model, đơn vị, chi phí thực) |
-| `PriceEstimator` | Giá ước tính tối đa trước khi chạy và số trừ thực (chi phí thực × 110%) sau khi chạy (BR-01, BR-02) |
+| `UsageMeter` | Ghi `ai_usage_records` (provider, model, đơn vị, số lượng, chi phí thực, `attempt`, `request_id`) cho mọi lần gọi, kể cả lần lỗi. Provider trả chi phí thì dùng số đó; không trả thì **tự tính** = số lượng đo được (token, ảnh, ký tự, giây) × `ai_models.unit_cost_usd` |
+| `PriceEstimator` | Giá ước tính tối đa trước khi chạy và số trừ thực (chi phí thực × 110%) sau khi chạy (BR-01, BR-02). Token đầu vào LLM đếm bằng tokenizer của provider nếu có thư viện; không có thì dùng **hệ số ký tự/token đo ở PoC cho tiếng Việt và tiếng Anh** (lưu trong `price_rules.formula`), nhân hệ số an toàn 1,2 |
 
 ### 7.2 Interface (rút gọn)
 
@@ -244,7 +248,7 @@ interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hi
 | Aligner / STT | WhisperX tự host | Montreal Forced Aligner, Azure STT, Google STT |
 | Thư viện nhạc & SFX *(sau MVP)* | Bộ CC0/CC-BY tuyển chọn từ Pixabay, Freesound (QĐ-58) | — |
 
-> **Tiêu chí chọn ở P0:** ảnh: tỷ lệ shot sai ngoại hình ≤ 10% trên golden set; TTS: WER ≤ 3% (vi, en), chất lượng tiếng Việt, SSML alias/phoneme, có timestamp, giá trên 1.000 ký tự (QĐ-07). Ngân sách PoC $200. Key nằm trong secret manager; `ai_providers.config_ref` chỉ lưu **tên** secret.
+> **Tiêu chí chọn ở P0** (cách đo ở [09 §1.5](09-ke-hoach-phat-trien.md)): ảnh: tỷ lệ shot sai ngoại hình ≤ 10% trên golden set, tỷ lệ bị từ chối ≤ 5%; TTS: WER hiệu chỉnh ≤ 3% (vi, en), chất lượng tiếng Việt, SSML alias/phoneme, timestamp đạt `EVAL-alignment`, giá trên 1.000 ký tự; chi phí AI ≤ $0,15/phút video ở mật độ ảnh đã chốt (QĐ-07, QĐ-110..115). Ngân sách PoC $200. Key nằm trong secret manager; `ai_providers.config_ref` chỉ lưu **tên** secret.
 
 ### 7.4 Giữ nhân vật nhất quán
 
@@ -294,6 +298,10 @@ interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hi
 | ADR-23 | **Triển khai rút gọn cho MVP** (§4.1): một tiến trình worker + render riêng; không outbox (enqueue sau commit + reconciler); bỏ worker Python khi TTS có timestamp; IC-08 chỉ ở service; không RLS, không tracing phân tán | Triển khai đủ thiết kế từ đầu | Năng lực 36 tuần-người không đủ để vận hành 8 loại tiến trình; giữ port và ranh giới module nên nâng cấp không phải viết lại. Đổi lại: một job có thể bị đẩy trễ tới 1 phút khi API chết đúng sau commit |
 | ADR-24 | **Đổi tốc độ clip thuyết minh bằng file audio dẫn xuất sinh ở server** (FFmpeg `atempo`/`rubberband`, giữ cao độ); preview và render đều phát file này ở tốc độ 1,0 | (a) WebAudio `playbackRate` trong preview + `atempo` khi render; (b) `HTMLMediaElement.preservesPitch` trong preview | (a) WebAudio đổi tốc độ làm **đổi cao độ**, nghe khác bản xuất; (b) thuật toán giãn thời gian khác nhau giữa trình duyệt và FFmpeg, thời lượng và âm sắc lệch nhau. File dẫn xuất bảo đảm preview = render (NFR-PERF-13). Đổi lại: mỗi lần đổi tốc độ chờ vài giây xử lý; tốn thêm dung lượng (cache theo cặp narration–tốc độ, xóa bản không dùng sau 90 ngày) |
 | ADR-25 | **Trần chi tiêu ngày bằng bộ đếm nguyên tử** trong bảng `daily_ai_budgets` (câu `UPDATE … WHERE spent + reserved + x ≤ cap`), cùng giao dịch với HOLD | (a) Đọc tổng `ai_usage_records` rồi so sánh; (b) bộ đếm Redis `INCRBY` | (a) Hai yêu cầu đồng thời cùng đọc tổng cũ rồi cùng qua kiểm tra → vượt trần (race condition); (b) không cùng giao dịch với HOLD, lỗi giữa chừng làm lệch bộ đếm. Một dòng nóng mỗi ngày là đủ cho quy mô closed beta (vài yêu cầu/giây) |
+| ADR-26 | **Mọi offset văn bản tính theo code unit UTF-16** trên văn bản NFC; độ dài do ứng dụng tính (`char_count`), không dùng `char_length()` của Postgres; worker Python đổi đơn vị qua hàm dùng chung (04 D-10) | Code point ở mọi nơi; byte UTF-8 | Phần lớn code là TypeScript, chỉ số chuỗi JS là UTF-16; trộn đơn vị làm lệch phủ kín và phụ đề khi văn bản có emoji / ký tự ngoài BMP. Đổi lại: phải đổi đơn vị ở biên Python và không dùng hàm chuỗi của Postgres để cắt |
+| ADR-27 | **Kysely** (query builder có kiểu) + SQL viết tay cho đường tiền, ngân sách và tái cấu trúc chương; migration bằng Kysely Migrator (file TS chứa SQL); `bigint` ánh xạ sang `bigint` của TS, ra API thành chuỗi thập phân | Prisma; TypeORM; SQL thuần với `pg` | Cần `SELECT … FOR UPDATE`, `UPDATE … WHERE … RETURNING` có điều kiện, `INSERT … ON CONFLICT`, unique `DEFERRABLE`, partial index, `jsonb`: Prisma hỗ trợ kém (khóa hàng, deferrable, bigint); TypeORM dễ sinh truy vấn ngầm khó kiểm soát; SQL thuần thiếu kiểu |
+| ADR-28 | **Semaphore theo người dùng bằng Redis**: worker `INCR conc:{userId}:{kind}` khi bắt đầu, vượt giới hạn thì `DECR` và trì hoãn job 3 s; `DECR` trong `finally`; khóa có TTL bằng 2× thời gian chạy tối đa; reconciler đặt lại bộ đếm từ số job `RUNNING` trong DB | BullMQ Pro groups; chỉ kiểm khi tạo job | BullMQ bản mã nguồn mở không giới hạn theo nhóm; group là tính năng trả phí. Chỉ kiểm lúc tạo job không chặn được job cha sinh nhiều job con |
+| ADR-29 | **Bảng `jobs` là nguồn sự thật**; BullMQ chỉ vận chuyển (cùng `jobId`); nhận việc bằng `UPDATE … WHERE status IN (…)` để chạy lặp an toàn; commit DB rồi mới ack; mọi lần gọi provider ghi `ai_usage_records` kèm `attempt`; **chi phí của các lần thử lỗi do hệ thống chịu** (WR-09); khóa chương mở cùng giao dịch kết thúc job và bởi reconciler | Lấy trạng thái từ BullMQ; để BullMQ tự retry không ghi DB | Hai nguồn trạng thái sẽ lệch khi retry, hủy, worker chết; một job giao lại không được gọi provider hai lần hay trừ tiền hai lần |
 
 ## 10. Triển khai
 

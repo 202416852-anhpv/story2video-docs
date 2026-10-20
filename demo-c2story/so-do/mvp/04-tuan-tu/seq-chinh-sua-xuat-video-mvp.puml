@@ -28,7 +28,7 @@ API --> Web : timeline
 Web -> Web : Preview realtime (cùng component dựng khung hình)
 
 == Chỉnh sửa (miễn phí) ==
-Editor -> Web : Ken Burns, chuyển cảnh (cơ bản; nâng cao ✂2) cho các clip ảnh
+Editor -> Web : Ken Burns, chuyển cảnh (cơ bản; nâng cao ✂3) cho các clip ảnh
 Editor -> Web : Đổi tốc độ clip thuyết minh shot 5 → 1,1× (0,8–1,25×)
 Editor -> Web : Tìm "calm piano" trong Âm thanh của tôi, kéo vào track Nhạc nền
 Web -> API : GET /audio-assets?kind=MUSIC&q=calm piano

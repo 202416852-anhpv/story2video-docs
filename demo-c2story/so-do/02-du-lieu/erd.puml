@@ -651,6 +651,8 @@ package "Director, job & hạ tầng" #EEEEEE {
         cost_usd : numeric
         latency_ms : int
         request_id : text
+        attempt : int
+        succeeded : bool
     }
     entity price_rules {
         * id : uuid <<PK>>

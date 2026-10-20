@@ -131,7 +131,7 @@
 | Hậu điều kiện | **Thành công:** `users.consented_at` và `consent_version` được ghi; người dùng vào được ứng dụng. **Tối thiểu:** chưa đồng ý thì mọi API ngoài `/auth/*`, `/me`, `/me:consent` trả `403 CONSENT_REQUIRED` |
 | Kích hoạt | UC-01.01 bước 8 |
 | Truy vết | FR-AUTH-12; BR-31; C-02; NFR-PRV-01; API 2.1 `GET /me`, `POST /me:consent` |
-| Giai đoạn | P0 |
+| Giai đoạn | P1 |
 
 **Luồng chính**
 1. Hệ thống hiện màn hình thông báo (phiên bản lấy từ `system_settings.consent_notice_version`): dữ liệu thu thập (email, tên, ảnh đại diện từ SSO; truyện, ảnh, nhạc tải lên; video tạo ra; nhật ký sử dụng), mục đích (thử nghiệm đồ án tốt nghiệp, phiếu khảo sát), nơi xử lý (nhà cung cấp AI và lưu trữ), thời hạn (xóa toàn bộ sau ngày bảo vệ), quyền yêu cầu xóa sớm và kênh liên hệ.

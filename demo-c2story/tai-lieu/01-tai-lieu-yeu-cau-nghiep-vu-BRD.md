@@ -18,11 +18,11 @@ Hệ thống cần một **Studio theo dự án** với luồng 6 bước: **nh�
 | Mã | Mục tiêu | KPI | Mục tiêu MVP [ĐX] | Cách đo trong đồ án |
 |---|---|---|---|---|
 | BO-01 | Rút ngắn thời gian chuyển thể | Thời gian trung vị từ import đến video chương đầu tiên | ≤ 60 phút (thao tác tay, chương 10.000 ký tự) | Đo trong closed beta |
-| BO-02 | Nhân vật nhất quán | Tỷ lệ shot bị sinh lại vì sai ngoại hình nhân vật | ≤ 15% (provider chọn ở P0 phải ≤ 10% trên golden set) | `EVAL-consistency`, thống kê beta |
+| BO-02 | Nhân vật nhất quán | Tỷ lệ shot bị sinh lại vì sai ngoại hình nhân vật | ≤ 15% (provider chọn ở P0 phải ≤ 10% trên golden set) | `EVAL-consistency` (rubric, 2 người chấm, QĐ-110), thống kê beta |
 | BO-03 | **Trung thành với nguyên tác** | Tỷ lệ văn bản chương được đọc trong video (độ phủ) | **100%** (bắt buộc) | Kiểm tra tự động trước mỗi render |
-| BO-04 | Chất lượng lời đọc | Tỷ lệ lỗi từ (WER) giữa audio và văn bản gốc | ≤ 3% | Bảo đảm ở **khâu chọn provider** (`EVAL-wer-golden`, P0); không kiểm tra từng shot lúc chạy trong MVP (QĐ-54) |
-| BO-05 | Khả năng thu phí | Tỷ lệ người dùng beta nạp tiền (sandbox) sau khi dùng hết tiền dùng thử | ≥ 20% người dùng beta | Sổ cái ví |
-| BO-06 | Kiểm soát chi phí | Chi phí AI trung bình trên mỗi phút video | ≤ $0,15 | `ai_usage_records` |
+| BO-04 | Chất lượng lời đọc | Tỷ lệ lỗi từ (WER) giữa audio và văn bản gốc, đã trừ WER nền của ASR | ≤ 3% | Bảo đảm ở **khâu chọn provider** (`EVAL-wer-golden`, P0, QĐ-111); không kiểm tra từng shot lúc chạy trong MVP (QĐ-54) |
+| BO-05 | Khả năng thu phí | Tỷ lệ người dùng beta nạp tiền (sandbox) sau khi dùng hết tiền dùng thử | ≥ 20% người dùng beta | Sổ cái ví; câu hỏi khảo sát nếu cắt nạp tiền sandbox (✂1, QĐ-116) |
+| BO-06 | Kiểm soát chi phí | Chi phí AI trung bình trên mỗi phút video | ≤ $0,15 | `EVAL-cost-per-minute` ở P0 (QĐ-112), `ai_usage_records` khi beta |
 
 ## 3. Các bên liên quan
 
@@ -118,11 +118,11 @@ Chi tiết nằm ở [08](08-quy-tac-nghiep-vu.md).
 | Mã | Rủi ro | Mức | Biện pháp |
 |---|---|---|---|
 | R-01 | Chi phí AI vượt ngân sách của PO | Trung bình | Giá = chi phí thực × 110%; trần chi tiêu ngày; mock adapter cho dev/CI; ghi chi phí thực từng job |
-| R-02 | Nội dung vi phạm trong văn bản hoặc ảnh | Cao | Moderation đầu vào và đầu ra. Văn bản không bị sửa, nên khi vi phạm thì chặn và báo tác giả, không tự làm mềm câu chữ |
+| R-02 | Nội dung vi phạm trong văn bản hoặc ảnh | Cao | Moderation đầu vào và đầu ra. Văn bản truyện không bị sửa, nên khi vi phạm thì chặn và báo tác giả, không tự làm mềm câu chữ; brief ảnh do AI viết thì người dùng sửa được (BR-18) |
 | R-03 | Phụ thuộc một nhà cung cấp AI | Trung bình | Adapter provider, chuyển đổi qua cấu hình |
 | R-04 | Mất dữ liệu khi tái cấu trúc chương | Trung bình | Giao dịch DB; Archive và version chương sau MVP |
 | R-05 | Văn bản dài vượt context LLM | Trung bình | Xử lý theo chương; tóm tắt cuốn chiếu **chỉ dùng nội bộ cho ngữ cảnh**, không bao giờ đưa vào audio |
-| **R-06** | **TTS đọc sai hoặc bỏ chữ** (số, từ mượn, tên riêng, từ Hán Việt) | Cao | Chọn provider bằng `EVAL-wer-golden` ở P0 (ngưỡng ≤ 3%); người dùng nghe và đánh dấu sinh lại; từ điển phát âm. **Lưu ý:** từ điển phát âm nằm cuối thứ tự cắt giảm (✂5); nếu bị cắt, mục tiêu WER chỉ còn dựa vào khâu chọn provider (QĐ-80) |
+| **R-06** | **TTS đọc sai hoặc bỏ chữ** (số, từ mượn, tên riêng, từ Hán Việt) | Cao | Chọn provider bằng `EVAL-wer-golden` ở P0 (ngưỡng ≤ 3%); người dùng nghe và đánh dấu sinh lại; từ điển phát âm. **Lưu ý:** từ điển phát âm nằm cuối tầng 1 của thứ tự cắt giảm (✂6); nếu bị cắt, mục tiêu WER chỉ còn dựa vào khâu chọn provider (QĐ-80) |
 | **R-07** | **LLM chia shot không phủ kín văn bản** | Cao | Validator phía server + thuật toán sửa ranh giới tất định (`act-phu-kin-van-ban.puml`) |
 | R-08 | Một đoạn văn dài khiến một ảnh đứng quá lâu, gây nhàm | Trung bình | Cảnh báo ảnh > 30 s; gợi ý tách shot; Ken Burns nhiều pha |
 | R-09 | SSO gián đoạn thì người dùng không đăng nhập được | Trung bình | Phiên ứng dụng vẫn hiệu lực đến hết hạn; trang lỗi thân thiện |
@@ -134,3 +134,4 @@ Chi tiết nằm ở [08](08-quy-tac-nghiep-vu.md).
 | R-15 | Render / preview không đạt yêu cầu (chậm, lệch khung, máy staging yếu) | Trung bình | Benchmark ở P0; khung chạy đầu-cuối T6; spike editor ở P2; ✂9 (QĐ-90, QĐ-92, QĐ-98) |
 | R-16 | Mất năng lực vì Tết, thi, thành viên vắng | Cao | Lịch không làm việc trong kế hoạch; người dự phòng cho mỗi vai trò (QĐ-95, QĐ-96) |
 | R-17 | Báo cáo đồ án dồn cuối | Trung bình | Viết dần theo giai đoạn (QĐ-99) |
+| R-21 | Provider ảnh từ chối nhiều cảnh trong văn học (bạo lực, nghèo đói, tình dục) | Cao | Đo tỷ lệ từ chối ở P0 và tính vào tiêu chí chọn provider; prompt storyboard tả gián tiếp; người dùng sửa brief (QĐ-113) |

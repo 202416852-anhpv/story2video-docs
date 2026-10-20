@@ -23,7 +23,7 @@ function segment(text: string, lang: 'vi' | 'en'): Sentence[];
 | SEG-I4 | Ổn định cục bộ: sửa chữ bên trong một đoạn văn (giữa hai `\n`) không làm đổi ranh giới của đoạn văn khác |
 | SEG-I5 | Mỗi câu chứa ít nhất một ký tự không phải khoảng trắng, trừ khi toàn bộ văn bản chỉ là khoảng trắng (khi đó trả một câu) |
 
-Offset tính theo **code unit UTF-16** (chỉ số chuỗi của JavaScript) trên văn bản đã chuẩn hóa NFC (FR-PRJ-03), thống nhất với `shots.source_start/end` và `wordTimings.charStart`. `storyboard_drafts.segmenter_version` lưu phiên bản đã dùng; đổi quy tắc thì tăng phiên bản, bản nháp cũ vẫn hợp lệ vì đã lưu offset.
+Offset tính theo **code unit UTF-16** (chỉ số chuỗi của JavaScript) trên văn bản đã chuẩn hóa NFC (FR-PRJ-03), thống nhất với `shots.source_start/end` và `wordTimings.charStart` (04 D-10, ADR-26). Ranh giới câu không bao giờ rơi giữa một cặp surrogate. Postgres `char_length()` đếm code point nên **không** được dùng để so độ dài hay cắt văn bản. `storyboard_drafts.segmenter_version` lưu phiên bản đã dùng; đổi quy tắc thì tăng phiên bản, bản nháp cũ vẫn hợp lệ vì đã lưu offset.
 
 ### 1.2 Quy tắc (áp theo thứ tự)
 
@@ -72,6 +72,7 @@ Offset tính theo **code unit UTF-16** (chỉ số chuỗi của JavaScript) tr�
 | SEG-20 | en | `Mr. Smith arrived. He sat down.` | `Mr. Smith arrived.␣` \| `He sat down.` | R5a |
 | SEG-21 | en | `She bought apples, pears, etc. Then she left.` | `She bought apples, pears, etc.␣` \| `Then she left.` | §1.3 |
 | SEG-22 | vi | `` (rỗng) | `[]` | I2 |
+| SEG-23 | vi | `Cô cười 😊. Anh đi.` (emoji là cặp surrogate, 2 code unit) | `Cô cười 😊.␣` \| `Anh đi.`; câu 2 bắt đầu ở offset 12 (UTF-16), không phải 11 (code point) | §1.1 |
 
 **Property-based test (`PBT-segmenter-coverage`)**: 10.000 chuỗi ngẫu nhiên sinh từ các mảnh tiếng Việt, dấu câu, ngoặc, số, ký hiệu `* [ ] # ---`, dòng trống, emoji (cặp surrogate): kiểm SEG-I1..I5. Thêm: tách → nối → tách lại cho cùng kết quả.
 
@@ -143,6 +144,7 @@ Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[
 | MAP-06 | `Một hai ba bốn.` | aligner thiếu thời gian của `ba` | `ba` được nội suy giữa `hai` và `bốn`; thứ tự không giảm |
 | MAP-07 | 1 câu 130 ký tự | | 2 cue, mỗi cue ≤ 2 dòng × 42 ký tự; ghép lại đúng nguyên văn |
 | MAP-08 | `Cô đi.` với `playbackRate = 1,25` | | Thời gian trong snapshot = thời gian gốc / 1,25 |
+| MAP-10 | `Vui 😊 quá.` | Aligner Python trả offset theo code point | Sau hàm chuyển đổi, `charStart` của `quá` là 7 (UTF-16), cue cắt đúng `Vui 😊 quá.` |
 | MAP-09 | Mọi chương golden set | pipeline thật | Kiểm tra nguyên văn §2.4 đạt 100%; lệch cue so với lời đọc ≤ 100 ms (NFR-PERF-11) |
 
 **Property-based test (`PBT-normalization-map`)**: sinh S ngẫu nhiên có ký hiệu, số, mục từ điển; kiểm bất biến §2.2, và ánh xạ mọi vị trí R về S luôn đơn điệu.

@@ -98,7 +98,7 @@ def main():
         out += [f'### Giai đoạn {ph}', '']
         for u in [u for u in mvp if u['Giai đoạn'].split()[0] == ph]:
             sid = 'ST-' + u['id'].replace('.', '-')
-            cut = ' ' + ' '.join(re.findall(r'✂\d', u['Giai đoạn'])) if '✂' in u['Giai đoạn'] else ''
+            cut = ' ' + ' '.join(re.findall(r'✂\d+', u['Giai đoạn'])) if '✂' in u['Giai đoạn'] else ''
             out += [f'#### {sid} {u["name"]}{cut}', '',
                     '| Mục | Nội dung |', '|---|---|',
                     f'| Story | Là **{actor(u)}**, tôi muốn {u["name"][0].lower() + u["name"][1:]} |',

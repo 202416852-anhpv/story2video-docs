@@ -7,8 +7,8 @@
 
 | Giai đoạn | Số story | Use case |
 |---|---|---|
-| P0 | 8 | UC-01.01, UC-01.01a, UC-01.01b, UC-01.01c, UC-01.01d, UC-01.02, UC-01.02a, UC-10.11 |
-| P1 | 49 | UC-02.01, UC-02.02, UC-02.02a, UC-02.03, UC-02.04, UC-02.05, UC-03.01, UC-03.02, UC-03.03, UC-03.04, UC-03.05, UC-03.06, UC-03.07, UC-03.08, UC-03.09, UC-04.01, UC-04.01a, UC-04.02, UC-04.02a, UC-04.02b, UC-04.02d, UC-04.02e, UC-04.03, UC-04.03a, UC-04.04, UC-04.05, UC-04.06, UC-04.10, UC-05.01, UC-05.01a, UC-05.02c, UC-05.03, UC-05.06, UC-05.06a, UC-05.06b, UC-05.06c, UC-05.06e, UC-05.06f, UC-05.08, UC-05.09, UC-05.10, UC-05.10a, UC-05.10c, UC-05.17, UC-10.01, UC-10.03, UC-10.04, UC-10.05, UC-10.09 |
+| P0 | 6 | UC-01.01, UC-01.01a, UC-01.01b, UC-01.01c, UC-01.02, UC-01.02a |
+| P1 | 51 | UC-01.01d, UC-02.01, UC-02.02, UC-02.02a, UC-02.03, UC-02.04, UC-02.05, UC-03.01, UC-03.02, UC-03.03, UC-03.04, UC-03.05, UC-03.06, UC-03.07, UC-03.08, UC-03.09, UC-04.01, UC-04.01a, UC-04.02, UC-04.02a, UC-04.02b, UC-04.02d, UC-04.02e, UC-04.03, UC-04.03a, UC-04.04, UC-04.05, UC-04.06, UC-04.10, UC-05.01, UC-05.01a, UC-05.02c, UC-05.03, UC-05.06, UC-05.06a, UC-05.06b, UC-05.06c, UC-05.06e, UC-05.06f, UC-05.08, UC-05.09, UC-05.10, UC-05.10a, UC-05.10c, UC-05.17, UC-10.01, UC-10.03, UC-10.04, UC-10.05, UC-10.09, UC-10.11 |
 | P2 | 21 | UC-01.03, UC-01.05, UC-03.01a, UC-03.01b, UC-03.02a, UC-04.07, UC-04.08, UC-04.09, UC-05.07, UC-05.07a, UC-05.07b, UC-05.07c, UC-05.11, UC-05.11a, UC-05.12, UC-05.13, UC-05.13a, UC-05.13b, UC-05.18, UC-09.05, UC-10.12 |
 | P3 | 26 | UC-01.04, UC-02.09, UC-06.01, UC-06.01a, UC-06.02, UC-06.02a, UC-06.03, UC-06.04, UC-06.05, UC-06.06, UC-06.08, UC-06.09, UC-06.10, UC-06.11, UC-06.11a, UC-06.13, UC-06.15, UC-06.16, UC-06.16a, UC-06.17, UC-09.01, UC-09.03, UC-09.03a, UC-09.06, UC-09.08, UC-09.08a |
 | **MVP** | **104** | |
@@ -212,49 +212,6 @@ Feature: UC-01.01c Quay về trang đã yêu cầu
     Then trang đích tự hiển thị lỗi 404 (không tiết lộ sự tồn tại), người dùng dùng điều hướng bình thường
 ```
 
-#### ST-01-01d Đồng ý xử lý dữ liệu cá nhân
-
-| Mục | Nội dung |
-|---|---|
-| Story | Là **User**, tôi muốn đồng ý xử lý dữ liệu cá nhân |
-| Mô tả | Người dùng đọc thông báo xử lý dữ liệu cá nhân và đồng ý trước khi dùng ứng dụng, theo Nghị định 13/2023 |
-| Use case | [UC-01.01d](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0101d) · M01 — Tích hợp SSO & hồ sơ |
-| Giai đoạn | P0 |
-| Truy vết | FR-AUTH-12; BR-31; C-02; NFR-PRV-01; API 2.1 `GET /me`, `POST /me:consent` |
-| Story point | |
-
-```gherkin
-Feature: UC-01.01d Đồng ý xử lý dữ liệu cá nhân
-  Background:
-    Given Có phiên ứng dụng; users.consented_at rỗng hoặc consent_version khác phiên bản thông báo hiện hành
-
-  Scenario: Luồng chính
-    When Hệ thống hiện màn hình thông báo (phiên bản lấy từ system_settings.consent_notice_version): dữ liệu thu thập (email, tên, ảnh đại diện từ SSO; truyện, ảnh, nhạc tải lên; video tạo ra; nhật ký sử dụng), mục đích (thử nghiệm đồ án tốt nghiệp, phiếu khảo sát), nơi xử lý (nhà cung cấp AI và lưu trữ), thời hạn (xóa toàn bộ sau ngày bảo vệ), quyền yêu cầu xóa sớm và kênh liên hệ
-    And Người dùng tích "Tôi đã đọc và đồng ý" rồi bấm "Tiếp tục"
-    And Hệ thống gọi POST /me:consent {noticeVersion}, ghi consented_at = now() và consent_version
-    And Hệ thống quay về UC-01.01 bước 9
-    Then users.consented_at và consent_version được ghi; người dùng vào được ứng dụng
-
-  Scenario: 2a Chưa tích ô đồng ý
-    Given luồng chính đã tới bước 2
-    When Chưa tích ô đồng ý
-    Then nút "Tiếp tục" bị vô hiệu hóa
-
-  Scenario: 3a Người dùng bấm "Không đồng ý"
-    Given luồng chính đã tới bước 3
-    When Người dùng bấm "Không đồng ý"
-    Then hệ thống đăng xuất (UC-01.02); hồ sơ và ví vẫn giữ để lần sau đồng ý thì dùng tiếp
-
-  Scenario: 3b noticeVersion gửi lên khác phiên bản hiện hành (thông báo vừa đổi)
-    Given luồng chính đã tới bước 3
-    When noticeVersion gửi lên khác phiên bản hiện hành (thông báo vừa đổi)
-    Then 409, tải lại thông báo mới
-
-  Scenario: *a Thông báo đổi phiên bản sau khi người dùng đã đồng ý
-    When Thông báo đổi phiên bản sau khi người dùng đã đồng ý
-    Then lần đăng nhập hoặc gia hạn phiên kế tiếp hiện lại màn hình này
-```
-
 #### ST-01-02 Đăng xuất
 
 | Mục | Nội dung |
@@ -324,55 +281,50 @@ Feature: UC-01.02a Kết thúc phiên SSO
     Then người dùng vẫn ở trạng thái đã đăng xuất khỏi ứng dụng; không thử lại tự động
 ```
 
-#### ST-10-11 Quản lý danh sách mời beta
+### Giai đoạn P1
+
+#### ST-01-01d Đồng ý xử lý dữ liệu cá nhân
 
 | Mục | Nội dung |
 |---|---|
-| Story | Là **Admin**, tôi muốn quản lý danh sách mời beta |
-| Mô tả | Thêm, gỡ và xem email được mời tham gia closed beta; chỉ email trong danh sách mới tạo được hồ sơ (BR-30) |
-| Use case | [UC-10.11](03-dac-ta-use-case/m10-quan-tri.md#uc-1011) · M10 — Quản trị |
-| Giai đoạn | P0 |
-| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites` |
+| Story | Là **User**, tôi muốn đồng ý xử lý dữ liệu cá nhân |
+| Mô tả | Người dùng đọc thông báo xử lý dữ liệu cá nhân và đồng ý trước khi dùng ứng dụng, theo Nghị định 13/2023 |
+| Use case | [UC-01.01d](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0101d) · M01 — Tích hợp SSO & hồ sơ |
+| Giai đoạn | P1 |
+| Truy vết | FR-AUTH-12; BR-31; C-02; NFR-PRV-01; API 2.1 `GET /me`, `POST /me:consent` |
 | Story point | |
 
 ```gherkin
-Feature: UC-10.11 Quản lý danh sách mời beta
+Feature: UC-01.01d Đồng ý xử lý dữ liệu cá nhân
   Background:
-    Given Là Admin; truy cập được môi trường chạy lệnh quản trị
+    Given Có phiên ứng dụng; users.consented_at rỗng hoặc consent_version khác phiên bản thông báo hiện hành
 
   Scenario: Luồng chính
-    When Admin chạy add với một hoặc nhiều email (hoặc file CSV), kèm ghi chú (ví dụ "nhóm khảo sát 1")
-    And Hệ thống chuẩn hóa email (bỏ khoảng trắng, chữ thường), kiểm tra định dạng, tạo beta_invites cho email chưa có
-    And Hệ thống thực hiện UC-10.09 và in kết quả: số email thêm mới, số đã có, số lỗi
-    And Admin gửi lời mời cho người dùng qua kênh riêng (email, nhóm chat) kèm link ứng dụng
-    And Lệnh list hiển thị email, ngày mời, đã tạo hồ sơ chưa (used_by_user_id), đã thu hồi chưa
-    Then beta_invites cập nhật; có audit log
+    When Hệ thống hiện màn hình thông báo (phiên bản lấy từ system_settings.consent_notice_version): dữ liệu thu thập (email, tên, ảnh đại diện từ SSO; truyện, ảnh, nhạc tải lên; video tạo ra; nhật ký sử dụng), mục đích (thử nghiệm đồ án tốt nghiệp, phiếu khảo sát), nơi xử lý (nhà cung cấp AI và lưu trữ), thời hạn (xóa toàn bộ sau ngày bảo vệ), quyền yêu cầu xóa sớm và kênh liên hệ
+    And Người dùng tích "Tôi đã đọc và đồng ý" rồi bấm "Tiếp tục"
+    And Hệ thống gọi POST /me:consent {noticeVersion}, ghi consented_at = now() và consent_version
+    And Hệ thống quay về UC-01.01 bước 9
+    Then users.consented_at và consent_version được ghi; người dùng vào được ứng dụng
 
-  Scenario: 2a Email sai định dạng
+  Scenario: 2a Chưa tích ô đồng ý
     Given luồng chính đã tới bước 2
-    When Email sai định dạng
-    Then bỏ qua email đó, báo trong kết quả
+    When Chưa tích ô đồng ý
+    Then nút "Tiếp tục" bị vô hiệu hóa
 
-  Scenario: 2b Email đã có và đang hiệu lực
-    Given luồng chính đã tới bước 2
-    When Email đã có và đang hiệu lực
-    Then không tạo trùng
+  Scenario: 3a Người dùng bấm "Không đồng ý"
+    Given luồng chính đã tới bước 3
+    When Người dùng bấm "Không đồng ý"
+    Then hệ thống đăng xuất (UC-01.02); hồ sơ và ví vẫn giữ để lần sau đồng ý thì dùng tiếp
 
-  Scenario: 2c Email đã bị thu hồi trước đó
-    Given luồng chính đã tới bước 2
-    When Email đã bị thu hồi trước đó
-    Then add mở lại lời mời (xóa revoked_at)
+  Scenario: 3b noticeVersion gửi lên khác phiên bản hiện hành (thông báo vừa đổi)
+    Given luồng chính đã tới bước 3
+    When noticeVersion gửi lên khác phiên bản hiện hành (thông báo vừa đổi)
+    Then 409, tải lại thông báo mới
 
-  Scenario: *a remove
-    When remove
-    Then đặt revoked_at; người chưa tạo hồ sơ không vào được nữa; người đã có hồ sơ vẫn đăng nhập được (BR-30). Muốn chặn hẳn thì Admin khóa hồ sơ (users.status = LOCKED)
-
-  Scenario: *b Kết thúc beta, mở rộng
-    When Kết thúc beta, mở rộng
-    Then Admin đặt system_settings.beta_invite_only = false
+  Scenario: *a Thông báo đổi phiên bản sau khi người dùng đã đồng ý
+    When Thông báo đổi phiên bản sau khi người dùng đã đồng ý
+    Then lần đăng nhập hoặc gia hạn phiên kế tiếp hiện lại màn hình này
 ```
-
-### Giai đoạn P1
 
 #### ST-02-01 Xem danh sách dự án
 
@@ -1981,6 +1933,16 @@ Feature: UC-05.17 Giữ / trừ / hoàn tiền
     When Provider không trả số liệu sử dụng
     Then dùng đơn giá × đơn vị đo được (số ảnh, số ký tự) để tính chi phí thực
 
+  Scenario: 5c Job thành công sau một hoặc nhiều lần thử lỗi
+    Given luồng chính đã tới bước 5
+    When Job thành công sau một hoặc nhiều lần thử lỗi
+    Then chỉ tính chi phí của lần thử thành công; chi phí các lần lỗi do hệ thống chịu (WR-09)
+
+  Scenario: 5d Job bị giao lại cho worker khác khi đã kết thúc
+    Given luồng chính đã tới bước 5
+    When Job bị giao lại cho worker khác khi đã kết thúc
+    Then câu nhận việc không trúng dòng nào, worker bỏ qua; không gọi provider và không trừ tiền lần nữa (ADR-29)
+
   Scenario: *a Job mất heartbeat > 10 phút
     When Job mất heartbeat > 10 phút
     Then reconciler đặt FAILED và RELEASE
@@ -2123,6 +2085,54 @@ Feature: UC-10.09 Ghi audit log
     Given luồng chính đã tới bước 2
     When Không ghi được audit
     Then rollback cả thay đổi
+```
+
+#### ST-10-11 Quản lý danh sách mời beta
+
+| Mục | Nội dung |
+|---|---|
+| Story | Là **Admin**, tôi muốn quản lý danh sách mời beta |
+| Mô tả | Thêm, gỡ và xem email được mời tham gia closed beta; chỉ email trong danh sách mới tạo được hồ sơ (BR-30) |
+| Use case | [UC-10.11](03-dac-ta-use-case/m10-quan-tri.md#uc-1011) · M10 — Quản trị |
+| Giai đoạn | P1 |
+| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites` |
+| Story point | |
+
+```gherkin
+Feature: UC-10.11 Quản lý danh sách mời beta
+  Background:
+    Given Là Admin; truy cập được môi trường chạy lệnh quản trị
+
+  Scenario: Luồng chính
+    When Admin chạy add với một hoặc nhiều email (hoặc file CSV), kèm ghi chú (ví dụ "nhóm khảo sát 1")
+    And Hệ thống chuẩn hóa email (bỏ khoảng trắng, chữ thường), kiểm tra định dạng, tạo beta_invites cho email chưa có
+    And Hệ thống thực hiện UC-10.09 và in kết quả: số email thêm mới, số đã có, số lỗi
+    And Admin gửi lời mời cho người dùng qua kênh riêng (email, nhóm chat) kèm link ứng dụng
+    And Lệnh list hiển thị email, ngày mời, đã tạo hồ sơ chưa (used_by_user_id), đã thu hồi chưa
+    Then beta_invites cập nhật; có audit log
+
+  Scenario: 2a Email sai định dạng
+    Given luồng chính đã tới bước 2
+    When Email sai định dạng
+    Then bỏ qua email đó, báo trong kết quả
+
+  Scenario: 2b Email đã có và đang hiệu lực
+    Given luồng chính đã tới bước 2
+    When Email đã có và đang hiệu lực
+    Then không tạo trùng
+
+  Scenario: 2c Email đã bị thu hồi trước đó
+    Given luồng chính đã tới bước 2
+    When Email đã bị thu hồi trước đó
+    Then add mở lại lời mời (xóa revoked_at)
+
+  Scenario: *a remove
+    When remove
+    Then đặt revoked_at; người chưa tạo hồ sơ không vào được nữa; người đã có hồ sơ vẫn đăng nhập được (BR-30). Muốn chặn hẳn thì Admin khóa hồ sơ (users.status = LOCKED)
+
+  Scenario: *b Kết thúc beta, mở rộng
+    When Kết thúc beta, mở rộng
+    Then Admin đặt system_settings.beta_invite_only = false
 ```
 
 ### Giai đoạn P2
@@ -2328,14 +2338,14 @@ Feature: UC-03.02a Dời ranh giới shot
     Then ranh giới đã dời vẫn giữ, brief cũ giữ nguyên, tiền giữ được hoàn; shot có nút "Viết lại brief" (UC-05.06e)
 ```
 
-#### ST-04-07 Xem dòng thời gian truyện ✂4
+#### ST-04-07 Xem dòng thời gian truyện ✂5
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Owner**, tôi muốn xem dòng thời gian truyện |
 | Mô tả | Xem dòng thời gian (ngày, mùa, tóm tắt) theo chương do AI dựng |
 | Use case | [UC-04.07](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0407) · M04 — Thế giới truyện |
-| Giai đoạn | P2 ✂4 |
+| Giai đoạn | P2 ✂5 |
 | Truy vết | FR-WLD-08 |
 | Story point | |
 
@@ -2361,14 +2371,14 @@ Feature: UC-04.07 Xem dòng thời gian truyện
     Then "Theo mạch truyện" (thứ tự chương, mặc định) hoặc "Theo thứ tự thời gian" (sắp theo nhãn ngày/mùa, dùng cho truyện có hồi tưởng). Hệ thống sắp theo chrono_index; mốc chưa có (NULL) xếp cuối nhóm "Chưa xác định"
 ```
 
-#### ST-04-08 Xem đồ thị quan hệ ✂3
+#### ST-04-08 Xem đồ thị quan hệ ✂4
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Owner**, tôi muốn xem đồ thị quan hệ |
 | Mô tả | Xem đồ thị quan hệ giữa các nhân vật và diễn biến |
 | Use case | [UC-04.08](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0408) · M04 — Thế giới truyện |
-| Giai đoạn | P2 ✂3 |
+| Giai đoạn | P2 ✂4 |
 | Truy vết | FR-WLD-09 |
 | Story point | |
 
@@ -2384,14 +2394,14 @@ Feature: UC-04.08 Xem đồ thị quan hệ
     Then hiển thị đồ thị
 ```
 
-#### ST-04-09 Phân tích lại (Re-analyse) ✂3 ✂4
+#### ST-04-09 Phân tích lại (Re-analyse) ✂4 ✂5
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Owner**, tôi muốn phân tích lại (Re-analyse) |
 | Mô tả | Dựng lại Timeline và Relationships sau khi văn bản hoặc tài sản thay đổi |
 | Use case | [UC-04.09](03-dac-ta-use-case/m04-the-gioi-truyen.md#uc-0409) · M04 — Thế giới truyện |
-| Giai đoạn | P2 ✂3 ✂4 |
+| Giai đoạn | P2 ✂4 ✂5 |
 | Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; 08 §3.2 (`STORY_META`) |
 | Story point | |
 
@@ -2460,7 +2470,7 @@ Feature: UC-05.07 Sinh tư liệu chương
 
   Scenario: *a Editor sửa văn bản chương trong lúc job chạy
     When Editor sửa văn bản chương trong lúc job chạy
-    Then chương bị khóa (BR-12) đến khi job xong
+    Then chương bị khóa (BR-12) đến khi job xong. Khóa được mở trong cùng giao dịch kết thúc job cha (thành công, lỗi hay hủy); nếu worker chết, reconciler mở khóa trong ≤ 15 phút (05 §6.1 bước 8, ADR-29)
 ```
 
 #### ST-05-07a Dựng storyboard tự động
@@ -2652,15 +2662,15 @@ Feature: UC-05.11a Nghe thử giọng
     Then hiện nhãn gói; vẫn nghe thử được, nhưng chọn dùng thì cần nâng cấp
 ```
 
-#### ST-05-12 Quản lý từ điển phát âm ✂5
+#### ST-05-12 Quản lý từ điển phát âm ✂6
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Owner**, tôi muốn quản lý từ điển phát âm |
 | Mô tả | Khai báo cách đọc tên riêng, từ mượn, từ Hán Việt; chỉ ảnh hưởng audio, không đổi chữ |
 | Use case | [UC-05.12](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0512) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
-| Giai đoạn | P2 ✂5 |
-| Truy vết | FR-NAR-04; BR-19. Vị trí ✂5 trong thứ tự cắt giảm (QĐ-05, QĐ-80) |
+| Giai đoạn | P2 ✂6 |
+| Truy vết | FR-NAR-04; BR-19. Vị trí ✂6 trong thứ tự cắt giảm (QĐ-05, QĐ-80) |
 | Story point | |
 
 ```gherkin
@@ -2932,14 +2942,14 @@ Feature: UC-01.04 Đổi ngôn ngữ giao diện
     Then mặc định lấy claim locale của SSO nếu có
 ```
 
-#### ST-02-09 Xem bản đồ quy trình (Map) ✂1
+#### ST-02-09 Xem bản đồ quy trình (Map) ✂2
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Owner**, tôi muốn xem bản đồ quy trình (Map) |
-| Mô tả | Xem 6 bước của luồng chính và vị trí hiện tại của dự án. Trang tĩnh, đứng đầu thứ tự cắt giảm (✂1, QĐ-61) |
+| Mô tả | Xem 6 bước của luồng chính và vị trí hiện tại của dự án. Trang tĩnh, đứng thứ hai trong thứ tự cắt giảm, sau nạp tiền sandbox (✂2, QĐ-61, QĐ-116) |
 | Use case | [UC-02.09](03-dac-ta-use-case/m02-du-an-cong-tac.md#uc-0209) · M02 — Quản lý dự án & cộng tác |
-| Giai đoạn | P3 ✂1 |
+| Giai đoạn | P3 ✂2 |
 | Truy vết | FR-PRJ-06 |
 | Story point | |
 
@@ -3175,15 +3185,15 @@ Feature: UC-06.04 Đặt hiệu ứng Ken Burns & điểm tập trung
     Then gợi ý chuyển động nhiều pha, hoặc tách shot trong Storyboard (UC-05.06c)
 ```
 
-#### ST-06-05 Đặt chuyển cảnh ✂2
+#### ST-06-05 Đặt chuyển cảnh ✂3
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Owner**, tôi muốn đặt chuyển cảnh |
 | Mô tả | Đặt kiểu và thời lượng chuyển cảnh giữa hai clip ảnh |
 | Use case | [UC-06.05](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0605) · M06 — Trình chỉnh sửa & xuất video |
-| Giai đoạn | P3 (nâng cao ✂2) |
-| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂2 trong thứ tự cắt giảm |
+| Giai đoạn | P3 (nâng cao ✂3) |
+| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm |
 | Story point | |
 
 ```gherkin
@@ -3230,15 +3240,15 @@ Feature: UC-06.06 Chọn khung hình & tinh chỉnh màu
     Then hệ thống xử lý như mô tả
 ```
 
-#### ST-06-08 Định kiểu phụ đề ✂2
+#### ST-06-08 Định kiểu phụ đề ✂3
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Owner**, tôi muốn định kiểu phụ đề |
 | Mô tả | Bật/tắt và định kiểu phụ đề; nội dung luôn nguyên văn, không sửa được |
 | Use case | [UC-06.08](03-dac-ta-use-case/m06-trinh-chinh-sua-video.md#uc-0608) · M06 — Trình chỉnh sửa & xuất video |
-| Giai đoạn | P3 (preset ✂2) |
-| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂2 trong thứ tự cắt giảm |
+| Giai đoạn | P3 (preset ✂3) |
+| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm |
 | Story point | |
 
 ```gherkin
@@ -3605,14 +3615,14 @@ Feature: UC-09.01 Xem bảng giá
     Then hệ thống quy đổi theo tỷ giá cấu hình (system_settings.vnd_rate), ghi chú "chỉ để tham khảo; thanh toán bằng USD"
 ```
 
-#### ST-09-03 Nạp tiền vào ví ✂6
+#### ST-09-03 Nạp tiền vào ví ✂1
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **User**, tôi muốn nạp tiền vào ví |
 | Mô tả | Nạp một số tiền USD vào ví để dùng cho các thao tác AI; lần nạp đầu chuyển tài khoản sang "Đã nạp tiền" |
 | Use case | [UC-09.03](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0903) · M09 — Ví & thanh toán |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 | Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions` |
 | Story point | |
 
@@ -3634,14 +3644,14 @@ Feature: UC-09.03 Nạp tiền vào ví
     Then báo lỗi, không tạo phiên thanh toán [ĐX]
 ```
 
-#### ST-09-03a Thanh toán qua checkout ✂6
+#### ST-09-03a Thanh toán qua checkout ✂1
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **User**, tôi muốn thanh toán qua checkout |
 | Mô tả | Đưa User sang trang thanh toán của cổng để trả tiền; ứng dụng không bao giờ nhận hay lưu thông tin thẻ |
 | Use case | [UC-09.03a](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0903a) · M09 — Ví & thanh toán |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 | Truy vết | ADR-08; FR-BIL-03; NFR-SEC-07; API 2.8 `POST /billing/topup-sessions` |
 | Story point | |
 
@@ -3703,14 +3713,14 @@ Feature: UC-09.06 Xem lịch sử chi tiêu
     Then hiển thị các bút toán (append-only)
 ```
 
-#### ST-09-08 Xử lý webhook thanh toán ✂6
+#### ST-09-08 Xử lý webhook thanh toán ✂1
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Payment Gateway**, tôi muốn xử lý webhook thanh toán |
 | Mô tả | Nhận sự kiện thanh toán và cập nhật ví (và gói, sau MVP) một cách idempotent |
 | Use case | [UC-09.08](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0908) · M09 — Ví & thanh toán |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 | Truy vết | FR-BIL-09; NFR-SEC-07; IC-07 |
 | Story point | |
 
@@ -3743,14 +3753,14 @@ Feature: UC-09.08 Xử lý webhook thanh toán
     Then trả 500 để cổng gửi lại; giao dịch DB rollback
 ```
 
-#### ST-09-08a Ghi nạp tiền vào sổ cái ✂6
+#### ST-09-08a Ghi nạp tiền vào sổ cái ✂1
 
 | Mục | Nội dung |
 |---|---|
 | Story | Là **Hệ thống**, tôi muốn ghi nạp tiền vào sổ cái |
 | Mô tả | Biến mỗi sự kiện thanh toán thành thay đổi đúng ở payments và ví, với đầy đủ bút toán sổ cái |
 | Use case | [UC-09.08a](03-dac-ta-use-case/m09-vi-thanh-toan.md#uc-0908a) · M09 — Ví & thanh toán |
-| Giai đoạn | P3 ✂6 |
+| Giai đoạn | P3 ✂1 |
 | Truy vết | FR-BIL-03, FR-BIL-09; WR-01..08; IC-06, IC-07 |
 | Story point | |
 

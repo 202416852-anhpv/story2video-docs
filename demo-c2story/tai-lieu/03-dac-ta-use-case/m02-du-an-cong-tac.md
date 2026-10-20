@@ -241,12 +241,12 @@
 | Mục | Nội dung |
 |---|---|
 | Tác nhân chính | Editor |
-| Mô tả | Xem 6 bước của luồng chính và vị trí hiện tại của dự án. Trang tĩnh, đứng **đầu** thứ tự cắt giảm (✂1, QĐ-61) |
+| Mô tả | Xem 6 bước của luồng chính và vị trí hiện tại của dự án. Trang tĩnh, đứng thứ hai trong thứ tự cắt giảm, sau nạp tiền sandbox (✂2, QĐ-61, QĐ-116) |
 | Tiền điều kiện | Là thành viên dự án |
 | Hậu điều kiện | **Thành công:** hiển thị tiến độ từng bước; điều hướng tới bước được chọn |
 | Kích hoạt | Mở `?v=map` |
 | Truy vết | FR-PRJ-06 |
-| Giai đoạn | P3 ✂1 |
+| Giai đoạn | P3 ✂2 |
 
 **Luồng chính**
 1. Editor mở Map.

@@ -59,6 +59,8 @@ package "Director, job & hạ tầng" #EEEEEE {
         attempts : int
         held_micro : bigint
         charged_micro : bigint
+        budget_day : date
+        budget_reserved_micro : bigint
         * idempotency_key : text <<UQ>>
         parent_job_id : uuid <<FK>>
         heartbeat_at : timestamptz
@@ -111,6 +113,8 @@ package "Director, job & hạ tầng" #EEEEEE {
         cost_usd : numeric
         latency_ms : int
         request_id : text
+        attempt : int
+        succeeded : bool
     }
     entity price_rules {
         * id : uuid <<PK>>

@@ -26,7 +26,7 @@
 |---|---|---|
 | NFR-INT-01 | **Độ phủ văn bản = 100%** cho mọi render: tổng ký tự các đoạn nguồn bằng độ dài chương, và `concat` các đoạn nguồn bằng văn bản chương (so sánh byte) | Kiểm tra tự động trước render; test property-based cho `CoverageValidator` với 10.000 phân đoạn ngẫu nhiên |
 | NFR-INT-02 | Không có đường code nào ghi đầu ra LLM vào `chapters.content` / `source_texts` / văn bản TTS | Review kiến trúc; test kiến trúc (ArchUnit-style) cấm import module LLM trong repository chương |
-| NFR-INT-03 | WER thuyết minh trung bình ≤ 3% trên golden set tiếng Việt và tiếng Anh với provider và giọng đã chọn. Bảo đảm ở **khâu chọn provider** (P0), không kiểm tra từng shot lúc chạy trong MVP (QĐ-54) | `EVAL-wer-golden` ở P0 và mỗi khi đổi provider, giọng hoặc quy tắc chuẩn hóa |
+| NFR-INT-03 | WER hiệu chỉnh của thuyết minh (WER theo âm tiết trừ WER nền của ASR, QĐ-111) trung bình ≤ 3% trên golden set tiếng Việt và tiếng Anh với provider và giọng đã chọn. Bảo đảm ở **khâu chọn provider** (P0), không kiểm tra từng shot lúc chạy trong MVP (QĐ-54) | `EVAL-wer-golden` ở P0 và mỗi khi đổi provider, giọng hoặc quy tắc chuẩn hóa |
 | NFR-INT-04 | Phụ đề khớp nguyên văn 100%, kể cả ký hiệu trình bày (so sánh ký tự sau khi bỏ ngắt dòng; trừ dòng phân cách không có phụ đề, BR-22) | Test tự động trên file SRT/VTT |
 | NFR-INT-05 | Văn bản giữ nguyên qua import với các định dạng hỗ trợ (round-trip .txt/.md giống byte sau NFC) | Test tự động |
 | NFR-INT-06 | Mỗi render lưu `timeline_snapshot` và hash các đoạn nguồn để kiểm toán lại sau này | Kiểm tra dữ liệu |
@@ -37,7 +37,7 @@
 |---|---|
 | NFR-SCAL-01 | API stateless, scale ngang; phiên lưu trong DB hoặc Redis |
 | NFR-SCAL-02 | Worker scale theo độ dài queue, riêng từng queue `orchestrator` / `llm` / `image` / `tts` / `align` / `media-proc` / `render` / `export` (05 §3, §10) |
-| NFR-SCAL-03 | Giới hạn đồng thời theo provider (tôn trọng rate limit) và theo người dùng (BR-32): tối đa 8 job ảnh, 8 job TTS, 1 job render đồng thời; ≤ 30 yêu cầu LLM/phút |
+| NFR-SCAL-03 | Giới hạn đồng thời theo provider (rate limiter của BullMQ cho từng queue) và theo người dùng bằng semaphore Redis (BR-32, ADR-28): tối đa 8 job ảnh, 8 job TTS, 1 job render đồng thời; ≤ 30 yêu cầu LLM/phút |
 | NFR-SCAL-04 | Closed beta: 20 người dùng, 5 người đồng thời. Kiến trúc không chặn scale ngang tới 10.000 MAU, 500 người dùng đồng thời (sau MVP) |
 
 ## 3. Độ tin cậy & sẵn sàng
@@ -93,13 +93,14 @@
 | Mã | Yêu cầu |
 |---|---|
 | NFR-MNT-01 | Test coverage ≥ 80% cho module `billing` và `authz` và package `@studio/timeline-rules`; ≥ 60% toàn hệ thống |
+| NFR-MNT-09 | Nền tảng kiểm thử theo 09 §2.3: integration test chạy trên Testcontainers (Postgres, Redis, MinIO), không mock DB; property-based test bằng fast-check; OpenAPI viết trước so trong CI |
 | NFR-MNT-02 | Provider AI có adapter **mock** chạy offline cho dev và CI (không cần key). Provider thật chỉ gọi khi demo và trong test E2E hằng tuần (QĐ-40) |
 | NFR-MNT-03 | Tracing OpenTelemetry xuyên API → queue → worker → provider; correlation id = jobId |
 | NFR-MNT-04 | Dashboard: độ dài queue, thời gian job, tỷ lệ lỗi theo provider, chi phí AI theo giờ, chi tiêu so với trần ngày, tỷ lệ job bị trừ kịch số đã giữ, độ trễ outbox relay, số job treo bị reconciler xử lý |
 | NFR-MNT-07 | Luật khóa thuyết minh (BR-24) nằm trong một package dùng chung client/server (`@studio/timeline-rules`), có bộ test riêng chạy ở CI (ADR-16) |
 | NFR-MNT-08 | Môi trường local chạy được toàn bộ luồng 6 bước không cần mạng ngoài: Keycloak dev realm, AI mock, MinIO, Stripe CLI (sandbox) |
 | NFR-MNT-05 | Migration DB có phiên bản và có thể rollback; zero-downtime (expand/contract) |
-| NFR-MNT-06 | Prompt template quản lý bằng file có phiên bản; có bộ eval hồi quy khi đổi prompt hoặc mô hình. Golden set: 5–10 chương tác phẩm hết thời hạn bảo hộ (tiếng Việt), Project Gutenberg (tiếng Anh) và 1–2 chương nhóm tự viết có tên riêng, số, từ mượn (QĐ-70) |
+| NFR-MNT-06 | Prompt template quản lý bằng file có phiên bản; có bộ eval hồi quy khi đổi prompt hoặc mô hình (`EVAL-consistency`, `EVAL-refusal-rate`, `EVAL-asset-extraction`, `EVAL-wer-golden`, `EVAL-alignment`, `EVAL-segmenter-golden`). Golden set: 5–10 chương tác phẩm hết thời hạn bảo hộ (tiếng Việt), Project Gutenberg (tiếng Anh) và 1–2 chương nhóm tự viết có tên riêng, số, từ mượn (QĐ-70) |
 
 ## 8. Tương thích
 
