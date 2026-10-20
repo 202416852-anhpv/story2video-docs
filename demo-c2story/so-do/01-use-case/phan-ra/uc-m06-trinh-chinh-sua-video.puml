@@ -76,8 +76,8 @@ note right of UC8
   Phụ đề hiện nguyên ký hiệu trình bày (BR-22)
 end note
 note right of UC2
-  Clip thuyết minh: chỉ dời, chỉnh âm lượng,
-  đổi tốc độ 0,8×–1,25× (BR-24)
+  Clip thuyết minh: chỉ dời, chỉnh âm lượng (BR-24);
+  tốc độ đọc đặt cho cả dự án (UC-05.11)
 end note
 caption Nền xám: use case sau MVP (bản chỉ gồm MVP: so-do/mvp/)
 @enduml

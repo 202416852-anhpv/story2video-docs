@@ -28,7 +28,7 @@
 | **BR-21** | **Chỉ tác giả sửa văn bản:** văn bản chương chỉ thay đổi bởi thao tác trực tiếp của Owner/Editor (gõ, Find & replace, Re-import, khôi phục phiên bản). Không AI nào (Director, phân tích, storyboard) có quyền ghi văn bản chương. | M03/M07 | P1 | ĐX |
 | **BR-22** | Phụ đề hiển thị **đúng nguyên văn** đoạn đang đọc, kể cả ký hiệu trình bày (`*Bố*`, `[…]`, `# …` hiện nguyên), ngắt dòng theo timestamp. Dòng phân cách (`---`, `***`) không có thuyết minh nên **không có phụ đề** ở khoảng lặng đó. | M06 | P3 | QĐ-56 |
 | **BR-23** | Chỉ xuất video khi: độ phủ 100%; mọi shot có ảnh `DONE`; mọi shot có thuyết minh `DONE` (sau MVP: `VERIFIED` hoặc `ACCEPTED`); không clip nào `OUTDATED`; timeline thỏa BR-24. **Không bắt buộc** người dùng nghe hết thuyết minh; shot "cần sinh lại" (BR-34) chỉ là cảnh báo. | M06 | P3 | QĐ-55 |
-| **BR-24** | **Khóa thuyết minh trên timeline:** clip thuyết minh không được cắt, trim, xóa, đổi thứ tự hay chồng lấn. Chỉ được (a) dời thời điểm (chèn khoảng lặng), (b) chỉnh âm lượng, (c) **đổi tốc độ trong khoảng 0,8×–1,25×**, giữ nguyên cao độ; clip ảnh và phụ đề co giãn theo. Số lượng và thứ tự clip do storyboard quyết định. | M06 | P3 | QĐ-53 |
+| **BR-24** | **Khóa thuyết minh trên timeline:** clip thuyết minh không được cắt, trim, xóa, đổi thứ tự hay chồng lấn. Chỉ được (a) dời thời điểm (chèn khoảng lặng), (b) chỉnh âm lượng. Không đổi tốc độ từng clip; tốc độ đọc đặt cho cả dự án ở cài đặt thuyết minh (QĐ-140). Số lượng và thứ tự clip do storyboard quyết định. | M06 | P3 | QĐ-53 |
 | BR-25 | Clip ảnh của shot phải hiển thị suốt thời gian đọc đoạn của shot (được dài hơn, không ngắn hơn); chuyển cảnh, nhạc và SFX không được làm mất lời đọc (ducking bắt buộc khi nhạc chồng thuyết minh). | M06 | P3 | ĐX |
 | BR-26 | Nhạc nền và SFX: **MVP chỉ dùng file người dùng tự tải lên**; người tải lên tự chịu trách nhiệm bản quyền, không có ô cam kết và không có quy trình gỡ nội dung. *Sau MVP:* thư viện hệ thống gồm bộ CC0/CC-BY tuyển chọn (Pixabay, Freesound); nhạc CC-BY tự sinh dòng ghi công vào clip kết hoặc file mô tả. | M06 | P3 / Sau | QĐ-27, QĐ-58 |
 | BR-27 | **Trạng thái tài khoản:** *Free* hoặc *Đã nạp tiền*. "Đã nạp tiền" bật khi **tổng nạp tiền thật > 0** (tiền dùng thử không tính). Free bị giới hạn theo §3.3 và render có watermark; Đã nạp tiền bỏ giới hạn và watermark. Video đã render khi còn Free giữ watermark; render lại để có bản không watermark. | M09 | P1, P3 | QĐ-35, QĐ-36, QĐ-38 |
@@ -36,7 +36,7 @@
 | BR-29 | **Trần chi tiêu AI toàn hệ thống** mỗi ngày (closed beta: **$10**, cấu hình được). Trần tính trên **chi phí thật của provider** (chưa cộng phí 10%): chi phí đã phát sinh trong ngày cộng chi phí ước tính của các job đang chạy cộng job mới không được vượt trần, nếu vượt thì **từ chối job tốn phí mới** (`503 DAILY_BUDGET_EXCEEDED`); job đang chạy vẫn hoàn tất; gửi cảnh báo cho Admin. Kiểm tra và giữ chỗ phải **nguyên tử** (một câu cập nhật có điều kiện trên bộ đếm của ngày, cùng giao dịch với HOLD; ADR-25), để các yêu cầu đồng thời không thể cùng vượt trần. Ngày tính theo giờ Việt Nam (UTC+7); job tính vào ngày nó được tạo. | M10 | P2 | QĐ-39 |
 | BR-30 | **Closed beta:** chỉ email có trong danh sách mời mới tạo được hồ sơ (so khớp không phân biệt hoa thường). Không có trong danh sách thì không tạo hồ sơ, không tạo phiên, không tặng tiền dùng thử. Người đã có hồ sơ vẫn đăng nhập được khi bị gỡ khỏi danh sách. Tắt quy tắc bằng cấu hình khi mở rộng. | M01 | P1 | QĐ-25 |
 | BR-31 | **Đồng ý xử lý dữ liệu cá nhân:** lần đăng nhập đầu (hoặc khi nội dung thông báo đổi phiên bản), người dùng phải đồng ý trước khi dùng ứng dụng. Thông báo nêu dữ liệu thu thập (email, tên, truyện, file tải lên), mục đích (đồ án tốt nghiệp), thời hạn xóa (sau ngày bảo vệ), và **bên thứ ba nhận dữ liệu**: Google (Gemini, gói trả phí) nhận văn bản truyện, mô tả và ảnh tham chiếu; TTS và aligner chạy trên hạ tầng của nhóm nên văn bản không gửi ra ngoài ở bước này (QĐ-128). Lưu thời điểm và phiên bản đã đồng ý. Không đồng ý thì đăng xuất. | M01 | P1 | QĐ-26 |
-| BR-32 | **Giới hạn kỹ thuật** (không liên quan tính phí): ≤ 30 yêu cầu LLM/phút/người; ≤ 8 job ảnh, 8 job TTS và 1 job render đồng thời/người. Vượt thì `429` kèm `Retry-After`. | M10 | P1 | QĐ-33 |
+| BR-32 | **Giới hạn kỹ thuật** (không liên quan tính phí): ≤ 30 yêu cầu LLM/phút/người; ≤ 1 render đang chạy/người (kiểm khi tạo job); nghe thử phát âm ≤ 10 lần/phút/người. Vượt thì `429` kèm `Retry-After`. Giới hạn ≤ 8 job ảnh, 8 job TTS đồng thời/người: sau MVP (QĐ-132); MVP giới hạn toàn hệ thống bằng `concurrency` của queue. | M10 | P1 | QĐ-33 |
 | BR-33 | **Dời ranh giới shot** chỉ làm ở Workspace, theo câu, giữa hai shot liền kề của storyboard hiện hành. Sau khi dời, AI viết lại brief của 2 shot bị ảnh hưởng: hệ thống hiện giá ước tính, Editor xác nhận thì mới dời và tạo job; hủy thì không dời. Thuyết minh của 2 shot chuyển `OUTDATED`. | M03/M05 | P2 | QĐ-52 |
 | BR-34 | **Kiểm chứng thủ công:** mỗi shot có "Nghe" và "Đánh dấu cần sinh lại". Đánh dấu chỉ là ghi nhớ cho người dùng; không chặn xuất (BR-23) nhưng hiện cảnh báo trong báo cáo điều kiện xuất. Sinh lại thuyết minh thì xóa đánh dấu. | M05 | P2 | QĐ-54 |
 
@@ -85,10 +85,9 @@
 | `SHOT_IMAGE` | Số ảnh × đơn giá ảnh | 1 ảnh | P1 |
 | `IMAGE_EDIT` (Describe→Edit, Retry) | Số ảnh × đơn giá sửa ảnh | 1 ảnh | P1 |
 | `NARRATION_TTS` | MVP: giây GPU của TTS Server + Alignment Worker × đơn giá giây (QĐ-123). Sau MVP (Vbee AIVoice): số ký tự × đơn giá ký tự | Số ký tự đoạn nguồn × thời lượng/ký tự đo ở P0 × hệ số GPU/thời lượng của `BENCH-tts` × 1,2 | P2 |
-| `PRONUNCIATION_PREVIEW` | Như `NARRATION_TTS` (≤ 200 ký tự); gọi đồng bộ (QĐ-131) | 200 ký tự | P2 |
 | `REDIRECT`, Director chat | Token LLM | theo thao tác | Sau |
 | `RENDER_TIMELINE` | — | **Miễn phí** trong giới hạn gói (QĐ-34) | P3 |
-| `EXPORT_ZIP`, tải nhạc lên, thay ảnh bằng ảnh tải lên, nghe mẫu giọng có sẵn | — | Miễn phí | P3 / Sau |
+| `EXPORT_ZIP`, tải nhạc lên, thay ảnh bằng ảnh tải lên, nghe mẫu giọng có sẵn, **nghe thử phát âm** ≤ 200 ký tự (rate limit BR-32, QĐ-136) | — | Miễn phí | P3 / Sau |
 
 **Ánh xạ loại job → thao tác tính phí** (QĐ-130). Tên job theo hành động của worker, tên thao tác theo thứ người dùng trả tiền; hai bộ tên giữ nguyên, bảng này là nguồn chính thức:
 
@@ -99,9 +98,10 @@
 | `GENERATE_SHOT_IMAGE` | `SHOT_IMAGE` |
 | `EDIT_IMAGE` | `IMAGE_EDIT` |
 | `NARRATE_SEGMENT` + `VERIFY_NARRATION` | `NARRATION_TTS` (aligner gộp vào) |
-| `PRONUNCIATION_PREVIEW` (đồng bộ) | `PRONUNCIATION_PREVIEW` |
 | `GENERATE_MEDIA_CHAPTER` | — (job cha, không gọi provider; tiền nằm ở job con) |
+| `REDIRECT_CHAPTER` *(sau MVP)* | `REDIRECT` |
 | `RENDER_TIMELINE` | `RENDER_TIMELINE` (miễn phí) |
+| `PROCESS_AUDIO_UPLOAD` (queue `media-proc`), `EXPORT_ZIP` *(sau MVP)* | — (miễn phí, không gọi provider, không HOLD) |
 
 > Đã bỏ: `MUSIC_AI`, `SFX_AI`, `SFX_SUGGEST` (QĐ-57); bảng giá credit cũ và "1 credit ≈ 1 ảnh".
 > **Ước lượng tham khảo:** một chương 10.000 ký tự (khoảng 12 phút audio; ở mật độ mặc định 3 ảnh/phút là khoảng 36 ảnh, QĐ-112) cần đo lại ở P0. Ước lượng cũ "10 ảnh, $0,5–1" dựa trên mật độ quá thấp (1 ảnh mỗi 72 s). Ngưỡng: ≤ $0,15/phút video (BO-06); $2 dùng thử phải đủ khoảng 1 chương (QĐ-37), nếu không thì PO điều chỉnh theo QĐ-112. Số liệu thật lấy từ `EVAL-cost-per-minute` ở P0.
@@ -124,7 +124,7 @@
 | WR-02 | Sổ cái chỉ ghi thêm. Loại bút toán: `TRIAL_GRANT` (tiền dùng thử, BR-28), `TOPUP` (nạp tiền thật qua cổng), `HOLD`, `CAPTURE`, `RELEASE`, `ADJUST` (Admin, sau MVP), `REFUND` (hoàn tiền thanh toán, sau MVP). | P1 |
 | WR-03 | HOLD: `available -= x`, `held += x` trong cùng giao dịch với tạo job, dùng `SELECT … FOR UPDATE` trên ví. Không đủ `available` thì `402 INSUFFICIENT_BALANCE`. | P1 |
 | WR-04 | Khi job xong: CAPTURE `c = min(chi phí thực × 110%, x)` (`held -= c`), RELEASE phần dư `x − c` (`held -= x − c`, `available += x − c`). Thất bại: RELEASE toàn bộ. | P1 |
-| WR-05 | Job hàng loạt (Sinh tư liệu, Regenerate all): HOLD tổng ước tính trước; khi biết số shot thực tế thì giữ thêm hoặc trả lại; mỗi job con CAPTURE/RELEASE phần của nó. | P1 |
+| WR-05 | **Chỉ job gốc giữ và quyết toán tiền** (QĐ-134). Job có job con (Sinh tư liệu `GENERATE_MEDIA_CHAPTER`, kể cả khi chỉ sinh thuyết minh): HOLD giá ước tính tối đa của cả lượt ở job cha; job con có `held_micro = 0`, chỉ ghi `ai_usage_records`; khi job cha kết thúc: CAPTURE `min(Σ chi phí của các con thành công × 110%, HOLD)`, RELEASE phần còn lại. Không giữ thêm giữa chừng. Thao tác nhiều đối tượng độc lập (Regenerate all ảnh tham chiếu): tạo n job gốc, mỗi job HOLD riêng, trong **một giao dịch** (thiếu tiền cho bất kỳ job nào thì không tạo job nào). | P1 |
 | WR-06 | TOPUP: chỉ ghi khi webhook của cổng xác nhận thanh toán (sandbox); `available += x`, `topup_total += x`. Số nạp tối thiểu $1, tối đa $100 mỗi lần [ĐX]. | P3 |
 | WR-07 | Hoàn tiền thanh toán (refund/chargeback, sau MVP): ghi `REFUND` âm; số dư âm thì khóa thao tác tốn phí đến khi bù. | Sau |
 | WR-08 | Admin điều chỉnh (sau MVP): `ADJUST` kèm `reason` bắt buộc và `actor_id`. | Sau |
@@ -152,7 +152,6 @@ Sơ đồ: `../so-do/05-hoat-dong/act-giu-tru-tien.puml`.
 | Đoạn nguồn một shot | ≥ 1 câu; cảnh báo nếu > 30 s đọc (~450 ký tự tiếng Việt) |
 | Từ điển phát âm | ≤ 500 mục / dự án; mỗi mục ≤ 100 ký tự |
 | Tốc độ đọc của dự án | 0,8–1,3× |
-| Tốc độ một clip thuyết minh trên timeline | 0,8–1,25× (BR-24) |
 | Ngưỡng WER *(sau MVP)* | 0,01–0,10 (mặc định 0,03) |
 | Nhạc / SFX tải lên | MP3/WAV/M4A ≤ 100 MB, ≤ 15 phút |
 | Chuyển cảnh | 0–1.500 ms |

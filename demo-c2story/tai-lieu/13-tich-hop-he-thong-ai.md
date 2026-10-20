@@ -26,8 +26,8 @@ Nguồn: 05 §2, §7.3; QĐ-119..123.
 |---|---|---|
 | AI-P1 | **AI chỉ minh họa, không viết lại truyện.** Không có đường ghi nào từ đầu ra LLM vào `chapters.content`, `source_texts`, `narrations.spoken_text`. LLM chỉ trả **chỉ số** (câu, đoạn), không trả lại văn bản | AG-00, ADR-11, NFR-INT-02, BR-21 |
 | AI-P2 | **Không gọi SDK provider trực tiếp từ module nghiệp vụ.** Mọi lời gọi đi qua AI Gateway, qua một port; đổi provider bằng cấu hình | AG-02, ADR-03 |
-| AI-P3 | **Mọi lời gọi AI là job bất đồng bộ.** Ngoại lệ duy nhất: nghe thử phát âm ≤ 200 ký tự trả audio đồng bộ. Báo giá không gọi provider | AG-01, QĐ-131 |
-| AI-P4 | **Không có lời gọi tốn phí nào mà không có giá ước tính, HOLD và giữ chỗ trần ngày** trong cùng một giao dịch | BR-01, BR-02, BR-29, ADR-25 |
+| AI-P3 | **Mọi lời gọi AI là job bất đồng bộ.** Ngoại lệ duy nhất: nghe thử phát âm ≤ 200 ký tự trả audio đồng bộ, miễn phí. Báo giá không gọi provider | AG-01, QĐ-131, QĐ-136 |
+| AI-P4 | **Không có lời gọi tốn phí nào mà không có giá ước tính, HOLD và giữ chỗ trần ngày** trong cùng một giao dịch, đặt ở **job gốc** (job con của một Flow không giữ tiền riêng, WR-05). Ngoại lệ: nghe thử phát âm miễn phí (QĐ-136) | BR-01, BR-02, BR-29, ADR-25 |
 | AI-P5 | **Mọi lần gọi provider đều được đo** (`ai_usage_records`), kể cả lần lỗi | NFR-COST-03, ADR-29 |
 | AI-P6 | **Dev và CI không gọi mạng**: mock adapter là mặc định | ADR-21, NFR-MNT-02 |
 | AI-P7 | **Văn bản truyện là dữ liệu không tin cậy**, không phải chỉ dẫn | NFR-SEC-08 |
@@ -65,9 +65,8 @@ AI Gateway **không phải một dịch vụ mạng riêng**: là thư viện Ty
 | | `SentenceSegmenter` | Tách câu tất định, đánh số câu để LLM chỉ trả chỉ số (12 §1) |
 | | `PromptCompiler` | Ghép prompt ảnh theo thứ tự BR-08; lưu `prompt_snapshot`; cờ ablation (QĐ-117) |
 | | `SpeechNormalizer` | Đoạn nguồn → SSML + `NormalizationMap`; không đổi chữ (12 §2) |
-| Kiểm soát | `ModerationFilter` | Kiểm duyệt văn bản đầu vào, ảnh/audio đầu ra |
-| | `ProviderRouter` | Chọn provider/mô hình theo loại tác vụ; timeout; circuit breaker; fallback chỉ cho LLM, sang mô hình không đắt hơn (QĐ-124, 125) |
-| | `RetryPolicy` | Backoff 2 s / 8 s / 30 s + jitter, tối đa 3 lần |
+| Kiểm soát | `ProviderRouter` | Chọn provider/mô hình theo loại tác vụ; timeout; phân loại lỗi (§7.1); fallback chỉ cho LLM, sang mô hình không đắt hơn (QĐ-124, 125). Mỗi lần thử của job gọi provider **một lần**; thử lại là việc của job (BullMQ backoff, QĐ-133) |
+| | `ModerationFilter` *(sau MVP)* | MVP dựa vào bộ lọc an toàn có sẵn của Gemini (QĐ-135) |
 | Giao tiếp | `Adapters` | Một adapter thật + một adapter mock cho mỗi port. MVP: `GeminiLlmAdapter`, `GeminiImageAdapter`, `SelfHostedTtsAdapter`, `WhisperXAlignerAdapter`; sau MVP: `VbeeTtsAdapter` |
 | Hậu xử lý | `CoverageValidator` | Đổi chỉ số câu của LLM thành offset, sửa ranh giới, kiểm phủ kín (UC-05.01a) |
 | | `WerScorer` | WER theo âm tiết cho eval (QĐ-111) |
@@ -79,14 +78,12 @@ AI Gateway **không phải một dịch vụ mạng riêng**: là thư viện Ty
 ```
 Worker
  → [chuẩn bị]  ContextBuilder / PromptCompiler / SpeechNormalizer
- → [kiểm duyệt vào]  ModerationFilter
- → [chọn đích]  ProviderRouter (provider, model; circuit breaker)
- → [thử lại]  RetryPolicy
+ → [chọn đích]  ProviderRouter (provider, model, timeout; phân loại lỗi)
  → [gọi]  Adapter (thật | mock) ──HTTPS──▶ provider
  → [đo]  UsageMeter → ai_usage_records (mỗi lần thử một dòng)
- → [kiểm duyệt ra]  ModerationFilter
  → [hậu xử lý]  kiểm schema / CoverageValidator / ánh xạ timestamp
  → Worker ghi kết quả + quyết toán tiền trong một giao dịch, rồi mới ack BullMQ
+   (lỗi tạm thời: jobs RETRYING → BullMQ thử lại lần sau theo backoff, tối đa 3 lần)
 ```
 
 ## 3. Danh mục tác vụ AI
@@ -103,7 +100,7 @@ Worker
 | `EDIT_IMAGE` | `image` | Image | Ảnh gốc + mô tả thay đổi | 1 ảnh | `IMAGE_EDIT` | UC-05.10a | P1 |
 | `NARRATE_SEGMENT` | `tts` | Tts (+ Aligner) | SSML của đúng đoạn nguồn, giọng, ngôn ngữ, tốc độ | Audio + timestamp (nếu provider có) | `NARRATION_TTS` | UC-05.13 | P2 |
 | `VERIFY_NARRATION` | `align` | Aligner / Stt | Audio + bản đọc | `word_timings` (MVP: luôn chạy vì TTS tự host không có timestamp); *sau MVP:* transcript → WER | (gộp trong `NARRATION_TTS`) | UC-05.13, 05.13c | P2 / Sau |
-| Nghe thử phát âm (`POST …/pronunciations:preview`) | — (đồng bộ, không tạo job) | Tts | ≤ 200 ký tự | Audio | `PRONUNCIATION_PREVIEW` | UC-05.12, 05.11a | P2 |
+| Nghe thử phát âm (`POST …/pronunciations:preview`) | — (đồng bộ, không qua queue, không tạo `jobs`; 05 §6.1) | Tts | ≤ 200 ký tự | Audio | — (miễn phí, rate limit + cache, QĐ-136) | UC-05.12, 05.11a | P2 |
 | Director *(sau MVP)* | `llm` | Llm (tools) | Kế hoạch, lịch sử chat, tool whitelist | Lời đáp + tool call → `director_tool_proposals` | `REDIRECT`, Director chat | UC-07.* | Sau |
 
 Job cha `GENERATE_MEDIA_CHAPTER` (queue `orchestrator`) **không gọi provider**: chỉ điều phối `STORYBOARD_DRAFT` → fan-out `GENERATE_SHOT_IMAGE` + `NARRATE_SEGMENT` cho từng shot (BullMQ Flows, ADR-15; 05 §6.2).
@@ -158,7 +155,7 @@ Brief 7 trường: Subject, Environment, Composition, Camera, Lighting, Mood, De
 
 1. `text = chapter.content[source_start:source_end]`, kiểm `sha256(text) == shot.source_hash`; lệch thì `OUTDATED`, không gọi TTS.
 2. `SpeechNormalizer` sinh SSML (break / alias / phoneme), áp quy tắc ký hiệu SYM-01..05 và từ điển phát âm, rồi **kiểm tra ngược**: bỏ thẻ SSML, áp ngược alias → chỉ được thiếu các ký hiệu đã bỏ theo quy tắc. Không đạt thì `FAILED`, không gọi TTS.
-3. Gọi `TtsPort.speak`; đoạn dài thì chia theo câu. Với TTS tự host (ADR-30), `SelfHostedTtsAdapter` gửi **bản đọc R dạng chữ thuần** (12 §2.1), tách tại các đoạn `PAUSE` rồi chèn khoảng lặng đúng độ dài khi ghép; mục từ điển `PHONEME` bị bỏ qua (UC-05.13b 2b), chỉ `ALIAS` có tác dụng.
+3. Gọi `TtsPort.speak`; đoạn dài thì chia theo câu. Với TTS tự host (ADR-30), `SelfHostedTtsAdapter` gửi **bản đọc R dạng chữ thuần** (12 §2.1), tách tại các đoạn `PAUSE` rồi chèn khoảng lặng đúng độ dài khi ghép; mục từ điển `PHONEME` bị bỏ qua (UC-05.13b 2b), chỉ `ALIAS` có tác dụng. **Tốc độ đọc** của dự án: model hỗ trợ thì truyền tham số `speed`; không thì adapter đổi tốc độ audio đã ghép (FFmpeg `atempo`, giữ cao độ) **trước** bước căn timestamp, nên timestamp khớp file cuối (QĐ-140).
 4. Timestamp: dùng của TTS nếu có (Vbee AIVoice sau MVP, nếu đạt `EVAL-alignment`); TTS tự host thì luôn `AlignerPort.align` trên bản đọc. Ánh xạ về tọa độ chương bằng `NormalizationMap` (12 §2.3).
 5. Lưu audio vào object storage, `word_timings`, `normalization_log`; thuyết minh `DONE`.
 
@@ -166,16 +163,16 @@ Sơ đồ: `../so-do/04-tuan-tu/seq-thuyet-minh-nguyen-van.puml`.
 
 ## 5. Vòng đời một lời gọi tốn phí
 
-Sơ đồ: `seq-storyboard-sinh-anh`, `seq-sinh-tu-lieu`, `act-giu-tru-tien`, `state-job`. Chi tiết ở 05 §6.1.
+Sơ đồ: `seq-vong-doi-job` (khung chung), `seq-storyboard-sinh-anh`, `seq-sinh-tu-lieu`, `act-giu-tru-tien`, `state-job`. Chi tiết ở 05 §6.1.
 
 | Bước | Nơi chạy | Việc | Liên quan provider |
 |---|---|---|---|
 | 1 | API | `GET …:quote` → `PriceEstimator` tính **giá ước tính tối đa** từ `ai_models.unit_cost_usd` và giới hạn đầu ra | Chưa gọi provider. Token LLM tính bằng hệ số ký tự/token cục bộ đo ở P0 × 1,2; không gọi tokenizer khi báo giá (QĐ-129). TTS tự host: số ký tự → thời lượng → giây GPU theo `BENCH-tts` |
 | 2 | API | Kiểm `Idempotency-Key`, rate limit (BR-32), giới hạn Free | — |
-| 3 | API, một giao dịch | Giữ chỗ trần ngày `daily_ai_budgets` (chi phí provider chưa cộng 10%) → HOLD ví → `jobs (QUEUED)` | Vượt trần: `503 DAILY_BUDGET_EXCEEDED`; thiếu tiền: `402` |
+| 3 | API, một giao dịch | Giữ chỗ trần ngày `daily_ai_budgets` (chi phí provider chưa cộng 10%) → HOLD ví → `jobs (QUEUED)`; chỉ làm cho job gốc, job con của Flow không giữ tiền (WR-05) | Vượt trần: `503 DAILY_BUDGET_EXCEEDED`; thiếu tiền: `402` |
 | 4 | API | Trả `202 {jobId, estimatedCostUsd}`; enqueue sau commit | — |
-| 5 | Worker | Nhận việc bằng `UPDATE jobs … WHERE status IN ('QUEUED','RETRYING')`; kiểm semaphore theo người dùng (ADR-28) | Không trúng dòng thì bỏ qua → **không gọi provider hai lần** |
-| 6 | Worker | Gọi provider qua AI Gateway; heartbeat 30 s | Mỗi lần thử ghi một dòng `ai_usage_records` (`attempt`, `request_id`) |
+| 5 | Worker | Nhận việc bằng `UPDATE jobs … WHERE status IN ('QUEUED','RETRYING')`; số job chạy cùng lúc do `concurrency` của queue quyết định (semaphore theo người dùng sau MVP, ADR-28) | Không trúng dòng thì bỏ qua → **không gọi provider hai lần** |
+| 6 | Worker | Gọi provider qua AI Gateway, một lời gọi mỗi lần thử; heartbeat 30 s | Mỗi lần thử ghi một dòng `ai_usage_records` (`attempt`, `request_id`) |
 | 7 | Worker, một giao dịch | Ghi kết quả + CAPTURE `min(Σ cost × 1,10, held)` + RELEASE dư + `SUCCEEDED` + cập nhật `daily_ai_budgets` | Σ cost = tổng chi phí các lời gọi của **lần thử thành công** (vd. map + reduce, TTS chia theo câu); lần thử lỗi không trừ ví (WR-09) nhưng vẫn cộng vào `spent_micro` của trần ngày |
 | 8 | Worker | Ack BullMQ; publish SSE (`job.updated`, `illustration.ready`, `narration.updated`…) | — |
 | 9 | Scheduler | Reconciler: job `RUNNING` mất heartbeat > 10 phút → `FAILED` + RELEASE + mở khóa chương; đối soát `spent_micro` với Σ `ai_usage_records` | — |
@@ -206,7 +203,7 @@ Kiểm bằng test kiến trúc: cấm import module LLM trong repository chươ
 
 | Tình huống | Xử lý | Nguồn |
 |---|---|---|
-| Provider hoặc `ModerationFilter` chặn | Job `FAILED`, `error_code = CONTENT_POLICY` (HTTP 451 khi báo lỗi đồng bộ), RELEASE toàn bộ, **không lưu đầu ra** | BR-18 |
+| Provider chặn (bộ lọc an toàn của Gemini; `ModerationFilter` riêng sau MVP) | Job `FAILED`, `error_code = CONTENT_POLICY`, RELEASE toàn bộ, **không lưu đầu ra** | BR-18 |
 | Thử lại để vượt bộ lọc | **Không** tự động thử lại; **không** tự sửa văn bản truyện | BR-18 |
 | Người dùng muốn sinh lại | Sửa brief (UC-05.06) rồi sinh lại; brief không phải văn bản truyện | QĐ-113 |
 | Giảm tỷ lệ bị chặn | Prompt storyboard hướng dẫn tả gián tiếp cảnh bạo lực, nhạy cảm; tỷ lệ từ chối là tiêu chí chọn provider (≤ 5%) | QĐ-113, R-21 |
@@ -217,19 +214,19 @@ Kiểm bằng test kiến trúc: cấm import module LLM trong repository chươ
 
 | Nhóm lỗi | Ví dụ | Thử lại? | Kết quả job | Tiền |
 |---|---|---|---|---|
-| Tạm thời | Timeout (QĐ-126), 5xx, rate limit 429 của provider, mất mạng, TTS Server hết VRAM hoặc máy GPU tắt | Có: tối đa 3 lần, 2 s / 8 s / 30 s + jitter | Hết lượt → `FAILED` | RELEASE toàn bộ; chi phí lần lỗi do hệ thống chịu (WR-09) |
+| Tạm thời | Timeout (QĐ-126), 5xx, rate limit 429 của provider, mất mạng, TTS Server hết VRAM hoặc máy GPU tắt | Có: job thử lại tối đa 3 lần qua BullMQ, 2 s / 8 s / 30 s + jitter (một tầng, QĐ-133) | Hết lượt → `FAILED` | RELEASE toàn bộ; chi phí lần lỗi do hệ thống chịu (WR-09) |
 | Sai schema (LLM) | JSON thiếu trường, chỉ số câu ngoài phạm vi | Có: tối đa 2 lần, **kèm thông báo lỗi** trong prompt | Hết lượt → `FAILED`, giữ dữ liệu cũ | RELEASE |
-| Chính sách nội dung | Provider từ chối, `ModerationFilter` chặn | **Không** | `FAILED`, `CONTENT_POLICY` | RELEASE |
+| Chính sách nội dung | Provider từ chối | **Không** | `FAILED`, `CONTENT_POLICY` | RELEASE |
 | Đầu vào sai | Key sai, mô hình không tồn tại, request quá lớn | Không | `FAILED`; cảnh báo vận hành | RELEASE |
 | Kiểm tra tất định thất bại | Kiểm tra ngược SSML sai (trước khi gọi TTS), phủ kín vẫn sai sau khi sửa | Không | `FAILED`; cảnh báo P1 (lỗi lập trình) | RELEASE |
 
 Ranh giới sai mà validator **sửa được** không phải lỗi: lưu bình thường, ghi `boundary_fixes`; > 20% ranh giới bị sửa thì kèm cảnh báo chất lượng (UC-05.01a 7a, R-07).
 
-### 7.2 Circuit breaker và fallback
+### 7.2 Fallback
 
-- Circuit breaker mở khi tỷ lệ lỗi của một provider > 50% trong 1 phút (NFR-REL-04).
+- **Không có circuit breaker trong MVP** (QĐ-133): với 5 người dùng đồng thời, 3 lần thử có backoff của job đã giới hạn số lời gọi vào provider đang lỗi. Circuit breaker thêm khi có nhiều worker và lưu lượng đủ lớn để lỗi dồn thành bão gọi lại.
 - **Fallback chỉ cho LLM** (QĐ-124): chuyển sang mô hình Gemini khác có `unit_cost_usd` ≤ mô hình đã báo giá (QĐ-125); không có thì job lỗi tạm thời. Lý do: đổi provider ảnh giữa chừng làm lệch phong cách và nhân vật trong chương; đổi TTS làm đổi giọng giữa các shot.
-- **Ảnh** ghim Gemini Image theo dự án; **TTS** ghim theo giọng đã chọn. Circuit breaker mở thì job lỗi tạm thời, chờ thử lại; không đổi provider.
+- **Ảnh** ghim Gemini Image theo dự án; **TTS** ghim theo giọng đã chọn. Provider lỗi thì job lỗi tạm thời, chờ thử lại; không đổi provider.
 - Chạy lặp an toàn: bảng `jobs` là nguồn sự thật (ADR-29); job giao lại không gọi provider lần nữa nếu đã kết thúc.
 - Kết quả lỗi một shot không làm hỏng cả chương: shot `FAILED`, chương `NEEDS_ATTENTION`, người dùng sinh lại phần lỗi (UC-05.07c).
 
@@ -237,10 +234,10 @@ Ranh giới sai mà validator **sửa được** không phải lỗi: lưu bình
 
 | Tín hiệu | Nội dung | Nguồn |
 |---|---|---|
-| Tracing | OpenTelemetry API → queue → worker → provider; correlation id = `jobId`; mỗi lần gọi provider là một span có `provider`, `model`, `attempt`, `request_id` | NFR-MNT-03 |
+| Log | MVP: log có cấu trúc với `jobId` làm correlation id, kèm `provider`, `model`, `attempt`, `request_id`; Sentry cho lỗi. OpenTelemetry tracing sau MVP (ADR-23) | NFR-MNT-03 |
 | Dashboard | Tỷ lệ lỗi theo provider, chi phí AI theo giờ, chi tiêu so với trần ngày, tỷ lệ job bị trừ kịch số đã giữ, số job treo bị reconciler xử lý | NFR-MNT-04 |
 | Đối soát | `spent_micro` khớp Σ `ai_usage_records` trong ngày; sổ cái khớp số dư ví | 05 §6.1 bước 8, NFR-REL-03 |
-| Cảnh báo | Chạm trần ngày (gửi Admin), circuit breaker mở, lỗi đầu vào sai (key, mô hình), kiểm tra tất định thất bại (P1) | BR-29, NFR-REL-04 |
+| Cảnh báo | Chạm trần ngày (gửi Admin), tỷ lệ job lỗi theo provider > 50% trong 15 phút, lỗi đầu vào sai (key, mô hình), kiểm tra tất định thất bại (P1) | BR-29, NFR-REL-04 |
 
 Tỷ lệ "job bị trừ kịch số đã giữ" cao nghĩa là giá ước tính quá thấp: hiệu chỉnh `price_rules` (giới hạn đầu ra, hệ số ký tự/token).
 
@@ -249,7 +246,7 @@ Tỷ lệ "job bị trừ kịch số đã giữ" cao nghĩa là giá ước tí
 | Mức | Giới hạn | Cách làm | Nguồn |
 |---|---|---|---|
 | Người dùng → API | ≤ 30 yêu cầu LLM/phút | Rate limit Redis, `429` + `Retry-After` | BR-32 |
-| Người dùng → worker | ≤ 8 job ảnh, 8 job TTS, 1 render đồng thời | Semaphore Redis `conc:{userId}:{kind}`; hết slot thì trì hoãn 3 s, không tăng `attempts` | ADR-28 |
+| Worker (toàn hệ thống) | `concurrency` mỗi queue (vd. `image` 4); render 1 đang chạy/người, kiểm khi tạo job | Cấu hình BullMQ; đếm `renders` `QUEUED`/`RENDERING` trong giao dịch tạo | BR-32; semaphore theo người dùng sau MVP (ADR-28) |
 | Worker → Gemini | Theo hạn mức của dự án Google Cloud | Rate limiter của BullMQ cho cả queue; mỗi provider một queue khi cần | 05 §6.2 |
 | Worker → TTS Server | Số lời gọi đồng thời vừa VRAM, đo ở P0 | Rate limiter của queue `tts`; Alignment Worker xử lý tuần tự trên cùng GPU | ADR-30 |
 | Toàn hệ thống | $10/ngày chi phí provider (closed beta) | `daily_ai_budgets` nguyên tử | BR-29, ADR-25 |
@@ -345,6 +342,7 @@ PO duyệt các đề xuất ĐX-AI-01..08 ngày 2026-10-20 và chọn lại nh�
 | QĐ-129 (ĐX-AI-06) | Báo giá chỉ dùng hệ số ký tự/token cục bộ | 05 §7.1 |
 | QĐ-130 (ĐX-AI-07) | Bảng ánh xạ `jobs.type` ↔ `price_rules.operation` | 08 §3.2 |
 | QĐ-131 (ĐX-AI-08) | Nghe thử phát âm là ngoại lệ đồng bộ của AG-01 | 05 AG-01, §6.1; 06 |
+| QĐ-132..136 | Rà soát kỹ thuật: bỏ semaphore, circuit breaker, `ModerationFilter` riêng khỏi MVP; một tầng thử lại; chỉ job gốc giữ tiền; nghe thử miễn phí | 05, 08, 13 |
 
 Rủi ro mới: **R-22** phụ thuộc một nhà cung cấp (Google) cho LLM và ảnh; **R-23** TTS tự host không đạt chất lượng, tốc độ hoặc thiếu GPU (09 §5).
 

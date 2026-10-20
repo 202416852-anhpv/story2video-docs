@@ -40,7 +40,7 @@
 | Hậu điều kiện | **Thành công:** có Project, ProjectMember(OWNER), SourceText (kèm `sha256`), Chapter #1 chứa toàn văn. **Tối thiểu:** không tạo dự án dở dang khi lỗi |
 | Kích hoạt | Bấm "Import your story" |
 | Quan hệ | include UC-02.02a |
-| Truy vết | FR-PRJ-02, FR-PRJ-03; FR-BIL-12; BR-19, BR-21, BR-27 |
+| Truy vết | FR-PRJ-02, FR-PRJ-03; FR-BIL-12; BR-19, BR-21, BR-27; seq-import-chia-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -69,7 +69,7 @@
 | Tiền điều kiện | Có văn bản dán hoặc file .txt, .md, .docx |
 | Hậu điều kiện | **Thành công:** có văn bản sạch về kỹ thuật kèm `char_count`, `sha256`, `normalization_log`. **Tối thiểu:** không lưu gì khi kiểm tra thất bại |
 | Kích hoạt | UC-02.02 bước 2; UC-03.01b bước 3 |
-| Truy vết | FR-PRJ-02, FR-PRJ-03; BR-19, BR-21; NFR-SEC-10, NFR-INT-05; 08 §5 |
+| Truy vết | FR-PRJ-02, FR-PRJ-03; BR-19, BR-21; NFR-SEC-10, NFR-INT-05; 08 §5; seq-import-chia-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -97,7 +97,7 @@
 | Tiền điều kiện | Đã đăng nhập; chưa vượt giới hạn số dự án của tài khoản Free (BR-27) |
 | Hậu điều kiện | **Thành công:** Project + ProjectMember(OWNER) + một chương trống |
 | Kích hoạt | Bấm "Tạo dự án trống" |
-| Truy vết | FR-PRJ-04; FR-BIL-12; BR-27 |
+| Truy vết | FR-PRJ-04; FR-BIL-12; BR-27; seq-import-chia-chuong |
 | Giai đoạn | P1 |
 
 **Luồng chính**

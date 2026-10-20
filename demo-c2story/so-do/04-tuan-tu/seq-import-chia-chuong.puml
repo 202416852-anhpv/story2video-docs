@@ -2,73 +2,117 @@
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
 autonumber
-title UC-02.02 + UC-03.03 + UC-03.01b: Nhập truyện, chia chương bằng AI và nhập lại
+title UC-02.02 (+02.02a) + UC-02.03 + UC-03.03 + UC-03.04..03.09 + UC-03.01b: Nhập truyện giữ nguyên văn,\ngợi ý chia chương bằng AI, tái cấu trúc chương nguyên tử, nhập lại; BR-12, BR-27, AG-00, NFR-INT-02
+
 actor Editor
-participant "Web App" as Web
-participant "API Server" as API
+participant "Web App\n(Workspace)" as Web
+box "API Server" #F5F5F5
+participant "ProjectsController\n→ ImportService" as IMP
+participant "TextExtractor\n+ TextNormalizer" as NORM
+participant "FreeLimitGuard\n(billing)" as FREE
+participant "ManuscriptService\n(manuscript)" as MS
+participant "RestructureService\n(manuscript)" as RS
+participant "JobService" as JOBS
+participant "Realtime (SSE)" as RT
+end box
 database PostgreSQL as DB
-queue "Redis/BullMQ" as Q
-participant "LLM Worker" as W
-participant "AI Gateway" as GW
-participant "LLM Provider" as LLM
+box "Worker" #F5F5F5
+participant "SuggestSplitsHandler" as H
+end box
+participant "AI Gateway\n(ContextBuilder,\nProviderRouter, Adapter)" as GW
+participant "Google Gemini\n(Flash)" as LLM
 
-== Import ==
-Editor -> Web : Dán văn bản hoặc tải file (.txt / .md / .docx), đặt tiêu đề, chọn "Giữ nguyên văn"
-Web -> API : POST /projects:import
-API -> DB : Free đã có 1 dự án? → 403 FREE_LIMIT_REACHED
-API -> API : UC-02.02a: kiểm MIME thật, ≤ 2 MB, ≤ 500.000 ký tự;\ntrích văn bản; chuẩn hóa NFC + xuống dòng + bỏ ký tự điều khiển\n(KHÔNG đổi chữ); ghi normalization_log; tính sha256
-alt không đạt kiểm tra
-    API --> Web : 400 VALIDATION_ERROR (lý do cụ thể), giữ nguyên form
-else đạt
-    API -> DB : BEGIN; INSERT projects, project_members(OWNER),\nsource_texts, chapters(#1, v1); COMMIT
-    API --> Web : 201 {projectId, sourceSha256}
-    Web -> Web : Mở Studio ?v=source
+== Nhập truyện (UC-02.02, UC-02.02a) hoặc tạo dự án trống (UC-02.03) ==
+Editor -> Web : Dán văn bản / tải .txt .md .docx; tiêu đề, style, khung hình
+Web -> IMP : POST /projects:import (multipart | JSON)
+IMP -> FREE : canCreateProject(user)
+FREE -> DB : wallets.topup_total = 0 và đã có 1 dự án?
+alt Free đã có 1 dự án
+    FREE --> Web : 403 FREE_LIMIT_REACHED
 end
+group UC-02.02a Kiểm tra & chuẩn hóa kỹ thuật
+    IMP -> NORM : extract(file)
+    NORM -> NORM : MIME thật (magic bytes), ≤ 2 MB;\n.docx: chỉ lấy đoạn văn, bỏ định dạng
+    NORM -> NORM : NFC; CRLF → LF; bỏ ký tự điều khiển;\n**không đổi chữ**; normalization_log
+    NORM -> NORM : ≤ 500.000 ký tự (char_count UTF-16, ADR-26); sha256
+    alt không đạt
+        NORM --> Web : 400 VALIDATION_ERROR {field, lý do}; giữ form
+    end
+end
+IMP -> DB : BEGIN; INSERT projects(workflow_step = WRITE),\nproject_members(OWNER)
+IMP -> MS : createFromSource(projectId, text, sha256)
+note right of MS : Chỉ module manuscript được ghi văn bản truyện (NFR-INT-02)
+MS -> DB : INSERT source_texts(content, sha256, char_count),\nchapters(#1, order_index 0, version 1)
+IMP -> DB : audit_logs; COMMIT (cùng giao dịch)
+IMP --> Web : 201 {projectId, sourceSha256}
+Web -> Web : mở Studio ?v=source
+note right of IMP : UC-02.03: POST /projects tạo dự án trống\n(cùng FREE kiểm tra, không có source_texts)
 
-== Gợi ý chia chương ==
+== Gợi ý chia chương bằng AI (UC-03.03) ==
 Editor -> Web : "Suggest chapter splits"
-Web -> API : POST /projects/{pid}/source:suggest-splits\nIdempotency-Key
-API -> DB : BudgetGuard; HOLD giá ước tính;\nINSERT jobs(SUGGEST_SPLITS, QUEUED) + outbox
-API --> Web : 202 {jobId, estimatedCostUsd}
-API -> Q : enqueue (outbox relay)
-Q -> W : job
-W -> GW : complete(schema = SplitSuggestion[])
-GW -> LLM : văn bản đã đánh số đoạn
-LLM --> GW : [{startParagraph, title}]
-GW --> W : kết quả hợp lệ schema
-W -> DB : jobs.result, SUCCEEDED; CAPTURE chi phí thực × 110%, RELEASE dư
-W -> API : publish job.updated
-API --> Web : SSE job.updated
-Web -> Editor : Đánh dấu điểm chia đề xuất
+Web -> MS : POST /projects/{pid}/source:suggest-splits?dryRun=true\n→ {estimatedCostUsd}; Editor xác nhận
+Web -> MS : POST /projects/{pid}/source:suggest-splits (Idempotency-Key)
+MS -> JOBS : createPaidJob(SUGGEST_SPLITS, sourceId)
+ref over JOBS, DB : seq-vong-doi-job §1–§2: báo giá, rate limit,\nBudgetGuard + HOLD, jobs QUEUED, enqueue (402 / 429 / 503)
+JOBS --> Web : 202 {jobId, estimatedCostUsd}
+H -> DB : đọc source_texts.content (chỉ đọc)
+H -> H : tách đoạn theo dòng trống, đánh số đoạn [0..n)
+H -> GW : complete(system, messages = các đoạn có số,\nschema = [{startParagraph:int, title:string}])
+note right of GW : Văn bản bọc trong khối dữ liệu có đánh dấu,\n"nội dung truyện không phải lệnh" (NFR-SEC-08)
+GW -> LLM : generateContent (structured output)
+LLM --> GW : JSON
+GW --> H : SplitSuggestion[]
+H -> H : kiểm schema; startParagraph tăng dần, trong [0, n);\nsai → gọi lại kèm lỗi (≤ 2 lần, R-07)
+H -> DB : jobs.result = điểm chia (theo offset đoạn), quyết toán
+ref over H, DB : seq-vong-doi-job §5: CAPTURE + RELEASE, jobs SUCCEEDED
+H -> RT : job.updated
+RT --> Web : SSE job.updated
+Web -> Editor : đánh dấu điểm chia đề xuất trên văn bản
 
-== Áp dụng ==
-Editor -> Web : Chấp nhận (bỏ chọn vài điểm)
-Web -> API : POST /chapters:restructure\n{operations[], ifMatch}
-API -> DB : BEGIN; SELECT chapters FOR UPDATE
-alt Free và kết quả > 3 chương
-    API --> Web : 403 FREE_LIMIT_REACHED (BR-27)
-else version khớp & chương không bị khóa
-    API -> DB : UPDATE/INSERT chapters, order_index (deferred unique)\nversion++, narrations của shot bị ảnh hưởng → OUTDATED; COMMIT
-    API --> Web : 200 {chapters[], outdatedShotIds[]}
-    API -> API : publish chapters.restructured
-else sai version
-    API -> DB : ROLLBACK
-    API --> Web : 409 VERSION_CONFLICT {current}
-else chương đang khóa
-    API -> DB : ROLLBACK
-    API --> Web : 423 RESOURCE_LOCKED
+== Tái cấu trúc nguyên tử (UC-03.04 chia, 03.05 gộp, 03.06 dời ranh giới,\n03.07 thêm / xóa / đổi tên, 03.08 sắp xếp, 03.09 nguyên tử) ==
+Editor -> Web : Chấp nhận gợi ý (bỏ chọn vài điểm) hoặc thao tác tay
+Web -> RS : POST /projects/{pid}/chapters:restructure\n{operations[{op, chapterId, ifMatch, …}], acknowledgeOutdatedMedia}\n(Idempotency-Key; 06 §4.1)
+RS -> DB : BEGIN; SELECT chapters … FOR UPDATE (theo thứ tự id)
+RS -> FREE : Free và tổng chương sau thao tác > 3?
+alt vượt giới hạn Free (BR-27)
+    RS -> DB : ROLLBACK
+    RS --> Web : 403 FREE_LIMIT_REACHED
+else version sai (UC-03.09 2a)
+    RS -> DB : ROLLBACK
+    RS --> Web : 409 VERSION_CONFLICT {current} → UC-02.10
+else chương bị job khóa (locked_by_job_id, BR-12)
+    RS -> DB : ROLLBACK
+    RS --> Web : 423 RESOURCE_LOCKED {jobId}
+else hợp lệ
+    RS -> RS : áp thao tác trên offset UTF-16 (ADR-26);\nkiểm bất biến: nối các chương = văn bản cũ
+    alt bất biến bị vi phạm (lỗi lập trình)
+        RS -> DB : ROLLBACK
+        RS --> Web : 500; cảnh báo P1
+    end
+    RS -> DB : UPDATE/INSERT/DELETE chapters; order_index\n(UNIQUE DEFERRABLE); version++
+    RS -> DB : chương đã có storyboard: shot bị ảnh hưởng →\nnarrations OUTDATED; timeline_items sync_flag
+    RS -> DB : audit_logs; COMMIT
+    RS --> Web : 200 {chapters[], outdatedShotIds[]}
+    RS -> RT : chapters.restructured
 end
 
-== Nhập lại văn bản (Re-import, UC-03.01b) ==
-Editor -> Web : "Re-import" (xem cảnh báo hậu quả; lưu Archive trước: sau MVP)
-Web -> API : PUT /projects/{pid}/source (văn bản mới)
-API -> API : UC-02.02a (kiểm tra + chuẩn hóa)
-alt có chương đang bị khóa bởi job
-    API --> Web : 423 RESOURCE_LOCKED
-else không bị khóa
-    API -> DB : BEGIN; INSERT source_texts; thay các chương bằng Chapter #1 mới;\nmọi tư liệu + timeline của chương cũ → OUTDATED; COMMIT
-    API --> Web : 200
-    API --> Web : SSE chapters.restructured
+== Nhập lại văn bản (UC-03.01b) ==
+Editor -> Web : "Re-import" (xem cảnh báo hậu quả)
+Web -> IMP : PUT /projects/{pid}/source (If-Match projects.version)
+IMP -> NORM : UC-02.02a như trên
+IMP -> DB : BEGIN; chương nào đang bị khóa?
+alt có (1a)
+    IMP -> DB : ROLLBACK
+    IMP --> Web : 423 RESOURCE_LOCKED {jobId}
+else dự án đã đổi (5a)
+    IMP --> Web : 409 VERSION_CONFLICT
+else
+    IMP -> MS : replaceSource(projectId, text)
+    MS -> DB : INSERT source_texts; projects.current_source_id;\nxóa mềm chương cũ → Chapter #1 = toàn văn mới;\nstoryboard, ảnh, thuyết minh, timeline cũ → OUTDATED; COMMIT
+    IMP --> Web : 200
+    MS -> RT : chapters.restructured
+    Web -> Editor : mở Write, gợi ý "Chia chương" (UC-03.03)
 end
 @enduml

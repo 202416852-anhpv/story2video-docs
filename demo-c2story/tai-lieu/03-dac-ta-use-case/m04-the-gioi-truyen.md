@@ -1,6 +1,6 @@
 # M04 — Thế giới truyện
 
-> Bước 3 của luồng chính. Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m04-the-gioi-truyen.puml`. Yêu cầu: FR-WLD-01..11. Thứ tự chỉ dẫn hình ảnh: BR-08.
+> Bước 3 của luồng chính. Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m04-the-gioi-truyen.puml`, `../../so-do/04-tuan-tu/seq-the-gioi-truyen.puml`. Yêu cầu: FR-WLD-01..11. Thứ tự chỉ dẫn hình ảnh: BR-08.
 
 ---
 
@@ -15,7 +15,7 @@
 | Hậu điều kiện | **Thành công:** danh sách đề xuất được duyệt, tài sản được tạo. **Tối thiểu:** không tạo tài sản khi Editor chưa duyệt |
 | Kích hoạt | Bấm "Analyze" trong Story Assets |
 | Quan hệ | extend UC-04.02; include UC-04.01a, UC-05.17 |
-| Truy vết | FR-WLD-01; BR-01, BR-02; 08 §3.2 (`ANALYZE_ASSETS`) |
+| Truy vết | FR-WLD-01; BR-01, BR-02; 08 §3.2 (`ANALYZE_ASSETS`); seq-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -42,7 +42,7 @@
 | Tiền điều kiện | Job `ANALYZE_ASSETS` đã trả danh sách đề xuất (UC-04.01 bước 2–3) |
 | Hậu điều kiện | **Thành công:** có danh sách tài sản cuối cùng do Editor chốt. **Tối thiểu:** nếu Editor đóng mà không xác nhận thì không tạo tài sản nào |
 | Kích hoạt | UC-04.01 bước 4 |
-| Truy vết | FR-WLD-01; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10, ≤ 200 Story Assets) |
+| Truy vết | FR-WLD-01; 08 §5 (tên 1–80 ký tự, bí danh ≤ 10, ≤ 200 Story Assets); seq-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -89,7 +89,7 @@
 | Tiền điều kiện | Là thành viên dự án; dự án có dưới 200 Story Assets |
 | Hậu điều kiện | **Thành công:** có StoryAsset mới (`kind` = `CHARACTER`, `LOCATION` hoặc `PROP`, `version = 1`). **Tối thiểu:** tạo tài sản không phụ thuộc việc có ảnh hay không |
 | Kích hoạt | Bấm "New character / location / prop" |
-| Truy vết | FR-WLD-02, FR-WLD-03; BR-14; 08 §5; API 2.4 `POST /projects/{pid}/story-assets` |
+| Truy vết | FR-WLD-02, FR-WLD-03; BR-14; 08 §5; API 2.4 `POST /projects/{pid}/story-assets`; seq-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -227,7 +227,7 @@
 | Hậu điều kiện | **Thành công:** `asset_images` mới, đặt làm ảnh hiện hành; tiền bị trừ. **Tối thiểu:** lỗi thì hoàn tiền |
 | Kích hoạt | "Generate" / "Regenerate" trên tài sản |
 | Quan hệ | được include bởi UC-04.02a; được mở rộng bởi UC-04.03a |
-| Truy vết | FR-WLD-03; BR-01, BR-02, BR-08, BR-14 |
+| Truy vết | FR-WLD-03; BR-01, BR-02, BR-08, BR-14; seq-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -250,23 +250,23 @@
 | Tác nhân | Editor / Image Provider |
 | Mô tả | Sinh lại ảnh tham chiếu của mọi tài sản sau khi đổi style hoặc Art Direction, bỏ qua tài sản dùng ảnh nguyên bản |
 | Tiền điều kiện | Dự án có style; có ít nhất một tài sản không dùng "use exact"; đủ số dư cho toàn bộ |
-| Hậu điều kiện | **Thành công:** mọi tài sản đủ điều kiện có `asset_images` mới theo style mới. **Tối thiểu:** tài sản "use exact" không bao giờ bị vẽ lại; job lỗi được hoàn tiền phần của nó |
+| Hậu điều kiện | **Thành công:** mọi tài sản đủ điều kiện có `asset_images` mới theo style mới. **Tối thiểu:** tài sản "use exact" không bao giờ bị vẽ lại; job lỗi được hoàn toàn bộ tiền đã giữ của nó |
 | Kích hoạt | Bấm "Regenerate all" (thường sau khi đổi style, UC-04.05, hoặc Art Direction, UC-04.06) |
-| Truy vết | BR-01, BR-02, BR-14, BR-15; WR-05; API 2.4 `POST /projects/{pid}/story-assets:regenerate-all` |
+| Truy vết | BR-01, BR-02, BR-14, BR-15; WR-05; API 2.4 `POST /projects/{pid}/story-assets:regenerate-all`; seq-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor bấm "Regenerate all".
 2. Hệ thống đếm các tài sản đủ điều kiện (bỏ tài sản có `use_exact_image = true`) và hiển thị tổng giá (theo đơn giá ảnh tham chiếu).
 3. Editor xác nhận.
-4. Hệ thống giữ toàn bộ tiền ước tính trước (WR-05) và tạo job hàng loạt, mỗi tài sản một job con.
-5. Mỗi job con chạy như UC-04.03 bước 3–4 và CAPTURE hoặc RELEASE phần của nó.
+4. Trong **một giao dịch**, hệ thống tạo mỗi tài sản một job `GENERATE_ASSET_IMAGE` và giữ tiền riêng cho từng job (WR-05); thiếu tiền cho bất kỳ job nào thì không tạo job nào.
+5. Mỗi job chạy như UC-04.03 bước 3–4 và CAPTURE hoặc RELEASE tiền của chính nó.
 6. Tiến độ gửi qua SSE (`job.updated`, `asset.updated`); khi xong, mọi tài sản đủ điều kiện có ảnh theo style mới. Ảnh cũ được giữ như phiên bản trước.
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Không có tài sản nào đủ điều kiện: báo "Không có tài sản cần sinh lại", không tạo job.
 - **4a.** Không đủ số dư: `402` kèm số còn thiếu; gợi ý nạp tiền (UC-09.03) hoặc sinh lại từng tài sản.
-- **5a.** Một số job con lỗi sau retry: RELEASE phần của chúng, liệt kê tài sản lỗi và cho phép thử lại riêng từng cái.
+- **5a.** Một số job lỗi sau retry: RELEASE tiền của chúng, liệt kê tài sản lỗi và cho phép thử lại riêng từng cái.
 - ***a.** Đổi style sau khi đã có ảnh **không** tự sinh lại; hệ thống chỉ gợi ý hành động này kèm giá.
 
 ---
@@ -282,7 +282,7 @@
 | Hậu điều kiện | **Thành công:** tài sản có `use_exact_image = true` |
 | Kích hoạt | "Use this exact image" khi tạo/sửa tài sản |
 | Quan hệ | extend UC-04.02a, UC-04.02e |
-| Truy vết | FR-WLD-04; BR-14; NFR-SEC-10 |
+| Truy vết | FR-WLD-04; BR-14; NFR-SEC-10; seq-the-gioi-truyen |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -345,7 +345,7 @@
 | Hậu điều kiện | **Thành công:** hiển thị timeline truyện theo tỷ lệ thời gian |
 | Kích hoạt | Mở `?v=timeline` |
 | Quan hệ | được mở rộng bởi UC-04.09 |
-| Truy vết | FR-WLD-08 |
+| Truy vết | FR-WLD-08; seq-the-gioi-truyen |
 | Giai đoạn | P2 ✂5 |
 
 **Luồng chính**
@@ -370,7 +370,7 @@
 | Hậu điều kiện | **Thành công:** hiển thị đồ thị |
 | Kích hoạt | Mở `?v=relationships` |
 | Quan hệ | được mở rộng bởi UC-04.09 |
-| Truy vết | FR-WLD-09 |
+| Truy vết | FR-WLD-09; seq-the-gioi-truyen |
 | Giai đoạn | P2 ✂4 |
 
 **Luồng chính**
@@ -391,7 +391,7 @@
 | Hậu điều kiện | **Thành công:** `timeline_events` và `relationships` được thay mới |
 | Kích hoạt | "Re-analyse" |
 | Quan hệ | extend UC-04.07, UC-04.08 |
-| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; 08 §3.2 (`STORY_META`) |
+| Truy vết | FR-WLD-08, FR-WLD-09; BR-01, BR-02; 08 §3.2 (`STORY_META`); seq-the-gioi-truyen |
 | Giai đoạn | P2 ✂4 ✂5 |
 
 **Luồng chính**

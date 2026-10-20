@@ -16,7 +16,7 @@
 | Job bất đồng bộ | Trả `202 Accepted` + `{ jobId, status, estimatedCostUsd }` (số đã giữ) + header `Location: /v1/jobs/{jobId}`. Khi job xong, `GET /jobs/{jid}` trả thêm `chargedUsd`, `releasedUsd` |
 | Tiền | Trường tiền trong API là **chuỗi thập phân USD** (`"0.0132"`) để không mất độ chính xác; server lưu micro-USD (04 D-09) |
 | Lỗi | RFC 9457 Problem Details (§1.1) |
-| Rate limit | `429` + `Retry-After`; giới hạn **kỹ thuật**, không liên quan tính phí (BR-32): 120 req/phút/người; ≤ 30 yêu cầu LLM/phút/người; ≤ 8 job ảnh, 8 job TTS, 1 render đồng thời |
+| Rate limit | `429` + `Retry-After`; giới hạn **kỹ thuật**, không liên quan tính phí (BR-32): 120 req/phút/người; ≤ 30 yêu cầu LLM/phút/người; ≤ 10 lần nghe thử phát âm/phút/người; 1 render đang chạy/người. Giới hạn job ảnh/TTS đồng thời theo người: sau MVP |
 
 ### 1.1 Định dạng lỗi
 
@@ -73,7 +73,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | POST | `/auth/backchannel-logout` | P (xác thực `logout_token` theo JWKS) | *(sau MVP)* SSO thông báo đăng xuất; hủy mọi phiên của `sub` / `sid` |
 | GET | `/auth/session` | P | `{ authenticated, user? }` cho client kiểm tra trạng thái |
 | GET | `/me` | U | Hồ sơ cục bộ (email/tên/avatar đồng bộ từ SSO), `consentRequired`, `consentNotice` (nội dung + phiên bản) |
-| POST | `/me:consent` | U | `{ noticeVersion }`: ghi `consented_at`, `consent_version`; lần đầu thì tạo ví và tặng tiền dùng thử (UC-01.01d) |
+| POST | `/me:consent` | U | `{ noticeVersion }`: ghi `consented_at`, `consent_version` (UC-01.01d). Ví và tiền dùng thử đã tạo lúc JIT hồ sơ ở `/auth/callback` (UC-01.01b), không tạo ở đây |
 | PATCH | `/me` | U | Chỉ sửa trường riêng của ứng dụng (`locale`) |
 | POST | `/me:request-data-deletion` | U | *(sau MVP)* Yêu cầu xóa dữ liệu của ứng dụng (không xóa tài khoản SSO) |
 | GET | `/me/dashboard` | U | Trạng thái tài khoản (Free / Đã nạp tiền), số dư ví, phần Free đã dùng trong tháng, số dự án, link "Quản lý tài khoản" của SSO |
@@ -142,7 +142,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 
 | Method | Path | Quyền | Job | Mô tả |
 |---|---|---|---|---|
-| GET | `/projects/{pid}/media:quote?chapterIds=` | E | | Giá ước tính tối đa `{shots, storyboardUsd, imagesUsd, ttsChars, ttsUsd, totalUsd}` |
+| GET | `/projects/{pid}/media:quote?chapterIds=&only=&parts=` | E | | Giá ước tính tối đa `{shots, storyboardUsd, imagesUsd, ttsChars, ttsUsd, totalUsd}`; cùng tham số `only`, `parts` với `media:generate`. Không còn gì để sinh: `{totalUsd: "0", shots: 0}` |
 | POST | `/projects/{pid}/media:generate` | E | ✓ | `{chapterIds[], only?: MISSING\|FAILED\|OUTDATED\|FLAGGED\|ALL, parts?: [IMAGE, NARRATION]}`: storyboard tự động (nếu thiếu), rồi ảnh + thuyết minh cho từng shot |
 | GET | `/projects/{pid}/media?chapterId=` | E | | **Media bin**: chương → shot → `{illustration, narration, sourceText, durationMs, status, flagged}` |
 
@@ -178,7 +178,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | GET | `/voices?language=` | U | | Danh mục giọng, kèm URL nghe thử |
 | GET / PUT | `/projects/{pid}/narration-settings` | E | | Giọng, tốc độ, ngắt nghỉ, `symbolRules` (bật/tắt SYM-01..05, 08 §6); ngưỡng WER sau MVP |
 | CRUD | `/projects/{pid}/pronunciations[/{id}]` | E | | Từ điển phát âm |
-| POST | `/projects/{pid}/pronunciations:preview` | E | ✓ | `{text}` (≤ 200 ký tự) trả audio nghe thử ngắn **đồng bộ** (ngoại lệ của AG-01, QĐ-131): HOLD → gọi TTS (timeout 15 s, không thử lại) → CAPTURE/RELEASE trong cùng request; tính phí TTS theo BR-01. Lỗi: `402`, `429`, `451`, `503` |
+| POST | `/projects/{pid}/pronunciations:preview` | E | ✓ | `{text}` (≤ 200 ký tự) trả audio nghe thử ngắn **đồng bộ, miễn phí** (ngoại lệ của AG-01, QĐ-131, QĐ-136): gọi TTS (timeout 15 s, không thử lại), không tạo job, không giữ tiền; cache 24 giờ theo văn bản đã chuẩn hóa + giọng. Lỗi: `429`, `503` |
 | GET | `/projects/{pid}/chapters/{cid}/narrations:quote` | E | | `{chars, estimatedCostUsd}` |
 | POST | `/projects/{pid}/chapters/{cid}/narrations` | E | ✓ | Sinh thuyết minh cả chương (job cha + job con theo shot) |
 | POST | `…/shots/{shid}/narration:generate` | E | ✓ | Sinh hoặc sinh lại thuyết minh một shot |
@@ -194,10 +194,10 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 
 | Method | Path | Quyền | Job | Mô tả |
 |---|---|---|---|---|
-| POST | `/projects/{pid}/timelines` | E | | Tạo hoặc lấy timeline `{scope: CHAPTER\|PROJECT, chapterId?}`; tự dựng bản nháp từ tư liệu |
+| POST | `/projects/{pid}/timelines` | E | | Tạo hoặc lấy timeline `{scope: CHAPTER, chapterId}` (`PROJECT` sau MVP, QĐ-141); tự dựng bản nháp từ tư liệu |
 | GET | `/projects/{pid}/timelines/{tlid}` | E | | Timeline đầy đủ: tracks + items + ETag (dùng cho editor và preview) |
 | PATCH | `/projects/{pid}/timelines/{tlid}` | E | | Thuộc tính chung: khung hình, kiểu phụ đề, master loudness (If-Match) |
-| POST | `/projects/{pid}/timelines/{tlid}:apply-ops` | E | | **Lô thao tác** `{ifMatch, ops: [{op: ADD_ITEM\|UPDATE_ITEM\|MOVE_ITEM\|SPLIT_ITEM\|TRIM_ITEM\|DELETE_ITEM\|ADD_TRACK\|UPDATE_TRACK\|DELETE_TRACK, …}]}`, nguyên tử. `UPDATE_ITEM` trên clip thuyết minh chỉ nhận `startMs`, `volume`, `volumeKeyframes`, `playbackRate` (0,8–1,25); đổi `playbackRate` thì server tạo job `PROCESS_AUDIO_RATE` (miễn phí) và item có `rateStatus: PROCESSING\|READY\|FAILED` (ADR-24), báo kết quả qua `timeline.updated`. Server kiểm tra BR-24/IC-10/IC-17; vi phạm trả `422 NARRATION_LOCKED` |
+| POST | `/projects/{pid}/timelines/{tlid}:apply-ops` | E | | **Lô thao tác** `{ifMatch, ops: [{op: ADD_ITEM\|UPDATE_ITEM\|MOVE_ITEM\|SPLIT_ITEM\|TRIM_ITEM\|DELETE_ITEM\|ADD_TRACK\|UPDATE_TRACK\|DELETE_TRACK, …}]}`, nguyên tử. `UPDATE_ITEM` trên clip thuyết minh chỉ nhận `startMs`, `volume`, `volumeKeyframes` (không có tốc độ từng clip, QĐ-140). Server kiểm tra BR-24/IC-10; vi phạm trả `422 NARRATION_LOCKED` |
 | POST | `/projects/{pid}/timelines/{tlid}:sync-media` | E | | Đồng bộ với tư liệu mới nhất, giữ chỉnh sửa của người dùng; trả danh sách item đã thay đổi |
 | GET / POST | `/projects/{pid}/timelines/{tlid}/versions` | E | | *(sau MVP)* Lịch sử phiên bản / đặt tên phiên bản |
 | POST | `/projects/{pid}/timelines/{tlid}/versions/{v}:restore` | E | | *(sau MVP)* Khôi phục |
@@ -216,6 +216,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 |---|---|---|---|---|
 | GET | `/projects/{pid}/timelines/{tlid}/readiness` | E | | `{coverage: {covered, total}, missingImages[], notDone[], outdated[], violations[], warnings: {flagged[]}, freeQuota?: {rendersLeft, minutesLeft, watermark}}` |
 | POST | `/projects/{pid}/timelines/{tlid}/renders` | E | | `{resolution}`: chụp `timeline_snapshot` và tạo job xuất (miễn phí); `422` nếu chưa sẵn sàng; Free vượt lượt/phút hoặc chọn 1080p: `403 FREE_LIMIT_REACHED`. `splitBy`, `maxMinutes`: sau MVP |
+| POST | `/projects/{pid}/renders` | E | ✓ | **Xuất cả dự án** (QĐ-141) `{resolution}`: ghép timeline mọi chương theo thứ tự (chương chưa có timeline thì tự dựng bản nháp) thành một `timeline_snapshot` phạm vi `PROJECT`, tạo job `RENDER_TIMELINE`. `?dryRun=true` trả báo cáo điều kiện theo từng chương `{chapters: [{chapterId, ready, coverage, notDone[], outdated[]}], durationMs, freeQuota?}` mà không tạo render. Lỗi: `422` (có chương chưa đạt), `403 FREE_LIMIT_REACHED`, `429` (đang có render chạy) |
 | GET | `/projects/{pid}/renders?timelineId=&versions=latest\|all` | E | | Danh sách bản xuất |
 | GET | `/projects/{pid}/renders/{rid}` | E | | Trạng thái, `progress` |
 | GET | `/projects/{pid}/renders/{rid}/download?file=MP4\|SRT\|VTT\|NARRATION_AUDIO` | E | | `302` tới link ký có thời hạn (15 phút) |
@@ -238,7 +239,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 
 | Method | Path | Quyền | Mô tả |
 |---|---|---|---|
-| GET | `/jobs/{jid}` | U (người tạo hoặc Editor dự án) | Trạng thái job, `estimatedCostUsd`, `chargedUsd`, `releasedUsd` |
+| GET | `/jobs/{jid}` | U (người tạo hoặc Editor dự án) | Trạng thái job, `estimatedCostUsd`, `chargedUsd`, `releasedUsd`; `result` khi `SUCCEEDED` (vd. danh sách tài sản đề xuất của `ANALYZE_ASSETS`), `error` khi `FAILED` |
 | POST | `/jobs/{jid}:cancel` | U | Hủy job đang `QUEUED` (RELEASE toàn bộ) |
 | GET | `/me/wallet` | U | `{availableUsd, heldUsd, topupTotalUsd, accountStatus: FREE\|PAID, freeUsage: {projects, chapters, rendersThisMonth, minutesThisMonth}}` |
 | GET | `/me/wallet/ledger?projectId=&type=&from=&to=` | U | Lịch sử chi tiêu: bút toán, job, chi phí thực, phí 10% |
@@ -252,7 +253,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 
 **MVP:** bảng giá, provider, mô hình, style, giọng và `system_settings` nạp từ file seed bằng lệnh `pnpm seed`; danh sách mời quản lý bằng CLI `pnpm admin:invites add|remove|list <email>` (UC-10.11). Không có endpoint quản trị qua HTTP.
 
-**Sau MVP:** `/admin/price-rules`, `/admin/plans`, `/admin/ai-providers`, `/admin/ai-models`, `/admin/styles`, `/admin/invites`, `/admin/settings`, `/admin/jobs` (lọc, `:retry`, `:refund`), `/admin/users/{uid}/wallet:adjust`, `/admin/reports/*`. Tất cả yêu cầu quyền `A` và ghi audit log.
+**Sau MVP:** `/admin/price-rules`, `/admin/plans`, `/admin/ai-providers`, `/admin/ai-models`, `/admin/styles`, `/admin/audio-assets` (thư viện âm thanh hệ thống, UC-10.06), `/admin/invites`, `/admin/settings`, `/admin/jobs` (lọc, `:retry`, `:refund`), `/admin/users/{uid}/wallet:adjust`, `/admin/reports/*`. Tất cả yêu cầu quyền `A` và ghi audit log.
 
 ## 3. Sự kiện realtime (SSE)
 
@@ -260,19 +261,18 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 
 | `event` | `data` |
 |---|---|
-| `job.updated` | `{jobId, type, status, progress?, targetType, targetId, error?}` |
-| `chapter.updated` | `{chapterId, version, lastEditedBy}` |
+| `job.updated` | `{jobId, type, status, progress?, targetType, targetId, error?, summary?}`; `summary` là tóm tắt kết quả nhỏ (vd. `{draftId, boundaryFixes, unlinked}` của `STORYBOARD_DRAFT`, `{unmatchedNames[]}` của `STORY_META`); kết quả đầy đủ đọc ở `GET /jobs/{jid}` |
+| `chapter.updated` | `{chapterId, version, lastEditedBy, mediaStatus}` |
 | `chapters.restructured` | `{chapterIds[]}` |
 | `shot.updated` | `{shotId, version}` |
 | `illustration.ready` | `{shotId, illustrationId, url}` |
 | `narration.updated` | `{shotId, narrationId, status, flagged}` |
-| `media.progress` | `{chapterId, shotId, part: IMAGE\|NARRATION, status}` |
-| `chapter.media-ready` | `{chapterId, timelineId}` |
+| `chapter.media-ready` | `{chapterId, timelineId, chargedUsd, releasedUsd}` |
 | `timeline.updated` | `{timelineId, version, changedItemIds[]}` |
 | `render.progress` | `{renderId, progress}` |
 | `render.ready` | `{renderId, url}` |
 | `asset.updated` | `{assetId}` |
-| `director.plan` | `{status, currentStep, awaitingReason?}` |
+| `director.plan` | `{status, currentStep, awaitingReason?}` *(sau MVP)* |
 | `member.changed` | `{userId, action: JOINED\|REMOVED}` *(sau MVP)* |
 | `wallet.updated` | `{availableUsd, heldUsd, accountStatus}` (kênh của người dùng) |
 
@@ -397,13 +397,13 @@ POST /v1/projects/{pid}/timelines/{tlid}:apply-ops
     { "op": "ADD_ITEM", "trackId": "trk-music", "item": { "kind": "AUDIO", "audioAssetId": "calm-piano", "startMs": 0, "durationMs": 95000, "fadeInMs": 1500, "fadeOutMs": 3000, "volume": 0.6, "duckingDb": -12 } },
     { "op": "ADD_ITEM", "trackId": "trk-sfx-1", "item": { "kind": "AUDIO", "audioAssetId": "fireworks", "startMs": 102000, "durationMs": 4000, "volume": 0.8 } },
     { "op": "UPDATE_ITEM", "itemId": "img-shot-7", "patch": { "motion": { "type": "ZOOM_IN", "intensity": 0.15, "focusX": 0.6, "focusY": 0.4 }, "transitionIn": { "type": "CROSSFADE", "durationMs": 800 } } },
-    { "op": "UPDATE_ITEM", "itemId": "nar-shot-5", "patch": { "playbackRate": 1.1 } },
+    { "op": "UPDATE_ITEM", "itemId": "nar-shot-5", "patch": { "volume": 0.9 } },
     { "op": "DELETE_ITEM", "itemId": "nar-shot-3" }
   ]
 }
 ```
 
-Response `422` (op thứ 5 vi phạm BR-24, cả lô không được áp dụng; op thứ 4 đổi tốc độ 1,1× là hợp lệ):
+Response `422` (op thứ 5 vi phạm BR-24, cả lô không được áp dụng; op thứ 4 chỉnh âm lượng là hợp lệ):
 
 ```json
 { "code": "NARRATION_LOCKED", "status": 422, "detail": "Không thể xóa clip thuyết minh nguyên văn.", "opIndex": 4 }

@@ -497,8 +497,6 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
         fade_in_ms : int
         fade_out_ms : int
         ducking_db : numeric
-        playback_rate : numeric
-        derived_media_id : uuid <<FK>>
         user_modified : bool
         sync_flag : text
     }
@@ -521,8 +519,9 @@ package "Trình chỉnh sửa & xuất video" #FFEFEF {
     entity renders {
         * id : uuid <<PK>>
         --
-        * timeline_id : uuid <<FK>>
-        * timeline_version : int
+        * scope : text
+        timeline_id : uuid <<FK>>
+        timeline_version : int
         * project_id : uuid <<FK>>
         render_group_id : uuid
         part_no : int
@@ -755,7 +754,7 @@ illustrations |o--o{ timeline_items
 narrations |o--o{ timeline_items
 audio_assets |o--o{ timeline_items
 users |o--o{ audio_assets : uploads
-timelines ||--o{ renders
+timelines |o--o{ renders
 projects ||--o{ director_plans
 director_plans |o--o{ director_messages
 director_messages ||--o{ director_tool_proposals

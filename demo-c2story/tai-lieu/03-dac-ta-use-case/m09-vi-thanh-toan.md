@@ -14,7 +14,7 @@
 | Tiền điều kiện | — |
 | Hậu điều kiện | **Thành công:** hiển thị giá hiện hành từ cấu hình |
 | Kích hoạt | Mở `/pricing` |
-| Truy vết | FR-BIL-01; BR-01, BR-27, BR-28; 08 §3; API 2.8 `GET /pricing` |
+| Truy vết | FR-BIL-01; BR-01, BR-27, BR-28; 08 §3; API 2.8 `GET /pricing`; seq-thanh-toan |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -40,7 +40,7 @@
 | Hậu điều kiện | **Thành công:** Subscription `ACTIVE`; quyền lợi gói có hiệu lực. **Tối thiểu:** không kích hoạt gói khi chưa nhận webhook thanh toán |
 | Kích hoạt | Chọn gói trên Pricing |
 | Quan hệ | include UC-09.03a |
-| Truy vết | FR-BIL-02 |
+| Truy vết | FR-BIL-02; seq-thanh-toan |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -65,7 +65,7 @@
 | Hậu điều kiện | **Thành công:** `wallets.available_micro` và `topup_total_micro` tăng đúng số tiền; sổ cái có bút toán `TOPUP`; tài khoản ở trạng thái "Đã nạp tiền" (BR-27). **Tối thiểu:** không cộng tiền khi chưa có webhook xác nhận |
 | Kích hoạt | Bấm "Nạp tiền" trên Pricing, Dashboard, hoặc từ thông báo thiếu số dư (`402`) hay vượt giới hạn Free (`403 FREE_LIMIT_REACHED`) |
 | Quan hệ | include UC-09.03a |
-| Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions` |
+| Truy vết | FR-BIL-03; BR-27; WR-06; API 2.8 `POST /billing/topup-sessions`; seq-thanh-toan |
 | Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
@@ -89,7 +89,7 @@
 | Tiền điều kiện | Đã đăng nhập; số tiền hợp lệ |
 | Hậu điều kiện | **Thành công:** User hoàn tất thanh toán trên cổng và cổng phát webhook cho UC-09.08. **Tối thiểu:** hủy hoặc thất bại thì không có thay đổi nào về ví |
 | Kích hoạt | UC-09.03 bước 2 |
-| Truy vết | ADR-08; FR-BIL-03; NFR-SEC-07; API 2.8 `POST /billing/topup-sessions` |
+| Truy vết | ADR-08; FR-BIL-03; NFR-SEC-07; API 2.8 `POST /billing/topup-sessions`; seq-thanh-toan |
 | Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
@@ -120,7 +120,7 @@
 | Tiền điều kiện | Có khách hàng trên cổng |
 | Hậu điều kiện | **Thành công:** thay đổi được đồng bộ qua webhook (UC-09.08) |
 | Kích hoạt | "Manage Billing" |
-| Truy vết | FR-BIL-04 |
+| Truy vết | FR-BIL-04; seq-thanh-toan |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -145,7 +145,7 @@
 | Tiền điều kiện | Đã đăng nhập |
 | Hậu điều kiện | **Thành công:** số liệu khớp `wallets` và sổ cái |
 | Kích hoạt | Badge số dư ở thanh trên, hoặc Dashboard |
-| Truy vết | FR-BIL-05, FR-BIL-12; BR-27; API 2.8 `GET /me/wallet` |
+| Truy vết | FR-BIL-05, FR-BIL-12; BR-27; API 2.8 `GET /me/wallet`; seq-thanh-toan |
 | Giai đoạn | P2 |
 
 **Luồng chính**
@@ -168,7 +168,7 @@
 | Tiền điều kiện | Đã đăng nhập |
 | Hậu điều kiện | **Thành công:** hiển thị các bút toán (append-only) |
 | Kích hoạt | "Lịch sử chi tiêu" |
-| Truy vết | FR-BIL-06, 08; API 2.8 `GET /me/wallet/ledger` |
+| Truy vết | FR-BIL-06, 08; API 2.8 `GET /me/wallet/ledger`; seq-thanh-toan |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -189,7 +189,7 @@
 | Hậu điều kiện | **Thành công:** mỗi event xử lý đúng một lần. **Tối thiểu:** event trùng hoặc sai chữ ký không làm thay đổi dữ liệu |
 | Kích hoạt | `POST /webhooks/stripe` |
 | Quan hệ | include UC-09.08a |
-| Truy vết | FR-BIL-09; NFR-SEC-07; IC-07 |
+| Truy vết | FR-BIL-09; NFR-SEC-07; IC-07; seq-thanh-toan |
 | Giai đoạn | P3 ✂1 |
 
 **Luồng chính**
@@ -215,7 +215,7 @@
 | Tiền điều kiện | Event mới đã qua kiểm tra chữ ký và chống trùng (UC-09.08 bước 2–3) |
 | Hậu điều kiện | **Thành công:** `payments` và ví khớp với cổng; mọi thay đổi số dư có bút toán. **Tối thiểu:** lỗi thì rollback toàn bộ để cổng gửi lại |
 | Kích hoạt | UC-09.08 bước 4 |
-| Truy vết | FR-BIL-03, FR-BIL-09; WR-01..08; IC-06, IC-07 |
+| Truy vết | FR-BIL-03, FR-BIL-09; WR-01..08; IC-06, IC-07; seq-thanh-toan |
 | Giai đoạn | P3 ✂1 |
 
 **Luồng chính**

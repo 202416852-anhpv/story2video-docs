@@ -15,12 +15,12 @@ Container_Boundary(api, "API Server (NestJS modular monolith)") {
     Component(manu, "manuscript (M03)", "Module", "Chương, tái cấu trúc nguyên tử, dời ranh giới shot (Workspace); phiên bản, archive (sau MVP). **Duy nhất được ghi văn bản truyện**")
     Component(world, "world (M04)", "Module", "Story assets, art direction, visual rules, story timeline, relationships")
     Component(media, "media (M05)", "Module", "Điều phối Sinh tư liệu; storyboard, illustration, narration (ký hiệu SYM, nghe & đánh dấu); media_status")
-    Component(editor, "editor (M06)", "Module", "Timeline apply-ops + BR-24 (tốc độ 0,8–1,25×), sync-media, âm thanh tải lên, render (watermark, hạn mức Free), tải; thư viện âm thanh, versions (sau MVP)")
+    Component(editor, "editor (M06)", "Module", "Timeline chương apply-ops + BR-24, sync-media, âm thanh tải lên, render chương / cả dự án (watermark, hạn mức Free), tải; thư viện âm thanh, versions (sau MVP)")
     Component(director, "director (M07, sau MVP)", "Module", "PlanEngine, ToolRegistry, tool proposals")
     Component(library, "library (M08, sau MVP)", "Module", "Thư viện tài sản cá nhân")
     Component(billing, "billing (M09)", "Module", "Ví USD, sổ cái, tiền dùng thử, nạp tiền sandbox, webhook; gói (sau MVP)")
     Component(adminm, "admin (M10)", "Module", "Seed cấu hình, danh sách mời, trần chi tiêu ngày; giao diện admin, giám sát, báo cáo (sau MVP)")
-    Component(platform, "platform", "Shared", "authz, jobs (BudgetGuard + HOLD + outbox), idempotency, rate limit, realtime SSE, audit, storage")
+    Component(platform, "platform", "Shared", "authz, jobs (JobService, BudgetGuard + HOLD, JobRunner, Reconciler; outbox sau MVP), idempotency, rate limit, realtime SSE, audit, storage")
 }
 
 Rel(web, auth, "Đăng nhập / phiên / đồng ý")

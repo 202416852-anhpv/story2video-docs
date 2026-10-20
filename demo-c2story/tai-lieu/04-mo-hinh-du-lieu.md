@@ -1,6 +1,6 @@
 # 04 — Mô hình dữ liệu
 
-> **Phiên bản mô hình:** 2.1 (khớp luồng Studio 6 bước, use case ở [03](03-dac-ta-use-case/00-muc-luc.md) và các quyết định ở [sổ quyết định](../quyet-dinh.md)). Bảng chỉ dùng sau MVP vẫn giữ trong mô hình và được đánh dấu *(sau MVP)*; ERD MVP (`../so-do/mvp/02-du-lieu/erd-mvp.puml`) sinh tự động bằng `python3 so-do/tools/gen_mvp.py` dựa trên các đánh dấu này.
+> **Phiên bản mô hình:** 2.2 (khớp luồng Studio 6 bước, use case ở [03](03-dac-ta-use-case/00-muc-luc.md) và các quyết định ở [sổ quyết định](../quyet-dinh.md)). Bảng chỉ dùng sau MVP vẫn giữ trong mô hình và được đánh dấu *(sau MVP)*; ERD MVP (`../so-do/mvp/02-du-lieu/erd-mvp.puml`) sinh tự động bằng `python3 so-do/tools/gen_mvp.py` dựa trên các đánh dấu này.
 > **Sơ đồ:** `../so-do/02-du-lieu/domain-class.puml` (mô hình miền); `../so-do/02-du-lieu/erd.puml` (mô hình vật lý đầy đủ, 56 bảng); ERD theo nhóm `../so-do/02-du-lieu/erd-1..6-*.puml`, sinh tự động từ `erd.puml` bằng `python3 so-do/tools/split_erd.py`. Chỉ sửa `erd.puml` rồi chạy lại script.
 > **CSDL:** PostgreSQL 16. Khóa chính `uuid` (UUIDv7). Mọi bảng có thêm `created_at`, `updated_at` (`timestamptz`, không liệt kê ở dưới).
 
@@ -66,7 +66,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 
 | Bảng | Cột | Ghi chú / Use case |
 |---|---|---|
-| `projects` | id PK, owner_id FK, title, cover_media_id FK?, style_id FK?, image_model_id FK?, language, target_shot_seconds (mặc định 15), aspect_ratio (`16:9`/`9:16`/`1:1`), visibility (`PRIVATE`/`UNLISTED`), art_direction, current_source_id FK?, workflow_step (1–6, cache cho Map), version, deleted_at? | UC-02.02..05, UC-02.09, UC-04.05, UC-04.06 |
+| `projects` | id PK, owner_id FK, title, cover_media_id FK?, style_id FK?, image_model_id FK?, language, target_shot_seconds (mặc định 20, khoảng 3 ảnh/phút, QĐ-112), aspect_ratio (`16:9`/`9:16`/`1:1`), visibility (`PRIVATE`/`UNLISTED`), art_direction, current_source_id FK?, workflow_step (1–6, cache cho Map), version, deleted_at? | UC-02.02..05, UC-02.09, UC-04.05, UC-04.06 |
 | `project_members` | (project_id FK, user_id FK) PK, role, joined_at, last_active_at | IC-01. UC-02.07, UC-02.08 |
 | `invite_links` *(sau MVP)* | id PK, project_id FK, token_hash UQ, created_by FK, revoked_at?, expires_at? | Chỉ lưu SHA-256 của token. UC-02.06 |
 | `source_texts` | id PK, project_id FK, content, char_count, sha256, normalization_log, original_media_id FK? | Mỗi lần import một bản, luôn nguyên văn. UC-02.02, UC-03.01b |
@@ -99,7 +99,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `illustrations` | id PK, shot_id FK, media_id FK?, status, edit_kind (`GENERATE`/`EDIT`/`RETRY`/`UPLOAD`), instruction?, prompt_snapshot, shot_version, parent_illustration_id FK?, job_id FK? | `shot_version` < `shots.version` = "brief đã đổi" (bản `UPLOAD` đặt `shot_version = shots.version`, `prompt_snapshot`/`job_id` rỗng, `status = DONE`). UC-05.09, UC-05.10 |
 | `narration_settings` | project_id PK/FK, language, voice_id FK?, speed, pitch, sentence_pause_ms, paragraph_pause_ms, symbol_rules, wer_threshold (mặc định 0,03, sau MVP), multi_voice (sau MVP) | 1–1 với project. `symbol_rules`: `{SYM-01: true, …}` bật/tắt từng mẫu ký hiệu (08 §6); thiếu khóa = bật. UC-05.11 |
 | `voices` | id PK, provider_id FK, code, name, language, gender, sample_media_id FK?, min_plan_code?, sample_wer?, enabled | Cấu hình. UC-05.11a, UC-10.05 |
-| `pronunciation_entries` | id PK, project_id FK, written, spoken, kind (`ALIAS`/`PHONEME`), case_sensitive | Chỉ ảnh hưởng audio. UC-05.12 |
+| `pronunciation_entries` | id PK, project_id FK, written, spoken, kind (`ALIAS`/`PHONEME`), case_sensitive | Chỉ ảnh hưởng audio. TTS tự host (MVP) bỏ qua `PHONEME` (ADR-30). UC-05.12 |
 | `character_voices` *(sau MVP)* | (project_id FK, story_asset_id FK) PK, voice_id FK | UC-05.15 |
 | `dialogue_attributions` *(sau MVP)* | id PK, shot_id FK, char_start, char_end, story_asset_id FK?, confirmed | Người nói của từng câu thoại (offset trong chương). UC-05.15 |
 | `narrations` | id PK, shot_id FK, project_id FK, version_no, **source_hash**, spoken_text, ssml, normalization_log, voice_id FK?, media_id FK?, duration_ms, **word_timings**, status, flagged_at?, wer?, mismatches?, accepted_by FK?, accepted_at?, job_id FK? | `spoken_text` = bản đọc do **server** sinh. `flagged_at` ≠ NULL = người dùng đánh dấu cần sinh lại (BR-34). `wer`, `mismatches`, `accepted_*` dùng khi bật kiểm chứng ASR (sau MVP). IC-09. UC-05.13, UC-05.18 |
@@ -108,12 +108,12 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 
 | Bảng | Cột | Ghi chú / Use case |
 |---|---|---|
-| `timelines` | id PK, project_id FK, scope (`CHAPTER`/`PROJECT`), chapter_id FK?, aspect_ratio, framing (`CROP`/`FIT`/`BLUR`), subtitle_style, master (`{loudnessLufs, volume}`), status, version, updated_by FK? | Tự dựng khi chương `READY_TO_EDIT`. UC-06.01, UC-06.06, UC-06.08, UC-06.12 |
+| `timelines` | id PK, project_id FK, scope (`CHAPTER`; `PROJECT` sau MVP, QĐ-141), chapter_id FK?, aspect_ratio, framing (`CROP`/`FIT`/`BLUR`), subtitle_style, master (`{loudnessLufs, volume}`), status, version, updated_by FK? | Tự dựng khi chương `READY_TO_EDIT`. UC-06.01, UC-06.06, UC-06.08, UC-06.12 |
 | `timeline_versions` *(sau MVP)* | id PK, timeline_id FK, version, name?, snapshot, created_by FK? | Bất biến. UC-06.14, UC-02.10a |
 | `timeline_tracks` | id PK, timeline_id FK, kind, name, order_index, muted, solo, hidden, locked, volume | Track `NARRATION`: `locked = true`, không xóa. UC-06.03 |
-| `timeline_items` | id PK, track_id FK, kind, start_ms, duration_ms, source_in_ms, shot_id FK?, illustration_id FK?, narration_id FK?, audio_asset_id FK?, media_id FK? (logo), text?, text_style?, motion?, transition_in?, color?, volume, volume_keyframes?, fade_in_ms, fade_out_ms, ducking_db?, playback_rate (mặc định 1,0; item `NARRATION`: 0,8–1,25, BR-24), derived_media_id FK? (audio đã đổi tốc độ, bắt buộc khi `playback_rate ≠ 1`; ADR-24), user_modified, sync_flag (`NONE`/`UPDATED`/`NEEDS_REVIEW`) | Một bảng cho mọi loại clip. IC-10. UC-06.02..10, UC-06.15 |
+| `timeline_items` | id PK, track_id FK, kind, start_ms, duration_ms, source_in_ms, shot_id FK?, illustration_id FK?, narration_id FK?, audio_asset_id FK?, media_id FK? (logo), text?, text_style?, motion?, transition_in?, color?, volume, volume_keyframes?, fade_in_ms, fade_out_ms, ducking_db?, user_modified, sync_flag (`NONE`/`UPDATED`/`NEEDS_REVIEW`) | Một bảng cho mọi loại clip. IC-10. UC-06.02..10, UC-06.15 |
 | `audio_assets` | id PK, owner_user_id FK? (NULL = hệ thống), kind (`MUSIC`/`SFX`), title, genre, mood, tags, media_id FK, duration_ms, waveform, license (`USER_UPLOAD`; `LIBRARY_CC0`/`LIBRARY_CC_BY` sau MVP), license_note (tác giả, nguồn, dòng ghi công CC-BY), published | BR-26. MVP chỉ có file người dùng tải lên. UC-06.11, UC-06.11a, UC-10.06 |
-| `renders` | id PK, timeline_id FK, timeline_version, project_id FK, render_group_id?, part_no?, version_no, is_primary, resolution, aspect_ratio, watermark, status, progress, media_id FK?, subtitle_srt_media_id FK?, subtitle_vtt_media_id FK?, narration_audio_media_id FK?, duration_ms, **coverage_chars, total_chars**, timeline_snapshot, job_id FK? | IC-11. `render_group_id` + `part_no` khi chia phần. UC-06.16, UC-06.16b, UC-06.17 |
+| `renders` | id PK, scope (`CHAPTER`/`PROJECT`), timeline_id FK? (NULL khi `PROJECT`), timeline_version?, project_id FK, render_group_id?, part_no?, version_no, is_primary, resolution, aspect_ratio, watermark, status, progress, media_id FK?, subtitle_srt_media_id FK?, subtitle_vtt_media_id FK?, narration_audio_media_id FK?, duration_ms, **coverage_chars, total_chars**, timeline_snapshot, job_id FK? | IC-11. `scope = PROJECT`: xuất cả dự án, ghép timeline các chương; `timeline_snapshot.sourceTimelines` ghi timeline và phiên bản của từng chương (QĐ-141). `render_group_id` + `part_no` khi chia phần. UC-06.16, UC-06.16b, UC-06.17 |
 
 ### 3.6 Director, job & hạ tầng — `erd-6-director-job-ha-tang`
 
@@ -122,7 +122,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `director_plans` *(sau MVP)* | id PK, project_id FK, started_by FK, status, current_step (`pickStyle`/`split`/`cast`/`pickVoice`/`media`/`verify`/`draftTimeline`), awaiting_reason?, step_state, estimated_remaining_micro, version | UC-07.02..08 |
 | `director_messages` *(sau MVP)* | id PK, project_id FK, plan_id FK?, sender (`USER`/`DIRECTOR`/`TOOL`), user_id FK?, content, tool_call? | UC-07.01 |
 | `director_tool_proposals` *(sau MVP)* | id PK, message_id FK, tool, args, estimated_cost_micro, status (`PENDING`/`CONFIRMED`/`REJECTED`/`EXPIRED`), decided_by FK?, decided_at?, job_id FK? | Tool tốn phí chờ xác nhận. UC-07.01b |
-| `jobs` | id PK, project_id FK?, user_id FK (người trả tiền), type, status, priority, target_type, target_id, params, result, error_code?, error_message?, attempts, held_micro (giá ước tính đã giữ), charged_micro? (số đã trừ = chi phí thực × 110%, ≤ `held_micro`), budget_day?, budget_reserved_micro? (chỗ đã giữ trong trần ngày, tính theo chi phí provider chưa cộng phí; ADR-25), idempotency_key UQ, parent_job_id FK?, heartbeat_at?, started_at?, finished_at? | Job cha `GENERATE_MEDIA_CHAPTER` có job con. UC-05.07, UC-05.17, UC-10.07 |
+| `jobs` | id PK, project_id FK?, user_id FK (người trả tiền), type, status, priority, target_type, target_id, params, result, error_code?, error_message?, attempts, held_micro (giá ước tính đã giữ), charged_micro? (số đã trừ = chi phí thực × 110%, ≤ `held_micro`), budget_day?, budget_reserved_micro? (chỗ đã giữ trong trần ngày, tính theo chi phí provider chưa cộng phí; ADR-25), idempotency_key UQ, parent_job_id FK?, heartbeat_at?, started_at?, finished_at? | `type`: danh mục và handler ở 05 §5.1, ánh xạ sang thao tác tính phí ở 08 §3.2. Job cha `GENERATE_MEDIA_CHAPTER` có job con. Job miễn phí (`PROCESS_AUDIO_UPLOAD`, `RENDER_TIMELINE`) và **job con** của Flow (`parent_job_id` ≠ NULL) có `held_micro = 0`, không giữ chỗ trần ngày; tiền nằm ở job gốc (WR-05). UC-05.07, UC-05.17, UC-10.07 |
 | `ai_providers` | id PK, code UQ, kind, enabled, priority, config_ref | `config_ref` = **tên** secret, không lưu key. UC-10.03 |
 | `ai_models` | id PK, provider_id FK, code, display_name, capabilities, unit_cost_usd, enabled, user_selectable | UC-10.03 |
 | `ai_usage_records` | id PK, job_id FK, provider_id FK?, model, prompt_version?, seed?, unit (`TOKENS`/`IMAGES`/`SECONDS`/`CHARS`), quantity, cost_usd, latency_ms, request_id, attempt, succeeded | Mỗi lần gọi provider một dòng, kể cả lần lỗi; `attempt` = lần thử của job (ADR-29). CAPTURE chỉ tính các dòng `succeeded` của lần thử thành công (WR-09); tổng mọi dòng tính vào `daily_ai_budgets.spent_micro`. `prompt_version`, `seed` để tái lập kết quả LLM/ảnh (QĐ-127). TTS tự host ghi `SECONDS` = giây GPU (QĐ-123). Đối soát chi phí. UC-10.10 |
@@ -141,7 +141,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | IC-02 | `chapters.order_index` liên tục, duy nhất trong project | Unique DEFERRABLE INITIALLY DEFERRED; tái cấu trúc trong một giao dịch (UC-03.09) |
 | IC-03 | Mỗi chương có tối đa 1 storyboard hiện hành | `chapters.current_storyboard_id` |
 | IC-04 | `wallets.available_micro ≥ 0`, `held_micro ≥ 0`, `topup_total_micro ≥ 0` | CHECK + `SELECT … FOR UPDATE` khi HOLD |
-| IC-05 | Mỗi job tốn phí có đúng một HOLD; khi kết thúc, tổng CAPTURE + RELEASE bằng số đã HOLD, và CAPTURE ≤ HOLD | Service + reconciler định kỳ (`act-giu-tru-tien`) |
+| IC-05 | Mỗi job **gốc** tốn phí (`parent_job_id` NULL) có đúng một HOLD; job con không có bút toán; khi kết thúc, tổng CAPTURE + RELEASE bằng số đã HOLD, và CAPTURE ≤ HOLD | Service + reconciler định kỳ (`act-giu-tru-tien`) |
 | IC-06 | `payments`: `kind = TOPUP` thì `plan_id` NULL; `kind = SUBSCRIPTION` thì `plan_id` NOT NULL | CHECK |
 | IC-07 | `payment_events.gateway_event_id` duy nhất | Unique index |
 | **IC-08** | **Phủ kín:** shot của mỗi bản nháp, sắp theo `order_index`: `shot[0].source_start = 0`, `shot[i].source_end = shot[i+1].source_start`, `shot[last].source_end = chapters.char_count` (độ dài UTF-16, D-10) | Service (CoverageValidator) trong cùng giao dịch ghi; constraint trigger DEFERRABLE sau MVP (ADR-23) |
@@ -153,7 +153,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | IC-14 | `relationships.asset_a_id ≠ asset_b_id`, cùng project | CHECK + trigger |
 | IC-15 | `audio_assets` có `license = USER_UPLOAD` thì `owner_user_id` NOT NULL; `published = false` không xuất hiện trong tìm kiếm | CHECK + điều kiện truy vấn |
 | IC-16 | Mỗi người dùng có đúng một `TRIAL_GRANT` trong đời tài khoản; không tạo lại cho cùng email đã nhận (BR-28) | Partial unique index `(user_id) WHERE entry_type='TRIAL_GRANT'` + kiểm tra `beta_invites.used_by_user_id` |
-| IC-17 | `timeline_items.playback_rate` ∈ [0,8; 1,25] với item `NARRATION`; item khác mặc định 1,0; `playback_rate ≠ 1` thì `derived_media_id` NOT NULL trước khi render | CHECK + `@studio/timeline-rules` + `ReadinessChecker` |
+| IC-17 | *(Đã bỏ, QĐ-140: không còn tốc độ từng clip.)* | — |
 | IC-18 | `daily_ai_budgets`: `reserved_micro ≥ 0`, `spent_micro ≥ 0`, `spent_micro + reserved_micro ≤ cap_micro` tại mọi thời điểm giữ chỗ | CHECK + câu `UPDATE` có điều kiện (05 §6.1, ADR-25) |
 
 ## 5. Cột trạng thái ↔ sơ đồ trạng thái
@@ -175,8 +175,8 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 - `timeline_items (track_id, start_ms)`
 - `audio_assets USING gin (tags)`, `audio_assets (kind, published)`, `audio_assets USING gin (to_tsvector('simple', title))`
 - `jobs (status, priority, created_at) WHERE status IN ('QUEUED','RUNNING','RETRYING')`; `jobs (project_id, created_at DESC)`; `jobs (heartbeat_at) WHERE status = 'RUNNING'`
-- `wallet_ledger_entries (user_id, created_at DESC)`; `ai_usage_records (created_at)` để tính chi tiêu trong ngày (BR-29)
-- `outbox_events (published_at) WHERE published_at IS NULL`
+- `wallet_ledger_entries (user_id, created_at DESC)`; `ai_usage_records (created_at)` để reconciler đối chiếu `daily_ai_budgets.spent_micro` (BR-29, ADR-25)
+- `outbox_events (published_at) WHERE published_at IS NULL` *(sau MVP)*
 - `idempotency_keys (expires_at)`
 - `story_assets USING gin (aliases)`; `chapters USING gin (to_tsvector('simple', content))` cho Find & replace
 
@@ -193,7 +193,7 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | `wallet_ledger_entries`, `payments` | Đến khi xóa dữ liệu beta (thanh toán sandbox, không có nghĩa vụ kế toán); sản phẩm thật: 10 năm, ẩn danh hóa khi người dùng bị xóa |
 | `audit_logs` | 2 năm |
 | `ai_usage_records` | 24 tháng |
-| `outbox_events` đã publish | 7 ngày |
+| `outbox_events` đã publish *(sau MVP)* | 7 ngày |
 | `idempotency_keys` | 24 giờ |
 
 ## 8. Lịch sử thay đổi mô hình
@@ -205,3 +205,4 @@ Ký hiệu: **PK** khóa chính, **FK** khóa ngoại, **UQ** duy nhất, `?` ch
 | 1.x → 2.0: bỏ | `projects.status` (thay bằng `workflow_step` + `chapters.media_status`); `director_plans.target` (Director chỉ còn một luồng); các bảng sách/slideshow/video AI từ các bản trước |
 | 1.x → 2.0: đổi tên nhóm | ERD chia 6 nhóm theo luồng: Tài khoản, Dự án & bản thảo, Thế giới truyện, Sinh tư liệu, Trình chỉnh sửa & xuất video, Director/job/hạ tầng |
 | 2.0 → 2.1 | **Ví USD thay credit:** bỏ `credit_balances`, `credit_ledger_entries`, `credit_packs`, enum `credit_bucket`; thêm `wallets`, `wallet_ledger_entries`; tiền lưu micro-USD; `jobs.credit_cost` → `held_micro`, `charged_micro`. **Closed beta:** thêm `beta_invites`, `system_settings`, `users.consented_at`, `consent_version`; bỏ `users.last_daily_claim_on`. **Bỏ** `illustrations.mask_media_id`, `edit_kind = INPAINT`, `sfx_suggestions`, `license = AI_GENERATED`, `provider_kind = MUSIC`. **Thêm** `narrations.flagged_at`, trạng thái `DONE`; `narration_settings.symbol_rules`; `timeline_items.playback_rate` |
+| 2.1 → 2.2 | **Bỏ tốc độ từng clip** (QĐ-140): bỏ `timeline_items.playback_rate`, `derived_media_id`, IC-17. **Xuất cả dự án** (QĐ-141): `renders.scope`, `timeline_id` và `timeline_version` cho phép NULL; `timelines.scope = PROJECT` thành sau MVP |

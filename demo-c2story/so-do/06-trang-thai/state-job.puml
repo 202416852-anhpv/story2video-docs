@@ -7,11 +7,18 @@ QUEUED --> RUNNING : worker nhận
 QUEUED --> CANCELLED : người dùng hủy / RELEASE
 RUNNING --> SUCCEEDED : xong / CAPTURE chi phí thực × 110%\n+ RELEASE phần dư
 RUNNING --> RETRYING : lỗi tạm thời
-RETRYING --> RUNNING : backoff hết
+RETRYING --> RUNNING : BullMQ giao lại sau backoff\n(thử lại một tầng, QĐ-133)
 RETRYING --> FAILED : quá 3 lần / RELEASE
 RUNNING --> FAILED : lỗi vĩnh viễn, CONTENT_POLICY / RELEASE
 RUNNING --> FAILED : reconciler: mất heartbeat / RELEASE
+RUNNING --> CANCELLED : hủy render đang chạy\n(RENDER_TIMELINE, miễn phí)
 SUCCEEDED --> [*]
 FAILED --> [*]
 CANCELLED --> [*]
+note bottom
+  Job miễn phí (PROCESS_AUDIO_UPLOAD, RENDER_TIMELINE):
+  không HOLD, không giữ chỗ trần ngày.
+  Job con của Flow (held = 0): không HOLD; tiền quyết toán ở job cha (WR-05).
+  Nghe thử phát âm không tạo job (QĐ-136).
+end note
 @enduml

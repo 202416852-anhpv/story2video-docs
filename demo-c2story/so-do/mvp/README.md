@@ -7,6 +7,7 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 | Loại | Cách làm |
 |---|---|
 | Use case phân rã, ERD, mô hình miền | **Sinh tự động**, không sửa tay. Sửa sơ đồ đầy đủ (hoặc dòng "Giai đoạn" của use case trong `tai-lieu/03-dac-ta-use-case/`, đánh dấu `*(sau MVP)*` của bảng trong `tai-lieu/04`), rồi chạy trong `demo-c2story/`: `python3 so-do/tools/gen_mvp.py && python3 so-do/tools/split_erd.py` |
+| Tuần tự (`04-tuan-tu/*-mvp`) | **Sinh tự động** bởi `gen_mvp.py` từ bản đầy đủ: dòng giữa `'@sau-mvp` và `'@/sau-mvp` chỉ có ở bản đầy đủ; dòng bắt đầu bằng `'@mvp ` chỉ có ở bản MVP |
 | Còn lại | Viết tay; sửa cùng lúc với bản đầy đủ tương ứng |
 
 ## Danh mục
@@ -23,7 +24,7 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 
 ## Sơ đồ dùng chung (MVP giống bản đầy đủ)
 
-`04-tuan-tu/seq-import-chia-chuong`, `seq-storyboard-sinh-anh`; `05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
+`04-tuan-tu/seq-vong-doi-job`, `seq-import-chia-chuong`, `seq-doi-ranh-gioi-shot`, `seq-the-gioi-truyen`, `seq-storyboard-sinh-anh`; `05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
 
 ## Sơ đồ chỉ có ở bản đầy đủ (toàn bộ sau MVP)
 

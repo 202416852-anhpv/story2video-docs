@@ -3,7 +3,7 @@
 > Bước 5–6 của luồng chính. Nhạc nền và SFX được thêm **tại đây**. Track thuyết minh bị khóa nội dung (BR-24).
 > Sơ đồ: `../../so-do/01-use-case/phan-ra/uc-m06-trinh-chinh-sua-video.puml`, `../../so-do/04-tuan-tu/seq-chinh-sua-xuat-video.puml`, `../../so-do/06-trang-thai/state-narration-render.puml`.
 > Yêu cầu: FR-EDT-01..27. Quy tắc: BR-22..BR-27. Mọi thao tác chỉnh sửa và render đều miễn phí (render trong giới hạn tài khoản Free).
-> **Thay đổi theo sổ quyết định:** cho đổi tốc độ clip thuyết minh 0,8×–1,25× (QĐ-53); bỏ AI sinh nhạc/SFX (UC-06.11b) và gợi ý SFX (UC-06.11c) (QĐ-57); MVP chỉ dùng nhạc/SFX tải lên (QĐ-58); điều kiện xuất dùng thuyết minh `DONE` (QĐ-55); giới hạn Free và watermark (QĐ-36).
+> **Thay đổi theo sổ quyết định:** bỏ đổi tốc độ từng clip thuyết minh, tốc độ đọc đặt cho cả dự án ở UC-05.11 (QĐ-140, thay QĐ-53); MVP xuất cả dự án tự động, không có timeline cả dự án (QĐ-141); bỏ AI sinh nhạc/SFX (UC-06.11b) và gợi ý SFX (UC-06.11c) (QĐ-57); MVP chỉ dùng nhạc/SFX tải lên (QĐ-58); điều kiện xuất dùng thuyết minh `DONE` (QĐ-55); giới hạn Free và watermark (QĐ-36).
 
 ---
 
@@ -13,16 +13,16 @@
 | Mục | Nội dung |
 |---|---|
 | Tác nhân chính | Editor |
-| Mô tả | Mở timeline của một chương hoặc cả dự án để dựng video |
+| Mô tả | Mở timeline của một chương để dựng video (timeline cả dự án: sau MVP; cả dự án xuất thẳng ở UC-06.16, QĐ-141) |
 | Tiền điều kiện | Chương (hoặc các chương) có tư liệu |
 | Hậu điều kiện | **Thành công:** timeline được tải kèm ETag; preview sẵn sàng |
 | Kích hoạt | "Mở trình chỉnh sửa" từ chương, Tư liệu, Map hoặc thông báo `chapter.media-ready` |
 | Quan hệ | include UC-06.01a; được mở rộng bởi UC-06.15 |
-| Truy vết | FR-EDT-01, 02 |
+| Truy vết | FR-EDT-01, 02; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
-1. Editor chọn phạm vi: một chương, hoặc cả dự án (các chương nối tiếp).
+1. Editor chọn một chương. *(Sau MVP)* phạm vi cả dự án (các chương nối tiếp trên một timeline).
 2. Nếu phạm vi chưa có timeline, hệ thống thực hiện **UC-06.01a**.
 3. Hệ thống tải tracks + items và hiển thị: vùng preview, thư viện (tư liệu, âm thanh, chuyển cảnh), timeline nhiều track, bảng thuộc tính.
 4. Nếu tư liệu đã đổi kể từ lần mở trước, hệ thống thực hiện UC-06.15.
@@ -38,10 +38,10 @@
 | Loại | include của UC-06.01 (bước 2) |
 | Tác nhân | Hệ thống (`TimelineBuilder`) |
 | Mô tả | Tự dựng bản nháp timeline từ ảnh, thuyết minh và phụ đề của các shot, để Editor chỉ phải chỉnh chứ không dựng từ đầu |
-| Tiền điều kiện | Phạm vi (chương hoặc cả dự án) chưa có timeline; mọi shot hiện hành có ảnh `DONE` và thuyết minh `DONE` (chương "Sẵn sàng dựng") |
+| Tiền điều kiện | Chương chưa có timeline; mọi shot hiện hành có ảnh `DONE` và thuyết minh `DONE` (chương "Sẵn sàng dựng") |
 | Hậu điều kiện | **Thành công:** timeline `DRAFT` thỏa IC-10, `version = 1`; nhạc nền và SFX để trống. **Tối thiểu:** lỗi thì không tạo timeline dở dang |
-| Kích hoạt | UC-06.01 bước 2; hoặc chương chuyển `READY_TO_EDIT` (`chapter.media-ready`) |
-| Truy vết | FR-EDT-01..03; IC-10, IC-12; BR-24, BR-25; API 2.6 `POST /projects/{pid}/timelines` |
+| Kích hoạt | UC-06.01 bước 2; chương chuyển `READY_TO_EDIT` (`chapter.media-ready`); hoặc xuất cả dự án khi chương chưa có timeline (UC-06.16 nhánh 1b) |
+| Truy vết | FR-EDT-01..03; IC-10, IC-12; BR-24, BR-25; API 2.6 `POST /projects/{pid}/timelines`; seq-sinh-tu-lieu, seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -71,7 +71,7 @@
 | Hậu điều kiện | **Thành công:** thay đổi được lưu tự động (version tăng) và thỏa BR-24. **Tối thiểu:** thao tác vi phạm bị hoàn tác, không làm hỏng timeline |
 | Kích hoạt | Thao tác chuột/bàn phím trên timeline |
 | Quan hệ | include UC-06.02a |
-| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14, ADR-24; IC-17 |
+| Truy vết | FR-EDT-03, 04, 18, 20; ADR-14; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -81,11 +81,10 @@
 4. Server thực hiện **UC-06.02a**, ghi items, tăng version, trả ETag mới.
 
 **Luồng thay thế / ngoại lệ**
-- **1a.** Editor chọn một clip thuyết minh và đổi tốc độ (thanh trượt 0,8×–1,25×, bước 0,05): timeline cập nhật ngay độ dài clip, clip ảnh và phụ đề của shot co giãn theo, các clip phía sau dời theo (BR-24). Server tạo job `PROCESS_AUDIO_RATE` sinh file audio đã đổi tốc độ, giữ cao độ (ADR-24); trong lúc chờ (vài giây), clip hiện "Đang xử lý tốc độ" và preview phát im lặng đúng độ dài mới. Khi xong, `derived_media_id` được gán và preview phát file dẫn xuất ở tốc độ 1,0, giống hệt bản xuất. Cặp narration–tốc độ đã có file thì dùng lại ngay (cache).
-- **1b.** Job `PROCESS_AUDIO_RATE` lỗi: clip giữ tốc độ mới nhưng báo lỗi và nút "Thử lại"; không xuất được tới khi có file (IC-17).
+- **1a.** Editor muốn thuyết minh đọc nhanh/chậm hơn: không chỉnh trên timeline; giao diện chỉ tới cài đặt tốc độ đọc của dự án (UC-05.11) và sinh lại thuyết minh; timeline cập nhật qua UC-06.15 (QĐ-140).
 - **4a.** `422 NARRATION_LOCKED`: client hoàn tác thao tác vi phạm, hiện giải thích.
 - **4b.** `409` (timeline vừa đổi ở tab khác): tải lại timeline (BR-05); sau MVP xử lý theo UC-02.10.
-- **\*a.** Mất mạng: thao tác giữ trong hàng đợi cục bộ, đồng bộ khi có mạng; hiện trạng thái "Chưa lưu".
+- **\*a.** Mất mạng: lô thao tác giữ trong bộ nhớ, thử lại có backoff; hiện "Chưa lưu"; đóng tab khi chưa lưu thì cảnh báo (không có hàng đợi offline lưu bền, QĐ-137).
 
 ### UC-06.02a Kiểm tra khóa thuyết minh
 <a id="uc-0602a"></a>
@@ -98,7 +97,7 @@
 | Tiền điều kiện | Có thao tác (hoặc lô thao tác) sắp áp lên timeline |
 | Hậu điều kiện | **Thành công:** timeline luôn thỏa IC-10; độ phủ văn bản không bao giờ giảm. **Tối thiểu:** thao tác vi phạm không được áp dụng một phần nào |
 | Kích hoạt | Mỗi thao tác của Editor trên timeline (UC-06.02) và mỗi lần `apply-ops` |
-| Truy vết | BR-24, BR-25; IC-10, IC-12, IC-17; ADR-16; NFR-INT-01; API 2.6 `POST …/timelines/{tlid}:apply-ops` |
+| Truy vết | BR-24, BR-25; IC-10, IC-12; ADR-16; NFR-INT-01; API 2.6 `POST …/timelines/{tlid}:apply-ops`; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -109,9 +108,9 @@
 5. Có thao tác vi phạm: server từ chối cả lô, trả `422 NARRATION_LOCKED` kèm `opIndex`; client hoàn tác thao tác đó và hiện lý do.
 
 **Luồng thay thế / ngoại lệ**
-- **1a.** Bị **cấm** với clip `NARRATION`: cắt, trim, xóa, đổi thứ tự; đổi tốc độ ra ngoài khoảng 0,8×–1,25×; hai clip chồng nhau.
+- **1a.** Bị **cấm** với clip `NARRATION`: cắt, trim, xóa, đổi thứ tự, đổi tốc độ; hai clip chồng nhau.
 - **1b.** Bị cấm: để clip ảnh của một shot kết thúc trước khi thuyết minh của shot đó đọc xong (BR-25); xóa track Thuyết minh (IC-12).
-- **1c.** Được **cho phép**: dời thời điểm clip thuyết minh (chèn khoảng lặng, kéo theo các clip phía sau); chỉnh âm lượng và keyframe âm lượng; **đổi tốc độ 0,8×–1,25×** (giữ cao độ). Khi đổi tốc độ, độ dài clip thuyết minh, clip ảnh của shot, phụ đề và các clip phía sau được tính lại để vẫn thỏa BR-25 (BR-24, IC-17).
+- **1c.** Được **cho phép**: dời thời điểm clip thuyết minh (chèn khoảng lặng, kéo theo các clip phía sau); chỉnh âm lượng và keyframe âm lượng (BR-24).
 - **3a.** Client và server cho kết quả khác nhau (phiên bản bộ luật lệch): server là chuẩn; client nhận `422` và hiển thị như trên.
 - **4a.** `409 VERSION_CONFLICT` (timeline vừa đổi ở tab khác): tải lại (BR-05).
 
@@ -127,7 +126,7 @@
 | Tiền điều kiện | Timeline đang mở |
 | Hậu điều kiện | **Thành công:** cấu trúc track cập nhật |
 | Kích hoạt | Menu của track |
-| Truy vết | FR-EDT-02, 15 |
+| Truy vết | FR-EDT-02, 15; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -150,7 +149,7 @@
 | Tiền điều kiện | Có clip ảnh |
 | Hậu điều kiện | **Thành công:** thuộc tính `motion` cập nhật; preview phản ánh ngay |
 | Kích hoạt | Chọn clip ảnh → bảng "Chuyển động" |
-| Truy vết | FR-EDT-06 |
+| Truy vết | FR-EDT-06; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -173,7 +172,7 @@
 | Tiền điều kiện | Có ≥ 2 clip ảnh liền kề |
 | Hậu điều kiện | **Thành công:** `transition_in` cập nhật; vị trí clip thuyết minh không đổi |
 | Kích hoạt | Kéo chuyển cảnh từ thư viện vào mối nối, hoặc chọn mối nối |
-| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm |
+| Truy vết | FR-EDT-07; BR-25. Chuyển cảnh nâng cao ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 (nâng cao ✂3) |
 
 **Luồng chính**
@@ -196,7 +195,7 @@
 | Tiền điều kiện | Có clip ảnh |
 | Hậu điều kiện | **Thành công:** `framing` (timeline) và `color` (clip) cập nhật |
 | Kích hoạt | Bảng "Khung hình" / "Màu" |
-| Truy vết | FR-EDT-08, 09 |
+| Truy vết | FR-EDT-08, 09; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -219,7 +218,7 @@
 | Tiền điều kiện | Timeline đang mở |
 | Hậu điều kiện | **Thành công:** item `TITLE`/`TEXT`/`LOGO` được thêm trên track Overlay |
 | Kích hoạt | "Thêm chữ" / "Thêm logo" / "Clip tiêu đề" |
-| Truy vết | FR-EDT-05, 10 |
+| Truy vết | FR-EDT-05, 10; seq-chinh-sua-xuat-video |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -243,7 +242,7 @@
 | Tiền điều kiện | Có clip thuyết minh có `word_timings` |
 | Hậu điều kiện | **Thành công:** `subtitle_style` cập nhật |
 | Kích hoạt | Bảng "Phụ đề" |
-| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm |
+| Truy vết | FR-EDT-11; BR-22. Preset ở vị trí ✂3 trong thứ tự cắt giảm; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 (preset ✂3) |
 
 **Luồng chính**
@@ -268,7 +267,7 @@
 | Hậu điều kiện | **Thành công:** item `AUDIO` trên track Nhạc nền; ducking bắt buộc khi chồng thuyết minh |
 | Kích hoạt | Kéo nhạc từ "Âm thanh của tôi" vào track Nhạc nền |
 | Quan hệ | include UC-06.11 |
-| Truy vết | FR-EDT-13; BR-25, BR-26 |
+| Truy vết | FR-EDT-13; BR-25, BR-26; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -294,7 +293,7 @@
 | Hậu điều kiện | **Thành công:** item `AUDIO` trên track SFX |
 | Kích hoạt | Kéo SFX vào track SFX |
 | Quan hệ | include UC-06.11 |
-| Truy vết | FR-EDT-14 |
+| Truy vết | FR-EDT-14; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -316,7 +315,7 @@
 | Hậu điều kiện | **Thành công:** danh sách kết quả, nghe thử được |
 | Kích hoạt | Mở tab "Âm thanh" |
 | Quan hệ | được include bởi UC-06.09, UC-06.10; được mở rộng bởi UC-06.11a |
-| Truy vết | FR-EDT-12, 27; BR-26 |
+| Truy vết | FR-EDT-12, 27; BR-26; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -338,7 +337,7 @@
 | Tiền điều kiện | Đã đăng nhập; file là MP3, WAV hoặc M4A |
 | Hậu điều kiện | **Thành công:** có `audio_assets` thuộc âm thanh của tôi (`license = USER_UPLOAD`, `owner_user_id` = Editor). **Tối thiểu:** file không đạt thì không lưu gì |
 | Kích hoạt | Bấm "Tải lên" trong tab Âm thanh |
-| Truy vết | FR-EDT-27; BR-26; IC-15; NFR-SEC-10; 08 §5; API 2.6 `POST /audio-assets` |
+| Truy vết | FR-EDT-27; BR-26; IC-15; NFR-SEC-10; 08 §5; API 2.6 `POST /audio-assets`; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -387,7 +386,7 @@
 | Tiền điều kiện | Timeline đang mở |
 | Hậu điều kiện | **Thành công:** hình, thuyết minh, nhạc, SFX, phụ đề đồng bộ (lệch ≤ 100 ms) |
 | Kích hoạt | Play, scrub, nhảy tới clip |
-| Truy vết | FR-EDT-17; NFR-PERF-11, 13; ADR-13 |
+| Truy vết | FR-EDT-17; NFR-PERF-11, 13; ADR-13; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 ✂9 |
 
 **Luồng chính**
@@ -435,13 +434,13 @@
 | Hậu điều kiện | **Thành công:** clip trỏ tới tư liệu mới; IC-10 thỏa; clip bị ảnh hưởng được đánh dấu |
 | Kích hoạt | Mở trình chỉnh sửa (UC-06.01), sự kiện `narration.updated`/`illustration.ready`, đổi bản nháp hiện hành |
 | Quan hệ | extend UC-06.01 |
-| Truy vết | FR-EDT-19; BR-33 |
+| Truy vết | FR-EDT-19; BR-33; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
 1. Hệ thống so tư liệu hiện hành với tham chiếu trong timeline.
 2. *Ảnh mới:* thay `illustration_id`, giữ motion/màu/chuyển cảnh.
-3. *Thuyết minh mới:* thay `narration_id`, giữ `playback_rate` Editor đã đặt, cập nhật độ dài; dời các clip phía sau theo độ chênh (nhạc, SFX dời theo nếu gắn với shot).
+3. *Thuyết minh mới:* thay `narration_id`, giữ âm lượng Editor đã đặt, cập nhật độ dài; dời các clip phía sau theo độ chênh (nhạc, SFX dời theo nếu gắn với shot).
 4. *Storyboard đổi (tách/gộp shot, dời ranh giới shot ở Workspace):* thêm hoặc bớt cặp clip ảnh/thuyết minh tương ứng, đặt hiệu ứng mặc định cho clip mới.
 5. Hệ thống đánh dấu các clip thay đổi, hiện thông báo "N clip đã cập nhật" để Editor kiểm tra.
 
@@ -459,9 +458,9 @@
 | Mô tả | Bước 6: render timeline thành MP4 kèm phụ đề |
 | Tiền điều kiện | Timeline thỏa UC-06.16a |
 | Hậu điều kiện | **Thành công:** Render phiên bản mới `READY`, đặt làm bản chính, có MP4 + SRT/VTT; với tài khoản Free, lượt render và phút video của tháng được cộng. **Tối thiểu:** lỗi thì Render `FAILED`, không ảnh hưởng timeline, không tính lượt |
-| Kích hoạt | Bấm "Xuất video" |
+| Kích hoạt | Bấm "Xuất video" trong trình chỉnh sửa chương; hoặc "Xuất cả dự án" ở danh sách Renders / Map |
 | Quan hệ | include UC-06.16a; được mở rộng bởi UC-06.16b |
-| Truy vết | FR-EDT-21..24; FR-BIL-12; BR-23, BR-27; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video |
+| Truy vết | FR-EDT-21..24, 28; FR-BIL-12; BR-23, BR-27; QĐ-141; API 2.6 `POST /projects/{pid}/renders`; 12 §3 (`timeline_snapshot`, SNP-01..07); seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
@@ -469,11 +468,13 @@
 2. Hệ thống thực hiện **UC-06.16a** và hiện báo cáo độ phủ, thời lượng.
 3. Editor chọn độ phân giải (720p / 1080p) và xác nhận. Tài khoản Free: chỉ 720p, hộp thoại hiện số lượt render và phút video còn lại trong tháng, và ghi chú video sẽ có watermark (BR-27).
 4. Hệ thống chụp `timeline_snapshot` của phiên bản hiện tại (hợp lệ theo `schemas/timeline-snapshot.schema.json` và SNP-01..07, 12 §3) và tạo job `RENDER_TIMELINE` (miễn phí).
-5. Render Worker kiểm schema snapshot, dựng khung hình (Ken Burns, chuyển cảnh, phụ đề dựng sẵn trong snapshot; watermark đường kẻ + logo nếu tài khoản Free) theo đoạn song song; dùng file dẫn xuất cho clip đã đổi tốc độ; trộn thuyết minh + nhạc (ducking) + SFX; chuẩn hóa loudness; encode H.264/AAC.
+5. Render Worker kiểm schema snapshot, dựng khung hình (Ken Burns, chuyển cảnh, phụ đề dựng sẵn trong snapshot; watermark đường kẻ + logo nếu tài khoản Free) trong một lượt Remotion; trộn thuyết minh + nhạc (ducking) + SFX; chuẩn hóa loudness; encode H.264/AAC.
 6. Tiến độ gửi qua SSE; Editor có thể hủy.
 7. Hoàn tất: tạo Render `READY` + SRT/VTT; thông báo "Video đã sẵn sàng" và mở UC-06.17.
 
 **Luồng thay thế / ngoại lệ**
+- **1b.** *Xuất cả dự án* (MVP, không qua trình chỉnh sửa, QĐ-141): hệ thống lấy timeline của mọi chương theo thứ tự (chương chưa có timeline thì tự dựng bản nháp, UC-06.01a), chạy UC-06.16a cho từng chương và hiện báo cáo gộp (chương nào chưa đạt, tổng thời lượng). Editor chọn độ phân giải và xác nhận như bước 3. Hệ thống ghép snapshot các chương nối tiếp (cắt thẳng giữa hai chương; khung hình, kiểu phụ đề, âm lượng tổng theo chương đầu) thành một snapshot phạm vi `PROJECT`, tạo một job `RENDER_TIMELINE`; các bước 5–7 như luồng chính. Giới hạn Free tính theo tổng thời lượng video.
+- **1c.** Xuất cả dự án khi có chương chưa đạt (chưa "Sẵn sàng dựng", thiếu ảnh, thuyết minh lỗi hoặc `OUTDATED`): `422`, liệt kê chương và lý do; Editor xử lý từng chương rồi xuất lại.
 - **2a.** Chưa đạt điều kiện: liệt kê vị trí lỗi trên timeline, có nút nhảy tới.
 - **3a.** Tài khoản Free hết lượt render hoặc video vượt số phút còn lại trong tháng: `403 FREE_LIMIT_REACHED`, gợi ý nạp tiền (UC-09.03) hoặc đợi tháng sau.
 - **3b.** Tài khoản Free chọn 1080p: không cho chọn, ghi chú "1080p khi đã nạp tiền".
@@ -492,12 +493,12 @@
 | Tiền điều kiện | Timeline đang mở |
 | Hậu điều kiện | **Thành công:** có báo cáo điều kiện; chỉ cho xuất khi mọi mục đạt. **Tối thiểu:** không thay đổi dữ liệu |
 | Kích hoạt | UC-06.16 bước 2; mỗi lần Editor mở hộp thoại xuất |
-| Truy vết | BR-11, BR-23, BR-24, BR-27, BR-34; IC-10, IC-11; NFR-INT-01; API 2.6 `GET …/timelines/{tlid}/readiness` |
+| Truy vết | BR-11, BR-23, BR-24, BR-27, BR-34; IC-10, IC-11; NFR-INT-01; API 2.6 `GET …/timelines/{tlid}/readiness`; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**
 1. Hệ thống kiểm tra mọi shot hiện hành có ảnh `DONE`.
-2. Hệ thống kiểm tra mọi shot có thuyết minh `DONE` (sau MVP: `VERIFIED` hoặc `ACCEPTED`), không có `OUTDATED`; clip có `playback_rate ≠ 1` đã có file dẫn xuất (IC-17).
+2. Hệ thống kiểm tra mọi shot có thuyết minh `DONE` (sau MVP: `VERIFIED` hoặc `ACCEPTED`), không có `OUTDATED`.
 3. Hệ thống kiểm tra timeline thỏa IC-10 và BR-24.
 4. Hệ thống kiểm tra tổng ký tự các đoạn nguồn có clip thuyết minh bằng tổng ký tự chương (100%).
 5. Hệ thống liệt kê **cảnh báo không chặn**: các shot được đánh dấu cần sinh lại (BR-34); với tài khoản Free thêm lượt render, phút video còn lại và ghi chú watermark.
@@ -506,7 +507,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **6a.** Bất kỳ mục điều kiện nào không đạt (bước 1–4): nút "Xuất" bị vô hiệu hóa; nếu vẫn gọi tạo render thì `422` (IC-11). Cảnh báo ở bước 5 không làm vô hiệu hóa nút.
-- ***a.** Phạm vi cả dự án: độ phủ tính trên tổng ký tự của mọi chương trong timeline.
+- ***a.** Xuất cả dự án (UC-06.16 nhánh 1b): kiểm từng chương; độ phủ tính trên tổng ký tự của mọi chương.
 
 ### UC-06.16b Chia video thành phần
 <a id="uc-0616b"></a>
@@ -519,7 +520,7 @@
 | Tiền điều kiện | Timeline thỏa UC-06.16a |
 | Hậu điều kiện | **Thành công:** nhiều Render cùng `render_group_id`, mỗi phần có `part_no`; ghép lại đủ 100% truyện. **Tối thiểu:** không cắt giữa một shot |
 | Kích hoạt | Chọn "Chia thành phần" trong hộp thoại xuất |
-| Truy vết | FR-EDT-23; BR-23; IC-11; 04 §3.5 `renders`; API 2.6 `POST …/renders {splitBy, maxMinutes}` |
+| Truy vết | FR-EDT-23; BR-23; IC-11; 04 §3.5 `renders`; API 2.6 `POST …/renders {splitBy, maxMinutes}`; seq-chinh-sua-xuat-video |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -546,7 +547,7 @@
 | Tiền điều kiện | Có Render `READY` |
 | Hậu điều kiện | **Thành công:** file được tải qua link ký có thời hạn 15 phút |
 | Kích hoạt | "Tải xuống" ở thông báo hoặc danh sách Renders |
-| Truy vết | FR-EDT-24, 25; NFR-SEC-05 |
+| Truy vết | FR-EDT-24, 25; NFR-SEC-05; seq-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
 
 **Luồng chính**

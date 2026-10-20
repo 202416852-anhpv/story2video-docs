@@ -74,7 +74,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-PRJ-04 | Tạo dự án trống rồi viết trực tiếp trong Workspace. | M | P1 | QS |
 | FR-PRJ-05 | Bố cục Studio: thanh trái gồm các nhóm Write (Workspace, Split into chapters), Your world (Story Assets, Timeline, Relationships, Visual Rules), Make·Media (Sinh tư liệu, Storyboard, Ảnh, Thuyết minh theo chương), Make·Video (Trình chỉnh sửa, Renders), danh sách chương, Settings. Vùng giữa là các tab có thể đóng. Màn hình hiện tại thể hiện trên URL (`?v=<view>[:<id>]`) để chia sẻ link. Find & replace, Archives, Project Assets, panel Notes/Director: sau MVP. | M | P1 | QS |
 | FR-PRJ-06 | Map overview: sơ đồ chặng (1 Nhập truyện → 2 Chia chương → 3 Thế giới truyện → 4 Sinh tư liệu → 5 Chỉnh sửa video → 6 Xuất & tải), làm nổi bật chặng hiện tại; bấm một chặng để chuyển tới. Trang tĩnh, khoảng 1–2 ngày công. | S | P3 ✂2 | QS (điều chỉnh), QĐ-61 |
-| FR-PRJ-07 | Settings (chỉ Owner): style, mô hình ảnh, ngôn ngữ, thời lượng mục tiêu mỗi ảnh (mặc định 15 s đọc), hiển thị, **tỷ lệ khung hình video mục tiêu (16:9 / 9:16 / 1:1)**. Ảnh shot được sinh theo tỷ lệ này. Lưu ngay khi chọn. | M | P1 | QS + ĐX |
+| FR-PRJ-07 | Settings (chỉ Owner): style, mô hình ảnh, ngôn ngữ, thời lượng mục tiêu mỗi ảnh (mặc định 20 s đọc, khoảng 3 ảnh/phút, QĐ-112), hiển thị, **tỷ lệ khung hình video mục tiêu (16:9 / 9:16 / 1:1)**. Ảnh shot được sinh theo tỷ lệ này. Lưu ngay khi chọn. | M | P1 | QS + ĐX |
 | FR-PRJ-08 | Share (chỉ Owner): tạo, sao chép và thu hồi link mời; ai mở link sẽ tham gia làm Editor. | S | Sau | QS, QĐ-04 |
 | FR-PRJ-09 | Collaborators: Owner xem danh sách thành viên, xóa thành viên. | S | Sau | QS, QĐ-04 |
 | FR-PRJ-10 | Ma trận quyền theo [08](08-quy-tac-nghiep-vu.md) §2. | M | P1 | QS |
@@ -133,7 +133,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 
 | Mã | Yêu cầu | Ưu tiên | GĐ | Nguồn |
 |---|---|---|---|---|
-| FR-BOK-01 | Tạo bản nháp storyboard cho chương: AI chia **toàn bộ** văn bản chương thành N shot liên tục. Mỗi shot gắn với một **đoạn nguồn** `[sourceStart, sourceEnd)` (offset ký tự, ranh giới tại cuối câu). N mặc định suy từ độ dài chương và mục tiêu "thời lượng mục tiêu mỗi ảnh" (mặc định 8–20 s đọc). | M | P1 | QS + ĐX |
+| FR-BOK-01 | Tạo bản nháp storyboard cho chương: AI chia **toàn bộ** văn bản chương thành N shot liên tục. Mỗi shot gắn với một **đoạn nguồn** `[sourceStart, sourceEnd)` (offset theo code unit UTF-16 trên văn bản NFC, ADR-26; ranh giới tại cuối câu). N mặc định suy từ độ dài chương và mục tiêu "thời lượng mục tiêu mỗi ảnh" (8–30 s đọc, mặc định 20 s, QĐ-112). | M | P1 | QS + ĐX |
 | FR-BOK-01a | **Validator phủ kín (BR-20):** khi lưu bản nháp, server kiểm tra các đoạn nguồn sắp theo thứ tự, liên tục, không chồng lấn, phủ `[0, len(chapter))`. Nếu LLM trả sai, server **sửa ranh giới tất định**: snap về ranh giới câu gần nhất; khoảng hở gộp vào shot trước; chồng lấn cắt theo shot sau. Không bao giờ đổi chữ. Sơ đồ `act-phu-kin-van-ban.puml`. | M | P1 | ĐX |
 | FR-BOK-01b | Màn hình storyboard hiển thị đoạn nguồn của mỗi shot (nguyên văn, chỉ đọc). **Dời ranh giới** giữa hai shot liền kề làm ở **Workspace** (M03): vạch ranh giới shot hiện trên văn bản chương khi chương có storyboard hiện hành; kéo vạch theo câu. Sau khi dời, AI viết lại brief của 2 shot bị ảnh hưởng (có phí: hiện giá ước tính, chờ xác nhận, BR-33). Không có nút ◀ ▶ trong storyboard. | M | P2 ✂8 | ĐX, QĐ-52 |
 | FR-BOK-02 | Quản lý bản nháp: chọn, đổi tên, nhân bản, xóa, so sánh hai bản; "Set as current" (BR-07). | S | Sau | QS |
@@ -159,10 +159,10 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 
 | Mã | Yêu cầu | Ưu tiên | GĐ | Nguồn |
 |---|---|---|---|---|
-| FR-NAR-01 | Cài đặt thuyết minh của dự án: ngôn ngữ (Auto theo truyện hoặc chọn; tiếng Việt, tiếng Anh), **giọng đọc** (chọn từ danh mục, nghe mẫu), tốc độ (0,8–1,3×), cao độ, khoảng nghỉ giữa câu và giữa đoạn, **bật/tắt từng quy tắc ký hiệu** ([08 §6](08-quy-tac-nghiep-vu.md)). | M | P2 | ĐX, QĐ-56 |
+| FR-NAR-01 | Cài đặt thuyết minh của dự án: ngôn ngữ (Auto theo truyện hoặc chọn; tiếng Việt, tiếng Anh), **giọng đọc** (chọn từ danh mục, nghe mẫu), tốc độ đọc (0,8–1,3×; **duy nhất** cho cả dự án, áp ở bước TTS: tham số của model hoặc đổi tốc độ audio giữ cao độ ngay sau khi tổng hợp, trước khi căn timestamp; QĐ-140), cao độ, khoảng nghỉ giữa câu và giữa đoạn, **bật/tắt từng quy tắc ký hiệu** ([08 §6](08-quy-tac-nghiep-vu.md)). | M | P2 | ĐX, QĐ-56 |
 | FR-NAR-02 | **Văn bản TTS = đúng đoạn nguồn của shot** (`chapter.content[sourceStart:sourceEnd]`). Người dùng không có ô nào để sửa lời đọc trong phân hệ này; muốn đổi lời thì phải sửa chính văn bản chương (BR-19, BR-21). | M | P2 | ĐX |
 | FR-NAR-03 | **Chuẩn hóa chỉ cho phát âm, không đổi văn bản:** quy tắc tất định áp lên *bản đọc*: bỏ ký hiệu trình bày theo [08 §6](08-quy-tac-nghiep-vu.md) nhưng **giữ chữ bên trong** (`*Bố*` đọc "Bố"); dòng phân cách thành khoảng lặng 0,5 s; đọc số, ngày, đơn vị; ngắt nghỉ theo dấu câu. Văn bản hiển thị và phụ đề vẫn là nguyên văn. Mọi quy tắc được ghi log để truy vết. | M | P2 | ĐX, QĐ-56 |
-| FR-NAR-04 | **Từ điển phát âm theo dự án:** cặp *từ viết → cách đọc* (tên riêng, từ mượn, từ Hán Việt). Chỉ ảnh hưởng audio (SSML alias/phoneme), không đổi chữ. | S | P2 ✂6 | ĐX |
+| FR-NAR-04 | **Từ điển phát âm theo dự án:** cặp *từ viết → cách đọc* (tên riêng, từ mượn, từ Hán Việt). Chỉ ảnh hưởng audio, không đổi chữ. MVP (TTS tự host) chỉ dùng cách đọc thay thế (`ALIAS`); phiên âm `PHONEME` qua SSML khi dùng Vbee AIVoice sau MVP (ADR-30). | S | P2 ✂6 | ĐX |
 | FR-NAR-05 | **Đa giọng (tùy chọn):** gán giọng riêng cho lời thoại trong ngoặc kép của từng nhân vật (nhận diện bằng LLM, người dùng duyệt). Nội dung đọc vẫn nguyên văn; chỉ đổi giọng. MVP đọc một giọng kể. | C | Sau | ĐX, QĐ-60 |
 | FR-NAR-06 | Sinh thuyết minh cho một shot, một chương hoặc cả dự án; hiện giá ước tính theo số ký tự trước khi chạy. Đoạn vượt giới hạn provider được chia theo câu rồi nối audio. Lấy timestamp từng từ (từ TTS hoặc forced alignment) để dựng phụ đề. | M | P2 | ĐX |
 | FR-NAR-07 | **Kiểm chứng lời đọc bằng ASR:** sau TTS, chạy STT so với văn bản nguồn, tính WER và đánh dấu các từ lệch. WER ≤ ngưỡng (mặc định 3%) thì `VERIFIED`, ngược lại `NEEDS_REVIEW`; shot `NEEDS_REVIEW` được nghe lại, sửa từ điển và sinh lại, hoặc **chấp nhận thủ công** (ghi người và thời điểm). Trong MVP, WER ≤ 3% được bảo đảm ở khâu chọn provider (`EVAL-wer-golden`). | S | Sau | ĐX, QĐ-54 |
@@ -177,10 +177,10 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 
 | Mã | Yêu cầu | Ưu tiên | GĐ | Nguồn |
 |---|---|---|---|---|
-| FR-EDT-01 | Mở trình chỉnh sửa cho một chương hoặc cả dự án (các chương nối tiếp). **Bản nháp timeline** được dựng tự động từ tư liệu: track **Video** (mỗi shot một clip ảnh, thời lượng = audio + đệm 0,3 s / 0,5 s), track **Thuyết minh** (mỗi shot một clip audio, theo thứ tự), track **Phụ đề** (nguyên văn), track **Nhạc nền** và **SFX** để trống; mặc định Ken Burns luân phiên và crossfade 0,5 s. | M | P3 | ĐX |
+| FR-EDT-01 | Mở trình chỉnh sửa cho **một chương** (timeline cả dự án để chỉnh trên một trục: sau MVP, QĐ-141). **Bản nháp timeline** được dựng tự động từ tư liệu: track **Video** (mỗi shot một clip ảnh, thời lượng = audio + đệm 0,3 s / 0,5 s), track **Thuyết minh** (mỗi shot một clip audio, theo thứ tự), track **Phụ đề** (nguyên văn), track **Nhạc nền** và **SFX** để trống; mặc định Ken Burns luân phiên và crossfade 0,5 s. | M | P3 | ĐX |
 | FR-EDT-02 | Loại track: Video (ảnh), Phụ đề, Thuyết minh (khóa), Nhạc nền (có thể nhiều track), SFX (có thể nhiều track); Overlay (chữ, logo, hình) sau MVP. Thêm, xóa, đổi tên, ẩn, tắt tiếng track (trừ track Thuyết minh: không xóa được). | M | P3 (một phần ✂10) | ĐX |
 | FR-EDT-03 | Thao tác timeline: kéo thả, di chuyển, cắt (split), trim đầu/cuối, nhân bản, xóa clip; chọn nhiều; zoom và cuộn timeline; snap theo playhead và mép clip; thước thời gian; phím tắt; **undo/redo** tối thiểu 100 bước. | M | P3 (một phần ✂10) | ĐX |
-| FR-EDT-04 | **Ràng buộc nguyên văn (BR-24):** clip thuyết minh **không** được cắt, trim, xóa, đổi thứ tự hay chồng lên nhau. Chỉ được (a) dời thời điểm bắt đầu để chèn khoảng lặng, (b) chỉnh âm lượng hoặc keyframe âm lượng, (c) **đổi tốc độ 0,8×–1,25×**, giữ cao độ, bằng file audio dẫn xuất sinh ở server để preview và bản xuất giống nhau (ADR-24); clip ảnh và phụ đề của shot co giãn theo. Clip ảnh của một shot phải hiển thị **suốt** thời gian đọc đoạn của shot đó; được dài hơn, không được ngắn hơn. | M | P3 | ĐX, QĐ-53 |
+| FR-EDT-04 | **Ràng buộc nguyên văn (BR-24):** clip thuyết minh **không** được cắt, trim, xóa, đổi thứ tự hay chồng lên nhau. Chỉ được (a) dời thời điểm bắt đầu để chèn khoảng lặng, (b) chỉnh âm lượng hoặc keyframe âm lượng. **Không** đổi tốc độ từng clip; muốn đọc nhanh/chậm hơn thì đổi tốc độ đọc của dự án (FR-NAR-01) và sinh lại thuyết minh (QĐ-140). Clip ảnh của một shot phải hiển thị **suốt** thời gian đọc đoạn của shot đó; được dài hơn, không được ngắn hơn. | M | P3 | ĐX, QĐ-53 |
 | FR-EDT-05 | Clip tiêu đề (tên truyện, tên chương, tác giả) và clip kết (credit) dạng overlay trên nền màu hoặc ảnh; không có thuyết minh (tiêu đề chương không đọc, QĐ-60). | S | Sau | ĐX |
 
 #### 2.6.2 Hình ảnh & chuyển cảnh
@@ -212,7 +212,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 |---|---|---|---|---|
 | FR-EDT-17 | **Xem trước** theo thời gian thực trong trình duyệt (không cần render): play/pause, tua, scrub; hình, thuyết minh, nhạc, SFX, phụ đề đồng bộ. | M | P3 ✂9 | ĐX |
 | FR-EDT-18 | **Tự động lưu** (debounce ≤ 2 s) với khóa lạc quan theo version. Lịch sử phiên bản timeline (đặt tên, khôi phục) và xử lý xung đột giữa nhiều người: sau MVP. | M | P3 | ĐX |
-| FR-EDT-19 | **Đồng bộ với tư liệu:** khi shot được sinh lại ảnh hoặc thuyết minh, hoặc storyboard thay đổi (tách/gộp shot, dời ranh giới), trình chỉnh sửa cập nhật clip tương ứng và **giữ** các chỉnh sửa của người dùng (hiệu ứng, chuyển cảnh, tốc độ, nhạc, SFX); clip bị ảnh hưởng được đánh dấu để người dùng kiểm tra. | M | P3 | ĐX |
+| FR-EDT-19 | **Đồng bộ với tư liệu:** khi shot được sinh lại ảnh hoặc thuyết minh, hoặc storyboard thay đổi (tách/gộp shot, dời ranh giới), trình chỉnh sửa cập nhật clip tương ứng và **giữ** các chỉnh sửa của người dùng (hiệu ứng, chuyển cảnh, âm lượng, nhạc, SFX); clip bị ảnh hưởng được đánh dấu để người dùng kiểm tra. | M | P3 | ĐX |
 | FR-EDT-20 | Mọi thao tác chỉnh sửa trên timeline miễn phí. | M | P3 | ĐX |
 
 #### 2.6.5 Xuất & tải video
@@ -224,6 +224,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | FR-EDT-23 | Tiến độ xuất theo % qua SSE; có thể hủy. | M | P3 | ĐX |
 | FR-EDT-24 | Mỗi lần xuất tạo **phiên bản** render; danh sách Renders theo chương hoặc dự án; đặt bản chính; xóa. | M | P3 | ĐX |
 | FR-EDT-25 | **Tải xuống** MP4, phụ đề SRT/VTT và audio thuyết minh (MP3/WAV) qua link ký có thời hạn. | M | P3 | ĐX |
+| FR-EDT-28 | **Xuất cả dự án thành một video** không qua trình chỉnh sửa: hệ thống ghép timeline của từng chương (bản đã chỉnh, hoặc bản nháp tự dựng nếu chương chưa mở trình chỉnh sửa) nối tiếp theo thứ tự chương, cắt thẳng giữa hai chương, rồi render một lần. Mọi chương phải đạt điều kiện xuất (FR-EDT-22); giới hạn Free tính theo tổng thời lượng (BR-27). | M | P3 | QĐ-141 |
 | FR-EDT-26 | Chia video dài theo chương hoặc theo giới hạn thời lượng (vd. ≤ 10 phút), cắt tại ranh giới shot. | S | Sau | ĐX |
 
 ### 2.7 M07 — AI Director (DIR) · sau MVP
@@ -293,7 +294,7 @@ Sơ đồ: `../so-do/01-use-case/uc-tong-quan.puml`, `../so-do/01-use-case/uc-st
 | IF-03 | Image (Google Gemini Image, QĐ-120) | Text-to-image có ảnh tham chiếu (≥ 3 ảnh), edit theo hướng dẫn bằng lời |
 | IF-04 | Forced aligner / STT (WhisperX tự host) | Timestamp cấp từ cho audio + văn bản đã biết (tiếng Việt, tiếng Anh) khi TTS không trả timestamp; STT để tính WER (bộ đánh giá ở P0; kiểm chứng từng shot sau MVP) |
 | IF-05 | TTS | TTS chất lượng cao tiếng Việt và tiếng Anh, đọc **đúng văn bản đầu vào** (không "cải biên"). **MVP: model tự host** trên GPU của nhóm, nhận chữ thuần (không cần SSML; ngắt nghỉ do adapter chèn, cách đọc riêng bằng alias), timestamp lấy từ aligner (QĐ-121, ADR-30). **Sau MVP: Vbee AIVoice**, dùng SSML (alias/phoneme/break) và timestamp nếu có |
-| IF-09 | Render engine | FFmpeg (zoompan, xfade, subtitles/ASS, sidechaincompress để ducking, rubberband/atempo để đổi tốc độ giữ cao độ) hoặc Remotion; chạy trong hạ tầng của hệ thống |
+| IF-09 | Render engine | Remotion dựng khung hình (cùng component với preview, ADR-13) + FFmpeg (amix, sidechaincompress để ducking, loudnorm, encode); chạy trong hạ tầng của hệ thống |
 | IF-06 | Payment | Checkout có host ở chế độ sandbox, webhook có chữ ký; portal sau MVP |
 | IF-07 | Object storage | S3-compatible, presigned URL |
 | IF-08 | Email | Email giao dịch (cảnh báo trần chi tiêu cho Admin, thông báo xuất video) |

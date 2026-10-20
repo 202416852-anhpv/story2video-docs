@@ -2,7 +2,7 @@
 
 > Ghi các quyết định đã chốt của nhóm (ngày, nội dung, lý do). Không cần duyệt riêng; khi bất đồng, PO quyết định cuối (QĐ-50).
 > Nguồn: 4 vòng câu hỏi chốt phạm vi và kế hoạch ngày 2026-10-20 (file câu hỏi đã được xóa sau khi chốt; nội dung trả lời được ghi đầy đủ ở đây). Mã ở cột Nguồn: **A/B/C/D…** = vòng 1, **V2 / V3 / V4 + số câu** = vòng 2–4.
-> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16; mục 11 áp ở phiên bản 1.18.
+> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16; mục 11 áp ở phiên bản 1.18; mục 12 áp ở phiên bản 1.22.
 
 ## 1. Bối cảnh, năng lực, lộ trình
 
@@ -63,7 +63,7 @@
 | QĐ-50 | Quy trình ra quyết định: họp chốt cả nhóm; bất đồng thì PO quyết định cuối | C6, V2 11 | 09 §2 |
 | QĐ-51 | Bỏ hẳn "Fix a spot" (inpainting): xóa UC-05.10b, `edit_kind = INPAINT`, `mask_media_id`, tham số `mask`, phần "chỉnh ảnh theo mask" trong A-01 | B3 | 01, 02, 03-M05, 04, 05, 06 |
 | QĐ-52 | Dời ranh giới shot làm ở **Workspace (M03)**: hiện vạch ranh giới shot khi chương đã có storyboard, kéo vạch theo câu. Sau khi dời, AI viết lại brief của 2 shot bị ảnh hưởng (có phí, báo giá và chờ xác nhận). Bỏ nút ◀ ▶ trong storyboard; tách, gộp, xóa shot vẫn ở storyboard | B4, V2 8 | FR-BOK-01b, UC-03.02a, BR-33 |
-| QĐ-53 | Cho đổi tốc độ clip thuyết minh trong khoảng **0,8×–1,25×** (giữ cao độ, phụ đề co giãn theo) | B5 | BR-24, FR-EDT-04, UC-06.02 |
+| QĐ-53 | *(Thay bằng QĐ-140)* Cho đổi tốc độ clip thuyết minh trong khoảng **0,8×–1,25×** (giữ cao độ, phụ đề co giãn theo) | B5 | BR-24, FR-EDT-04, UC-06.02 |
 | QĐ-54 | Kiểm chứng lời đọc thủ công là M: mỗi shot có "Nghe" và "Đánh dấu cần sinh lại", **không bắt buộc** nghe hết mới được xuất. Kiểm chứng ASR từng shot (WER, `NEEDS_REVIEW`, chấp nhận thủ công) là S, sau MVP. WER ≤ 3% bảo đảm ở **khâu chọn provider** (`EVAL-wer-golden`, P0) | B1, V2 3 | BR-11, BR-23, FR-NAR-07, 08 |
 | QĐ-55 | BR-23 nới thành: xuất được khi độ phủ 100%, mọi shot có ảnh `DONE` và thuyết minh `DONE`, không clip nào `OUTDATED` | V2 3 | BR-23, FR-EDT-22 |
 | QĐ-56 | Ký hiệu trình bày: **đọc chữ, bỏ ký hiệu** (`*Bố*` đọc "Bố"); phụ đề **hiện nguyên** `*Bố*`. Dòng phân cách `---` không đọc (lặng 0,5 s) và không có phụ đề. Danh sách mặc định toàn hệ thống, mỗi dự án bật/tắt từng mẫu | A5, V2 4.1–4.3, V3 ghi chú | BR-19, BR-22, 08 §6 |
@@ -150,3 +150,21 @@ Nguồn: [13 — Tích hợp hệ thống AI bên ngoài](tai-lieu/13-tich-hop-h
 | QĐ-129 | (ĐX-AI-06) Báo giá chỉ dùng hệ số ký tự/token cục bộ; tokenizer thật chỉ dùng để hiệu chỉnh hệ số ở P0 | 05 §7.1 |
 | QĐ-130 | (ĐX-AI-07) Ghi bảng ánh xạ `jobs.type` ↔ `price_rules.operation` vào 08 §3.2 | 08 §3.2 |
 | QĐ-131 | (ĐX-AI-08) **Nghe thử phát âm là ngoại lệ đồng bộ** của AG-01: báo giá → giữ chỗ trần ngày + HOLD → gọi TTS (timeout 15 s, không thử lại) → CAPTURE/RELEASE trong cùng request; vẫn ghi `ai_usage_records` | 05 AG-01, §6.1; 06 |
+
+## 12. Rà soát kỹ thuật: bỏ phần làm quá mức cần cho MVP (2026-10-20)
+
+Áp ở phiên bản 1.22 (QĐ-139..141: phiên bản 1.23). Bối cảnh: closed beta 20 người, 5 người đồng thời, một máy staging, một máy GPU (QĐ-71). Các phần dưới đây giữ trong thiết kế sau MVP; port và ranh giới module không đổi.
+
+| Mã | Quyết định | Tài liệu |
+|---|---|---|
+| QĐ-132 | **Bỏ semaphore theo người dùng khỏi MVP** (ADR-28 thành sau MVP). MVP giới hạn đồng thời toàn hệ thống bằng `concurrency` của từng queue và rate limiter có sẵn của BullMQ; render 1 đang chạy/người, kiểm bằng DB lúc tạo job. Lý do: với 5 người đồng thời, semaphore chỉ đem lại công bằng nhưng thêm bộ đếm Redis có thể rò khi worker chết | 05 §6.1, §6.2, ADR-28; 08 BR-32; 07 NFR-SCAL-03; 13 §8 |
+| QĐ-133 | **Thử lại một tầng ở mức job**: mỗi lần thử của job gọi provider một lần; lỗi tạm thời → `RETRYING` → BullMQ thử lại theo backoff (tối đa 3 lần). Bỏ `RetryPolicy` lặp bên trong AI Gateway (trước đây hai tầng chồng nhau có thể thành 9 lời gọi, và `attempt` mang hai nghĩa). **Bỏ circuit breaker khỏi MVP** | 05 §6.1, §7.1; 13 §2, §7; 07 NFR-REL-04 |
+| QĐ-134 | **Chỉ job gốc giữ và quyết toán tiền** (WR-05 mới). Job con của Flow có `held_micro = 0`; job cha CAPTURE chi phí các con thành công × 110% (≤ HOLD), RELEASE phần còn lại, một lần. Bỏ "giữ thêm khi biết số shot" và việc chia HOLD cho từng con. Regenerate all: n job gốc tạo trong một giao dịch. Job cha đang chờ con không bị reconciler coi là treo | 08 WR-05; 05 §6.1, §6.2; 04 IC-05; seq-sinh-tu-lieu, seq-vong-doi-job |
+| QĐ-135 | **Bỏ `ModerationFilter` riêng khỏi MVP**; dựa vào bộ lọc an toàn có sẵn của Gemini (LLM, ảnh). Không kiểm duyệt văn bản truyện của chính người dùng hay audio TTS đọc nguyên văn | 05 §7.1; 13 §2, §6.3 |
+| QĐ-136 | **Nghe thử phát âm miễn phí** (sửa QĐ-131): vẫn đồng bộ, nhưng không báo giá, không tạo job, không HOLD, không tính vào trần ngày; rate limit 10 lần/phút/người, cache 24 giờ. Lý do: ≤ 200 ký tự trên TTS tự host tốn chưa tới 0,1 cent | 05 §6.1; 06 §2.5; 08 §3.2, BR-32; 13 §3 |
+| QĐ-137 | Đơn giản hóa khác: render một lượt `renderMedia` của Remotion (không tự chia đoạn rồi nối); Scheduler dùng BullMQ repeatable job, bỏ leader lock; `OpsBatcher` không có hàng đợi offline lưu bền; bỏ sự kiện SSE `media.progress` (trùng `illustration.ready`, `narration.updated`, `job.updated`); log có `jobId` thay cho OpenTelemetry trong MVP | 05 §4, §6.4, §6.6, §10; 06 §3; 07 NFR-MNT-03 |
+| QĐ-138 | Sửa số liệu không khớp: `target_shot_seconds` mặc định 20 s (khớp 3 ảnh/phút, QĐ-112; trước ghi 15 s); NFR-PERF-08 tính 36 ảnh/chương thay vì 10; NFR-PERF-01 đo ở 20 RPS cho closed beta (200 RPS sau MVP) | 02 FR-PRJ-07, FR-BOK-01; 04; 07 |
+| QĐ-139 | **Giữ giới hạn Free 10 phút video/tháng**: một chương thông thường dài khoảng 10 phút, nên tài khoản Free xuất được khoảng một chương mỗi tháng, khớp mức "$2 đủ khoảng 1 chương" (QĐ-36, QĐ-37) | 08 BR-27 |
+| QĐ-140 | **Bỏ tốc độ từng clip thuyết minh** (thay QĐ-53; bỏ ADR-24, IC-17, job `PROCESS_AUDIO_RATE`). Chỉ còn **một** tốc độ đọc cho cả dự án (`narration_settings.speed`, 0,8–1,3×), áp ở bước TTS: truyền cho model nếu hỗ trợ, nếu không adapter đổi tốc độ audio (giữ cao độ) ngay sau khi tổng hợp, **trước** khi căn timestamp. Đổi tốc độ đọc thì sinh lại thuyết minh. Timeline chỉ cho dời và chỉnh âm lượng clip thuyết minh | 01, 02 FR-NAR-01, FR-EDT-04; 04; 05; 06; 08 BR-24; 12; schema v2; M06 |
+| QĐ-141 | **MVP không có timeline cả dự án.** Trình chỉnh sửa chỉ làm theo chương. Thêm **xuất cả dự án tự động** (FR-EDT-28): ghép timeline từng chương (đã chỉnh hoặc bản nháp tự dựng) nối tiếp, cắt thẳng giữa hai chương, render một lần; mọi chương phải đạt điều kiện xuất. Timeline cả dự án để chỉnh trên một trục: sau MVP | 02 FR-EDT-01, FR-EDT-28; 04 `renders.scope`; 05; 06 `POST /projects/{pid}/renders`; 12 §3; schema v2; UC-06.01, UC-06.16 |
+

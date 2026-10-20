@@ -46,7 +46,7 @@
 | **Trình chỉnh sửa video (Editor)** | Công cụ dựng video trên timeline nhiều track: ảnh, thuyết minh (khóa), phụ đề, nhạc nền, SFX, overlay |
 | **Timeline / Track / Clip (item)** | Trục thời gian của video; mỗi track chứa các clip cùng loại |
 | **SFX (Sound effect)** | Hiệu ứng âm thanh ngắn (tiếng mưa, bước chân, pháo hoa…) đặt tại thời điểm cụ thể |
-| **Khóa thuyết minh** | Ràng buộc BR-24: clip thuyết minh không thể cắt, xóa, đảo thứ tự; chỉ dời thời điểm, chỉnh âm lượng và đổi tốc độ 0,8–1,25× |
+| **Khóa thuyết minh** | Ràng buộc BR-24: clip thuyết minh không thể cắt, xóa, đảo thứ tự; chỉ dời thời điểm và chỉnh âm lượng; tốc độ đọc đặt cho cả dự án |
 | **Loudness (LUFS)** | Độ to cảm nhận của âm thanh; chuẩn hóa về −14 LUFS cho mạng xã hội |
 | **Ken Burns** | Hiệu ứng zoom/lia chậm trên ảnh tĩnh |
 | **Chuyển cảnh (Transition)** | Hiệu ứng nối hai clip ảnh (fade, crossfade, wipe…) |
@@ -70,10 +70,14 @@
 | **Mock adapter** | Adapter giả lập provider AI, trả fixture, dùng cho dev và CI để không tốn tiền |
 | **Hold / Capture / Release** | Giữ giá ước tính / trừ chi phí thực × 110% / hoàn phần dư của một job |
 | **Ledger (Sổ cái)** | Bảng ghi thêm (append-only) mọi biến động số dư ví |
-| **Job** | Tác vụ bất đồng bộ (thường gọi AI) có vòng đời và chi phí |
+| **Job** | Tác vụ bất đồng bộ (thường gọi AI) có vòng đời và chi phí. **Job gốc** giữ và quyết toán tiền; **job con** trong một Flow chỉ ghi chi phí (WR-05) |
 | **AI Gateway** | Lớp nội bộ chuẩn hóa việc gọi nhiều nhà cung cấp AI |
 | **Adapter / Port** | Mẫu thiết kế tách interface (port) khỏi cài đặt theo provider (adapter) |
 | **TTS Server** | Dịch vụ nội bộ chạy model TTS mã nguồn mở trên GPU của nhóm, dùng cho thuyết minh trong MVP (ADR-30); sau MVP thay bằng Vbee AIVoice |
-| **Outbox pattern** | Ghi sự kiện vào DB trong cùng giao dịch, sau đó mới đẩy ra queue, để không mất job |
+| **Outbox pattern** | Ghi sự kiện vào DB trong cùng giao dịch, sau đó mới đẩy ra queue, để không mất job. Sau MVP; MVP enqueue sau commit + reconciler (ADR-23) |
+| **Reconciler** | Tác vụ định kỳ ở Scheduler: đẩy lại job `QUEUED` bị sót, cho job mất heartbeat về `FAILED` và quyết toán, mở khóa chương, đối soát sổ cái và trần chi tiêu ngày |
+| **Semaphore theo người dùng** | Bộ đếm Redis giới hạn số job ảnh / TTS chạy đồng thời của một người (ADR-28); sau MVP, MVP chỉ dùng `concurrency` của queue |
+| **Code unit UTF-16** | Đơn vị đếm offset và độ dài văn bản (chỉ số chuỗi JavaScript) trên văn bản NFC (ADR-26) |
+| **SSE (Server-Sent Events)** | Kênh một chiều server → trình duyệt để đẩy trạng thái job, tư liệu, timeline, render (06 §3) |
 | **Idempotency-Key** | Khóa giúp gửi lại cùng request mà không tạo trùng job hoặc trừ tiền hai lần |
 | **Clean-room** | Phát triển lại từ hành vi quan sát được, không dùng mã, tài nguyên hay khóa của hệ thống gốc |

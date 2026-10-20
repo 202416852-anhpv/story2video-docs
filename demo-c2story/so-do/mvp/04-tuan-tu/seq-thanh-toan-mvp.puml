@@ -1,52 +1,96 @@
 @startuml Seq_ThanhToan_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
 autonumber
-title UC-09.03 + UC-09.08 (MVP): Nạp tiền vào ví qua Stripe sandbox
+title UC-09.01 + UC-09.03 (+09.03a) + UC-09.05 + UC-09.06 + UC-09.08 (+09.08a) (MVP)\nXem giá, nạp tiền qua Stripe sandbox, webhook ghi sổ cái, xem số dư và lịch sử chi tiêu; WR-01..04, BR-27
 actor User
 participant "Web App" as Web
-participant "API" as API
+box "API Server — module billing" #F5F5F5
+participant "BillingController" as BC
+participant "TopupService" as TS
+participant "PaymentGatewayPort\n(StripeAdapter)" as PG
+participant "WebhookController\n+ SignatureVerifier" as WH
+participant "WalletService" as WAL
+participant "Realtime (SSE)" as RT
+end box
 database PostgreSQL as DB
 participant "Stripe\n(test mode)" as ST
 
-== Nạp tiền vào ví (UC-09.03) ==
-User -> Web : Chọn số tiền ($2 / $5 / $10 / khác)
-Web -> API : POST /billing/topup-sessions {amountUsd}
-alt ngoài khoảng $1–$100
-    API --> Web : 400 VALIDATION_ERROR
+== Xem bảng giá và ví (UC-09.01, UC-09.05) ==
+User -> Web : Mở Pricing / Dashboard
+Web -> BC : GET /pricing
+BC -> DB : price_rules hiệu lực, giới hạn Free, tiền dùng thử
+BC --> Web : cách tính (chi phí thực × 110%), đơn giá tham khảo
+Web -> BC : GET /me/wallet
+BC -> WAL : summary(userId)
+WAL -> DB : wallets (available, held, topup_total);\nđếm phần Free đã dùng trong tháng
+WAL --> Web : {availableUsd, heldUsd, accountStatus: FREE | PAID, freeUsage}
+
+== Nạp tiền (UC-09.03, UC-09.03a) ==
+User -> Web : Chọn $2 / $5 / $10 / số khác
+Web -> BC : POST /billing/topup-sessions {amountUsd}
+BC -> TS : createTopup(userId, amountUsd)
+alt ngoài $1–$100
+    TS --> Web : 400 VALIDATION_ERROR
 else hợp lệ
-    API -> DB : INSERT payments (kind = TOPUP, status = PENDING, amount_micro)
-    API -> ST : (tạo customer nếu chưa có → users.gateway_customer_id)\nCreate Checkout Session một lần\n(client_reference_id = userId, metadata.paymentId, success_url, cancel_url)
-    ST --> API : session.url
-    API --> Web : {url}
-    Web -> ST : redirect (trang thanh toán sandbox, thẻ thử)
-    User -> ST : Thanh toán
-    alt hủy
-        ST --> Web : redirect cancel_url (không đổi gì)
-    else thanh toán xong
-        ST --> Web : redirect success_url → Dashboard ("Đang xử lý thanh toán")
+    opt users.gateway_customer_id rỗng
+        TS -> PG : createCustomer(email)
+        PG -> ST : POST /v1/customers
+        TS -> DB : users.gateway_customer_id
+    end
+    TS -> DB : INSERT payments(kind = TOPUP, status = PENDING, amount_micro)
+    TS -> PG : createCheckoutSession(mode = payment, amount,\nclient_reference_id = userId, metadata.paymentId,\nsuccess_url, cancel_url)
+    PG -> ST : POST /v1/checkout/sessions
+    alt Stripe lỗi / không phản hồi
+        PG --> TS : GatewayUnavailable
+        TS --> Web : báo lỗi, gợi ý thử lại (4a); payments vẫn PENDING rồi hết hạn
+    else
+        ST --> PG : {id, url}
+        TS -> DB : payments.gateway_ref = session.id
+        TS --> Web : 200 {url}
+        Web -> ST : chuyển hướng tới trang thanh toán (thẻ thử)
+        User -> ST : Thanh toán
+        alt hủy
+            ST --> Web : cancel_url (không đổi gì)
+        else xong
+            ST --> Web : success_url → Dashboard "Đang xử lý thanh toán"\n(chưa cộng tiền trước khi có webhook, 6a)
+        end
     end
 end
 
-== Webhook (UC-09.08) ==
-ST -> API : webhook checkout.session.completed
-API -> API : Xác thực chữ ký + timestamp (≤ 5 phút)
-alt chữ ký sai
-    API --> ST : 400, log bảo mật
-else chữ ký đúng
-    API -> DB : INSERT payment_events (gateway_event_id UNIQUE)
-    alt event mới
-        API -> DB : UC-09.08a — BEGIN; payments SUCCEEDED;\nwallets FOR UPDATE: available_micro += x, topup_total_micro += x;\nledger TOPUP (+x, payment_id); processed_at; COMMIT
+== Webhook ghi sổ cái (UC-09.08, UC-09.08a) ==
+ST -> WH : POST /webhooks/stripe (checkout.session.completed)
+WH -> WH : verify(Stripe-Signature, raw body, tolerance 5 phút)
+alt chữ ký sai / quá hạn
+    WH -> DB : audit_logs(SECURITY)
+    WH --> ST : 400
+else hợp lệ
+    WH -> DB : INSERT payment_events(gateway_event_id UNIQUE)\nON CONFLICT DO NOTHING
+    alt trùng event
+        WH --> ST : 200 (idempotent, bỏ qua)
+    else event mới
+        WH -> WAL : creditTopup(paymentId, amount)
+        WAL -> DB : BEGIN; payments FOR UPDATE (PENDING?)\n→ SUCCEEDED
+        WAL -> DB : wallets FOR UPDATE; available += x; topup_total += x;\nINSERT wallet_ledger_entries(TOPUP, +x, payment_id)
+        WAL -> DB : payment_events.processed_at; COMMIT
         alt lỗi xử lý
-            API -> DB : ROLLBACK
-            API --> ST : 500 (cổng gửi lại)
+            WAL -> DB : ROLLBACK
+            WH --> ST : 500 (Stripe gửi lại)
         else thành công
-            API --> ST : 200
-            API -> Web : SSE wallet.updated (lần nạp đầu: accountStatus = PAID, bỏ giới hạn Free)
+            WH --> ST : 200
+            WAL -> RT : publish wallet.updated
+            RT --> Web : SSE wallet.updated\n(lần nạp đầu: accountStatus = PAID, bỏ giới hạn Free, BR-27)
         end
-    else trùng event
-        API --> ST : 200 (idempotent, bỏ qua)
     end
 end
+note over WAL, DB : Phương án ✂1 (QĐ-116): nếu cắt nạp tiền sandbox,\nAdmin cộng tiền bằng CLI → cùng WalletService, bút toán TOPUP có actor_id
+
+== Lịch sử chi tiêu (UC-09.06) ==
+User -> Web : Mở "Lịch sử chi tiêu" (lọc theo dự án, loại, thời gian)
+Web -> BC : GET /me/wallet/ledger?projectId&type&from&to
+BC -> DB : wallet_ledger_entries JOIN jobs, Σ ai_usage_records.cost_usd
+BC --> Web : bút toán (TRIAL_GRANT, TOPUP, HOLD, CAPTURE, RELEASE),\nchi phí thực + phí 10% của từng job
 @enduml

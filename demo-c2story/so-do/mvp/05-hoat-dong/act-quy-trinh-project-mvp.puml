@@ -7,7 +7,8 @@ title Luồng chính của Studio: 6 bước từ truyện đến video (MVP)
 start
 partition "0. Tham gia beta" {
   :Đăng nhập SSO (email trong danh sách mời);
-  :Đồng ý xử lý dữ liệu; nhận $2 dùng thử;
+  :Hồ sơ + ví $2 dùng thử tạo tự động (JIT);
+  :Đồng ý xử lý dữ liệu;
 }
 partition "1. Nhập truyện" {
   :Nhập truyện giữ nguyên văn (Import)\n/ viết trong Workspace;
@@ -52,7 +53,7 @@ partition "4. Sinh tư liệu (ảnh + thuyết minh)" {
 partition "5. Chỉnh sửa video" {
   |Editor|
   :Mở trình chỉnh sửa timeline;
-  :Ken Burns, chuyển cảnh, khung hình,\nđổi tốc độ clip thuyết minh (0,8–1,25×);
+  :Ken Burns, chuyển cảnh, khung hình;
   :Thêm **nhạc nền** và **SFX** tải lên;
   :Định kiểu phụ đề;
   :Xem trước;

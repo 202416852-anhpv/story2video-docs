@@ -18,11 +18,11 @@ cloud "Container platform (ECS / Fly / GKE)" {
     node "API service (2..N)" {
         component "NestJS API + SSE" as api
     }
-    node "Scheduler (1, leader lock)" {
+    node "Scheduler (BullMQ repeatable jobs)" {
         component "Outbox relay\nReconciler\nCleanup" as sched
     }
     node "Job workers (autoscale)" {
-        component "orchestrator / llm /\nimage / tts / export" as wk
+        component "orchestrator / llm /\nimage / tts" as wk
     }
     node "Alignment (GPU nhỏ)" {
         component "WhisperX / MFA" as al
@@ -57,7 +57,7 @@ api --> pg
 api --> rd
 api --> sso : OIDC
 stripe --> api : webhook
-sched --> pg : outbox, reconcile
+sched --> pg : reconcile (+ outbox relay sau MVP)
 sched --> rd : enqueue, publish
 rd --> wk : job
 rd --> al : align

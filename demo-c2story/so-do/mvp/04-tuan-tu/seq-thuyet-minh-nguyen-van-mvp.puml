@@ -1,74 +1,124 @@
 @startuml Seq_ThuyetMinhNguyenVan_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
 autonumber
-title UC-05.13 (MVP): Sinh thuyết minh nguyên văn (BR-19)
+title UC-05.11 (+05.11a) + UC-05.12 + UC-05.13 (+05.13a, 05.13b) (MVP): Cài đặt giọng, nghe thử đồng bộ,\ntừ điển phát âm, sinh thuyết minh nguyên văn bằng TTS tự host; BR-18, BR-19, BR-22; ADR-26, ADR-30; QĐ-121..123, QĐ-131
+
 actor Editor
 participant "Web App" as Web
-participant "API" as API
+box "API Server — module media/narration" #F5F5F5
+participant "NarrationController\n→ NarrationService" as NS
+participant "PronunciationService" as PS
+participant "JobService\n+ WalletService" as JOBS
+participant "Realtime (SSE)" as RT
+end box
 database PostgreSQL as DB
-participant "TTS Worker" as W
+box "Worker" #F5F5F5
+participant "NarrateSegmentHandler" as W
+end box
+box "AI Gateway" #FFFFFF
 participant "SpeechNormalizer" as N
-participant "TTS Provider" as TTS
-participant "Alignment Worker\n(Aligner)" as AL
+participant "TtsPort\n(SelfHostedTtsAdapter)" as TA
+participant "AlignerPort / SttPort\n(WhisperXAlignerAdapter)" as AA
+participant "UsageMeter" as UM
+end box
+box "Máy GPU của nhóm" #EEF5FF
+participant "TTS Server\n(model tự host)" as TTS
+participant "Alignment Worker\n(WhisperX)" as AL
+end box
 participant "Object Storage" as S3
 
-Editor -> Web : "Sinh thuyết minh chương 1"
-Web -> API : GET .../narrations:quote
-API -> DB : SUM(source_end - source_start) các shot hiện hành
-API --> Web : {chars: 9895, estimatedCostUsd}
-Editor -> Web : Xác nhận
-Web -> API : POST .../chapters/{cid}/narrations (Idempotency-Key)
-API -> DB : BudgetGuard (BR-29); HOLD giá ước tính;\njobs NARRATE_CHAPTER + NARRATE_SEGMENT × n; khóa chương (BR-12)
-API --> Web : 202
+== Cài đặt thuyết minh (UC-05.11) và nghe mẫu giọng (UC-05.11a) ==
+Editor -> Web : Chọn ngôn ngữ, giọng, tốc độ, nghỉ câu / đoạn,\nbật / tắt quy tắc ký hiệu SYM-01..05
+Web -> NS : GET /voices?language → danh mục giọng (TTS tự host: giọng mẫu có quyền dùng)
+Editor -> Web : ▶ mẫu có sẵn → phát voices.sample_media_id (miễn phí)
+Web -> NS : PUT /projects/{pid}/narration-settings (If-Match)
+NS -> DB : narration_settings
+alt đã có thuyết minh (4a)
+    NS --> Web : 200 {affectedShots, estimatedCostUsd} → hỏi sinh lại toàn bộ
+end
 
-loop mỗi shot (song song có giới hạn)
-    W -> DB : UC-05.13a: đọc chapter.content, shot.source_start/end/hash
-    W -> W : text = content[start:end]
-    alt sha256(text) != shot.source_hash
-        W -> DB : narration OUTDATED; RELEASE phần của shot
-    else khớp
-        W -> N : UC-05.13b: text + symbol_rules + pronunciation_entries + settings
-        N --> W : SSML: bỏ ký hiệu trình bày, giữ chữ (SYM-01..04),\n"---" → lặng 0,5 s (SYM-05); break / alias / phoneme\n+ normalization_log
-        note right of N
-          Kiểm tra ngược: bỏ thẻ SSML và áp ngược alias
-          → chỉ thiếu các ký hiệu đã bỏ theo quy tắc
-          đang bật (BR-19)
-        end note
-        alt kiểm tra ngược thất bại
-            W -> DB : narration FAILED; RELEASE; cảnh báo P1
-        else đoạn chỉ có dòng phân cách
-            W -> DB : narration DONE = khoảng lặng 0,5 s, không phụ đề
-        else đạt
-            W -> TTS : speak(SSML, voice, speed)\n(chia theo câu nếu dài; retry khi lỗi tạm thời)
-            alt TTS lỗi sau retry / vi phạm chính sách
-                W -> DB : narration FAILED; RELEASE (không tự sửa văn bản, BR-18)
-            else audio hợp lệ
-                TTS --> W : audio (+ timestamp nếu có) + usage
-                W -> S3 : PUT narration.mp3
-                W -> W : word_timings = timestamp của TTS (nếu có)
-                alt TTS không trả timestamp
-                    W -> AL : align(audio, text)
-                    AL --> W : word_timings (lỗi sau retry → FAILED, RELEASE)
-                end
-                W -> DB : narrations(DONE, word_timings), flagged_at = NULL
-                W -> DB : CAPTURE chi phí thực × 110%; RELEASE phần dư
-            end
+== Từ điển phát âm (UC-05.12) + nghe thử đồng bộ, miễn phí (QĐ-131, QĐ-136) ==
+Editor -> Web : Thêm mục: từ viết, cách đọc, kiểu, phân biệt hoa thường
+Web -> PS : POST /projects/{pid}/pronunciations
+PS -> DB : ≤ 500 mục, không trùng từ viết (1a)
+alt giọng thuộc TTS tự host (1b)
+    PS -> PS : chỉ nhận kind = ALIAS (viết lại cách đọc bằng chữ)
+end
+PS -> DB : INSERT pronunciation_entries
+PS --> Web : 201 + danh sách shot chứa từ (gợi ý sinh lại)
+Editor -> Web : Nghe thử câu chứa từ (≤ 200 ký tự)
+Web -> PS : POST /projects/{pid}/pronunciations:preview {text}
+PS -> PS : rate limit ≤ 10 lần/phút/người (BR-32)
+PS -> N : normalize(text, settings, entries)
+PS -> PS : cache theo hash(R, giọng, tốc độ)? có → trả audio ngay
+PS -> TA : speak(R, voice, speed) — timeout 15 s, không thử lại
+TA -> TTS : POST /synthesize (HTTP nội bộ)
+alt thành công
+    TTS --> TA : audio (+ giây GPU)
+    PS --> Web : 200 audio/mpeg (cache 24 giờ; không tạo job, không giữ tiền)
+else lỗi / quá 15 s
+    PS --> Web : 503 → "Thử lại hoặc nghe mẫu có sẵn" (3c)
+end
+
+== Sinh thuyết minh (UC-05.13): chương hoặc từng shot ==
+Editor -> Web : "Sinh thuyết minh chương" | "Sinh lại" trên shot
+Web -> NS : GET …/chapters/{cid}/narrations:quote → {chars, estimatedCostUsd}
+Web -> NS : POST …/chapters/{cid}/narrations | …/shots/{shid}/narration:generate\n(Idempotency-Key)
+NS -> JOBS : chương: createPaidJob(GENERATE_MEDIA_CHAPTER {parts: [NARRATION]})\n→ con NARRATE_SEGMENT × n, HOLD ở job cha (WR-05); khóa chương (BR-12)\nmột shot: createPaidJob(NARRATE_SEGMENT) là job gốc, HOLD riêng
+ref over JOBS, DB : seq-vong-doi-job §2 (402 / 423 / 503)
+NS --> Web : 202
+
+loop mỗi NARRATE_SEGMENT (concurrency của queue tts, theo VRAM)
+    W -> DB : narrations(GENERATING, version_no + 1)
+    group UC-05.13a Cắt đoạn nguồn & kiểm tra hash
+        W -> DB : chapters.content; shots.source_start, source_end, source_hash
+        W -> W : text = content[start:end] (UTF-16, ADR-26);\nlà nơi **duy nhất** hình thành văn bản đọc
+        alt sha256(text) ≠ source_hash (2a)
+            W -> DB : narration OUTDATED; job FAILED; dừng
         end
     end
-    W --> Web : SSE narration.updated
+    group UC-05.13b Chuẩn hóa phát âm
+        W -> N : normalize(text, symbol_rules, pronunciation_entries, settings)
+        N -> N : SYM-01..04: bỏ ký hiệu trình bày, giữ chữ;\nSYM-05 "---" → PAUSE 0,5 s; số, ngày, đơn vị;\nALIAS theo từ điển (PHONEME bỏ qua với TTS tự host, 2b)
+        N -> N : sinh R (bản đọc), SSML, NormalizationMap\n(IDENTITY / DROP / EXPAND / ALIAS / PAUSE, 12 §2.2)
+        N -> N : kiểm tra ngược: bỏ thẻ, đảo alias → chỉ thiếu ký hiệu\nđã bỏ theo quy tắc đang bật (BR-19)
+        N --> W : R, ssml, map, normalization_log
+        alt kiểm tra ngược sai (4a)
+            W -> DB : narration FAILED; cảnh báo P1; **không gọi TTS**
+        else đoạn chỉ có dòng phân cách (1a)
+            W -> DB : narration DONE = khoảng lặng 0,5 s, không word_timings,\nkhông phụ đề (BR-22); không gọi TTS
+        end
+    end
+        W -> TA : speak(R, ssml, voice, language, speed)
+        TA -> TA : tách R tại các đoạn PAUSE; đoạn dài chia theo câu
+        loop mỗi đoạn
+            TA -> TTS : POST /synthesize {text chữ thuần, speaker, speed}\n(timeout ≥ 2× thời lượng dự kiến, QĐ-126)
+            TTS --> TA : wav
+        end
+        TA -> TA : ghép đoạn + chèn khoảng lặng đúng độ dài PAUSE; mã hóa mp3
+        TA -> UM : ai_usage_records(unit = SECONDS, giây GPU, QĐ-123)
+        TA --> W : audio, duration_ms (không có timestamp)
+        W -> S3 : PUT narrations/{id}.mp3
+        W -> AA : align(audio, R, language)
+        AA -> AL : job con VERIFY_NARRATION (queue align),\nworker Node chờ kết quả (waitUntilFinished)
+        AL -> S3 : đọc audio
+        AL -> AL : forced alignment trên R (WhisperX; MFA dự phòng)
+        AL --> AA : timings trên R (offset code point)
+        AA -> AA : code point → code unit UTF-16 (hàm dùng chung, MAP-10)
+        AA -> UM : ai_usage_records(SECONDS)
+    alt TTS / aligner lỗi sau retry, CONTENT_POLICY (4a, 5a)
+        W -> DB : narration FAILED; **không tự sửa văn bản** (BR-18)
+    else
+        W -> W : ánh xạ timings trên R → word_timings trên tọa độ chương\nqua NormalizationMap (12 §2.3); từ trong ALIAS / EXPAND\nnhận khoảng thời gian của cả đoạn
+        W -> DB : BEGIN; media_files; narrations(DONE, spoken_text = R, ssml,\nnormalization_log, word_timings, duration_ms, voice_id,\nsource_hash, flagged_at = NULL); shots.current_narration_id
+        W -> DB : job SUCCEEDED; [chỉ khi là job gốc] CAPTURE Σ cost × 1,10\n+ RELEASE dư; COMMIT
+    end
+    W -> RT : narration.updated
 end
-W -> DB : mở khóa chương
-
-opt Nghe & đánh dấu (UC-05.18, không bắt buộc trước khi xuất)
-    Editor -> Web : Nghe (tô sáng theo word_timings), "Đánh dấu cần sinh lại"
-    Web -> API : POST .../narration:flag
-    Editor -> Web : Thêm từ điển phát âm (UC-05.12) rồi "Sinh lại shot đã đánh dấu"
-    Web -> API : POST /media:generate {only: FLAGGED, parts: [NARRATION]}
-end
-note over Editor, S3
-  MVP không kiểm chứng WER từng shot; WER ≤ 3% được bảo đảm ở khâu
-  chọn provider (EVAL-wer-golden, P0) (QĐ-54).
-end note
+W -> DB : job cha xong: quyết toán cả lượt (WR-05: CAPTURE chi phí các con thành công,\nRELEASE phần còn lại) + mở khóa chương, cùng một giao dịch
+RT --> Web : SSE narration.updated
 @enduml

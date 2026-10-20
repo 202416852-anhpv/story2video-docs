@@ -34,11 +34,11 @@ Phần lớn sự nhất quán giữa các file dựa trên vài "nguồn" sau. 
 | `POST_CLASSES` trong `so-do/tools/gen_mvp.py`; dòng chứa `(sau MVP)` trong lớp | `so-do/mvp/02-du-lieu/domain-class-mvp.puml` |
 | `so-do/02-du-lieu/erd.puml` | `erd-1..6-*.puml` |
 
-File sinh tự động: `so-do/mvp/01-use-case/phan-ra/*-mvp.puml`, `so-do/mvp/02-du-lieu/*`, `so-do/02-du-lieu/erd-[1-6]-*.puml`, `tai-lieu/11-product-backlog.md`; màu `#DDDDDD` trên sơ đồ đầy đủ cũng do `gen_mvp.py` đặt.
+File sinh tự động: `so-do/mvp/01-use-case/phan-ra/*-mvp.puml`, `so-do/mvp/02-du-lieu/*`, `so-do/mvp/04-tuan-tu/*-mvp.puml` (từ bản đầy đủ có đánh dấu `'@sau-mvp` … `'@/sau-mvp` và `'@mvp `), `so-do/02-du-lieu/erd-[1-6]-*.puml`, `tai-lieu/11-product-backlog.md`; màu `#DDDDDD` trên sơ đồ đầy đủ cũng do `gen_mvp.py` đặt.
 
 Mục lục `00-muc-luc.md` §5 và RTM `09` §4 **không có script**: khi thêm, đổi tên, bỏ UC hoặc đổi giai đoạn thì cập nhật tay cả hai (kể cả bảng "Tổng hợp" và §4.12 Độ phủ). Mọi mã test dùng trong RTM phải có trong danh mục `09` §4.13 và ngược lại.
 
-Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, 5 tuần tự, quy trình, 2 trạng thái — danh mục ở `so-do/mvp/README.md`) phải sửa cùng lúc với bản đầy đủ cùng tên.
+Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, quy trình, 2 trạng thái — danh mục ở `so-do/mvp/README.md`) phải sửa cùng lúc với bản đầy đủ cùng tên.
 
 ## Cấu trúc tài liệu và truy vết
 
@@ -52,12 +52,12 @@ Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, 5 tu�
 
 ## Nguyên tắc nghiệp vụ không được phá
 
-- **Thuyết minh nguyên văn** (BR-19..BR-25): văn bản TTS = đúng đoạn nguồn của shot; các shot phủ kín 100% chương; AI không bao giờ ghi vào văn bản truyện; track thuyết minh khóa (chỉ dời, chỉnh âm lượng, đổi tốc độ 0,8–1,25×).
-- **Tốc độ đọc**: clip thuyết minh đổi tốc độ bằng file audio dẫn xuất sinh ở server, preview và render cùng phát ở tốc độ 1,0 (ADR-24); không dùng `playbackRate` của trình duyệt.
+- **Thuyết minh nguyên văn** (BR-19..BR-25): văn bản TTS = đúng đoạn nguồn của shot; các shot phủ kín 100% chương; AI không bao giờ ghi vào văn bản truyện; track thuyết minh khóa (chỉ dời, chỉnh âm lượng).
+- **Tốc độ đọc**: chỉ có **một** tốc độ đọc cho cả dự án (`narration_settings.speed`, 0,8–1,3×), áp ở bước TTS (tham số của model, hoặc adapter đổi tốc độ audio giữ cao độ trước khi căn timestamp). Không có tốc độ riêng từng clip trên timeline (QĐ-140; ADR-24 đã bỏ); preview và render phát audio ở tốc độ 1,0.
 - **Trần chi tiêu ngày** phải giữ chỗ nguyên tử trên `daily_ai_budgets` cùng giao dịch với HOLD (ADR-25), không đọc-rồi-so-sánh.
 - **Offset văn bản** luôn là code unit UTF-16 trên văn bản NFC (ADR-26); không dùng `char_length()` của Postgres cho phủ kín hay cắt văn bản.
 - **Nhà cung cấp AI** (QĐ-119..123): LLM và ảnh là Google Gemini; TTS trong MVP là model tự host (TTS Server, ADR-30), Vbee AIVoice sau MVP; Aligner/STT là WhisperX tự host; fallback chỉ cho LLM, không đổi provider ảnh/TTS giữa chừng.
-- **Job**: bảng `jobs` là nguồn sự thật, BullMQ chỉ vận chuyển; nhận việc bằng `UPDATE … WHERE status IN (…)`; giới hạn đồng thời theo người dùng bằng semaphore Redis, không dùng BullMQ Pro groups (ADR-28, ADR-29).
+- **Job**: bảng `jobs` là nguồn sự thật, BullMQ chỉ vận chuyển; nhận việc bằng `UPDATE … WHERE status IN (…)`; chỉ job gốc giữ/quyết toán tiền, job con của Flow không HOLD (WR-05); thử lại một tầng ở mức job (QĐ-133); MVP giới hạn đồng thời bằng `concurrency` của queue, semaphore theo người dùng là sau MVP (ADR-28, ADR-29).
 - **Tiền**: không còn "credit". Ví USD lưu micro-USD; giá = chi phí thực của provider × 110%; giữ giá ước tính tối đa → trừ chi phí thực → hoàn phần dư; tài khoản Free / Đã nạp tiền; trần chi tiêu AI $10/ngày.
 - **MVP chỉ có Owner**; Editor, cộng tác, AI Director (M07), thư viện (M08) là sau MVP nhưng đặc tả vẫn giữ.
 - Đã bỏ hẳn (không đưa lại trừ khi có QĐ mới): Fix a spot/inpainting, AI sinh nhạc/SFX, gợi ý SFX, credit hằng ngày, các UC-05.06d, 05.10b, 06.11b, 06.11c, 09.07.

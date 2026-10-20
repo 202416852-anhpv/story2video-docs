@@ -16,7 +16,7 @@
 | Hậu điều kiện | **Thành công:** có phiên ứng dụng (cookie httpOnly); `users` tồn tại, đồng bộ với claims và đã đồng ý xử lý dữ liệu; người dùng ở trang đã yêu cầu. **Tối thiểu:** không tạo phiên khi xác thực thất bại hoặc email chưa được mời; mọi lỗi bảo mật được ghi log |
 | Kích hoạt | Bấm "Đăng nhập" hoặc truy cập trang yêu cầu đăng nhập (vd. link mời) |
 | Quan hệ | include UC-01.01a, UC-01.01b, UC-01.01c, UC-01.01d |
-| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12; BR-30, BR-31; NFR-SEC-02 |
+| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12; BR-30, BR-31; NFR-SEC-02; seq-dang-nhap-sso |
 | Giai đoạn | P0 |
 
 **Luồng chính**
@@ -49,7 +49,7 @@
 | Tiền điều kiện | Có `code` và `state` ở callback; phiên đăng nhập tạm (UC-01.01 bước 2) còn lưu `state`, `nonce`, `code_verifier`, `returnTo` |
 | Hậu điều kiện | **Thành công:** claims hợp lệ (`sub`, `email`, `name`, `picture`, `locale`, `roles`) được chuyển cho UC-01.01b. **Tối thiểu:** không dùng code hoặc token chưa xác thực; mọi lỗi được ghi log bảo mật; không tạo phiên |
 | Kích hoạt | SSO chuyển trình duyệt về `/auth/callback?code&state` |
-| Truy vết | FR-AUTH-01..04; NFR-SEC-02; API 2.1 `/auth/callback` |
+| Truy vết | FR-AUTH-01..04; NFR-SEC-02; API 2.1 `/auth/callback`; seq-dang-nhap-sso |
 | Giai đoạn | P0 |
 
 **Luồng chính**
@@ -76,7 +76,7 @@
 | Tiền điều kiện | Claims đã xác thực từ UC-01.01a |
 | Hậu điều kiện | **Thành công:** có đúng một `users` ứng với `sso_subject = sub`, dữ liệu khớp claims; người dùng mới có ví với tiền dùng thử $2 (`TRIAL_GRANT`), trạng thái Free. **Tối thiểu:** email chưa được mời thì không tạo gì; lỗi ghi dữ liệu thì rollback, không tạo phiên |
 | Kích hoạt | UC-01.01 bước 6 |
-| Truy vết | FR-AUTH-04, 07, 11; FR-BIL-05, 10; BR-28, BR-30; IC-16; D-08; API 2.1 `/auth/callback`, `/me` |
+| Truy vết | FR-AUTH-04, 07, 11; FR-BIL-05, 10; BR-28, BR-30; IC-16; D-08; API 2.1 `/auth/callback`, `/me`; seq-dang-nhap-sso |
 | Giai đoạn | P0 |
 
 **Luồng chính**
@@ -107,7 +107,7 @@
 | Tiền điều kiện | Phiên ứng dụng vừa được tạo; có thể có `returnTo` đã lưu ở UC-01.01 bước 2 |
 | Hậu điều kiện | **Thành công:** người dùng ở trang đã yêu cầu hoặc `/projects`. **Tối thiểu:** không bao giờ chuyển hướng ra ngoài miền ứng dụng |
 | Kích hoạt | UC-01.01 bước 8 |
-| Truy vết | NFR-SEC-02 (`returnTo` chỉ cho phép đường dẫn nội bộ); API 2.1 `/auth/login` |
+| Truy vết | NFR-SEC-02 (`returnTo` chỉ cho phép đường dẫn nội bộ); API 2.1 `/auth/login`; seq-dang-nhap-sso |
 | Giai đoạn | P0 |
 
 **Luồng chính**
@@ -130,7 +130,7 @@
 | Tiền điều kiện | Có phiên ứng dụng; `users.consented_at` rỗng hoặc `consent_version` khác phiên bản thông báo hiện hành |
 | Hậu điều kiện | **Thành công:** `users.consented_at` và `consent_version` được ghi; người dùng vào được ứng dụng. **Tối thiểu:** chưa đồng ý thì mọi API ngoài `/auth/*`, `/me`, `/me:consent` trả `403 CONSENT_REQUIRED` |
 | Kích hoạt | UC-01.01 bước 8 |
-| Truy vết | FR-AUTH-12; BR-31; C-02; NFR-PRV-01; API 2.1 `GET /me`, `POST /me:consent` |
+| Truy vết | FR-AUTH-12; BR-31; C-02; NFR-PRV-01; API 2.1 `GET /me`, `POST /me:consent`; seq-dang-nhap-sso |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -158,7 +158,7 @@
 | Hậu điều kiện | **Thành công:** phiên ứng dụng bị thu hồi, token đã lưu bị xóa, phiên SSO kết thúc. **Tối thiểu:** phiên ứng dụng luôn bị thu hồi kể cả khi SSO lỗi |
 | Kích hoạt | Bấm "Đăng xuất" |
 | Quan hệ | include UC-01.02a |
-| Truy vết | FR-AUTH-05 |
+| Truy vết | FR-AUTH-05; seq-dang-nhap-sso |
 | Giai đoạn | P0 |
 
 **Luồng chính**
@@ -181,7 +181,7 @@
 | Tiền điều kiện | Phiên ứng dụng vừa bị thu hồi (UC-01.02 bước 2); còn `id_token_hint` đã mã hóa của phiên đó |
 | Hậu điều kiện | **Thành công:** phiên SSO kết thúc; trình duyệt về trang chủ. **Tối thiểu:** token đã lưu bị xóa dù SSO có lỗi |
 | Kích hoạt | UC-01.02 bước 3 |
-| Truy vết | FR-AUTH-05; API 2.1 `POST /auth/logout` |
+| Truy vết | FR-AUTH-05; API 2.1 `POST /auth/logout`; seq-dang-nhap-sso |
 | Giai đoạn | P0 |
 
 **Luồng chính**

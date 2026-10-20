@@ -1,7 +1,7 @@
 @startuml Act_GiuTruTien
 !theme plain
 skinparam defaultFontName "Segoe UI"
-title Vòng đời tiền của một job tốn phí (BR-01, BR-02, BR-29, WR-01..05, ADR-25) - dùng chung cho MVP và bản đầy đủ
+title Vòng đời tiền của một job gốc tốn phí (BR-01, BR-02, BR-29, WR-01..05, ADR-25) - dùng chung cho MVP và bản đầy đủ\nJob con của Flow không giữ tiền; job cha quyết toán cả lượt (WR-05)
 
 start
 :Nhận yêu cầu + Idempotency-Key;
@@ -30,7 +30,7 @@ partition "Giao dịch DB #1 (thứ tự khóa: ngân sách ngày → ví)" {
   :COMMIT;
 }
 :Enqueue BullMQ sau commit\n(MVP, ADR-23; sau MVP: outbox relay);
-:Worker chạy job;\nUsageMeter ghi ai_usage_records (cost_usd);
+:Worker chạy job (hoặc các job con);\nUsageMeter ghi ai_usage_records (cost_usd);
 if (Kết quả?) then (thành công)
   partition "Giao dịch DB #2" {
     :Lưu đầu ra;

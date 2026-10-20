@@ -6,14 +6,14 @@
 
 | Mã | Yêu cầu | Cách đo |
 |---|---|---|
-| NFR-PERF-01 | API đọc (không gọi AI): p95 ≤ 300 ms, p99 ≤ 800 ms | APM, tải 200 RPS |
+| NFR-PERF-01 | API đọc (không gọi AI): p95 ≤ 300 ms, p99 ≤ 800 ms | k6 trên staging, tải 20 RPS (gấp ~4 lần 5 người dùng đồng thời, NFR-SCAL-04); 200 RPS là mục tiêu sau MVP |
 | NFR-PERF-02 | API tạo job trả `202` trong p95 ≤ 500 ms | APM |
 | NFR-PERF-03 | Sự kiện job đến client ≤ 2 s sau khi trạng thái đổi | Đo end-to-end |
 | NFR-PERF-04 | Sinh 1 ảnh shot: p90 ≤ 60 s (phụ thuộc provider; tính từ lúc job vào hàng đợi) | Thống kê job |
 | NFR-PERF-05 | Storyboard 1 chương 10.000 ký tự: p90 ≤ 90 s | Thống kê job |
 | NFR-PERF-06 | Trình soạn thảo Workspace mượt với dự án 300.000 ký tự / 50 chương (gõ không trễ > 50 ms) | Đo trên máy tham chiếu |
 | NFR-PERF-07 | Restructure 50 chương hoàn tất ≤ 2 s | Benchmark |
-| NFR-PERF-08 | "Sinh tư liệu" một chương 10.000 ký tự (≈ 10 ảnh + 12 phút audio): p90 ≤ 8 phút | Thống kê job |
+| NFR-PERF-08 | "Sinh tư liệu" một chương 10.000 ký tự (≈ 36 ảnh ở mật độ 3 ảnh/phút, QĐ-112, + 12 phút audio): p90 ≤ 8 phút | Thống kê job |
 | NFR-PERF-09 | Sinh thuyết minh 1 chương 10.000 ký tự (≈ 12 phút audio), gồm timestamp từng từ: p90 ≤ 5 phút | Thống kê job |
 | NFR-PERF-10 | MVP: 1 phút video 720p render ≤ 2 phút trên máy staging thật (đo ở P0, QĐ-98). Sau MVP: render 1080p ≤ 1× thời lượng video trên worker tham chiếu 8 vCPU | `BENCH-render` |
 | NFR-PERF-11 | Preview trong trình chỉnh sửa: bắt đầu phát ≤ 2 s; lệch hình–tiếng–phụ đề ≤ 100 ms | Đo thủ công + test tự động |
@@ -36,8 +36,8 @@
 | Mã | Yêu cầu |
 |---|---|
 | NFR-SCAL-01 | API stateless, scale ngang; phiên lưu trong DB hoặc Redis |
-| NFR-SCAL-02 | Worker scale theo độ dài queue, riêng từng queue `orchestrator` / `llm` / `image` / `tts` / `align` / `media-proc` / `render` / `export` (05 §3, §10) |
-| NFR-SCAL-03 | Giới hạn đồng thời theo provider (rate limiter của BullMQ cho từng queue) và theo người dùng bằng semaphore Redis (BR-32, ADR-28): tối đa 8 job ảnh, 8 job TTS, 1 job render đồng thời; ≤ 30 yêu cầu LLM/phút |
+| NFR-SCAL-02 | Worker scale theo độ dài queue, riêng từng queue `orchestrator` / `llm` / `image` / `tts` / `align` / `media-proc` / `render` (05 §3, §4, §10) |
+| NFR-SCAL-03 | MVP: giới hạn đồng thời toàn hệ thống bằng `concurrency` của từng queue và rate limiter của BullMQ theo hạn mức provider; 1 render đang chạy/người; ≤ 30 yêu cầu LLM/phút/người (BR-32). Sau MVP: thêm giới hạn theo người dùng bằng semaphore Redis (≤ 8 job ảnh, 8 job TTS, ADR-28) |
 | NFR-SCAL-04 | Closed beta: 20 người dùng, 5 người đồng thời. Kiến trúc không chặn scale ngang tới 10.000 MAU, 500 người dùng đồng thời (sau MVP) |
 
 ## 3. Độ tin cậy & sẵn sàng
@@ -47,7 +47,7 @@
 | NFR-REL-01 | Trong 3 tuần closed beta: dịch vụ chạy liên tục, sự cố được khôi phục trong ngày làm việc. Uptime API ≥ 99,5%/tháng (sau MVP, không tính provider AI) |
 | NFR-REL-02 | Không mất job: BullMQ persistence + reconciler đẩy lại job `QUEUED` bị sót và giải phóng job treo (MVP, ADR-23); outbox sau MVP (05 §6.1) |
 | NFR-REL-03 | **Đúng tiền:** tổng sổ cái = số dư ví; mỗi job có HOLD và đúng một CAPTURE/RELEASE; số trừ ≤ số giữ; reconciler hằng ngày báo lệch bằng 0. Lệch thì cảnh báo P1 |
-| NFR-REL-04 | Retry provider: tối đa 3 lần, backoff 2s/8s/30s + jitter; circuit breaker mở khi tỷ lệ lỗi > 50% trong 1 phút. Timeout mỗi lời gọi (QĐ-126): LLM 120 s, ảnh 90 s, TTS ≥ 2× thời lượng audio dự kiến (tối thiểu 30 s), nghe thử 15 s; quá hạn tính là lỗi tạm thời |
+| NFR-REL-04 | Thử lại **một tầng ở mức job** (BullMQ): tối đa 3 lần, backoff 2s/8s/30s + jitter; AI Gateway không tự lặp (QĐ-133). Circuit breaker: sau MVP. Timeout mỗi lời gọi (QĐ-126): LLM 120 s, ảnh 90 s, TTS ≥ 2× thời lượng audio dự kiến (tối thiểu 30 s), nghe thử 15 s; quá hạn tính là lỗi tạm thời |
 | NFR-REL-05 | Backup PostgreSQL: snapshot hằng ngày giữ 7 ngày trong closed beta. PITR, RPO ≤ 5 phút, RTO ≤ 2 giờ (sau MVP) |
 | NFR-REL-06 | Object storage bật versioning cho bucket media |
 
@@ -95,8 +95,8 @@
 | NFR-MNT-01 | Test coverage ≥ 80% cho module `billing` và `authz` và package `@studio/timeline-rules`; ≥ 60% toàn hệ thống |
 | NFR-MNT-09 | Nền tảng kiểm thử theo 09 §2.3: integration test chạy trên Testcontainers (Postgres, Redis, MinIO), không mock DB; property-based test bằng fast-check; OpenAPI viết trước so trong CI |
 | NFR-MNT-02 | Provider AI có adapter **mock** chạy offline cho dev và CI (không cần key). Provider thật chỉ gọi khi demo và trong test E2E hằng tuần (QĐ-40) |
-| NFR-MNT-03 | Tracing OpenTelemetry xuyên API → queue → worker → provider; correlation id = jobId |
-| NFR-MNT-04 | Dashboard: độ dài queue, thời gian job, tỷ lệ lỗi theo provider, chi phí AI theo giờ, chi tiêu so với trần ngày, tỷ lệ job bị trừ kịch số đã giữ, độ trễ outbox relay, số job treo bị reconciler xử lý |
+| NFR-MNT-03 | MVP: log có cấu trúc, correlation id = `jobId` xuyên API → queue → worker → provider; Sentry cho lỗi. Tracing OpenTelemetry sau MVP (ADR-23) |
+| NFR-MNT-04 | Dashboard: độ dài queue, thời gian job, tỷ lệ lỗi theo provider, chi phí AI theo giờ, chi tiêu so với trần ngày, tỷ lệ job bị trừ kịch số đã giữ, độ trễ outbox relay (sau MVP), số job treo bị reconciler xử lý |
 | NFR-MNT-07 | Luật khóa thuyết minh (BR-24) nằm trong một package dùng chung client/server (`@studio/timeline-rules`), có bộ test riêng chạy ở CI (ADR-16) |
 | NFR-MNT-08 | Môi trường local chạy được toàn bộ luồng 6 bước không cần mạng ngoài: Keycloak dev realm, AI mock, MinIO, Stripe CLI (sandbox) |
 | NFR-MNT-05 | Migration DB có phiên bản và có thể rollback; zero-downtime (expand/contract) |

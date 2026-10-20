@@ -1,73 +1,112 @@
 @startuml Seq_SinhTuLieu_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
 autonumber
-title UC-05.07 (MVP): Sinh tư liệu chương (ảnh + thuyết minh nguyên văn)
-actor Editor
-participant "Web App" as Web
-participant "API" as API
-database PostgreSQL as DB
-participant "Media Orchestrator\n(job cha)" as ORC
-participant "LLM Worker\n(storyboard)" as SB
-participant "Image Worker" as IMG
-participant "TTS + Align Worker" as NAR
+title UC-05.07 (+05.07a, 05.07b, 05.07c) + UC-05.08 + UC-05.18 + UC-06.01a (MVP): Sinh tư liệu chương (ảnh + thuyết minh nguyên văn),\ntheo dõi tiến độ, sinh lại có chọn lọc, dựng timeline nháp; BullMQ Flow (ADR-15); BR-11, BR-12, BR-14, BR-34; WR-05
 
-Editor -> Web : "Sinh tư liệu" chương 1
-Web -> API : GET /media:quote?chapterIds=c1
-API --> Web : giá ước tính tối đa (đã gồm phí 10%):\n{shots≈10, storyboardUsd, imagesUsd, ttsChars 9895, ttsUsd, totalUsd}
+actor Editor
+participant "Web App\n(bảng tiến độ,\nmedia bin)" as Web
+box "API Server" #F5F5F5
+participant "MediaController\n→ MediaGenerationService" as MG
+participant "PriceEstimator" as PE
+participant "JobService" as JOBS
+participant "Realtime (SSE)" as RT
+end box
+database PostgreSQL as DB
+queue "Redis / BullMQ\n(Flow cha–con)" as Q
+box "Worker" #F5F5F5
+participant "MediaOrchestrator\n(GENERATE_MEDIA_CHAPTER)" as ORC
+participant "StoryboardDraftHandler" as SB
+participant "ShotImageHandler" as IMG
+participant "NarrateSegmentHandler\n(+ VERIFY_NARRATION)" as NAR
+end box
+participant "editor.TimelineBuilder" as TB
+
+== Báo giá (UC-05.07 bước 2, UC-05.07c bước 3) ==
+Editor -> Web : Chọn chương, "Sinh tư liệu" | "Sinh lại phần thiếu / lỗi"\n(only: MISSING | FAILED | OUTDATED | FLAGGED | ALL; parts: IMAGE, NARRATION)
+Web -> MG : GET /projects/{pid}/media:quote?chapterIds&only&parts
+MG -> DB : storyboard hiện hành? số shot; Σ (source_end − source_start);\nảnh DONE hợp lệ + ảnh UPLOAD bị loại (BR-14)
+MG -> PE : estimateMax(storyboard nếu thiếu + ảnh × n + TTS theo ký tự)
+note right of PE : Chưa có storyboard: n ước tính theo độ dài chương\nvà target_shot_seconds (mặc định 15 s)
+PE --> MG : {shots, storyboardUsd, imagesUsd, ttsChars, ttsUsd, totalUsd}
+MG --> Web : 200 | "Không có phần nào cần sinh lại" (2a)
 Editor -> Web : Xác nhận
-Web -> API : POST /media:generate {chapterIds:[c1]} (Idempotency-Key)
-API -> API : BudgetGuard: chi tiêu AI hôm nay + đang giữ + ước tính ≤ trần ngày? (BR-29)
-alt vượt trần
-    API --> Web : 503 DAILY_BUDGET_EXCEEDED
-else trong trần
-    API -> DB : wallets FOR UPDATE; HOLD totalUsd; jobs GENERATE_MEDIA_CHAPTER (QUEUED)
-    alt không đủ số dư
-        API --> Web : 402 INSUFFICIENT_BALANCE → gợi ý nạp tiền
-    else đủ
-        API --> Web : 202
-    end
-end
-ORC -> DB : chương có storyboard hiện hành?
-alt chưa có (UC-05.07a, STORYBOARD_DRAFT)
-    ORC -> SB : STORYBOARD_DRAFT, kind = INITIAL\n(tách câu → LLM chọn ranh giới → CoverageValidator phủ kín)
+
+== Tạo job cha + Flow (UC-05.07 bước 3) ==
+Web -> MG : POST /projects/{pid}/media:generate {chapterIds, only, parts} (Idempotency-Key)
+MG -> JOBS : createPaidJob(GENERATE_MEDIA_CHAPTER, chapterId, held = totalUsd)
+ref over JOBS, DB : seq-vong-doi-job §2: 402 (3a) / 503 (3b);\nHOLD **một lần** giá ước tính tối đa ở job cha (WR-05);\njob con không giữ tiền
+JOBS -> DB : cùng giao dịch: chapters.locked_by_job_id = job cha (BR-12);\nchương đã bị khóa → 423
+JOBS -> Q : FlowProducer.add(cha → con) sau commit
+JOBS --> Web : 202 {jobId, estimatedCostUsd}
+MG -> RT : chapter.updated (DRAFT → GENERATING)
+
+== Dựng storyboard tự động nếu thiếu (UC-05.07a) ==
+Q -> ORC : job cha (RUNNING, heartbeat)
+ORC -> DB : chapters.current_storyboard_id?
+alt chưa có
+    ORC -> Q : con STORYBOARD_DRAFT (kind = INITIAL, target_shot_seconds)
+    Q -> SB : chạy như seq-storyboard-sinh-anh §1\n(tách câu → Gemini → CoverageValidator)
     alt thành công
-        SB --> ORC : N shot (source_start/end/hash), đặt làm hiện hành
-        ORC -> DB : điều chỉnh HOLD theo N thực tế (WR-05)
-    else lỗi sau retry
+        SB --> ORC : N shot, đặt hiện hành (BR-07)
+        note right of ORC : Không điều chỉnh HOLD theo N thực tế (4a):\ngiá đã ước tính theo trần trên; số trừ ≤ số giữ
+    else lỗi sau retry (3a)
         SB --> ORC : FAILED
-        ORC -> DB : chương NEEDS_ATTENTION; bỏ qua chương này, các chương khác vẫn chạy
+        ORC -> DB : chương NEEDS_ATTENTION; quyết toán job cha (CAPTURE chi phí đã có,\nRELEASE phần còn lại); mở khóa;\ncác chương khác trong lượt vẫn chạy
     end
 end
-par mỗi shot (giới hạn đồng thời 8 ảnh, 8 TTS)
-    ORC -> IMG : GENERATE_SHOT_IMAGE(shot)
-    IMG --> ORC : illustration DONE / FAILED
-else
-    ORC -> NAR : NARRATE_SEGMENT(shot)\n(text = content[start:end], ký hiệu SYM, SSML, TTS, timestamp)
-    NAR --> ORC : narration DONE / FAILED
+
+== Fan-out mỗi shot (UC-05.07 bước 5) ==
+ORC -> DB : danh sách shot × phần cần chạy theo only/parts
+ORC -> Q : con GENERATE_SHOT_IMAGE × a, NARRATE_SEGMENT × b\n(held_micro = 0; chỉ ghi ai_usage_records)
+par ảnh (concurrency của queue image)
+    Q -> IMG : GENERATE_SHOT_IMAGE(shot)
+    IMG -> IMG : như seq-storyboard-sinh-anh §3\n(PromptCompiler → Gemini Image)
+    IMG -> DB : illustration DONE | FAILED; job con SUCCEEDED | FAILED;\njobs cha.heartbeat_at = now()
+    IMG -> RT : illustration.ready | job.updated
+else thuyết minh (concurrency của queue tts)
+    Q -> NAR : NARRATE_SEGMENT(shot)
+    NAR -> NAR : như seq-thuyet-minh-nguyen-van\n(hash → SpeechNormalizer → TTS Server → WhisperX)
+    NAR -> DB : narration DONE | FAILED; flagged_at = NULL;\njob con SUCCEEDED | FAILED; jobs cha.heartbeat_at = now()
+    NAR -> RT : narration.updated | job.updated
 end
-ORC --> Web : SSE media.progress (từng shot, từng phần)
-ORC -> DB : mỗi job con: CAPTURE chi phí thực × 110%, RELEASE phần dư;\njob lỗi: RELEASE toàn bộ
-alt mọi shot: ảnh DONE & thuyết minh DONE
-    ORC -> DB : chương READY_TO_EDIT;\ntạo timeline nháp: track Video (ảnh), Thuyết minh (khóa),\nPhụ đề (nguyên văn), Nhạc nền & SFX trống
-    ORC --> Web : SSE chapter.media-ready {timelineId} + số đã trừ / đã hoàn
-else còn lỗi
-    ORC -> DB : chương NEEDS_ATTENTION
-    ORC --> Web : danh sách shot cần xử lý
+RT --> Web : SSE illustration.ready, narration.updated, job.updated (từng shot, từng phần)
+
+== Theo dõi tiến độ (UC-05.07b) và media bin (UC-05.08) ==
+Web -> MG : GET /projects/{pid}/media?chapterId (ảnh chụp ban đầu)
+MG -> DB : chương → shot → {illustration, narration, sourceText,\ndurationMs, status, flagged}
+MG --> Web : bảng tiến độ (PENDING / GENERATING / DONE / FAILED / OUTDATED)
+alt mất kết nối SSE
+    Web -> MG : tải lại ảnh chụp rồi nghe tiếp (không phát lại sự kiện, ADR-23)
 end
-opt Nghe & đánh dấu (UC-05.18, không bắt buộc)
-    Editor -> Web : Nghe từng shot; "Đánh dấu cần sinh lại"
-    Web -> API : POST .../shots/{shid}/narration:flag
+
+== Kết thúc job cha: một giao dịch ==
+Q -> ORC : mọi con đã xong (Flow)
+ORC -> DB : BEGIN; đếm trạng thái ảnh, thuyết minh của mọi shot
+alt mọi shot ảnh DONE và thuyết minh DONE
+    ORC -> DB : chapters.media_status = READY_TO_EDIT
+    ORC -> TB : createDraftTimeline(chapterId) (UC-06.01a)
+    TB -> DB : timelines + tracks Video, Thuyết minh (khóa), Phụ đề (nguyên văn),\nNhạc nền, SFX; mỗi shot 1 item IMAGE + 1 item NARRATION;\nKen Burns luân phiên, crossfade 0,5 s
+else còn lỗi (5a)
+    ORC -> DB : chapters.media_status = NEEDS_ATTENTION
 end
-opt Sinh lại phần thiếu / lỗi / OUTDATED / đã đánh dấu (UC-05.07c)
-    Editor -> Web : Chọn phạm vi (MISSING / FAILED / OUTDATED / FLAGGED; ảnh / thuyết minh)
-    Web -> API : GET /media:quote → POST /media:generate {only, parts}
-    API -> DB : Bỏ qua ảnh DONE hợp lệ và ảnh do Editor tải lên (BR-14);\nHOLD; job cha + job con cho các shot được chọn
-    API --> Web : 202 → tiến độ theo shot (UC-05.07b, SSE media.progress)
-end
-note over Editor, NAR
-  Bước này **chỉ** sinh ảnh + thuyết minh.
-  Nhạc nền và SFX được thêm trong trình chỉnh sửa (UC-06.01).
+ORC -> DB : quyết toán (WR-05): CAPTURE min(Σ cost các con SUCCEEDED × 1,10, held),\nRELEASE phần còn lại; daily_ai_budgets: reserved −= x_cost, spent += Σ cost mọi con;\nchapters.locked_by_job_id = NULL; jobs SUCCEEDED; COMMIT
+ORC -> RT : chapter.media-ready {timelineId, chargedUsd, releasedUsd}\n| chapter.updated {mediaStatus: NEEDS_ATTENTION}
+RT --> Web : SSE
+note over ORC, DB : Job cha chờ con không tự heartbeat; mỗi con kết thúc cập nhật heartbeat của cha.\nWorker chết giữa chừng: reconciler quyết toán job cha như trên,\nhủy con còn chờ, mở khóa chương (seq-vong-doi-job §6)
+
+== Nghe & đánh dấu cần sinh lại (UC-05.18, không bắt buộc) ==
+Editor -> Web : "Nghe" (tô sáng từng từ theo word_timings)
+Editor -> Web : "Đánh dấu cần sinh lại" | "Bỏ đánh dấu"
+Web -> MG : POST | DELETE …/shots/{shid}/narration:flag
+MG -> DB : narrations.flagged_at = now() | NULL
+MG -> RT : narration.updated
+Editor -> Web : "Sinh lại shot đã đánh dấu" → quay lại báo giá với only = FLAGGED\n(hoặc thêm từ điển phát âm trước, UC-05.12)
+note over Editor, TB
+  Bước này **chỉ** sinh ảnh + thuyết minh. Nhạc nền và SFX thêm trong trình chỉnh sửa (UC-06.01).
+  Shot đánh dấu không chặn xuất video, chỉ cảnh báo ở UC-06.16a (BR-34).
 end note
 @enduml

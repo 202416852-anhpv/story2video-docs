@@ -1,87 +1,176 @@
 @startuml Seq_ChinhSuaXuatVideo_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
 autonumber
-title UC-06.01 + UC-06.16 (MVP): Chỉnh sửa video trên timeline, xuất và tải
+title UC-06.01 (+06.01a) + UC-06.02 (+06.02a) + UC-06.03..06.11 (+06.11a) + UC-06.13 + UC-06.15 + UC-06.16 (+06.16a) + UC-06.17 (MVP):\nMở, chỉnh sửa timeline chương với thuyết minh khóa, âm thanh, đồng bộ tư liệu, xuất chương / cả dự án, tải video; BR-24, BR-27; IC-10, IC-11; ADR-13, ADR-16; QĐ-140, QĐ-141
+
 actor Editor
-participant "Web App\n(Timeline editor + Preview)" as Web
-participant "API (editor module)" as API
+box "Web App — trình chỉnh sửa" #F5F5F5
+participant "TimelineView\n+ panels" as UI
+participant "TimelineStore\n(Zustand + immer)" as STORE
+participant "NarrationGuard\n(@studio/timeline-rules)" as NGc
+participant "OpsBatcher" as OB
+participant "PreviewPlayer\n(Remotion Player,\nStoryVideo)" as PV
+end box
+box "API Server — module editor" #F5F5F5
+participant "TimelineController" as TC
+participant "TimelineBuilder" as TB
+participant "OpsApplier\n+ NarrationGuard" as OA
+participant "AudioAssetService" as AU
+participant "MediaSync" as MS
+participant "ReadinessChecker" as RC
+participant "RenderService" as RS
+participant "Realtime (SSE)" as RT
+end box
 database PostgreSQL as DB
-participant "Render Worker\n(Remotion / FFmpeg)" as R
+queue "Redis / BullMQ" as Q
+participant "Media Processing\n(FFmpeg, ClamAV)" as MP
+participant "Render Worker\n(Remotion + FFmpeg)" as RW
 participant "Object Storage" as S3
 
-== Mở trình chỉnh sửa ==
-Editor -> Web : Mở trình chỉnh sửa chương 1
-Web -> API : POST /timelines {scope: CHAPTER, chapterId} (tạo hoặc lấy)
-alt chưa có timeline (UC-06.01a)
-    API -> DB : chương READY_TO_EDIT?
+== Mở trình chỉnh sửa (UC-06.01, UC-06.01a) ==
+Editor -> UI : Mở trình chỉnh sửa chương 1
+UI -> TC : POST /projects/{pid}/timelines {scope: CHAPTER, chapterId}
+TC -> DB : timeline của chương?
+alt chưa có
+    TC -> DB : chapters.media_status = READY_TO_EDIT?
     alt chưa sẵn sàng
-        API --> Web : 422 PRECONDITION_FAILED_BUSINESS
-    else sẵn sàng
-        API -> DB : TimelineBuilder: tracks Video / Thuyết minh (khóa) / Phụ đề /\nNhạc nền / SFX; mỗi shot 1 item IMAGE + 1 item NARRATION;\nphụ đề nguyên văn (kể cả ký hiệu) từ word_timings;\nKen Burns luân phiên, crossfade 0,5 s
+        TC --> UI : 422 PRECONDITION_FAILED_BUSINESS
+    else
+        TC -> TB : build(chapterId) (UC-06.01a)
+        TB -> DB : tracks + items như seq-sinh-tu-lieu (cùng hàm createDraftTimeline)
     end
 end
-Web -> API : GET /timelines/{tl} (ETag v1)
-API -> DB : tracks + items (ảnh, thuyết minh khóa, phụ đề)
-API --> Web : timeline
-Web -> Web : Preview realtime (cùng component dựng khung hình)
+UI -> TC : GET /projects/{pid}/timelines/{tlid}
+TC --> UI : tracks + items + ETag v1
+UI -> STORE : load(timeline)
+STORE -> PV : timeline → StoryVideo props
+PV -> S3 : prefetch media quanh playhead (signed URL 15 phút)
+PV -> Editor : Xem trước (UC-06.13) — cùng component với Render Worker (ADR-13)
 
-== Chỉnh sửa (miễn phí) ==
-Editor -> Web : Ken Burns, chuyển cảnh (cơ bản; nâng cao ✂3) cho các clip ảnh
-Editor -> Web : Đổi tốc độ clip thuyết minh shot 5 → 1,1× (0,8–1,25×)
-Editor -> Web : Tìm "calm piano" trong Âm thanh của tôi, kéo vào track Nhạc nền
-Web -> API : GET /audio-assets?kind=MUSIC&q=calm piano
-Editor -> Web : Kéo SFX "pháo hoa" vào track SFX tại 01:42
-Web -> Web : NarrationGuard (cùng bộ luật với server, BR-24) kiểm tra trước,\nrồi áp thao tác vào store cục bộ (undo/redo)
-Web -> API : POST /timelines/{tl}:apply-ops {ifMatch: v1, ops[]} (debounce)
-API -> API : UC-06.02a: kiểm tra BR-24 / IC-10 / IC-17 trên toàn lô\n(thuyết minh đủ, đúng thứ tự, không cắt / trim / xóa;\ntốc độ 0,8–1,25×; ảnh phủ khoảng đọc)
-alt hợp lệ
-    API -> DB : ghi items; version v2
-    API --> Web : 200 ETag v2
-    opt có clip thuyết minh đổi playbackRate (ADR-24)
-        API -> DB : job PROCESS_AUDIO_RATE (media-proc, miễn phí)\nhoặc dùng lại file dẫn xuất đã có (cache)
-        API --> Web : SSE timeline.updated (rateStatus READY, derived_media_id)
-        Web -> Web : Preview phát file dẫn xuất ở tốc độ 1,0\n(giống bản xuất)
-    end
-else vi phạm (vd. xóa clip thuyết minh)
-    API --> Web : 422 NARRATION_LOCKED {opIndex}
-    Web -> Web : hoàn tác thao tác, hiện giải thích
-else xung đột version
-    API --> Web : 409 → tải lại timeline (BR-05)
+== Chỉnh sửa (UC-06.02..06.10, miễn phí) ==
+Editor -> UI : Ken Burns / điểm tập trung (06.04), chuyển cảnh (06.05),\nkhung hình & màu (06.06), phụ đề (06.08), track (06.03)
+Editor -> UI : Kéo nhạc nền (06.09) / SFX (06.10) từ "Âm thanh của tôi"
+UI -> AU : GET /audio-assets?kind=MUSIC | SFX&q=
+Editor -> UI : Dời clip thuyết minh shot 5 sang phải 1 s (chèn khoảng lặng)\nhoặc chỉnh âm lượng; không có tốc độ từng clip (QĐ-140)
+UI -> STORE : applyLocal(op)
+STORE -> NGc : check(timeline, op) (BR-24: không cắt / trim / xóa / đảo thứ tự\nthuyết minh; ảnh phủ khoảng đọc)
+alt vi phạm
+    NGc --> UI : từ chối ngay, giải thích (không gửi server)
+else hợp lệ
+    STORE -> STORE : áp op; undo / redo ≥ 100 bước
+    STORE -> PV : cập nhật preview
+    STORE -> OB : enqueue(op)
 end
-opt Tải nhạc / SFX của tôi (UC-06.11a)
-    Editor -> Web : Chọn file MP3 / WAV / M4A (tự chịu trách nhiệm bản quyền)
-    Web -> API : POST /audio-assets (multipart)
-    API -> API : Kiểm MIME thật, ≤ 100 MB, ≤ 15 phút, quét malware
-    API -> DB : audio_assets(USER_UPLOAD) + job PROCESS_AUDIO_UPLOAD (waveform)
-    API --> Web : 202 → SSE asset.updated khi xong
+OB -> OB : gom thao tác, debounce 1–2 s; lỗi mạng: giữ lô trong bộ nhớ,\nthử lại có backoff, hiện "Chưa lưu"
+OB -> TC : POST …/timelines/{tlid}:apply-ops {ifMatch: v1, ops[]}
+TC -> OA : apply(timelineId, ifMatch, ops)
+OA -> DB : BEGIN; timelines FOR UPDATE; version = v1?
+alt version sai
+    OA -> DB : ROLLBACK
+    OA --> OB : 409 → tải lại timeline (BR-05; MVP chỉ một người sửa)
+else
+    OA -> OA : UC-06.02a trên **cả lô**: BR-24, IC-10\n(cùng bộ luật với client, ADR-16)
+    alt vi phạm
+        OA -> DB : ROLLBACK
+        OA --> OB : 422 NARRATION_LOCKED {opIndex}
+        OB -> STORE : hoàn tác op đó, hiện giải thích
+    else hợp lệ
+        OA -> DB : ghi items; version v2; COMMIT
+        OA --> OB : 200 ETag v2
+    end
 end
 
-== Xuất & tải ==
-Editor -> Web : Xuất video
-Web -> API : GET /timelines/{tl}/readiness (UC-06.16a)
-API -> DB : độ phủ, ảnh DONE, thuyết minh DONE (không OUTDATED), IC-10;\ncảnh báo shot đã đánh dấu; hạn mức Free
-alt chưa đạt
-    API --> Web : 422 {notDone[], outdated[], violations[]}
-else đạt (độ phủ 9895/9895)
-    Web -> API : POST /timelines/{tl}/renders {resolution}
-    alt Free: hết lượt / vượt phút trong tháng / chọn 1080p
-        API --> Web : 403 FREE_LIMIT_REACHED → gợi ý nạp tiền
-    else được phép
-        API -> DB : renders(QUEUED, timeline_snapshot v2, coverage, watermark = Free?)
-        API --> Web : 202
-        R -> S3 : tải ảnh, audio thuyết minh, nhạc, SFX, font
-        R -> R : Dựng khung hình (Ken Burns, chuyển cảnh, phụ đề nguyên văn,\nwatermark đường kẻ + logo nếu Free) theo đoạn song song
-        R -> R : Đổi tốc độ clip thuyết minh (giữ cao độ); trộn thuyết minh +\nnhạc (ducking) + SFX; loudnorm -14 LUFS; encode H.264/AAC
-        R --> Web : SSE render.progress
-        R -> S3 : PUT video.mp4, subs.srt, subs.vtt
-        R -> DB : renders READY, is_primary; Free: cộng lượt render + phút video
-        R --> Web : SSE render.ready
-        Editor -> Web : Tải xuống
-        Web -> API : GET /renders/{rid}/download?file=MP4
-        API --> Web : 302 → link ký 15 phút
-        Web -> S3 : tải video.mp4
+== Tải nhạc / SFX lên (UC-06.11a) ==
+Editor -> UI : Chọn MP3 / WAV / M4A (tự chịu trách nhiệm bản quyền, BR-26)
+UI -> AU : POST /audio-assets (multipart)
+AU -> AU : MIME thật, ≤ 100 MB, ≤ 15 phút
+AU -> S3 : PUT bản gốc
+AU -> DB : audio_assets(USER_UPLOAD, published = false)
+AU -> Q : job PROCESS_AUDIO_UPLOAD (media-proc)
+AU --> UI : 202
+Q -> MP : quét virus (ClamAV), chuyển mã, waveform, loudness bản nghe thử
+alt nhiễm / hỏng
+    MP -> DB : xóa media, audio_assets lỗi
+else
+    MP -> DB : waveform, duration_ms, published = true
+end
+MP -> RT : asset.updated
+RT --> UI : SSE
+
+== Đồng bộ khi tư liệu thay đổi (UC-06.15) ==
+MS -> MS : nghe illustration.ready, narration.updated,\nstoryboard.current-changed, shot.updated
+MS -> DB : BEGIN; ảnh mới → thay illustration_id (giữ motion, màu, chuyển cảnh);\nthuyết minh mới → thay narration_id, giữ âm lượng, cập nhật độ dài,\ndời clip phía sau theo độ chênh; shot thêm / bớt → thêm / bớt cặp clip
+MS -> DB : SFX rơi ra ngoài → về cuối clip gần nhất, đánh dấu (3a);\nuser_modified giữ; sync_flag; version++; COMMIT
+MS -> RT : timeline.updated {changedItemIds[]}
+RT --> STORE : SSE → tải lại phần đổi, "N clip đã cập nhật"
+
+== Xuất video (UC-06.16, UC-06.16a) ==
+Editor -> UI : "Xuất video"
+UI -> RC : GET …/timelines/{tlid}/readiness
+RC -> DB : mọi shot: ảnh DONE; thuyết minh DONE, không OUTDATED;\nIC-10, BR-24
+RC -> RC : độ phủ = Σ ký tự đoạn nguồn có clip thuyết minh / Σ ký tự chương
+RC -> DB : cảnh báo: shot flagged (BR-34); Free: lượt render, phút còn lại, watermark
+RC --> UI : {coverage{covered, total}, missingImages[], notDone[], outdated[],\nviolations[], warnings{flagged[]}, freeQuota?}
+alt có mục không đạt (6a)
+    UI -> Editor : nút "Xuất" vô hiệu; danh sách lỗi có nút nhảy tới vị trí
+else đạt (cảnh báo không chặn)
+    Editor -> UI : chọn 720p / 1080p (Free chỉ 720p), xác nhận
+    UI -> RS : POST …/timelines/{tlid}/renders {resolution}\n(Idempotency-Key)
+    RS -> RC : kiểm lại (chống điều kiện đua) → 422 nếu không đạt (IC-11)
+    RS -> DB : Free: còn lượt và đủ phút trong tháng? chọn 1080p?
+    alt vượt giới hạn Free (3a, 3b)
+        RS --> UI : 403 FREE_LIMIT_REACHED → gợi ý nạp tiền
+    else
+        RS -> DB : người dùng đã có render QUEUED / RENDERING? → 429 (BR-32)
+        RS -> RS : chụp timeline_snapshot (12 §3): media đã phân giải,\nphụ đề dựng sẵn từ word_timings, SNP-01..07; kiểm JSON Schema
+        RS -> DB : renders(QUEUED, timeline_version, snapshot, coverage_chars,\ntotal_chars, watermark = tài khoản Free lúc này); job RENDER_TIMELINE
+        RS -> Q : enqueue render (sau commit)
+        RS --> UI : 202 {renderId}
+        Q -> RW : RENDER_TIMELINE
+        RW -> RW : kiểm schema snapshot
+        RW -> S3 : tải ảnh, audio thuyết minh, nhạc, SFX, font
+        RW -> RW : Remotion renderMedia một lượt (tự song song theo khung hình):\nKen Burns, chuyển cảnh, phụ đề nguyên văn, watermark (Free)
+        RW -> RW : FFmpeg: amix thuyết minh + nhạc + SFX, sidechaincompress\n(ducking), loudnorm −14 LUFS; mux H.264 / AAC
+        RW -> RT : render.progress
+        RT --> UI : SSE (Editor có thể hủy → CANCELLED, 6a)
+        alt lỗi encode sau 1 lần thử lại (5a)
+            RW -> DB : renders FAILED (mã lỗi)
+        else
+            RW -> S3 : PUT video.mp4, subs.srt, subs.vtt, narration.mp3
+            RW -> DB : renders READY, is_primary; Free: cộng lượt + phút trong tháng
+            RW -> RT : render.ready
+        end
     end
 end
+
+== Xuất cả dự án, không qua trình chỉnh sửa (UC-06.16 nhánh 1b, QĐ-141) ==
+Editor -> UI : "Xuất cả dự án" (danh sách Renders / Map)
+UI -> RS : POST /projects/{pid}/renders?dryRun=true {resolution}
+loop mỗi chương theo order_index
+    RS -> DB : timeline của chương? chưa có → TimelineBuilder dựng bản nháp (UC-06.01a)
+    RS -> RC : kiểm điều kiện chương (UC-06.16a)
+end
+RS --> UI : {chapters[{chapterId, ready, coverage, notDone[], outdated[]}], durationMs, freeQuota?}
+alt có chương chưa đạt (1c)
+    UI -> Editor : liệt kê chương và lý do; nút "Xuất" vô hiệu
+else đạt
+    Editor -> UI : chọn 720p / 1080p, xác nhận
+    UI -> RS : POST /projects/{pid}/renders {resolution} (Idempotency-Key)
+    RS -> RS : kiểm lại; Free theo tổng thời lượng; 1 render đang chạy / người
+    RS -> RS : ghép snapshot từng chương: thời gian chương k + Σ độ dài chương trước;\ncắt thẳng giữa chương; sourceTimelines; kiểm schema + SNP-01..07
+    RS -> DB : renders(scope = PROJECT, timeline_id = NULL, snapshot, coverage_chars,\ntotal_chars, watermark); job RENDER_TIMELINE
+    RS -> Q : enqueue sau commit
+    RS --> UI : 202 {renderId}
+    note over RW : Render Worker xử lý như xuất chương (một lượt Remotion + FFmpeg)
+end
+
+== Tải xuống (UC-06.17) ==
+Editor -> UI : Tải MP4 / SRT / VTT / audio thuyết minh
+UI -> RS : GET …/renders/{rid}/download?file=MP4
+RS --> UI : 302 → signed URL 15 phút (NFR-SEC-05)
+UI -> S3 : tải file
 @enduml

@@ -80,7 +80,7 @@ Offset tính theo **code unit UTF-16** (chỉ số chuỗi của JavaScript) tr�
 
 ## 2. Ánh xạ timestamp từ bản đọc về văn bản gốc
 
-Dùng ở: UC-05.13 (bước 5–6), UC-06.01a (dựng phụ đề), `IT-subtitle-verbatim`, NFR-INT-04. Thuộc `SpeechNormalizer` (tạo bản đồ) và `narration` worker (áp bản đồ).
+Dùng ở: UC-05.13 (bước 5–6), UC-06.01a (dựng phụ đề), `IT-subtitle-verbatim`, NFR-INT-04. Thuộc `SpeechNormalizer` (tạo bản đồ) và `NarrateSegmentHandler` (áp bản đồ sau khi nhận timestamp; 05 §5.1, `seq-thuyet-minh-nguyen-van`).
 
 ### 2.1 Ba hệ tọa độ
 
@@ -104,7 +104,7 @@ interface MapSeg { kind: SegKind; sStart: number; sEnd: number; rStart: number; 
 | `IDENTITY` | Chữ giữ nguyên | `S[sStart:sEnd] === R[rStart:rEnd]` |
 | `DROP` | Ký hiệu bị bỏ khi đọc (SYM-01..04) | `rStart = rEnd` (độ dài 0 trên R) |
 | `EXPAND` | Số, ngày, đơn vị đọc thành chữ | Một đoạn S → nhiều từ R |
-| `ALIAS` | Từ điển phát âm `ALIAS` / `PHONEME` | Một đoạn S → cách đọc trên R (phoneme: R giữ chữ gốc, SSML mang phoneme) |
+| `ALIAS` | Từ điển phát âm `ALIAS` / `PHONEME` | Một đoạn S → cách đọc trên R (phoneme: R giữ chữ gốc, SSML mang phoneme; chỉ có tác dụng với Vbee sau MVP, TTS tự host bỏ qua) |
 | `PAUSE` | Dòng phân cách SYM-05 hoặc ngắt nghỉ | `rStart = rEnd`; SSML `<break time="500ms"/>` |
 
 Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[0, len(S))`; các `rStart..rEnd` nối liền phủ `[0, len(R))`; ghép S từ các đoạn `IDENTITY` + `DROP` + phần S của `EXPAND`/`ALIAS`/`PAUSE` bằng đúng S. Bản đồ được lưu trong `narrations.normalization_log` (`{segments: MapSeg[], rules: string[]}`).
@@ -120,7 +120,7 @@ Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[
 5. **`PAUSE`:** không sinh mục; khoảng lặng 0,5 s nằm sẵn trong audio.
 6. **Từ thiếu thời gian** (aligner bỏ sót): nội suy tuyến tính theo số ký tự giữa hai từ đã biết gần nhất; không có hàng xóm thì dùng biên của audio.
 7. **Đơn điệu:** ép `start` không giảm theo `charStart`; mục chồng lấn thì cắt `end` của mục trước bằng `start` mục sau.
-8. **Tốc độ** (ADR-24): clip có `playbackRate = r ≠ 1` dùng file audio dẫn xuất; thời gian của clip là `t / r`. `wordTimings` gốc không đổi, `timeline_snapshot` lưu bản đã chia.
+8. **Tốc độ đọc** của dự án đã nằm trong audio (áp ở bước TTS, trước khi căn timestamp; QĐ-140), nên timestamp đo trên chính file audio, không phải chia thêm.
 
 ### 2.4 Dựng phụ đề từ `wordTimings`
 
@@ -143,7 +143,7 @@ Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[
 | MAP-05 | `Hết.⏎---⏎Sáng.` | `PAUSE` cho `---⏎` | Không cue cho `---`; khoảng cách giữa cue `Hết.` và `Sáng.` ≥ 500 ms |
 | MAP-06 | `Một hai ba bốn.` | aligner thiếu thời gian của `ba` | `ba` được nội suy giữa `hai` và `bốn`; thứ tự không giảm |
 | MAP-07 | 1 câu 130 ký tự | | 2 cue, mỗi cue ≤ 2 dòng × 42 ký tự; ghép lại đúng nguyên văn |
-| MAP-08 | `Cô đi.` với `playbackRate = 1,25` | | Thời gian trong snapshot = thời gian gốc / 1,25 |
+| MAP-08 | `Cô đi.` với tốc độ đọc dự án 1,2× (adapter đổi tốc độ audio sau tổng hợp) | | Timestamp căn trên audio đã đổi tốc độ; cue khớp lời đọc ≤ 100 ms |
 | MAP-10 | `Vui 😊 quá.` | Aligner Python trả offset theo code point | Sau hàm chuyển đổi, `charStart` của `quá` là 7 (UTF-16), cue cắt đúng `Vui 😊 quá.` |
 | MAP-09 | Mọi chương golden set | pipeline thật | Kiểm tra nguyên văn §2.4 đạt 100%; lệch cue so với lời đọc ≤ 100 ms (NFR-PERF-11) |
 
@@ -154,9 +154,10 @@ Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[
 `timeline_snapshot` là ảnh chụp **bất biến, tự đủ** của một phiên bản timeline, dùng chung cho: PreviewPlayer (dựng từ trạng thái hiện tại theo cùng cấu trúc), Render Worker (đầu vào duy nhất), kiểm toán (NFR-INT-06). Lưu ở `renders.timeline_snapshot` và `timeline_versions.snapshot`.
 
 - **Schema:** [`schemas/timeline-snapshot.schema.json`](schemas/timeline-snapshot.schema.json) (JSON Schema 2020-12), ví dụ hợp lệ: [`schemas/timeline-snapshot.example.json`](schemas/timeline-snapshot.example.json).
-- **Phiên bản:** trường `schemaVersion` (hiện `1`). Đổi không tương thích ngược thì tăng; Render Worker từ chối phiên bản lạ.
+- **Phiên bản:** trường `schemaVersion` (hiện `2`: bỏ `playbackRate`/`derivedMediaKey`, thêm phạm vi `PROJECT` với `sourceTimelines`; QĐ-140, QĐ-141). Đổi không tương thích ngược thì tăng; Render Worker từ chối phiên bản lạ.
 - **Media** tham chiếu bằng `mediaKey` (khóa object storage), **không** bằng URL ký (URL hết hạn sau 15 phút, NFR-SEC-05). Worker tự ký URL khi render.
-- **Thời gian** là số nguyên mili-giây trên trục timeline; `wordTimings` trong snapshot đã quy về trục timeline của clip (đã chia `playbackRate`).
+- **Thời gian** là số nguyên mili-giây trên trục timeline; `wordTimings` trong snapshot đã quy về trục timeline của clip.
+- **Xuất cả dự án** (`scope.kind = PROJECT`, QĐ-141): snapshot ghép từ snapshot của từng chương theo thứ tự, mọi thời gian của chương *k* cộng thêm tổng `durationMs` của các chương trước; giữa hai chương cắt thẳng (không chuyển cảnh); `sourceTimelines` ghi `{chapterId, timelineId, timelineVersion}` từng chương thay cho `timelineId`. Ràng buộc SNP-01..07 kiểm trên toàn snapshot.
 - **Phụ đề** được dựng sẵn thành cue (§2.4) trong snapshot, để preview và render không tự dựng lại theo hai cách khác nhau.
 
 ### 3.1 Ràng buộc ngoài JSON Schema (kiểm ở `ReadinessChecker` và `@studio/timeline-rules`)
@@ -164,11 +165,11 @@ Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[
 | Mã | Ràng buộc |
 |---|---|
 | SNP-01 | Đúng một track `NARRATION`; mỗi shot hiện hành có đúng một item `NARRATION` và một item `IMAGE` (IC-10) |
-| SNP-02 | Item `NARRATION` theo đúng thứ tự `order_index` của shot, không chồng lấn; `durationMs = round(audioDurationMs / playbackRate)`; `0,8 ≤ playbackRate ≤ 1,25` (IC-17) |
+| SNP-02 | Item `NARRATION` theo đúng thứ tự `order_index` của shot, không chồng lấn; `durationMs` = độ dài audio |
 | SNP-03 | Item `IMAGE` của shot phủ trọn khoảng `[start, start + duration)` của item `NARRATION` cùng shot (BR-25) |
 | SNP-04 | `coverage.covered = coverage.total` = tổng ký tự các chương trong phạm vi (IC-11) |
 | SNP-05 | `sourceHash` của mọi item `NARRATION` khớp `shots.source_hash` tại thời điểm chụp |
-| SNP-06 | Mọi `mediaKey` tồn tại trong `media_files`; item `NARRATION` có `playbackRate ≠ 1` phải trỏ tới file dẫn xuất (`derivedMediaKey`, ADR-24) |
+| SNP-06 | Mọi `mediaKey` tồn tại trong `media_files` |
 | SNP-07 | Cue phụ đề đạt kiểm tra nguyên văn §2.4 |
 
 ### 3.2 Ca kiểm thử (`UT-snapshot-schema`)
@@ -177,8 +178,9 @@ Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[
 |---|---|---|
 | SNP-T01 | Không đổi | Hợp lệ theo schema và SNP-01..07 |
 | SNP-T02 | Bỏ trường `schemaVersion` | Schema từ chối |
-| SNP-T03 | `playbackRate = 1.5` trên item `NARRATION` | Schema từ chối (`maximum`) |
+| SNP-T03 | `volume = 3` trên item `NARRATION` | Schema từ chối (`maximum`) |
 | SNP-T04 | Thêm `url` có chữ ký vào item | Schema từ chối (`additionalProperties: false`) |
 | SNP-T05 | Rút `durationMs` của item `IMAGE` ngắn hơn thuyết minh | Schema chấp nhận; SNP-03 từ chối |
 | SNP-T06 | Xóa item `NARRATION` của một shot | Schema chấp nhận; SNP-01 và SNP-04 từ chối |
+| SNP-T08 | Đổi `scope.kind` thành `PROJECT` nhưng không có `sourceTimelines` | Schema từ chối |
 | SNP-T07 | Render cùng snapshot hai lần | Hai file MP4 giống nhau về khung hình (so hash khung đầu mỗi shot) |

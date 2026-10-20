@@ -8,16 +8,16 @@ Person(ed, "Owner")
 Container_Boundary(client, "Web App - Trình chỉnh sửa") {
     Component(view, "TimelineView", "Canvas", "Vẽ track/clip, ảo hóa, snap theo word_timings")
     Component(store, "TimelineStore", "Zustand + immer", "Trạng thái timeline, undo/redo ≥ 100 bước")
-    Component(guardc, "NarrationGuard", "@studio/timeline-rules", "Chặn thao tác vi phạm BR-24 (cho phép tốc độ 0,8–1,25×)")
+    Component(guardc, "NarrationGuard", "@studio/timeline-rules", "Chặn thao tác vi phạm BR-24 (chỉ dời, chỉnh âm lượng clip thuyết minh)")
     Component(batch, "OpsBatcher", "TS", "Gom thao tác, debounce, If-Match, hàng đợi offline")
     Component(player, "PreviewPlayer", "Remotion Player", "Component StoryVideo dùng chung với render")
-    Component(audio, "AudioEngine", "WebAudio", "Trộn thuyết minh, nhạc, SFX; ducking; đổi tốc độ giữ cao độ")
+    Component(audio, "AudioEngine", "WebAudio", "Trộn thuyết minh, nhạc, SFX; ducking; mọi audio phát ở tốc độ 1,0")
     Component(panels, "AudioPanel / MediaBinPanel", "React", "Âm thanh của tôi (tải lên), kéo thả tư liệu")
 }
 
 Container_Boundary(server, "API Server - module editor") {
     Component(ops, "OpsApplier", "NestJS", "Áp lô apply-ops nguyên tử")
-    Component(guards, "NarrationGuard", "@studio/timeline-rules", "Kiểm tra IC-10 / IC-17 / BR-24, 422 NARRATION_LOCKED")
+    Component(guards, "NarrationGuard", "@studio/timeline-rules", "Kiểm tra IC-10 / BR-24, 422 NARRATION_LOCKED")
     Component(builder, "TimelineBuilder", "NestJS", "Dựng bản nháp từ tư liệu; phụ đề nguyên văn")
     Component(sync, "MediaSync", "NestJS", "Cập nhật clip khi tư liệu đổi, giữ user_modified")
     Component(lib, "AudioAssetService", "NestJS", "Tải lên + PROCESS_AUDIO_UPLOAD; tìm theo tên")
@@ -25,7 +25,7 @@ Container_Boundary(server, "API Server - module editor") {
     Component(rs, "RenderService", "NestJS", "Hạn mức Free, timeline_snapshot, job RENDER_TIMELINE, link tải")
 }
 
-Container(rw, "Render Worker", "Remotion + FFmpeg", "Dựng khung hình, watermark Free, đổi tốc độ, trộn âm, loudnorm, encode")
+Container(rw, "Render Worker", "Remotion + FFmpeg", "Dựng khung hình, watermark Free, trộn âm, loudnorm, encode")
 ContainerDb(db, "PostgreSQL", "", "timelines, tracks, items, audio_assets, renders")
 
 Rel(ed, view, "Kéo thả, cắt, chỉnh")

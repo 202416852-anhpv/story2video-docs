@@ -62,7 +62,7 @@
 | Tiền điều kiện | Là Admin; secret của provider đã có trong secret manager |
 | Hậu điều kiện | **Thành công:** `ai_providers`/`ai_models` cập nhật; ProviderRouter dùng cấu hình mới |
 | Kích hoạt | MVP: `seed/ai-providers.yaml` + `pnpm seed`. Sau MVP: mở `/admin/ai-providers` |
-| Truy vết | FR-ADM-03; ADR-03 |
+| Truy vết | FR-ADM-03; ADR-03, ADR-30; QĐ-119..125; 13 §11.3 |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -127,15 +127,15 @@
 | Tác nhân chính | Admin |
 | Mô tả | *(Sau MVP)* Nhập bộ nhạc nền, SFX CC0/CC-BY tuyển chọn (Pixabay, Freesound) kèm thông tin license và dòng ghi công |
 | Tiền điều kiện | Là Admin; có quyền sử dụng hợp lệ |
-| Hậu điều kiện | **Thành công:** `audio_assets` (owner `SYSTEM`) cập nhật, tìm được trong UC-06.11 |
+| Hậu điều kiện | **Thành công:** `audio_assets` (`owner_user_id` NULL = hệ thống, `published = true`) cập nhật, tìm được trong UC-06.11 |
 | Kích hoạt | Mở `/admin/audio-library` |
-| Truy vết | FR-ADM-03; BR-26; C-04 |
+| Truy vết | FR-ADM-03; BR-26; C-04; API 2.9 `/admin/audio-assets` |
 | Giai đoạn | Sau |
 
 **Luồng chính**
 1. Admin tải lên (đơn lẻ hoặc theo lô) file nhạc/SFX.
 2. Admin nhập tiêu đề, loại, thể loại, tâm trạng, tag, nguồn, loại license (CC0 / CC-BY) và tác giả cần ghi công.
-3. Hệ thống tạo waveform, chuẩn hóa loudness bản nghe thử, xuất bản vào thư viện.
+3. Hệ thống tạo job `PROCESS_AUDIO_UPLOAD` (queue `media-proc`: quét virus, waveform, chuẩn hóa loudness bản nghe thử) rồi xuất bản vào thư viện.
 4. Admin có thể gỡ một mục; timeline đang dùng mục đó được cảnh báo.
 
 **Luồng thay thế / ngoại lệ**
@@ -187,7 +187,7 @@
 - **1a.** Job không ở `FAILED`: ẩn nút Retry.
 - **2a.** Job gốc lỗi do `CONTENT_POLICY`: cảnh báo nội dung đã bị moderation chặn; chạy lại có thể lỗi lại (BR-18) [ĐX].
 - **4a.** Chế độ thường nhưng người dùng không đủ số dư: `402`; Admin chuyển sang miễn phí hoặc hủy.
-- **3a.** Đối tượng đích đã đổi (chương đã sửa, shot đã xóa, `source_hash` lệch): job mới kết thúc `OUTDATED` hoặc bị từ chối `422`.
+- **3a.** Đối tượng đích đã đổi (chương đã sửa, shot đã xóa, `source_hash` lệch): không tạo job, trả `422 PRECONDITION_FAILED_BUSINESS`; Admin sinh lại từ màn hình của người dùng.
 
 ### UC-10.07b Hoàn tiền thủ công
 <a id="uc-1007b"></a>

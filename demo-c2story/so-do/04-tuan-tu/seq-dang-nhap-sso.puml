@@ -2,96 +2,168 @@
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
 autonumber
-title UC-01.01: Đăng nhập / đăng xuất qua SSO (OIDC, mẫu BFF)
+'@sau-mvp
+title UC-01.01 (+01.01a..d) + UC-01.02 (+01.02a): Đăng nhập, gia hạn phiên, đồng ý dữ liệu, đăng xuất qua SSO\nOIDC + PKCE, mẫu BFF; IdentityProviderPort (ADR-20); BR-28, BR-30, BR-31
+'@/sau-mvp
+'@mvp title UC-01.01 (+01.01a..d) + UC-01.02 (+01.02a) (MVP): Đăng nhập, đồng ý dữ liệu, đăng xuất qua SSO - closed beta\nOIDC + PKCE, mẫu BFF; IdentityProviderPort (ADR-20); BR-28, BR-30, BR-31
 
-actor "Người dùng" as U
+actor "Người dùng\n(trình duyệt)" as U
 participant "Web App" as Web
-participant "API (auth module)\n= OIDC Relying Party" as API
+box "API Server — module auth" #F5F5F5
+participant "AuthController" as AC
+participant "LoginStateStore" as LS
+participant "IdentityProviderPort\n(OidcAdapter |\nOAuth2UserinfoAdapter)" as IDP
+participant "UserProvisioning\n(JIT)" as JIT
+participant "InviteService" as INV
+participant "WalletService\n(billing)" as WAL
+participant "SessionService" as SES
+participant "ConsentService" as CON
+end box
 database PostgreSQL as DB
-participant "SSO\n(Keycloak; SSO Vbee)" as SSO
+queue Redis as R
+participant "SSO\n(Keycloak / SSO Vbee)" as SSO
 
-== Đăng nhập ==
-U -> Web : Mở ứng dụng hoặc một trang cần đăng nhập
-Web -> API : GET /auth/login?returnTo=<đường dẫn>
-API -> API : Tạo state, nonce, code_verifier (PKCE)\nlưu tạm (cookie ký / Redis, 10 phút)
-API --> U : 302 → SSO authorization_endpoint\n(client_id, redirect_uri, scope=openid email profile,\nstate, nonce, code_challenge)
-U -> SSO : Đăng nhập (hoặc đăng ký) trên trang SSO
-note right of SSO
-  Mọi màn hình đăng ký, đăng nhập,
-  quên mật khẩu, MFA thuộc SSO.
-  Ứng dụng không phát triển lại.
-end note
+== Đăng nhập (UC-01.01) ==
+U -> Web : Mở trang cần đăng nhập
+Web -> AC : GET /auth/session
+AC --> Web : {authenticated: false}
+Web -> AC : GET /auth/login?returnTo=/projects/p1
+AC -> LS : create(returnTo)
+LS -> LS : state, nonce, code_verifier (PKCE S256)
+LS -> R : SET login:{state} (TTL 10 phút)
+AC -> IDP : buildAuthorizeUrl(state, nonce, code_challenge)
+IDP --> AC : authorization_endpoint?client_id&redirect_uri\n&scope=openid email profile&state&nonce&code_challenge
+AC --> U : 302 → SSO
+U -> SSO : Đăng nhập / đăng ký / MFA trên trang SSO
+note right of SSO : Mọi màn hình tài khoản thuộc SSO;\nứng dụng không phát triển lại (C-05)
 SSO --> U : 302 → /auth/callback?code&state
-U -> API : GET /auth/callback?code&state
-API -> API : UC-01.01a: so state với state đã lưu (dùng một lần)
-alt state thiếu / không khớp / đã dùng
-    API --> U : Từ chối, ghi log bảo mật → "Đăng nhập không thành công"
-else state khớp
-    API -> SSO : POST token_endpoint (code, code_verifier, client_secret)
-    alt SSO báo lỗi / quá 10 s không phản hồi
-        API --> U : Trang lỗi thân thiện, gợi ý thử lại sau
-    else nhận được token
-        SSO --> API : id_token, access_token, refresh_token
-        API -> SSO : GET jwks_uri (có cache; làm mới khi gặp kid lạ)
-        API -> API : Xác thực id_token: chữ ký, iss, aud, exp, iat, nonce
-        note right
-          Adapter OAuth 2.0 (nếu Vbee không có OIDC):
-          GET userinfo bằng access_token thay cho id_token (ADR-20)
-        end note
-        alt id_token không hợp lệ
-            API --> U : Từ chối, ghi log bảo mật, không tạo phiên
-        else hợp lệ
-            API -> DB : UC-01.01b: tìm users theo sso_subject (JIT)
-            alt chưa có hồ sơ
-                API -> DB : email có trong beta_invites (chưa thu hồi)?
-                alt không được mời (BR-30)
-                    API --> U : 403 NOT_INVITED → "Bạn chưa được mời tham gia beta"\n(không tạo hồ sơ, không tạo phiên)
-                else được mời
-                    API -> DB : BEGIN; INSERT users + wallets;\nledger TRIAL_GRANT $2 (BR-28);\nbeta_invites.used_by_user_id; COMMIT
-                end
-            else đã có
-                API -> DB : UPDATE email, tên, avatar, role từ claims; last_login_at
-            end
-            alt users.status = LOCKED
-                API --> U : Thông báo tài khoản bị khóa, không tạo phiên
-            else bình thường
-                API -> DB : INSERT user_sessions (refresh_token mã hóa, sso_sid)
-                alt chưa đồng ý hoặc thông báo đổi phiên bản (UC-01.01d)
-                    API --> U : Set-Cookie session; 302 → /consent
-                    U -> Web : Đọc thông báo xử lý dữ liệu, tích "Đồng ý"
-                    Web -> API : POST /me:consent {noticeVersion}
-                    API -> DB : UPDATE users.consented_at, consent_version
-                    note right of API : "Không đồng ý" → đăng xuất (BR-31)
-                end
-                API -> API : UC-01.01c: returnTo là đường dẫn nội bộ?\n(bắt đầu bằng "/", không "//", không scheme / host)
-                API --> U : 302 → returnTo (hợp lệ) hoặc /projects
-            end
-        end
+U -> AC : GET /auth/callback?code&state
+
+group UC-01.01a Kiểm tra state
+    AC -> LS : consume(state)
+    LS -> R : GETDEL login:{state}
+    alt thiếu / không khớp / đã dùng
+        AC -> DB : audit_logs(SECURITY, login_state_invalid)
+        AC --> U : Trang "Đăng nhập không thành công"
     end
 end
 
-== Gia hạn phiên (≤ 15 phút) ==
-API -> SSO : refresh_token grant (khi access sắp hết hạn)
-alt SSO từ chối (tài khoản khóa / thu hồi)
-    API -> DB : revoke session, users.status = LOCKED nếu SSO báo vô hiệu
-    API --> Web : 401 → yêu cầu đăng nhập lại
+AC -> IDP : exchangeCode(code, code_verifier)
+IDP -> SSO : POST token_endpoint (client_secret, timeout 10 s)
+alt lỗi / quá 10 s
+    IDP --> AC : IdpUnavailable
+    AC --> U : Trang lỗi thân thiện, gợi ý thử lại
+end
+SSO --> IDP : id_token, access_token, refresh_token
+alt OidcAdapter
+    IDP -> SSO : GET jwks_uri (cache; làm mới khi gặp kid lạ)
+    IDP -> IDP : xác thực id_token: chữ ký, iss, aud, exp, iat, nonce
+else OAuth2UserinfoAdapter (Vbee chỉ có OAuth 2.0)
+    IDP -> SSO : GET userinfo (access_token)
+end
+IDP --> AC : Claims {sub, email, email_verified, name, picture, roles}
+alt token / claims không hợp lệ
+    AC -> DB : audit_logs(SECURITY)
+    AC --> U : Từ chối, không tạo phiên
 end
 
-== Đăng xuất ==
+group UC-01.01b Tạo / đồng bộ hồ sơ (JIT)
+    AC -> JIT : provision(claims)
+    JIT -> DB : SELECT users WHERE sso_subject = sub
+    alt chưa có hồ sơ
+        JIT -> INV : isInvited(lower(email), email_verified)
+        INV -> DB : beta_invites chưa thu hồi, chưa dùng? (BR-30)
+        alt không được mời / email chưa xác minh
+            INV --> JIT : false
+            JIT -> DB : audit_logs(NOT_INVITED)
+            JIT --> AC : NotInvited
+            AC --> U : 403 NOT_INVITED "Bạn chưa được mời tham gia beta"
+        else được mời
+            JIT -> DB : BEGIN; INSERT users (role từ claim roles,\nconsented_at = NULL)
+            JIT -> WAL : openWallet(userId) + grantTrial($2, BR-28)
+            WAL -> DB : INSERT wallets(0); ledger TRIAL_GRANT +2.000.000 µUSD;\nwallets.available += 2.000.000
+            JIT -> DB : beta_invites.used_by_user_id = userId; COMMIT
+            note right of JIT : Hai callback cùng sub: UNIQUE(sso_subject)\n→ giao dịch thua đọc lại, đi nhánh "đã có" (1a)
+        end
+    else đã có
+        JIT -> DB : UPDATE email, display_name, avatar_url, role,\nlast_login_at (locale chỉ khi người dùng chưa tự đổi)
+    end
+    JIT --> AC : user
+end
+alt users.status = LOCKED
+    AC --> U : "Tài khoản bị khóa", không tạo phiên
+end
+AC -> SES : create(user, tokens, sso_sid)
+SES -> DB : INSERT user_sessions(session_hash, refresh_token_enc,\nid_token_hint_enc (AES-GCM), sso_sid, expires_at)
+SES --> AC : sessionId
+AC -> CON : isRequired(user)
+CON -> DB : consent_version = system_settings.consent_notice_version?
+
+group UC-01.01c Quay về trang đã yêu cầu
+    AC -> LS : returnTo của state
+    AC -> AC : hợp lệ khi bắt đầu bằng "/", không "//",\nkhông scheme / host; ngược lại dùng /projects
+end
+alt cần đồng ý
+    AC --> U : Set-Cookie sid (HttpOnly, Secure, SameSite=Lax); 302 → /consent?returnTo
+else không cần
+    AC --> U : Set-Cookie sid; 302 → returnTo
+end
+
+== Đồng ý xử lý dữ liệu (UC-01.01d, BR-31) ==
+U -> Web : Mở /consent
+Web -> AC : GET /me
+AC --> Web : {consentRequired, consentNotice{version, nội dung:\ndữ liệu, mục đích, bên nhận (Google Gemini), thời hạn xóa}}
+U -> Web : Tích "Tôi đã đọc và đồng ý", "Tiếp tục"
+Web -> AC : POST /me:consent {noticeVersion}
+AC -> CON : accept(user, noticeVersion)
+alt noticeVersion ≠ phiên bản hiện hành
+    CON --> Web : 409 → tải lại thông báo
+else đúng
+    CON -> DB : users.consented_at = now(), consent_version
+    CON --> Web : 204
+    Web -> U : Chuyển tới returnTo
+end
+opt "Không đồng ý"
+    Web -> AC : POST /auth/logout (hồ sơ, ví giữ lại)
+end
+
+== Mỗi yêu cầu sau đó + gia hạn phiên ==
+Web -> AC : Request có cookie sid
+AC -> SES : resolve(sid)
+SES -> DB : user_sessions (cache Redis 60 s)
+alt access token còn < 1 phút
+    SES -> IDP : refresh(refresh_token)
+    IDP -> SSO : POST token_endpoint (refresh_token grant)
+    alt SSO từ chối (khóa / thu hồi)
+        SES -> DB : revoke session; users.status = LOCKED nếu SSO báo vô hiệu
+        SES --> Web : 401 → đăng nhập lại
+    else được cấp mới
+        SES -> DB : cập nhật token, expires_at
+    end
+end
+
+== Đăng xuất (UC-01.02, UC-01.02a) ==
 U -> Web : "Đăng xuất"
-Web -> API : POST /auth/logout
-API -> DB : Lấy id_token_hint (giải mã), revoke user_sessions, xóa token đã lưu
-alt SSO có end_session_endpoint (UC-01.02a)
-    API --> Web : { logoutUrl: end_session_endpoint?id_token_hint&post_logout_redirect_uri }
-    Web -> SSO : Chuyển hướng logoutUrl
-    SSO --> U : Kết thúc phiên SSO → 302 về trang chủ ứng dụng
-else không có end_session_endpoint
-    API --> Web : 200 (chỉ đăng xuất cục bộ)\nGhi chú "Bạn vẫn đăng nhập ở các ứng dụng khác dùng chung SSO"
+Web -> AC : POST /auth/logout
+AC -> SES : revoke(sid)
+SES -> DB : user_sessions.revoked_at; giải mã id_token_hint_enc
+AC -> IDP : endSessionUrl(id_token_hint, post_logout_redirect_uri)
+alt SSO có end_session_endpoint
+    AC --> Web : 200 {logoutUrl}; xóa cookie
+    Web -> SSO : chuyển hướng logoutUrl
+    SSO --> U : kết thúc phiên SSO → 302 trang chủ
+else không có
+    AC --> Web : 200 (chỉ đăng xuất cục bộ)
+    Web -> U : "Bạn vẫn đăng nhập ở ứng dụng khác dùng chung SSO"
 end
-
+'@sau-mvp
 == Back-channel logout (sau MVP, nếu SSO hỗ trợ) ==
-SSO -> API : POST /auth/backchannel-logout (logout_token)
-API -> API : Xác thực logout_token theo JWKS
-API -> DB : revoke mọi session có sso_sid / sub tương ứng
+SSO -> AC : POST /auth/backchannel-logout (logout_token)
+AC -> IDP : verifyLogoutToken (JWKS, iss, aud, events, sid | sub)
+AC -> SES : revokeBySidOrSub
+SES -> DB : revoke mọi user_sessions khớp
+AC --> SSO : 200
+'@/sau-mvp
 @enduml

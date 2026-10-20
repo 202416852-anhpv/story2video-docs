@@ -66,7 +66,7 @@ Sơ đồ tổng thể: `../so-do/05-hoat-dong/act-quy-trinh-project.puml`.
 
 | Mã | Quy trình | Các bước |
 |---|---|---|
-| BP-00 | Tham gia beta | Admin thêm email vào danh sách mời → người dùng đăng nhập qua SSO → đồng ý xử lý dữ liệu → hệ thống tạo hồ sơ, ví và tặng $2 dùng thử |
+| BP-00 | Tham gia beta | Admin thêm email vào danh sách mời → người dùng đăng nhập qua SSO → hệ thống tạo hồ sơ, ví và tặng $2 dùng thử (JIT) → người dùng đồng ý xử lý dữ liệu rồi mới dùng Studio |
 | BP-01 | Khởi tạo dự án | Import văn bản (luôn giữ nguyên văn) → chọn style và **tỷ lệ khung hình video** → Project có Chapter 1 |
 | BP-02 | Cấu trúc truyện | Gợi ý hoặc chia chương thủ công → sắp xếp/gộp |
 | BP-03 | Dựng thế giới | AI phân tích tài sản → duyệt cast/địa điểm/đạo cụ → sinh ảnh tham chiếu → Art Direction, Visual Rules; AI dựng Timeline và Relationships |
@@ -93,7 +93,7 @@ Chi tiết nằm ở [08](08-quy-tac-nghiep-vu.md).
 | **BR-21** | **Chỉ tác giả sửa văn bản:** văn bản truyện chỉ thay đổi bởi thao tác trực tiếp của Owner/Editor (gõ, Find & replace, Re-import). |
 | **BR-22** | Phụ đề hiển thị **đúng nguyên văn** đoạn đang đọc, kể cả ký hiệu trình bày. |
 | **BR-23** | Video chỉ được xuất khi độ phủ văn bản 100%, mọi shot có ảnh và thuyết minh `DONE`, không clip nào `OUTDATED`. Không bắt buộc người dùng nghe hết. |
-| **BR-24** | Trong trình chỉnh sửa, track thuyết minh **khóa nội dung**: không cắt, xóa, đảo thứ tự; chỉ dời thời điểm, chỉnh âm lượng và đổi tốc độ 0,8×–1,25×. |
+| **BR-24** | Trong trình chỉnh sửa, track thuyết minh **khóa nội dung**: không cắt, xóa, đảo thứ tự; chỉ dời thời điểm và chỉnh âm lượng. Tốc độ đọc đặt một lần cho cả dự án ở bước sinh thuyết minh. |
 | BR-27 | Tài khoản Free bị giới hạn (1 dự án, 3 chương, 3 lần render và 10 phút video mỗi tháng, watermark) cho tới khi **nạp tiền thật**. |
 | BR-29 | Trần chi tiêu AI toàn hệ thống **$10/ngày** trong closed beta. |
 | BR-30 | Closed beta chỉ nhận người dùng có email trong **danh sách mời**. |

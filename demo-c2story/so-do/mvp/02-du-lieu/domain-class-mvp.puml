@@ -156,7 +156,6 @@ package "Trình chỉnh sửa video" {
         transitionIn
         volume
         duckingDb
-        playbackRate : 0,8–1,25 cho thuyết minh
     }
     class AudioAsset {
         kind : MUSIC|SFX

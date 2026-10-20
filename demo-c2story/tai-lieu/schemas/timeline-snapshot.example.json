@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "timelineId": "0192a7c4-0000-7000-8000-000000000001",
   "timelineVersion": 12,
   "projectId": "0192a7c4-0000-7000-8000-000000000002",
@@ -104,7 +104,6 @@
           "shotId": "0192a7c4-0000-7000-8000-000000000020",
           "narrationId": "0192a7c4-0000-7000-8000-000000000040",
           "mediaKey": "p/0192/narrations/s1-v1.mp3",
-          "playbackRate": 1.0,
           "volume": 1,
           "chapterId": "0192a7c4-0000-7000-8000-000000000003",
           "sourceStart": 0,
@@ -133,8 +132,6 @@
           "shotId": "0192a7c4-0000-7000-8000-000000000021",
           "narrationId": "0192a7c4-0000-7000-8000-000000000041",
           "mediaKey": "p/0192/narrations/s2-v1.mp3",
-          "derivedMediaKey": "p/0192/narrations/s2-v1-r1.25.mp3",
-          "playbackRate": 1.25,
           "volume": 1,
           "chapterId": "0192a7c4-0000-7000-8000-000000000003",
           "sourceStart": 7,
