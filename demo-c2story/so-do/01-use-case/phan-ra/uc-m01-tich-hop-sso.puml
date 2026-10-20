@@ -1,0 +1,57 @@
+@startuml UC_M01_SSO
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam roundCorner 10
+skinparam actor {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+}
+skinparam usecase {
+    BackgroundColor #F5F7FA
+    BorderColor #37474F
+}
+skinparam rectangle {
+    BorderColor #37474F
+}
+left to right direction
+title M01 - Tích hợp SSO & hồ sơ
+
+actor "Guest" as Guest
+actor "User" as User
+User -|> Guest
+
+rectangle "M01 Tích hợp SSO & hồ sơ" {
+    usecase "UC-01.01\nĐăng nhập qua SSO" as UC1
+    usecase "UC-01.01a\nXác thực ID token" as UC1a
+    usecase "UC-01.01b\nTạo / đồng bộ hồ sơ cục bộ\n(JIT)" as UC1b
+    usecase "UC-01.01c\nQuay về trang đã yêu cầu" as UC1c
+    usecase "UC-01.02\nĐăng xuất" as UC2
+    usecase "UC-01.02a\nKết thúc phiên SSO" as UC2a
+    usecase "UC-01.03\nXem Dashboard" as UC3
+    usecase "UC-01.04\nĐổi ngôn ngữ giao diện" as UC4
+    usecase "UC-01.05\nMở trang quản lý tài khoản SSO" as UC5
+    usecase "UC-01.06\nYêu cầu xóa dữ liệu ứng dụng" as UC6
+    usecase "UC-01.07\nNhận đăng xuất back-channel" as UC7
+}
+rectangle "SSO có sẵn\n(vd. SSO Vbee, OIDC)" as SSO
+
+Guest --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC6
+UC1 ..> UC1a : <<include>>
+UC1 ..> UC1b : <<include>>
+UC1 ..> UC1c : <<include>>
+UC2 ..> UC2a : <<include>>
+UC3 <.. UC5 : <<extend>>
+UC1 --> SSO
+UC2a --> SSO
+UC5 --> SSO
+SSO --> UC7
+
+legend right
+  Đăng ký, mật khẩu, MFA thuộc SSO có sẵn,
+  ứng dụng **không** phát triển lại (C-05).
+endlegend
+@enduml
