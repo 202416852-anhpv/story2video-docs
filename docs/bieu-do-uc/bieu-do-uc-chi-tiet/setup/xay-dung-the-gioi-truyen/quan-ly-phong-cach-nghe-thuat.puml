@@ -1,4 +1,4 @@
-@startuml phong-cach-nghe-thuat
+@startuml quan-ly-phong-cach-nghe-thuat
 left to right direction
 
 actor "Người dùng" as User
