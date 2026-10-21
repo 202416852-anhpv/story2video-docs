@@ -9,7 +9,7 @@ rectangle "Quản lý mối quan hệ giữa các nhân vật" {
     usecase "Chỉnh sửa mối quan hệ giữa các nhân vật" as UC_02
     usecase "Xem đồ thị mối quan hệ giữa các nhân vật" as UC_03
     usecase "Xóa mối quan hệ giữa các nhân vật" as UC_04
-    usecase "Tự động sinh đồ thị mối quan hệ nhân vật\n(Dựa trên bản thảo truyện)" as UC_05
+    usecase "Tự động sinh mối quan hệ nhân vật\n(Dựa trên bản thảo truyện)" as UC_05
 }
 
 User --> UC_01
