@@ -6,14 +6,12 @@ actor "Dịch vụ AI" as AI_Service
 
 rectangle "Tổng hợp giọng đọc" {
     ' --- NHÓM 1: BÓC TÁCH LỜI THOẠI & LỜI KỂ ---
-    usecase "Bóc tách lời thoại và lời kể" as UC_01
-    usecase "Tự động bóc tách" as UC_01_AI
-    usecase "Chỉnh sửa phân chia lời thoại,\n lời kể thủ công" as UC_01_Manual
+    usecase "Tự động bóc tách lời thoại và lời kể" as UC_01
+    usecase "Chỉnh sửa phân chia lời thoại / lời kể thủ công" as UC_01_Manual
 
     ' --- NHÓM 2: PHÂN VAI NHÂN VẬT ---
-    usecase "Phân vai nhân vật cho câu thoại" as UC_02
-    usecase "Tự động nhận diện vai" as UC_02_AI
-    usecase "Đổi vai thủ công" as UC_02_Manual
+    usecase "Tự động nhận diện phân vai nhân vật" as UC_02
+    usecase "Điều chỉnh gán vai nhân vật thủ công" as UC_02_Manual
 
     ' --- NHÓM 3: SINH ÂM THANH & KIỂM TRA ---
     usecase "Nghe thử từng câu hoặc cả đoạn" as UC_03
@@ -25,14 +23,11 @@ User --> UC_02
 User --> UC_03
 User --> UC_04
 
-UC_01 <|-- UC_01_AI
-UC_01 <|-- UC_01_Manual
+UC_01 <.. UC_01_Manual : <<extend>>
+UC_02 <.. UC_02_Manual : <<extend>>
 
-UC_02 <|-- UC_02_AI
-UC_02 <|-- UC_02_Manual
-
-UC_01_AI --> AI_Service
-UC_02_AI --> AI_Service
+UC_01 --> AI_Service
+UC_02 --> AI_Service
 UC_03 --> AI_Service
 UC_04 --> AI_Service
 

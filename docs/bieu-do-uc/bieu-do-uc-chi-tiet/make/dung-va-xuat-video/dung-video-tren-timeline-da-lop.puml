@@ -13,10 +13,7 @@ rectangle "Dựng video trên Timeline đa lớp" {
     usecase "Cấu hình hiệu ứng âm thanh nhỏ dần" as UC_Fade
 
     ' --- CÁC THAO TÁC MỞ RỘNG CỦA TRACK ---
-    usecase "Khóa / Mở khóa track" as UC_Track_Lock
-    usecase "Bật / Tắt tiếng track âm thanh" as UC_Track_Mute
-    usecase "Ẩn / Hiện track hiển thị" as UC_Track_Hide
-    usecase "Điều chỉnh âm lượng track" as UC_Track_Vol
+    usecase "Cấu hình trạng thái & thuộc tính Track\n(Âm lượng, tắt tiếng, khóa, ẩn/hiện)" as UC_Track_Prop
 
     ' --- CÁC THAO TÁC MỞ RỘNG BIÊN TẬP KHỐI ---
     usecase "Cắt tách khối" as UC_Clip_Split
@@ -33,10 +30,7 @@ User --> UC_Trans
 User --> UC_Fade
 
 ' Quan hệ mở rộng (Extend) của nhóm Track
-UC_Track <.. UC_Track_Lock : <<extend>>
-UC_Track <.. UC_Track_Mute : <<extend>>
-UC_Track <.. UC_Track_Hide : <<extend>>
-UC_Track <.. UC_Track_Vol  : <<extend>>
+UC_Track <.. UC_Track_Prop : <<extend>>
 
 ' Quan hệ mở rộng (Extend) của nhóm Biên tập khối
 UC_Clip <.. UC_Clip_Split : <<extend>>
@@ -46,5 +40,11 @@ UC_Clip <.. UC_Clip_Del   : <<extend>>
 
 ' AI hỗ trợ khởi tạo
 UC_Auto --> AI_Service
+
+note right of UC_Auto
+  Lấy dữ liệu từ kịch bản phân cảnh:
+  Tự động nạp tư liệu từ bước Phân cảnh (hình ảnh)
+  và bước Giọng đọc (file âm thanh TTS) vào các Track tương ứng.
+end note
 
 @enduml

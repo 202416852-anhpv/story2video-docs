@@ -3,6 +3,7 @@ left to right direction
 
 actor "Người dùng" as User
 actor "Dịch vụ AI" as AI_Service
+actor "Hệ thống Render" as Render_Service
 
 rectangle "Dựng & xuất video" {
     usecase "Thiết lập khung hình và bố cục video" as UC_01
@@ -20,6 +21,6 @@ User --> UC_06
 
 UC_04 --> AI_Service
 UC_05 --> AI_Service
-UC_06 --> AI_Service
+UC_06 --> Render_Service
 
 @enduml

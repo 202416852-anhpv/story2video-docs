@@ -6,18 +6,22 @@ actor "Hệ thống Render" as Render_Service
 
 rectangle "Xem trước & Xuất video" {
     usecase "Xem trước video" as UC_01
-    usecase "Tua và tạm dừng video" as UC_02
     usecase "Xuất video" as UC_04
     usecase "Theo dõi tiến độ render video" as UC_05
     usecase "Tải video" as UC_06
 }
 
 User --> UC_01
-User --> UC_02
 User --> UC_04
 
 UC_04 ..> UC_05 : <<include>>
-UC_04 <.. UC_06 : <<extend>>
+UC_05 <.. UC_06 : <<extend>>
 
 UC_04 --> Render_Service
+
+note left of UC_01
+  Bao gồm các tương tác phát,
+  tạm dừng và tua thời gian
+  trong kịch bản luồng sự kiện.
+end note
 @enduml

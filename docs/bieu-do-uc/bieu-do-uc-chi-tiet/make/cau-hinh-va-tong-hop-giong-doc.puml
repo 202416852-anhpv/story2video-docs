@@ -14,4 +14,10 @@ User --> UC_02
 
 UC_02 --> AI_Service
 
+note bottom of UC_02
+  Tiền điều kiện:
+  Đã có nội dung kịch bản phân cảnh từ phân hệ
+  "Tạo & chỉnh sửa phân cảnh" để tiến hành bóc tách và tổng hợp giọng.
+end note
+
 @enduml
