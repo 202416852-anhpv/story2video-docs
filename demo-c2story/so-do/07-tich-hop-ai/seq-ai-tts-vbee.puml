@@ -1,0 +1,49 @@
+@startuml Seq_AI_TtsVbee
+!theme plain
+!include ../04-tuan-tu/_style-tuan-tu.iuml
+autonumber
+title Tích hợp AI (sau MVP, bản hoàn chỉnh; 13 §4.4, §11.3): một lần thử NARRATE_SEGMENT với Vbee AIVoice\nCùng TtsPort, chỉ thay adapter: SSML đầy đủ (PHONEME), tính phí theo ký tự, timestamp của Vbee nếu đạt EVAL-alignment\nQĐ-121, QĐ-145, ADR-30; BR-19, BR-21
+
+box "Worker (queue tts)" $BOX_WORKER
+participant "NarrateSegmentHandler" as H $WORKER
+end box
+database PostgreSQL as DB $DU_LIEU
+participant "Object Storage" as S3 $DU_LIEU
+box "AI Gateway (thư viện)" $BOX_AI_GATEWAY
+participant "SpeechNormalizer" as N $AI_GATEWAY
+participant "VbeeTtsAdapter\n(mock ở local / CI)" as VA $AI_GATEWAY
+participant "AlignerPort\n(WhisperX, chỉ khi cần)" as AA $AI_GATEWAY
+participant "UsageMeter" as UM $AI_GATEWAY
+end box
+participant "Vbee AIVoice API" as VB $BEN_NGOAI
+
+H -> DB : đoạn nguồn của shot, kiểm source_hash (như bản MVP)
+H -> N : normalize(text, symbol_rules, entries, settings)
+N --> H : NormalizedSpeech (cùng kiểu với bản MVP;\nPHONEME giữ vì capabilities.phoneme = true)
+H -> VA : speak(speech, voice, language, speed)\n(handler y hệt bản MVP, QĐ-145)
+VA -> VA : dùng speech.ssml (break / alias / phoneme);\nkey từ secret manager; timeout ≥ 2× thời lượng dự kiến
+VA -> VB : HTTPS tổng hợp giọng (SSML, giọng Vbee, tốc độ)\n[SL] dạng gọi đồng bộ hay bất đồng bộ chốt theo tài liệu API Vbee
+alt thành công
+    VB --> VA : audio (+ timestamp từ, nếu Vbee trả)
+else 429 / 5xx / timeout
+    VB --> VA : lỗi → TRANSIENT → job thử lại (không đổi provider giữa chừng)
+else Vbee từ chối nội dung
+    VB --> VA : lỗi → CONTENT_POLICY → FAILED + RELEASE (BR-18)
+end
+VA -> UM : record(unit = CHARS, số ký tự, cost, request_id, attempt)
+UM -> DB : ai_usage_records
+VA --> H : audio, durationMs, wordTimings? (trên R, UTF-16)
+H -> S3 : PUT narrations/{id}.mp3
+alt capabilities.timestampsTrusted (đã đạt EVAL-alignment)
+    H -> H : dùng timestamp của Vbee (bỏ bước căn)
+else không có / chưa đạt
+    H -> AA : align(audio, R) — như bản MVP (seq-ai-tts-tu-host §3)
+    AA --> H : timings (UTF-16)
+end
+H -> H : ánh xạ về tọa độ chương qua NormalizationMap
+H -> DB : narrations DONE; [job gốc] CAPTURE ký tự × đơn giá × 1,10\n+ RELEASE dư; COMMIT
+note over H, VB
+  Khác bản MVP: dữ liệu đọc đi ra ngoài tới Vbee (cập nhật thông báo đồng ý, BR-31);
+  PHONEME có tác dụng; đơn vị CHARS thay SECONDS; TTS Server có thể giữ làm dự phòng.
+end note
+@enduml

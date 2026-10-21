@@ -58,7 +58,7 @@ Web -> PS : POST /projects/{pid}/pronunciations:preview {text}
 PS -> PS : rate limit ≤ 10 lần/phút/người (BR-32)
 PS -> N : normalize(text, settings, entries)
 PS -> PS : cache theo hash(R, giọng, tốc độ)? có → trả audio ngay
-PS -> TA : speak(R, voice, speed) — timeout 15 s, không thử lại
+PS -> TA : speak(NormalizedSpeech, voice, speed) — timeout 15 s, không thử lại
 TA -> TTS : POST /synthesize (HTTP nội bộ)
 alt thành công
     TTS --> TA : audio (+ giây GPU)
@@ -99,7 +99,7 @@ loop mỗi NARRATE_SEGMENT (concurrency của queue tts, theo VRAM)
 '@sau-mvp
     alt giọng TTS tự host (MVP, ADR-30)
 '@/sau-mvp
-        W -> TA : speak(R, ssml, voice, language, speed)
+        W -> TA : speak(NormalizedSpeech, voice, language, speed) (QĐ-145)
         TA -> TA : tách R tại các đoạn PAUSE; đoạn dài chia theo câu
         loop mỗi đoạn
             TA -> TTS : POST /synthesize {text chữ thuần, speaker, speed}\n(timeout ≥ 2× thời lượng dự kiến, QĐ-126)
@@ -122,7 +122,7 @@ loop mỗi NARRATE_SEGMENT (concurrency của queue tts, theo VRAM)
         AA -> UM : ai_usage_records(SECONDS)
 '@sau-mvp
     else giọng Vbee AIVoice (sau MVP)
-        W -> TA : speak(ssml, voice) qua VbeeTtsAdapter
+        W -> TA : speak(NormalizedSpeech, voice) qua VbeeTtsAdapter (dùng speech.ssml)
         TA -> VB : HTTPS (SSML alias / phoneme / break)
         VB --> TA : audio (+ timestamp nếu có) — đơn vị CHARS
         opt không có timestamp đạt EVAL-alignment

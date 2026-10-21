@@ -1,0 +1,73 @@
+@startuml Act_AI_GoiProvider
+!theme plain
+!include ../05-hoat-dong/_style-hoat-dong.iuml
+title Tích hợp AI (13 §2.3, §5, §7): xử lý một job gọi provider AI, từ lúc worker nhận việc đến quyết toán\nPhân loại lỗi, thử lại một tầng, fallback chỉ cho LLM, sửa schema, đo mọi lần gọi; QĐ-124..126, QĐ-133; BR-18; WR-09
+
+|$LAN_WORKER|Worker|
+start
+:Nhận job từ BullMQ;
+:UPDATE jobs SET RUNNING, attempts += 1\nWHERE status IN (QUEUED, RETRYING);
+if (Trúng 1 dòng?) then (không)
+  :Ack, bỏ qua\n(không gọi provider lần hai, ADR-29);
+  stop
+else (có)
+endif
+:Chuẩn bị đầu vào tất định\n(ContextBuilder / PromptCompiler / SpeechNormalizer);
+if (Kiểm tra trước khi gọi đạt?\n(hash đoạn nguồn, kiểm tra ngược SSML)) then (không)
+  $LOI:FAILED, cảnh báo P1 (lỗi lập trình);\nkhông gọi provider;
+  $TIEN:RELEASE toàn bộ;
+  stop
+else (đạt)
+endif
+
+|$LAN_AI|AI Gateway|
+:ProviderRouter chọn provider, mô hình, timeout\n(LLM 120 s, ảnh 90 s, TTS ≥ 2× thời lượng);
+if (LLM và attempts ≥ 2?) then (có)
+  :Fallback sang mô hình Gemini có\nunit_cost ≤ mô hình đã báo giá (nếu có);
+else (không)
+  :Giữ provider ghim\n(ảnh theo dự án, TTS theo giọng);
+endif
+repeat
+  :Adapter đổi request sang định dạng provider,\nidempotency = jobId:attempt nếu hỗ trợ;
+  |$LAN_NGOAI|Dịch vụ AI|
+  $GOI_AI:Gemini (HTTPS) / TTS Server, WhisperX\n(HTTP nội bộ qua WireGuard);
+  |AI Gateway|
+  :UsageMeter ghi ai_usage_records\n(mọi lần gọi, kể cả lỗi);
+  if (Provider trả lỗi?) then (có)
+    break
+  else (không)
+  endif
+  :Kiểm schema, bỏ trường lạ;
+  backward:Gọi lại kèm thông báo lỗi schema;
+repeat while (LLM sai schema và chưa sửa đủ 2 lần?) is (có) not (không)
+
+|Worker|
+if (Kết quả?) then (lỗi tạm thời:\ntimeout, 5xx, 429, GPU tắt / hết VRAM)
+  if (attempts < 3?) then (có)
+    $TIEN:jobs RETRYING; giữ nguyên HOLD;
+    :BullMQ thử lại sau 2 s / 8 s / 30 s + jitter;
+    note right: Quay lại đầu luồng;\nlần lỗi không trừ ví nhưng\nvẫn cộng vào trần ngày (WR-09)
+    stop
+  else (không)
+    $LOI:FAILED (hết lượt thử);
+  endif
+elseif () then (CONTENT_POLICY)
+  $LOI:FAILED, CONTENT_POLICY;\nkhông lưu đầu ra, không tự thử lại (BR-18);
+elseif () then (đầu vào sai:\nkey, mô hình, request quá lớn)
+  $LOI:FAILED; cảnh báo vận hành;
+elseif () then (sai schema sau 2 lần sửa)
+  $LOI:FAILED; giữ dữ liệu cũ;
+else (hợp lệ)
+  :Hậu xử lý tất định (CoverageValidator,\nánh xạ timestamp, offset UTF-16);
+  partition "Một giao dịch" {
+    $XONG:Ghi kết quả nghiệp vụ;
+    $TIEN:CAPTURE min(Σ cost lần thử thành công × 1,10, held)\n+ RELEASE phần dư; cập nhật trần ngày;
+    $XONG:jobs SUCCEEDED;
+  }
+  :Ack BullMQ; SSE job.updated + sự kiện nghiệp vụ;
+  stop
+endif
+$TIEN:RELEASE toàn bộ; trần ngày: reserved −= c0, spent += Σ cost;
+:Ack BullMQ; SSE job.updated (FAILED);\nđối tượng FAILED, người dùng sinh lại phần lỗi;
+stop
+@enduml

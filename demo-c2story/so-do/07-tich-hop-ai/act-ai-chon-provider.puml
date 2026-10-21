@@ -1,0 +1,59 @@
+@startuml Act_AI_ChonProvider
+!theme plain
+!include ../05-hoat-dong/_style-hoat-dong.iuml
+title Tích hợp AI (13 §11; 09 §1.5): chọn provider và chốt tham số AI ở P0 bằng số liệu đo, kèm quy tắc dự phòng\nQĐ-110..117, QĐ-119..123; mốc M0 (T4)
+
+|$LAN_HE_THONG|Kỹ sư AI|
+start
+:Chuẩn bị golden set: 5–10 chương vi (hết hạn bảo hộ),\nGutenberg en, 1–2 chương tự viết; nhãn tay (QĐ-70);
+:Viết adapter thật + ghi fixture + mock adapter\n(seq-ai-danh-gia-provider);
+fork
+  $GOI_AI:Provider ứng viên: Gemini Image sinh ≥ 150 shot golden;
+  :Người chấm (PO / BA, 2 người): rubric 4 thuộc tính;\nκ ≥ 0,6 (EVAL-consistency);
+  if (Sai ngoại hình ≤ 10%?) then (đạt)
+  elseif (≤ 15% (BO-02)?) then (có)
+    :Vẫn dùng; ghi khoảng hở vào báo cáo;
+  else (không)
+    :Thử thêm 1 provider (≤ 1 tuần, từ dự phòng);\nchọn tốt nhất, ghi QĐ;
+  endif
+  if (Bị chặn ≤ 5%? (EVAL-refusal-rate)) then (đạt)
+  else (không)
+    :Thêm hướng dẫn tả gián tiếp vào prompt\nstoryboard, đo lại; vẫn > 5% → R-21 "đang xảy ra";
+  endif
+fork again
+  $GOI_AI:Provider ứng viên: 2–3 model TTS tự host + WhisperX\nđọc golden set;
+  :EVAL-wer-golden: WER âm tiết − WER nền;\nBENCH-tts trên máy GPU ứng viên;
+  if (WER hiệu chỉnh ≤ 3%?) then (đạt)
+  elseif (≤ 5%?) then (có)
+    :Chọn model WER thấp nhất; từ điển phát âm\nra khỏi thứ tự cắt giảm; R-06 "đang xảy ra";
+  else (không)
+    :PO chọn: chấp nhận / đổi giọng, ngôn ngữ /\nđưa Vbee AIVoice vào MVP (R-23);
+  endif
+  if (TTS + căn timestamp ≤ 0,4× thời lượng?) then (đạt)
+  else (không)
+    :GPU mạnh hơn (báo PO) / model nhẹ hơn\nnếu WER vẫn đạt / nới NFR-PERF-09;
+  endif
+  if (Biên từ trung vị ≤ 100 ms, p95 ≤ 250 ms?) then (đạt)
+  else (không)
+    :Thử MFA; vẫn không đạt → nới p95 ≤ 400 ms;
+  endif
+fork again
+  $GOI_AI:Provider ứng viên: Gemini Flash / Pro chạy phân tích tài sản\nvà storyboard trên golden set;
+  :EVAL-asset-extraction; đo hệ số ký tự/token\ntiếng Việt cho PriceEstimator (QĐ-129);
+  if (Recall ≥ 90%, precision ≥ 80%?) then (đạt)
+  else (không)
+    :Sửa prompt (file có phiên bản) hoặc\ndùng Pro; chạy lại eval;
+  endif
+end fork
+:EVAL-cost-per-minute: luồng đầy đủ trên 2 chương\ngolden ở mật độ 3 ảnh/phút, cộng ai_usage_records;
+if (≤ $0,15 / phút video?) then (đạt)
+  $XONG:Chốt mật độ ảnh (QĐ-112);
+else (không)
+  |$LAN_NGUOI_DUNG|PO|
+  :Chọn: giảm mật độ (≥ 2 ảnh/phút) /\nmô hình Gemini rẻ hơn / nâng BO-06;
+  |Kỹ sư AI|
+endif
+$XONG:Ghi QĐ; seed ai_providers, ai_models (unit_cost_usd),\nvoices, price_rules; cập nhật 05 §7.3, 13 §1.1;
+:Đưa eval vào danh sách hồi quy: chạy lại khi đổi\nprompt, mô hình, provider, giọng (NFR-MNT-06);
+stop
+@enduml

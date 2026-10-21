@@ -40,6 +40,8 @@ Mục lục `00-muc-luc.md` §5 và RTM `09` §4 **không có script**: khi thê
 
 Sơ đồ hoạt động theo nhóm `act-m*` `!include _style-hoat-dong.iuml` (làn màu, biến `$LOI`, `$TIEN`, `$GOI_AI`, `$XONG` cho hành động). Sơ đồ tuần tự `!include _style-tuan-tu.iuml` (màu theo tầng, chú giải); participant mới gắn biến màu tầng (`$API`, `$WORKER`, …) và đặt đúng cột theo thứ tự tầng ghi trong file đó. `gen_mvp.py` tự đổi đường dẫn include cho bản MVP.
 
+`so-do/07-tich-hop-ai/` gom sơ đồ góc nhìn tích hợp AI (tuần tự, hoạt động, trạng thái) theo `tai-lieu/13`; include style bằng `../04-tuan-tu/_style-tuan-tu.iuml` / `../05-hoat-dong/_style-hoat-dong.iuml`; không có đánh dấu MVP (dùng chung, riêng `seq-ai-tts-vbee` là sau MVP), `gen_mvp.py` không xử lý thư mục này.
+
 Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, quy trình, 2 trạng thái — danh mục ở `so-do/mvp/README.md`) phải sửa cùng lúc với bản đầy đủ cùng tên.
 
 ## Cấu trúc tài liệu và truy vết

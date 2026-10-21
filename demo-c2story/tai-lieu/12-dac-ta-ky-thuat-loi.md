@@ -104,7 +104,7 @@ interface MapSeg { kind: SegKind; sStart: number; sEnd: number; rStart: number; 
 | `IDENTITY` | Chữ giữ nguyên | `S[sStart:sEnd] === R[rStart:rEnd]` |
 | `DROP` | Ký hiệu bị bỏ khi đọc (SYM-01..04) | `rStart = rEnd` (độ dài 0 trên R) |
 | `EXPAND` | Số, ngày, đơn vị đọc thành chữ | Một đoạn S → nhiều từ R |
-| `ALIAS` | Từ điển phát âm `ALIAS` / `PHONEME` | Một đoạn S → cách đọc trên R (phoneme: R giữ chữ gốc, SSML mang phoneme; chỉ có tác dụng với Vbee sau MVP, TTS tự host bỏ qua) |
+| `ALIAS` | Từ điển phát âm `ALIAS` / `PHONEME` | Một đoạn S → cách đọc trên R (phoneme: R giữ chữ gốc, SSML mang phoneme; chỉ có tác dụng khi mô hình có `capabilities.phoneme`, vd. Vbee sau MVP; TTS tự host bỏ qua, QĐ-145) |
 | `PAUSE` | Dòng phân cách SYM-05 hoặc ngắt nghỉ | `rStart = rEnd`; SSML `<break time="500ms"/>` |
 
 Bất biến (`UT-normalization-map`): các `sStart..sEnd` nối liền phủ `[0, len(S))`; các `rStart..rEnd` nối liền phủ `[0, len(R))`; ghép S từ các đoạn `IDENTITY` + `DROP` + phần S của `EXPAND`/`ALIAS`/`PAUSE` bằng đúng S. Bản đồ được lưu trong `narrations.normalization_log` (`{segments: MapSeg[], rules: string[]}`).

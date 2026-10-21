@@ -1,0 +1,99 @@
+@startuml State_AI_LoiGoi
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam ArrowColor #455A64
+skinparam state {
+    BorderColor #546E7A
+    StartColor #37474F
+    EndColor #37474F
+}
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #F9A825
+}
+title Tích hợp AI (13 §2.3, §4.1, §7): trạng thái một lần thử gọi provider trong AI Gateway\n(mỗi lần thử của job; job thử lại một tầng qua BullMQ, QĐ-133; xem state-job)
+
+[*] --> ChuanBi : handler.handle(job, attempt)
+
+state "Chuẩn bị đầu vào" as ChuanBi #F3E5F5
+ChuanBi : ContextBuilder / PromptCompiler / SpeechNormalizer
+ChuanBi : bọc văn bản truyện trong khối dữ liệu (NFR-SEC-08)
+ChuanBi --> TuChoiTruoc : kiểm tra tất định sai\n(hash đoạn nguồn, kiểm tra ngược SSML)
+ChuanBi --> DinhTuyen : đầu vào hợp lệ
+
+state "Định tuyến" as DinhTuyen #F3E5F5
+DinhTuyen : chọn provider, mô hình, timeout theo loại (QĐ-126)
+DinhTuyen : [LLM, attempt ≥ 2] fallback mô hình không đắt hơn (QĐ-124, 125)
+DinhTuyen --> DangGoi : adapter.invoke (một lần)
+
+state "Đang gọi provider" as DangGoi #FCE4EC {
+    [*] --> GuiYeuCau
+    state "Gửi yêu cầu" as GuiYeuCau
+    GuiYeuCau : key từ secret manager; idempotency = jobId:attempt
+    state "Chờ phản hồi" as ChoPhanHoi
+    GuiYeuCau --> ChoPhanHoi
+    ChoPhanHoi --> [*] : có phản hồi / hết timeout
+}
+DangGoi --> DoChiPhi
+
+state "Đo chi phí" as DoChiPhi #FFE0B2
+DoChiPhi : UsageMeter → ai_usage_records
+DoChiPhi : (mọi lần gọi, kể cả lỗi; prompt_version, seed)
+
+state c_phanloai <<choice>>
+DoChiPhi --> c_phanloai : adapter phân loại kết quả (13 §7.1)
+c_phanloai --> HauXuLy : [có đầu ra]
+c_phanloai --> LoiTamThoi : [timeout, 5xx, 429,\nmất mạng, GPU tắt / hết VRAM]
+c_phanloai --> BiChan : [provider chặn nội dung]
+c_phanloai --> SaiDauVao : [key sai, mô hình không tồn tại,\nrequest quá lớn]
+
+state "Hậu xử lý" as HauXuLy #E8F5E9 {
+    [*] --> KiemSchema
+    state "Kiểm schema" as KiemSchema
+    KiemSchema : parse, bỏ trường lạ, chỉ số trong phạm vi
+    state "Sửa schema" as SuaSchema
+    SuaSchema : gọi lại kèm thông báo lỗi
+    state "Hậu xử lý tất định" as TatDinh
+    TatDinh : CoverageValidator, ánh xạ timestamp,\ncode point → UTF-16 (ADR-26)
+    KiemSchema --> SuaSchema : [LLM sai, số lần sửa < 2]
+    SuaSchema --> KiemSchema : đầu ra mới (lại qua Đo chi phí)
+    KiemSchema --> TatDinh : [hợp lệ]
+    KiemSchema --> [*] : [sai sau 2 lần sửa] / SchemaError
+    TatDinh --> [*]
+}
+HauXuLy --> ThanhCong : hợp lệ, phủ kín
+HauXuLy --> LoiVinhVien : SchemaError / CoverageError
+
+state "Thành công" as ThanhCong #C8E6C9
+ThanhCong : ghi kết quả + CAPTURE + RELEASE dư
+ThanhCong : trong một giao dịch, rồi ack
+
+state "Lỗi tạm thời" as LoiTamThoi #FFF3E0
+LoiTamThoi : retryable = true
+
+state "Bị chặn nội dung" as BiChan #FFCDD2
+BiChan : CONTENT_POLICY; không lưu đầu ra (BR-18)
+
+state "Sai đầu vào" as SaiDauVao #FFCDD2
+SaiDauVao : cảnh báo vận hành
+
+state "Từ chối trước khi gọi" as TuChoiTruoc #FFCDD2
+TuChoiTruoc : cảnh báo P1; không gọi provider
+
+state "Lỗi vĩnh viễn" as LoiVinhVien #FFCDD2
+LoiVinhVien : RELEASE toàn bộ; jobs FAILED
+
+LoiTamThoi --> [*] : attempts < 3 → jobs RETRYING,\nBullMQ backoff 2 s / 8 s / 30 s → lần thử mới
+LoiTamThoi --> LoiVinhVien : attempts = 3
+BiChan --> LoiVinhVien : không tự thử lại
+SaiDauVao --> LoiVinhVien : không thử lại
+TuChoiTruoc --> LoiVinhVien
+ThanhCong --> [*]
+LoiVinhVien --> [*]
+
+note right of DangGoi
+  Mock adapter (local, CI) đi cùng các
+  trạng thái, phản hồi đọc từ fixture
+  ghi từ provider thật (AI-P6).
+end note
+@enduml

@@ -118,8 +118,14 @@ package "Ports" #FFFFFF {
         +edit(req: ImageEditRequest): MediaRef
     }
     interface TtsPort <<interface>> {
-        +speak(req: TtsRequest): TtsResult
+        +speak(speech: NormalizedSpeech, voice, language, speed): TtsResult
     }
+    note bottom of TtsPort
+      Hợp đồng chung (QĐ-145): wordTimings trên bản đọc R,
+      code unit UTF-16; durationMs của file cuối; lỗi theo
+      nhóm chung; usage theo ai_models.unit.
+      Kiểm bằng IT-tts-port-contract cho mọi adapter
+    end note
     interface AlignerPort <<interface>> {
         +align(audio: MediaRef, text: string, language): WordTiming[]
     }
@@ -136,13 +142,13 @@ package "Adapters" #FCE4EC {
     class GeminiLlmAdapter
     class GeminiImageAdapter
     class SelfHostedTtsAdapter {
-        -splitAtPauses(r: string, map: NormalizationMap): string[]
+        -joinWithSilence(parts, pauses): audio
         -applyTempo(audio, speed): audio
     }
     note right of SelfHostedTtsAdapter
-      Gửi R dạng chữ thuần, chèn khoảng lặng PAUSE;
-      model không hỗ trợ tốc độ → FFmpeg atempo
-      trước khi căn timestamp (ADR-30, QĐ-140)
+      Dùng speech.segments (chữ thuần giữa các PAUSE),
+      chèn khoảng lặng; không có speedParam → FFmpeg
+      atempo trước khi căn timestamp (ADR-30, QĐ-140)
     end note
     class WhisperXAlignerAdapter
     class "Mock*Adapter" as MockAdapter {
@@ -161,10 +167,23 @@ package "Kiểu dữ liệu" #FAFAFA {
         boundaryFixes: int
     }
     class NormalizedSpeech {
-        r: string
+        reading: string
+        segments: {text, pauseAfterMs}[]
         ssml: string
         map: NormalizationMap
     }
+    class ModelCapabilities {
+        ssml: boolean
+        phoneme: boolean
+        speedParam: boolean
+        wordTimestamps: boolean
+        timestampsTrusted: boolean
+        maxCharsPerCall: int
+    }
+    note bottom of ModelCapabilities
+      ai_models.capabilities (QĐ-145): code ngoài
+      adapter đọc năng lực, không so tên provider
+    end note
     class NormalizationMap {
         segments: (IDENTITY | DROP | EXPAND | ALIAS | PAUSE)[]
         +toSource(rOffset): int
@@ -213,6 +232,8 @@ CoverageValidator ..> Sentence
 CoverageValidator ..> CoverageResult
 SpeechNormalizer ..> NormalizedSpeech
 NormalizedSpeech *-- NormalizationMap
+TtsPort ..> NormalizedSpeech
+ProviderRouter ..> ModelCapabilities : đọc từ ai_models
 AlignerPort ..> WordTiming
 WordTiming ..> NormalizationMap : ánh xạ về văn bản gốc (12 §2)
 PromptCompiler ..> CompiledPrompt

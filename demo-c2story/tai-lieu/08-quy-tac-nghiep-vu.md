@@ -71,6 +71,7 @@
 - Giá ước tính tối đa (BR-01) dùng đơn giá provider trong `ai_models.unit_cost_usd` và giới hạn đầu ra của từng thao tác ở §3.2.
 - Fallback sang mô hình khác (chỉ LLM) chỉ được chọn mô hình có `unit_cost_usd` ≤ mô hình đã báo giá, để chi phí thực không vượt HOLD (QĐ-125).
 - TTS tự host (MVP): chi phí thực = giây GPU × `unit_cost_usd` (giá thuê GPU một giờ / 3.600, đo ở P0); vẫn × 110% và tính vào trần ngày (QĐ-123).
+- Công thức báo giá và trừ tiền của `NARRATION_TTS` chọn theo `ai_models.unit` của mô hình gắn với giọng (`SECONDS` cho TTS tự host, `CHARS` cho Vbee AIVoice), không theo tên provider (QĐ-145).
 
 ### 3.2 Thao tác tính phí
 

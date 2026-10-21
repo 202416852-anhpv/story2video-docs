@@ -1,0 +1,85 @@
+@startuml State_AI_DauRa
+!theme plain
+skinparam defaultFontName "Segoe UI"
+skinparam ArrowColor #455A64
+skinparam state {
+    BorderColor #546E7A
+    StartColor #37474F
+    EndColor #37474F
+}
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #F9A825
+}
+title Tích hợp AI (13 §4.2, §6): vòng đời đầu ra của AI khi đi qua ranh giới tin cậy vào dữ liệu hệ thống\nAI-P1, AI-P7; BR-14, BR-18, BR-21; NFR-INT-02, NFR-SEC-08
+
+[*] --> Tho : provider trả về
+
+state "Thô (không tin cậy)" as Tho #FCE4EC
+Tho : chỉ nằm trong bộ nhớ của worker
+Tho --> KhongLuu : bị chặn nội dung (CONTENT_POLICY)\n/ lỗi provider
+Tho --> DaKiem : qua bộ kiểm schema\n(bỏ trường lạ, chỉ số trong phạm vi)
+Tho --> Tho : LLM sai schema: gọi lại kèm lỗi (≤ 2 lần)
+Tho --> KhongLuu : sai schema sau 2 lần sửa
+
+state "Đã kiểm" as DaKiem #F3E5F5
+
+state c_loai <<choice>>
+DaKiem --> c_loai : theo loại tác vụ
+
+state "Chỉ số câu / đoạn" as ChiSo #E3F2FD
+ChiSo : STORYBOARD_DRAFT, SUGGEST_SPLITS
+ChiSo : không chứa văn bản truyện (AI-P1)
+state "Đề xuất chờ duyệt" as DeXuat #FFF8E1
+DeXuat : ANALYZE_ASSETS, STORY_META
+DeXuat : nằm trong kết quả job; chưa tạo gì (UC-04.01a)
+state "Brief mới" as Brief #E3F2FD
+Brief : REWRITE_SHOT (7 trường)
+state "Media" as Media #E3F2FD
+Media : ảnh, audio thuyết minh, word_timings
+
+c_loai --> ChiSo
+c_loai --> DeXuat
+c_loai --> Brief
+c_loai --> Media
+
+state "Đã ánh xạ offset" as AnhXa #E3F2FD
+AnhXa : CoverageValidator: câu → [start, end),\nsource_hash, boundary_fixes
+ChiSo --> AnhXa : phủ kín 100% (IC-08)
+ChiSo --> KhongLuu : vẫn không phủ kín\n(lỗi lập trình, cảnh báo P1)
+
+state c_version <<choice>>
+AnhXa --> c_version : trước khi ghi
+Brief --> c_version : trước khi ghi
+c_version --> BoQua : [chapters / shots.version đã đổi]
+c_version --> DaApDung : [version không đổi]
+
+DeXuat --> DaApDung : Editor chọn, sửa, gộp,\nbấm "Thêm vào dự án"
+DeXuat --> BoQua : Editor đóng hộp thoại / bỏ chọn
+Media --> DaApDung : lưu bucket private,\nshots.current_* trỏ tới
+
+state "Bỏ qua" as BoQua #ECEFF1
+BoQua : storyboard: chạy lại từ đầu;\nbrief: giữ làm đề xuất trong jobs.result,\nkhông ghi đè (UC-05.06e 5a)
+
+state "Đã áp dụng" as DaApDung #C8E6C9
+DaApDung : shots, storyboard_drafts, story_assets,\nshots.brief, illustrations, narrations
+DaApDung : ghi cùng giao dịch quyết toán tiền
+
+state "Không lưu" as KhongLuu #FFCDD2
+KhongLuu : job FAILED, RELEASE; dữ liệu cũ giữ nguyên
+
+DaApDung --> Cu : ảnh / thuyết minh mới hơn,\nđoạn nguồn đổi hash, brief đổi
+state "Cũ" as Cu #ECEFF1
+Cu : illustration "brief đã đổi";\nnarration OUTDATED (IC-09)
+Cu --> [*]
+DaApDung --> [*]
+BoQua --> [*]
+KhongLuu --> [*]
+
+note bottom
+  Bất biến: không có chuyển trạng thái nào ghi đầu ra AI vào chapters.content,
+  source_texts, narrations.spoken_text (BR-21). Văn bản đọc của TTS chỉ hình thành
+  từ chapters.content[source_start:source_end] (SpeechNormalizer, tất định).
+  Kiểm bằng test kiến trúc NFR-INT-02, PBT-coverage-validator, IT-subtitle-verbatim.
+end note
+@enduml

@@ -2700,8 +2700,8 @@ Feature: UC-05.12 Quản lý từ điển phát âm
     When Vượt 500 mục hoặc trùng từ viết
     Then báo lỗi
 
-  Scenario: 1b Giọng của dự án thuộc TTS tự host (MVP, ADR-30)
-    When Giọng của dự án thuộc TTS tự host (MVP, ADR-30)
+  Scenario: 1b Mô hình của giọng dự án không hỗ trợ phoneme (ai_models.capabilities.phoneme = f
+    When Mô hình của giọng dự án không hỗ trợ phoneme (ai_models.capabilities.phoneme = false, vd. TTS tự host trong MVP, ADR-30; QĐ-145)
     Then chỉ cho chọn kiểu alias; giao diện gợi ý viết lại cách đọc bằng chữ thay cho phoneme
 ```
 
@@ -2726,7 +2726,7 @@ Feature: UC-05.13 Sinh thuyết minh nguyên văn
     And Thực hiện UC-05.13a
     And Thực hiện UC-05.13b
     And Gọi TTS (chia theo câu nếu vượt giới hạn, rồi nối audio); lưu audio
-    And Lấy thời gian từng từ trên bản đọc từ TTS nếu provider trả timestamp; nếu không, Aligner chạy forced alignment giữa audio và bản đọc. Ánh xạ về tọa độ chương bằng NormalizationMap theo 12 §2.3 để có word_timings
+    And Lấy thời gian từng từ trên bản đọc từ TTS nếu mô hình trả timestamp và đã được tin cậy (capabilities.timestampsTrusted, đạt EVAL-alignment); nếu không, Aligner chạy forced alignment giữa audio và bản đọc (QĐ-145). Ánh xạ về tọa độ chương bằng NormalizationMap theo 12 §2.3 để có word_timings
     And Lưu Narration DONE (phiên bản mới, đặt làm hiện hành, flagged_at rỗng), trừ chi phí thực × 110% và hoàn phần dư, phát narration.updated
     And *(Sau MVP)* Thực hiện UC-05.13c trước bước 6; trạng thái là VERIFIED hoặc NEEDS_REVIEW thay cho DONE
     Then Narration DONE kèm word_timings; cờ "cần sinh lại" (nếu có) được xóa
@@ -2801,7 +2801,7 @@ Feature: UC-05.13b Chuẩn hóa phát âm (SSML)
     And Hệ thống áp từ điển phát âm bằng SSML alias hoặc phoneme (tôn trọng case_sensitive)
     And Hệ thống ghi normalization_log gồm bản đồ chuẩn hóa NormalizationMap (12 §2.2: các đoạn IDENTITY/DROP/EXPAND/ALIAS/PAUSE nối S với bản đọc) và danh sách quy tắc đã áp
     And Hệ thống kiểm tra ngược: gỡ thẻ SSML và đảo các alias thì phải ra đúng text, chỉ khác ở các biến đổi mức phát âm được phép (BR-19), tức là chỉ thiếu các ký tự ký hiệu đã bỏ theo quy tắc đang bật
-    And Hệ thống trả ssml cho bước gọi TTS của UC-05.13
+    And Hệ thống trả NormalizedSpeech (bản đọc, các đoạn giữa PAUSE, SSML, bản đồ chuẩn hóa; QĐ-145) cho bước gọi TTS của UC-05.13; adapter tự chọn dạng cần
     Then có ssml và normalization_log; text gốc không đổi
 
   Scenario: 4a Kiểm tra ngược thất bại (có từ bị thêm, bớt hoặc đổi)
@@ -2814,9 +2814,9 @@ Feature: UC-05.13b Chuẩn hóa phát âm (SSML)
     When Mục từ điển lỗi cú pháp phoneme
     Then bỏ qua mục đó, ghi vào normalization_log và cảnh báo trong kết quả
 
-  Scenario: 2b Giọng thuộc TTS tự host (MVP, ADR-30)
+  Scenario: 2b Mô hình của giọng không hỗ trợ phoneme (capabilities.phoneme = false, vd. TTS tự
     Given luồng chính đã tới bước 2
-    When Giọng thuộc TTS tự host (MVP, ADR-30)
+    When Mô hình của giọng không hỗ trợ phoneme (capabilities.phoneme = false, vd. TTS tự host trong MVP, ADR-30; QĐ-145)
     Then mục PHONEME bị bỏ qua như 2a; SSML vẫn sinh để lưu và kiểm tra ngược, adapter chỉ gửi bản đọc chữ thuần
 
   Scenario: 1a Đoạn nguồn chỉ gồm dòng phân cách (SYM-05)

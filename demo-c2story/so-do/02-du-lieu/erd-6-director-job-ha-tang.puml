@@ -98,6 +98,7 @@ package "Director, job & hạ tầng" #EEEEEE {
         * code : text
         display_name : text
         capabilities : jsonb
+        unit : text
         unit_cost_usd : numeric
         enabled : bool
         user_selectable : bool

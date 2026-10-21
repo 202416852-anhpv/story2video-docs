@@ -1,8 +1,9 @@
 # 13 — Tích hợp với các hệ thống AI bên ngoài
 
-> **Phiên bản:** 1.1 · **Ngày:** 2026-10-20 · **Góc nhìn:** kỹ sư phần mềm và kỹ sư AI
+> **Phiên bản:** 1.2 · **Ngày:** 2026-10-21 · **Góc nhìn:** kỹ sư phần mềm và kỹ sư AI
 > Tài liệu gom về một chỗ mọi điều đã chốt về cách hệ thống gọi LLM, sinh ảnh, TTS, aligner/STT: thành phần, hợp đồng dữ liệu, luồng gọi, tiền, lỗi, bảo mật, kiểm thử và đánh giá. Đây là **tài liệu tổng hợp**: nguồn sự thật vẫn là 05 §6–§7 (kiến trúc, AI Gateway), 08 (giá, ví), 09 §1.5 (đánh giá), 12 (tách câu, ánh xạ timestamp). Mâu thuẫn thì tài liệu nguồn thắng.
 > Bản 1.1: áp lựa chọn nhà cung cấp QĐ-119..123 và 8 đề xuất đã duyệt QĐ-124..131 (§12).
+> Bản 1.2: QĐ-145, thiết kế để đổi TTS tự host sang Vbee AIVoice chỉ bằng adapter và dữ liệu seed (§4.1, §4.4, §4.5).
 
 ## 1. Tổng quan
 
@@ -86,6 +87,8 @@ Worker
    (lỗi tạm thời: jobs RETRYING → BullMQ thử lại lần sau theo backoff, tối đa 3 lần)
 ```
 
+Sơ đồ góc nhìn tích hợp AI (thư mục `../so-do/07-tich-hop-ai/`): tuần tự `seq-ai-goi-llm` (LLM), `seq-ai-sinh-anh` (ảnh), `seq-ai-tts-tu-host` (TTS tự host + WhisperX, MVP), `seq-ai-tts-vbee` (Vbee AIVoice, sau MVP), `seq-ai-danh-gia-provider` (fixture, eval); hoạt động `act-ai-goi-provider` (phân loại lỗi, thử lại, quyết toán), `act-ai-chon-provider` (chọn provider ở P0, §11); trạng thái `state-ai-loi-goi` (một lần thử trong AI Gateway), `state-ai-dau-ra` (đầu ra AI qua ranh giới tin cậy, §6).
+
 ## 3. Danh mục tác vụ AI
 
 | Job (`jobs.type`) | Queue | Port | Gửi đi | Nhận về | Thao tác tính phí (08 §3.2) | UC | GĐ |
@@ -113,7 +116,8 @@ Job cha `GENERATE_MEDIA_CHAPTER` (queue `orchestrator`) **không gọi provider*
 interface LlmPort      { complete(req: { system: string; messages: Msg[]; schema?: JSONSchema; tools?: Tool[]; stream?: boolean }): Promise<LlmResult>; }
 interface ImagePort    { generate(req: { prompt: string; references: MediaRef[]; aspect: '16:9'|'9:16'|'1:1'; seed?: number }): Promise<MediaRef>;
                          edit(req: { image: MediaRef; instruction: string }): Promise<MediaRef>; }
-interface TtsPort      { speak(req: { ssml: string; voice: VoiceSpec; language: string; speed: number }): Promise<{ audio: MediaRef; wordTimings?: WordTiming[]; usage: Usage }>; }
+interface TtsPort      { speak(req: { speech: NormalizedSpeech; voice: VoiceSpec; language: string; speed: number }): Promise<{ audio: MediaRef; durationMs: number; wordTimings?: WordTiming[]; usage: Usage }>; }
+interface NormalizedSpeech { reading: string; segments: { text: string; pauseAfterMs: number }[]; ssml: string; map: NormalizationMap; }  // QĐ-145
 interface AlignerPort  { align(req: { audio: MediaRef; text: string; language: string }): Promise<WordTiming[]>; }
 interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hint?: string }): Promise<string>; }
 ```
@@ -130,6 +134,8 @@ Quy ước cho mọi adapter:
 | Timeout | LLM 120 s, ảnh 90 s, TTS ≥ 2× thời lượng audio dự kiến (tối thiểu 30 s), nghe thử 15 s (QĐ-126) |
 | Tái lập | Ghi `prompt_version` và `seed` (nếu có) vào `ai_usage_records` (QĐ-127) |
 | Offset | Aligner Python trả offset theo code point; đổi sang code unit UTF-16 ở biên bằng hàm dùng chung có test (ADR-26, MAP-10) |
+| Năng lực | Khác biệt giữa các mô hình khai báo ở `ai_models.capabilities`; code ngoài adapter đọc năng lực, không so tên provider (QĐ-145) |
+| TTS | `wordTimings` luôn trên tọa độ bản đọc R, code unit UTF-16; `durationMs` là độ dài file cuối (đã ghép lặng, đã đổi tốc độ); kiểm bằng `IT-tts-port-contract` (QĐ-145) |
 
 ### 4.2 Hợp đồng đầu ra LLM
 
@@ -155,11 +161,36 @@ Brief 7 trường: Subject, Environment, Composition, Camera, Lighting, Mood, De
 
 1. `text = chapter.content[source_start:source_end]`, kiểm `sha256(text) == shot.source_hash`; lệch thì `OUTDATED`, không gọi TTS.
 2. `SpeechNormalizer` sinh SSML (break / alias / phoneme), áp quy tắc ký hiệu SYM-01..05 và từ điển phát âm, rồi **kiểm tra ngược**: bỏ thẻ SSML, áp ngược alias → chỉ được thiếu các ký hiệu đã bỏ theo quy tắc. Không đạt thì `FAILED`, không gọi TTS.
-3. Gọi `TtsPort.speak`; đoạn dài thì chia theo câu. Với TTS tự host (ADR-30), `SelfHostedTtsAdapter` gửi **bản đọc R dạng chữ thuần** (12 §2.1), tách tại các đoạn `PAUSE` rồi chèn khoảng lặng đúng độ dài khi ghép; mục từ điển `PHONEME` bị bỏ qua (UC-05.13b 2b), chỉ `ALIAS` có tác dụng. **Tốc độ đọc** của dự án: model hỗ trợ thì truyền tham số `speed`; không thì adapter đổi tốc độ audio đã ghép (FFmpeg `atempo`, giữ cao độ) **trước** bước căn timestamp, nên timestamp khớp file cuối (QĐ-140).
-4. Timestamp: dùng của TTS nếu có (Vbee AIVoice sau MVP, nếu đạt `EVAL-alignment`); TTS tự host thì luôn `AlignerPort.align` trên bản đọc. Ánh xạ về tọa độ chương bằng `NormalizationMap` (12 §2.3).
+3. Gọi `TtsPort.speak` với `NormalizedSpeech` (QĐ-145); adapter tự chọn dạng cần (SSML hay các đoạn chữ thuần) và chia đoạn dài theo câu, không quá `capabilities.maxCharsPerCall`. Với TTS tự host (ADR-30), `SelfHostedTtsAdapter` gửi **bản đọc R dạng chữ thuần** (12 §2.1), tách tại các đoạn `PAUSE` rồi chèn khoảng lặng đúng độ dài khi ghép; mục từ điển `PHONEME` bị bỏ qua vì `capabilities.phoneme = false` (UC-05.13b 2b), chỉ `ALIAS` có tác dụng. **Tốc độ đọc** của dự án: model có `capabilities.speedParam` thì truyền tham số `speed`; không thì adapter đổi tốc độ audio đã ghép (FFmpeg `atempo`, giữ cao độ) **trước** bước căn timestamp, nên timestamp khớp file cuối (QĐ-140).
+4. Timestamp: dùng `wordTimings` của adapter khi `capabilities.timestampsTrusted` (chỉ bật sau khi đạt `EVAL-alignment`); ngược lại `AlignerPort.align` trên bản đọc. TTS tự host luôn rơi vào nhánh căn. Ánh xạ về tọa độ chương bằng `NormalizationMap` (12 §2.3).
 5. Lưu audio vào object storage, `word_timings`, `normalization_log`; thuyết minh `DONE`.
 
-Sơ đồ: `../so-do/04-tuan-tu/seq-thuyet-minh-nguyen-van.puml`.
+Sơ đồ: `../so-do/04-tuan-tu/seq-thuyet-minh-nguyen-van.puml` (luồng nghiệp vụ); mức AI Gateway: `../so-do/07-tich-hop-ai/seq-ai-tts-tu-host.puml` (MVP), `seq-ai-tts-vbee.puml` (sau MVP).
+
+### 4.5 Đổi provider TTS (QĐ-145)
+
+Mục tiêu: chuyển TTS tự host sang Vbee AIVoice (sau MVP), hoặc ngược lại, **không sửa** handler, `SpeechNormalizer`, schema, ánh xạ timestamp, phụ đề, timeline hay giao diện.
+
+| Điểm khác giữa provider | Đặt ở đâu | Code dùng thế nào |
+|---|---|---|
+| Dạng đầu vào (chữ thuần theo đoạn `PAUSE` hay SSML) | Adapter | Port nhận `NormalizedSpeech` đủ mọi dạng |
+| PHONEME | `capabilities.phoneme` | Giao diện từ điển chỉ cho chọn PHONEME khi `true` (UC-05.12 1b); normalizer bỏ qua khi `false` (UC-05.13b 2b) |
+| Tốc độ đọc | `capabilities.speedParam` | Adapter truyền tham số, hoặc tự đổi tốc độ trước khi trả audio (QĐ-140) |
+| Timestamp | `capabilities.wordTimestamps`, `timestampsTrusted` | `if (!wordTimings \|\| !timestampsTrusted) align(...)` |
+| Độ dài mỗi lời gọi | `capabilities.maxCharsPerCall` | Adapter chia theo câu |
+| Đơn vị, đơn giá | `ai_models.unit`, `unit_cost_usd` | `PriceEstimator`, `UsageMeter` chọn công thức theo đơn vị (08 §3.1) |
+| Provider dùng cho dự án | `voices.provider_id` | Router chọn adapter theo giọng của dự án; TTS ghim theo giọng |
+
+**Các bước khi chuyển sang Vbee AIVoice:**
+
+1. Viết `VbeeTtsAdapter`; ghi fixture từ phản hồi thật (cả lỗi); mock adapter dùng fixture.
+2. Chạy `IT-tts-port-contract` cho adapter mới.
+3. Seed `ai_providers`, `ai_models` (`unit = CHARS`, `capabilities`, `timestampsTrusted = false`), `voices`.
+4. Chạy `EVAL-wer-golden`, `EVAL-alignment`; đạt `EVAL-alignment` thì bật `timestampsTrusted` (bỏ được bước căn timestamp).
+5. Tăng `consent_version`, thông báo đồng ý nêu thêm Vbee là bên nhận dữ liệu (BR-31).
+6. Đặt giọng Vbee làm mặc định cho dự án mới (`system_settings`). Dự án cũ giữ giọng tự host đến khi Owner đổi giọng; đổi giọng thì hỏi sinh lại toàn bộ (UC-05.11 4a), nên một chương không lẫn hai giọng. TTS Server có thể giữ làm dự phòng.
+
+Sơ đồ: `../so-do/07-tich-hop-ai/seq-ai-tts-tu-host.puml` (MVP), `seq-ai-tts-vbee.puml` (sau MVP).
 
 ## 5. Vòng đời một lời gọi tốn phí
 
@@ -286,6 +317,7 @@ Fixture mock được **ghi lại từ phản hồi thật** của provider ở 
 | `PBT-coverage-validator` | Đầu ra LLM bất kỳ (chỉ số sai, chồng lấn, hở) vẫn cho phủ kín 100% |
 | `UT-normalization-map`, `PBT-normalization-map`, `UT-timing-map` | Bản đồ chuẩn hóa và ánh xạ timestamp (12 §2) |
 | `IT-subtitle-verbatim` | Phụ đề đúng nguyên văn |
+| `IT-tts-port-contract` | Mọi adapter TTS (mock, tự host, Vbee) cùng hợp đồng: audio + `durationMs`, `wordTimings` trên R (UTF-16, đơn điệu), nhóm lỗi, `usage` đúng đơn vị (§4.5) |
 | `IT-daily-budget-cap` | Trần ngày không bị vượt khi gọi đồng thời |
 | `REC-ledger` | Sổ cái khớp số dư, mỗi job đúng một CAPTURE/RELEASE |
 
@@ -321,7 +353,7 @@ Golden set: 5–10 chương tác phẩm hết thời hạn bảo hộ (vi), Proj
 | `voices` | Giọng theo provider, ngôn ngữ, `sample_wer`; với TTS tự host là giọng mẫu có quyền dùng | Seed |
 | `price_rules` | Công thức `ceil(cost × 1,10)`, giới hạn đầu ra, hệ số ký tự/token | Seed |
 
-**Thêm một provider mới** (thứ tự): viết adapter thật cho port → ghi fixture từ phản hồi thật (cả lỗi) → adapter mock dùng fixture → seed `ai_providers`, `ai_models` (đơn giá), `voices` nếu là TTS → chạy eval của loại đó trên golden set → so với provider hiện tại → ghi QĐ nếu đổi mặc định. Việc đã biết trước: **Vbee AIVoice sau MVP** (`VbeeTtsAdapter`, giọng Vbee, đơn vị `CHARS`; nếu có timestamp đạt `EVAL-alignment` thì bỏ được bước căn timestamp).
+**Thêm một provider mới** (thứ tự): viết adapter thật cho port → ghi fixture từ phản hồi thật (cả lỗi) → adapter mock dùng fixture → seed `ai_providers`, `ai_models` (đơn giá), `voices` nếu là TTS → chạy eval của loại đó trên golden set → so với provider hiện tại → ghi QĐ nếu đổi mặc định. Việc đã biết trước: **Vbee AIVoice sau MVP** (`VbeeTtsAdapter`, giọng Vbee, đơn vị `CHARS`; nếu có timestamp đạt `EVAL-alignment` thì bỏ được bước căn timestamp; các bước chi tiết ở §4.5).
 
 ## 12. Quyết định đã áp
 
@@ -343,6 +375,7 @@ PO duyệt các đề xuất ĐX-AI-01..08 ngày 2026-10-20 và chọn lại nh�
 | QĐ-130 (ĐX-AI-07) | Bảng ánh xạ `jobs.type` ↔ `price_rules.operation` | 08 §3.2 |
 | QĐ-131 (ĐX-AI-08) | Nghe thử phát âm là ngoại lệ đồng bộ của AG-01 | 05 AG-01, §6.1; 06 |
 | QĐ-132..136 | Rà soát kỹ thuật: bỏ semaphore, circuit breaker, `ModerationFilter` riêng khỏi MVP; một tầng thử lại; chỉ job gốc giữ tiền; nghe thử miễn phí | 05, 08, 13 |
+| QĐ-145 | Đổi provider TTS chỉ bằng adapter + dữ liệu seed: `NormalizedSpeech`, `ai_models.capabilities` và `unit`, hợp đồng đầu ra TTS, `IT-tts-port-contract` | 04; 05 §7.1, §7.2, ADR-30; 08 §3.1; 09; 12 §2; 13 §4; UC-05.12, 05.13, 05.13b |
 
 Rủi ro mới: **R-22** phụ thuộc một nhà cung cấp (Google) cho LLM và ảnh; **R-23** TTS tự host không đạt chất lượng, tốc độ hoặc thiếu GPU (09 §5).
 
@@ -360,4 +393,4 @@ Rủi ro mới: **R-22** phụ thuộc một nhà cung cấp (Google) cho LLM v�
 | NFR | 07 NFR-INT-02, 03; NFR-REL-02..04; NFR-SEC-06, 08; NFR-MNT-02..06, 08; NFR-COST-01..03 |
 | Đánh giá | 09 §1.5, §4.13; QĐ-70, QĐ-110..118 |
 | Use case | UC-03.03, UC-04.01, 04.03, 04.09, UC-05.01, 05.01a, 05.06e, 05.07, 05.09, 05.10a, 05.12, 05.13, 05.17 |
-| Sơ đồ | `03-kien-truc/c4-component-ai`, `04-tuan-tu/seq-sinh-tu-lieu`, `seq-thuyet-minh-nguyen-van`, `seq-storyboard-sinh-anh`, `05-hoat-dong/act-giu-tru-tien`, `06-trang-thai/state-job` |
+| Sơ đồ | `03-kien-truc/c4-component-ai`, `04-tuan-tu/seq-sinh-tu-lieu`, `seq-thuyet-minh-nguyen-van`, `seq-storyboard-sinh-anh`, `05-hoat-dong/act-giu-tru-tien`, `06-trang-thai/state-job`; góc nhìn tích hợp AI `07-tich-hop-ai/`: `seq-ai-goi-llm`, `seq-ai-sinh-anh`, `seq-ai-tts-tu-host`, `seq-ai-tts-vbee` *(sau MVP)*, `seq-ai-danh-gia-provider`, `act-ai-goi-provider`, `act-ai-chon-provider`, `state-ai-loi-goi`, `state-ai-dau-ra` |

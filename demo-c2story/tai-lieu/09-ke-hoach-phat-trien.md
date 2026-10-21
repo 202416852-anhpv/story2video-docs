@@ -446,7 +446,7 @@ Mỗi use case chính có một dòng. Cột "Yêu cầu chức năng" gộp m�
 | UC-05.10 Sửa ảnh | P1 | FR-BOK-10 | BO-02 | seq-storyboard-sinh-anh | E2E-shot-image |
 | UC-05.11 Cài đặt thuyết minh | P2 | FR-NAR-01, 03 | BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van | IT-narration-settings, IT-symbol-rules |
 | UC-05.12 Quản lý từ điển phát âm | P2 ✂6 | FR-NAR-04 | BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van | IT-pronunciation-dictionary |
-| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden, EVAL-alignment, BENCH-tts, UT-normalization-map, PBT-normalization-map, UT-timing-map |
+| UC-05.13 Sinh thuyết minh nguyên văn | P2 | FR-NAR-02..04, 06 | BO-03, BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van | IT-tts-input-equals-source, IT-symbol-rules, EVAL-wer-golden, EVAL-alignment, BENCH-tts, UT-normalization-map, PBT-normalization-map, UT-timing-map, IT-tts-port-contract |
 | UC-05.14 Duyệt shot cần xem lại (NEEDS_REVIEW) | Sau | FR-NAR-07 | BO-03, BO-04 | act-m05-sinh-tu-lieu, seq-thuyet-minh-nguyen-van, state-narration-render | E2E-needs-review |
 | UC-05.15 Gán giọng theo nhân vật | Sau | FR-NAR-05 | BO-04 | — | IT-multi-voice |
 | UC-05.16 Tải ZIP ảnh | Sau | FR-BOK-16 | — | — | IT-asset-zip-export |
@@ -625,6 +625,7 @@ Quy ước mã `<MỨC>-<chủ đề>`:
 | `IT-narration-settings` | IT | ✓ | Cài đặt giọng, tốc độ, ngôn ngữ, bật/tắt quy tắc ký hiệu; nghe mẫu có sẵn miễn phí |
 | `IT-pronunciation-dictionary` | IT | ✓ | Từ điển phát âm chỉ đổi bản đọc, không đổi văn bản nguồn và phụ đề |
 | `IT-tts-input-equals-source` | IT | ✓ | Văn bản gửi TTS sau khi bỏ SSML bằng đúng đoạn nguồn của shot (BR-19) |
+| `IT-tts-port-contract` | IT | ✓ | Mọi adapter TTS (mock, tự host; Vbee sau MVP) chạy cùng bộ test hợp đồng `TtsPort` trên fixture: audio + `durationMs`, `wordTimings` trên bản đọc (UTF-16, đơn điệu), nhóm lỗi chung, `usage` đúng `ai_models.unit` (QĐ-145) |
 | `IT-symbol-rules` | IT | ✓ | SYM-01..05: bản đọc bỏ ký hiệu giữ chữ, "---" thành lặng 0,5 s; quy tắc tắt thì giữ ký hiệu; phụ đề luôn hiện nguyên văn kể cả ký hiệu (BR-19, BR-22) |
 | `UT-normalization-map` | UT | ✓ | `NormalizationMap` phủ kín cả S và bản đọc, đơn điệu; ghép lại đúng S (12 §2.2) |
 | `PBT-normalization-map` | PBT | ✓ | S ngẫu nhiên có ký hiệu, số, mục từ điển: bất biến 12 §2.2 và ánh xạ bản đọc → S đơn điệu |

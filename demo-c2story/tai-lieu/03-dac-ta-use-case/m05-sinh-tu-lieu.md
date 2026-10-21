@@ -683,7 +683,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **1a.** Vượt 500 mục hoặc trùng từ viết: báo lỗi.
-- **1b.** Giọng của dự án thuộc TTS tự host (MVP, ADR-30): chỉ cho chọn kiểu alias; giao diện gợi ý viết lại cách đọc bằng chữ thay cho phoneme.
+- **1b.** Mô hình của giọng dự án không hỗ trợ phoneme (`ai_models.capabilities.phoneme = false`, vd. TTS tự host trong MVP, ADR-30; QĐ-145): chỉ cho chọn kiểu alias; giao diện gợi ý viết lại cách đọc bằng chữ thay cho phoneme.
 
 ---
 
@@ -706,7 +706,7 @@
 2. Thực hiện **UC-05.13a**.
 3. Thực hiện **UC-05.13b**.
 4. Gọi TTS (chia theo câu nếu vượt giới hạn, rồi nối audio); lưu audio.
-5. Lấy thời gian từng từ trên bản đọc từ TTS nếu provider trả timestamp; nếu không, Aligner chạy forced alignment giữa audio và bản đọc. Ánh xạ về tọa độ chương bằng `NormalizationMap` theo 12 §2.3 để có `word_timings`.
+5. Lấy thời gian từng từ trên bản đọc từ TTS nếu mô hình trả timestamp và đã được tin cậy (`capabilities.timestampsTrusted`, đạt `EVAL-alignment`); nếu không, Aligner chạy forced alignment giữa audio và bản đọc (QĐ-145). Ánh xạ về tọa độ chương bằng `NormalizationMap` theo 12 §2.3 để có `word_timings`.
 6. Lưu Narration `DONE` (phiên bản mới, đặt làm hiện hành, `flagged_at` rỗng), trừ chi phí thực × 110% và hoàn phần dư, phát `narration.updated`.
 7. *(Sau MVP)* Thực hiện **UC-05.13c** trước bước 6; trạng thái là `VERIFIED` hoặc `NEEDS_REVIEW` thay cho `DONE`.
 
@@ -758,12 +758,12 @@
 2. Hệ thống áp từ điển phát âm bằng SSML `alias` hoặc `phoneme` (tôn trọng `case_sensitive`).
 3. Hệ thống ghi `normalization_log` gồm bản đồ chuẩn hóa `NormalizationMap` (12 §2.2: các đoạn `IDENTITY`/`DROP`/`EXPAND`/`ALIAS`/`PAUSE` nối S với bản đọc) và danh sách quy tắc đã áp.
 4. Hệ thống kiểm tra ngược: gỡ thẻ SSML và đảo các alias thì phải ra đúng `text`, chỉ khác ở các biến đổi mức phát âm được phép (BR-19), tức là chỉ thiếu các ký tự ký hiệu đã bỏ theo quy tắc đang bật.
-5. Hệ thống trả `ssml` cho bước gọi TTS của UC-05.13.
+5. Hệ thống trả `NormalizedSpeech` (bản đọc, các đoạn giữa `PAUSE`, SSML, bản đồ chuẩn hóa; QĐ-145) cho bước gọi TTS của UC-05.13; adapter tự chọn dạng cần.
 
 **Luồng thay thế / ngoại lệ**
 - **4a.** Kiểm tra ngược thất bại (có từ bị thêm, bớt hoặc đổi): không gọi TTS, Narration `FAILED`, RELEASE tiền đã giữ, cảnh báo P1 vì đây là lỗi vi phạm bất biến [ĐX].
 - **2a.** Mục từ điển lỗi cú pháp phoneme: bỏ qua mục đó, ghi vào `normalization_log` và cảnh báo trong kết quả.
-- **2b.** Giọng thuộc TTS tự host (MVP, ADR-30): mục `PHONEME` bị bỏ qua như 2a; SSML vẫn sinh để lưu và kiểm tra ngược, adapter chỉ gửi bản đọc chữ thuần.
+- **2b.** Mô hình của giọng không hỗ trợ phoneme (`capabilities.phoneme = false`, vd. TTS tự host trong MVP, ADR-30; QĐ-145): mục `PHONEME` bị bỏ qua như 2a; SSML vẫn sinh để lưu và kiểm tra ngược, adapter chỉ gửi bản đọc chữ thuần.
 - **1a.** Đoạn nguồn chỉ gồm dòng phân cách (SYM-05): không gọi TTS; tạo Narration `DONE` là khoảng lặng 0,5 s, không có `word_timings`, không có phụ đề (BR-22).
 - **1b.** Quy tắc ký hiệu bị tắt ở dự án: ký hiệu được giữ trong bản đọc và gửi nguyên cho TTS.
 

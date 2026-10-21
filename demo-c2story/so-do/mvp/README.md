@@ -24,8 +24,8 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 
 ## Sơ đồ dùng chung (MVP giống bản đầy đủ)
 
-`05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
+`05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; bộ sơ đồ tích hợp AI (13) trong `07-tich-hop-ai/` trừ `seq-ai-tts-vbee` (MVP dùng `seq-ai-tts-tu-host`); `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
 
 ## Sơ đồ chỉ có ở bản đầy đủ (toàn bộ sau MVP)
 
-`04-tuan-tu/seq-director`, `seq-cong-tac-xung-dot`; `06-trang-thai/state-director-plan`, `state-tool-proposal`, `state-subscription`; `01-use-case/phan-ra/uc-m07-ai-director`, `uc-m08-thu-vien-tai-san`.
+`04-tuan-tu/seq-director`, `seq-cong-tac-xung-dot`; `07-tich-hop-ai/seq-ai-tts-vbee`; `06-trang-thai/state-director-plan`, `state-tool-proposal`, `state-subscription`; `01-use-case/phan-ra/uc-m07-ai-director`, `uc-m08-thu-vien-tai-san`.
