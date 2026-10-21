@@ -9,7 +9,6 @@ rectangle "Quản lý phiên bản phân cảnh" {
     usecase "Đặt tên / Đổi tên phiên bản" as UC_03
     usecase "Đặt làm phiên bản làm việc chính" as UC_04
     usecase "So sánh giữa 2 phiên bản phân cảnh" as UC_05
-    usecase "Nhân bản phiên bản phân cảnh" as UC_06
     usecase "Xóa phiên bản phân cảnh" as UC_07
 }
 
@@ -19,7 +18,6 @@ User --> UC_02
 User --> UC_03 
 User --> UC_04
 User --> UC_05 
-User --> UC_06 
 User --> UC_07 
 
 @enduml
