@@ -1,11 +1,11 @@
-@startuml quan-ly-nhan-vat
+@startuml quan-ly-dia-diem
 left to right direction
 
 actor "Người dùng" as User
 actor "AI sinh ảnh" as AI_IMG
 actor "AI phân tích truyện" as AI_LLM
 
-rectangle "Quản lý nhân vật trong truyện" {
+rectangle "Quản lý địa điểm trong truyện" {
     usecase "Tạo địa điểm mới" as UC_01
     usecase "Chỉnh sửa thông tin địa điểm" as UC_02
     usecase "Xem danh sách địa điểm" as UC_03

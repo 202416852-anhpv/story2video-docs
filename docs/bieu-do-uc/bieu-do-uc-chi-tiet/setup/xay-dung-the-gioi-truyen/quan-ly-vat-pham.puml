@@ -1,11 +1,11 @@
-@startuml quan-ly-nhan-vat
+@startuml quan-ly-vat-pham
 left to right direction
 
 actor "Người dùng" as User
 actor "AI sinh ảnh" as AI_IMG
 actor "AI phân tích truyện" as AI_LLM
 
-rectangle "Quản lý nhân vật trong truyện" {
+rectangle "Quản lý vật phẩm trong truyện" {
     usecase "Tạo vật phẩm mới" as UC_01
     usecase "Chỉnh sửa thông tin vật phẩm" as UC_02
     usecase "Xem danh sách vật phẩm" as UC_03
