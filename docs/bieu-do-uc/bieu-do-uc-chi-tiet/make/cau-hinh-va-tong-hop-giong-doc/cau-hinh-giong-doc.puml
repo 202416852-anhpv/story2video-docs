@@ -10,7 +10,7 @@ rectangle "Cấu hình giọng đọc" {
     usecase "Điều chỉnh tốc độ đọc và mức nhấn nhá" as UC_02
     usecase "Thiết lập cách đọc câu thoại trong ngoặc kép" as UC_03
     usecase "Quản lý từ điển phát âm riêng" as UC_04
-    usecase "Gán giọng đọc mặc định cho từng nhân vật" as UC_05
+    usecase "Ghi đè giọng đọc của nhân vật theo câu thoại" as UC_05
 }
 
 User --> UC_01

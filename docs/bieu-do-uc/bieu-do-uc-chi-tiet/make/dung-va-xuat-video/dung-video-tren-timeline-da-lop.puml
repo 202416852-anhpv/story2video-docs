@@ -20,6 +20,7 @@ rectangle "Dựng video trên Timeline đa lớp" {
     usecase "Co giãn & Căn chỉnh thời lượng khối" as UC_Clip_Trim
     usecase "Kéo thả sắp xếp thứ tự khối" as UC_Clip_Move
     usecase "Xóa khối khỏi Timeline" as UC_Clip_Del
+    usecase "Cập nhật lại Timeline khi phân cảnh thay đổi\n(hình ảnh, giọng đọc, phụ đề)" as UC_SyncClip
 }
 
 ' Người dùng chỉ kết nối tới các mục tiêu chính
@@ -37,6 +38,7 @@ UC_Clip <.. UC_Clip_Split : <<extend>>
 UC_Clip <.. UC_Clip_Trim  : <<extend>>
 UC_Clip <.. UC_Clip_Move  : <<extend>>
 UC_Clip <.. UC_Clip_Del   : <<extend>>
+UC_Clip <.. UC_SyncClip   : <<extend>>
 
 ' AI hỗ trợ khởi tạo
 UC_Auto --> AI_Service
