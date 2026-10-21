@@ -62,11 +62,11 @@
 | Giai đoạn | P2 |
 
 **Luồng chính**
-1. Editor chọn "Re-import". Hệ thống cảnh báo hậu quả (mọi storyboard, ảnh, thuyết minh và timeline của các chương hiện có sẽ `OUTDATED`) và gợi ý lưu Archive trước (UC-03.11).
+1. Editor chọn "Re-import". Hệ thống cảnh báo hậu quả (mọi storyboard, ảnh, thuyết minh và timeline của các chương hiện có sẽ `OUTDATED`) và *(sau MVP)* gợi ý lưu Archive trước (UC-03.11).
 2. Editor dán văn bản hoặc tải file mới (.txt, .md, .docx).
-3. Hệ thống thực hiện **UC-02.02a** và hiển thị bản xem trước (số ký tự, số đoạn).
+3. Hệ thống thực hiện **UC-02.02a** ở chế độ xem trước (`PUT …/source?dryRun=true`, không ghi gì) và hiển thị bản xem trước (số ký tự, số đoạn).
 4. Editor xác nhận đã hiểu hậu quả.
-5. Trong **một giao dịch**, hệ thống tạo SourceText mới, thay các chương hiện có bằng một Chapter #1 chứa toàn văn mới, cập nhật `projects.current_source_id`.
+5. Client gửi lại cùng nội dung (If-Match); hệ thống kiểm tra lại (UC-02.02a), rồi trong **một giao dịch** tạo SourceText mới, thay các chương hiện có bằng một Chapter #1 chứa toàn văn mới, cập nhật `projects.current_source_id`.
 6. Hệ thống đánh dấu mọi tư liệu và timeline của các chương cũ là `OUTDATED`, phát `chapters.restructured`.
 7. Hệ thống mở màn hình Write và gợi ý bước "Chia chương" (UC-03.03).
 
@@ -89,7 +89,7 @@
 | Hậu điều kiện | **Thành công:** chương được lưu với version mới; `chapter_versions` có snapshot; thuyết minh của shot có đoạn nguồn bị đổi chuyển `OUTDATED` (BR-06) |
 | Kích hoạt | Mở `?v=workspace` và gõ |
 | Quan hệ | được mở rộng bởi UC-03.02a, UC-03.04, UC-03.05, UC-03.06 |
-| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot, act-m03-ban-thao-chuong |
+| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot, act-m03-ban-thao-chuong; act-phu-kin-van-ban |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -100,7 +100,7 @@
 5. Nếu chương đã có tư liệu, hệ thống so hash đoạn nguồn từng shot và đánh dấu shot `OUTDATED`.
 
 **Luồng thay thế / ngoại lệ**
-- **3a.** `409`: chuyển sang UC-02.10.
+- **3a.** `409`: hệ thống cảnh báo "Chương đã đổi ở tab khác" rồi tải lại chương (BR-05); phần chữ chưa lưu bị bỏ (QĐ-147, TD-14). Sau MVP chuyển sang UC-02.10.
 - **3b.** Chương đang bị khóa bởi job: `423`, editor ở chế độ chỉ đọc, hiện "Chương đang được xử lý".
 - **5a.** Thay đổi làm đoạn nguồn của nhiều shot lệch: hiện banner "N shot cần sinh lại thuyết minh" với nút đi tới UC-05.07c.
 - **\*a.** Editor muốn dời vạch ranh giới shot: UC-03.02a.
@@ -308,7 +308,7 @@
 5. Commit; phát `chapters.restructured`.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** Sai version: rollback, `409` → UC-02.10.
+- **2a.** Sai version: rollback, `409` → tải lại cấu trúc chương (BR-05); sau MVP xử lý theo UC-02.10.
 - **2b.** Chương bị khóa: rollback, `423`.
 - **3a.** Bất biến "nối các chương = văn bản cũ" bị vi phạm (lỗi lập trình): rollback, `500`, cảnh báo P1.
 

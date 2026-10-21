@@ -42,7 +42,6 @@ rectangle "M06 Trình chỉnh sửa & xuất video" {
     usecase "UC-06.16b\nChia video thành phần" as UC16b #DDDDDD
     usecase "UC-06.17\nTải MP4 / SRT / audio" as UC17
 }
-rectangle "Render Worker" as RW
 
 Editor --> UC1
 Editor --> UC2
@@ -67,7 +66,6 @@ UC10 ..> UC11 : <<include>>
 UC11 <.. UC11a : <<extend>>
 UC16 ..> UC16a : <<include>>
 UC16 <.. UC16b : <<extend>>
-UC16 --> RW
 note right of UC6
   Nhánh *a: bật/tắt vùng an toàn và lưới căn chỉnh (chỉ khi chỉnh sửa, không vào video xuất)
 end note

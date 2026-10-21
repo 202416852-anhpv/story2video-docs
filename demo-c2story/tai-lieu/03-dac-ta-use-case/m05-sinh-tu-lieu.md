@@ -24,16 +24,17 @@
 | Giai đoạn | P1 |
 
 **Luồng chính**
-1. Hệ thống dựng ngữ cảnh: văn bản chương, Story Assets (tên, bí danh, facts), timeline truyện, Visual Rules, Chapter rules, thời lượng mục tiêu mỗi ảnh.
+1. Hệ thống dựng ngữ cảnh: văn bản chương, Story Assets (tên, bí danh, facts), timeline truyện, Visual Rules, Chapter rules *(sau MVP)*, thời lượng mục tiêu mỗi ảnh.
 2. Hệ thống tách câu tất định và đánh số câu.
-3. Job `STORYBOARD_DRAFT` (tính phí theo BR-01; khi chạy trong UC-05.07 thì nằm trong giá ước tính tổng): LLM nhận danh sách câu, trả Shot[] gồm `startSentence`, `endSentence`, title, focus, cast, items, location, thời điểm, ngày, brief (Subject/Environment/Composition/Camera/Lighting/Mood/Details), caption. LLM **không chép lại văn bản**.
+3. Job `STORYBOARD_DRAFT` (tính phí theo BR-01; khi Editor chạy riêng thì hệ thống hiện giá ước tính và giữ tiền theo UC-05.17; khi chạy trong UC-05.07 thì nằm trong giá ước tính tổng): LLM nhận danh sách câu, trả Shot[] gồm `startSentence`, `endSentence`, title, focus, cast, items, location, thời điểm, ngày, brief (Subject/Environment/Composition/Camera/Lighting/Mood/Details), caption. LLM **không chép lại văn bản**.
 4. Hệ thống thực hiện **UC-05.01a**.
 5. Hệ thống ánh xạ tên sang tài sản (tên + bí danh); tên không khớp đánh dấu "chưa liên kết".
 6. Hệ thống lưu bản nháp, các shot (`source_start`, `source_end`, `source_hash`) và hiển thị đoạn nguồn nguyên văn bên cạnh mỗi shot.
 
 **Luồng thay thế / ngoại lệ**
 - **3a.** LLM trả sai schema: thử lại kèm thông báo lỗi, tối đa 2 lần; vẫn lỗi thì job `FAILED`.
-- **4a.** Phải sửa > 20% ranh giới: lưu kèm Director note cảnh báo chất lượng, gợi ý tạo lại.
+- **3b.** Không đủ số dư: `402 INSUFFICIENT_BALANCE`; chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED` (BR-29); không tạo job (UC-05.17).
+- **4a.** Phải sửa > 20% ranh giới: lưu bản nháp, hiện cảnh báo chất lượng (theo `boundary_fixes`), gợi ý tạo lại.
 - **5a.** Có tên chưa liên kết: hiện "Some names here aren't linked to an asset yet" kèm nút thêm tài sản (UC-04.02a) hoặc tự khớp (UC-05.06f).
 
 ### UC-05.01a Tách câu & kiểm tra phủ kín
@@ -61,7 +62,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **6a.** Bất biến vẫn sai sau khi sửa (lỗi lập trình): từ chối lưu, không ghi gì, phát cảnh báo P1.
-- **7a.** `boundary_fixes` vượt 20% số ranh giới: lưu bản nháp kèm Director note cảnh báo chất lượng và gợi ý tạo lại (UC-05.01 nhánh 4a).
+- **7a.** `boundary_fixes` vượt 20% số ranh giới: lưu bản nháp, hiện cảnh báo chất lượng và gợi ý tạo lại (UC-05.01 nhánh 4a).
 - ***a.** Nội dung chương đổi trong lúc xử lý (phiên bản khác): hủy kết quả và chạy lại từ bước 1.
 - **3a.** Bỏ shot rỗng làm số shot giảm: chấp nhận; số shot cuối cùng nằm trong 1–40 (08 §5).
 
@@ -144,7 +145,7 @@
 | Mô tả | Chọn bản nháp làm storyboard hiện hành của chương; tư liệu và timeline được cập nhật theo |
 | Tiền điều kiện | Bản nháp thuộc chương và chưa phải bản hiện hành; chương không bị khóa (BR-12) |
 | Hậu điều kiện | **Thành công:** `chapters.current_storyboard_id` trỏ bản mới (đúng một bản hiện hành, BR-07, IC-03). **Tối thiểu:** lỗi thì giữ nguyên bản hiện hành cũ |
-| Kích hoạt | Bấm "Set as current" |
+| Kích hoạt | "Dùng bản này" sau khi chia lại shot (UC-05.03, MVP); hoặc "Set as current" trong danh sách bản nháp (UC-05.02, sau MVP) |
 | Truy vết | BR-07, BR-12; IC-03; UC-06.15; API 2.5 `POST …/storyboards/{did}:set-current`; seq-storyboard-sinh-anh |
 | Giai đoạn | P1 |
 
@@ -158,7 +159,7 @@
 **Luồng thay thế / ngoại lệ**
 - **2a.** Editor không xác nhận: không đổi gì.
 - **3a.** Chương đang bị job khóa: `423 RESOURCE_LOCKED`.
-- **3b.** Có xung đột phiên bản: `409`, xử lý theo UC-02.10.
+- **3b.** Có xung đột phiên bản: `409`, tải lại bản nháp hiện hành (BR-05); sau MVP xử lý theo UC-02.10.
 
 ---
 
@@ -173,13 +174,16 @@
 | Hậu điều kiện | **Thành công:** bản nháp mới (`RESPLIT_MORE`/`RESPLIT_FEWER`), bản cũ giữ nguyên |
 | Kích hoạt | "Re-split shots" |
 | Quan hệ | include UC-05.01a |
-| Truy vết | FR-BOK-03; seq-storyboard-sinh-anh |
+| Truy vết | FR-BOK-03; BR-01, BR-02; seq-storyboard-sinh-anh |
 | Giai đoạn | P1 |
 
 **Luồng chính**
 1. Editor chọn "Nhiều hơn" hoặc "Ít hơn".
-2. Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống chạy UC-05.01 bước 1–6 với tham số tương ứng, tạo bản nháp mới (chưa hiện hành).
+2. Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17), chạy UC-05.01 bước 1–6 với tham số tương ứng, tạo bản nháp mới (chưa hiện hành).
 3. Hệ thống hiện bản mới cạnh bản hiện hành; Editor chọn "Dùng bản này" (đặt hiện hành, UC-05.02c) hoặc "Giữ bản cũ". Bản không dùng vẫn được lưu. So sánh chi tiết (UC-05.02b) và quản lý nhiều bản nháp: sau MVP.
+
+**Luồng thay thế / ngoại lệ**
+- **2a.** Không đủ số dư: `402 INSUFFICIENT_BALANCE`; chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED` (BR-29); không tạo job (UC-05.17).
 
 ---
 
@@ -241,7 +245,7 @@
 2. Editor thực hiện một use case con; hệ thống lưu.
 
 **Luồng thay thế / ngoại lệ**
-- **2a.** `409`: UC-02.10.
+- **2a.** `409`: tải lại shot (BR-05); sau MVP xử lý theo UC-02.10.
 
 ### UC-05.06a Sửa brief, thời điểm, caption
 <a id="uc-0506a"></a>
@@ -265,7 +269,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Caption dài hơn 300 ký tự hoặc sai schema: `400 VALIDATION_ERROR`.
-- **3a.** `409 VERSION_CONFLICT`: xử lý theo UC-02.10.
+- **3a.** `409 VERSION_CONFLICT`: tải lại shot (BR-05); sau MVP xử lý theo UC-02.10.
 - ***a.** Editor cố sửa đoạn nguồn: trường chỉ đọc, hướng dẫn sửa văn bản chương trong Workspace (UC-03.02).
 
 ### UC-05.06b Gắn cast / item / location
@@ -292,7 +296,7 @@
 - **1a.** Editor nhập tên chưa có tài sản: lưu với `raw_name`, `story_asset_id = NULL`, hiện cảnh báo "chưa liên kết" kèm nút thêm tài sản (UC-04.02a) hoặc tự khớp (UC-05.06f).
 - **2a.** Thêm location thứ hai: chặn, đề nghị thay location hiện có.
 - **4a.** Tài sản chưa có ảnh tham chiếu: cảnh báo ảnh sinh ra có thể thiếu nhất quán, gợi ý UC-04.03.
-- **3a.** `409`: xử lý theo UC-02.10.
+- **3a.** `409`: tải lại shot (BR-05); sau MVP xử lý theo UC-02.10.
 
 ### UC-05.06c Tách / gộp / xóa shot
 <a id="uc-0506c"></a>
@@ -322,7 +326,7 @@
 - **2b.** Tách làm bản nháp vượt 40 shot: chặn.
 - **4a.** Bản nháp chỉ còn một shot: không xóa được (phải phủ kín chương).
 - **6a.** Chương đang bị khóa: `423 RESOURCE_LOCKED`.
-- **6b.** `409`: xử lý theo UC-02.10.
+- **6b.** `409`: tải lại storyboard (BR-05); sau MVP xử lý theo UC-02.10.
 
 ### UC-05.06e Viết lại brief một shot bằng AI
 <a id="uc-0506e"></a>
@@ -350,7 +354,7 @@
 - **2b.** Không đủ số dư: `402`; chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED`.
 - **4a.** LLM trả sai schema: thử lại tối đa 2 lần; vẫn lỗi thì job `FAILED`, brief cũ giữ nguyên, tiền giữ được hoàn.
 - **4b.** Nội dung bị moderation chặn: job `FAILED` với `CONTENT_POLICY` (451); không tự sửa để vượt bộ lọc (BR-18).
-- **5a.** `409`: shot đã đổi trong lúc job chạy; kết quả không ghi đè, Editor chọn áp dụng hoặc bỏ (UC-02.10).
+- **5a.** `409`: shot đã đổi trong lúc job chạy; kết quả không ghi đè, Editor chọn áp dụng hoặc bỏ (BR-05).
 
 ### UC-05.06f Tự khớp tên với tài sản
 <a id="uc-0506f"></a>
@@ -392,7 +396,7 @@
 | Hậu điều kiện | **Thành công:** mọi shot có ảnh `DONE` và thuyết minh `DONE`; chương "Sẵn sàng dựng"; có bản nháp timeline (UC-06.01a). **Tối thiểu:** phần thành công được giữ; tiền giữ cho phần lỗi được hoàn |
 | Kích hoạt | Bấm "Sinh tư liệu" |
 | Quan hệ | include UC-05.07a, UC-05.09, UC-05.13, UC-05.17; được mở rộng bởi UC-05.07b, UC-05.07c |
-| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
+| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu; seq-storyboard-sinh-anh |
 | Giai đoạn | P2 |
 
 **Luồng chính**
@@ -457,7 +461,7 @@
 4. Editor lọc các shot "Cần xử lý" hoặc đã đánh dấu và mở từng shot để xử lý: ảnh lỗi (UC-05.10), nghe thuyết minh (UC-05.18), sinh lại phần thiếu (UC-05.07c).
 
 **Luồng thay thế / ngoại lệ**
-- **3a.** Mất kết nối SSE: client nối lại với `Last-Event-ID`; nếu thiếu sự kiện thì tải lại ảnh chụp ở bước 1.
+- **3a.** Mất kết nối SSE: client nối lại, tải lại ảnh chụp ở bước 1 rồi nghe tiếp (MVP không phát lại sự kiện, 06 §3, ADR-23); sau MVP nối lại với `Last-Event-ID` để phát lại sự kiện đã lỡ (TD-03).
 - **3b.** Job bị hủy hoặc lỗi hàng loạt: bảng hiển thị trạng thái hiện có của từng shot, chương ở "Cần xử lý".
 
 ### UC-05.07c Sinh lại phần thiếu / lỗi
@@ -525,10 +529,10 @@
 | Giai đoạn | P1 |
 
 **Luồng chính**
-1. Hệ thống hiện giá ước tính (khi Editor bấm trên một shot), thực hiện UC-05.17 (giữ tiền) và tạo job `GENERATE_SHOT_IMAGE`.
-2. Worker ghép prompt theo BR-08: style → Art Direction → Visual Rules → Chapter rules → brief + facts; đính kèm ảnh tham chiếu cast/location/item; tỷ lệ theo khung hình dự án.
-3. Moderation đầu vào; gọi Image Provider (retry tối đa 3 lần).
-4. Moderation đầu ra; lưu ảnh; tạo Illustration; trừ chi phí thực × 110%, hoàn phần dư; phát `illustration.ready`.
+1. Khi Editor bấm trên một shot: hệ thống hiện giá ước tính, thực hiện UC-05.17 (giữ tiền) và tạo job `GENERATE_SHOT_IMAGE`. Khi chạy trong UC-05.07: là job con, không giữ tiền riêng (WR-05).
+2. Worker ghép prompt theo BR-08: style → Art Direction → Visual Rules → Chapter rules *(sau MVP)* → brief + facts; đính kèm ảnh tham chiếu cast/location/item; tỷ lệ theo khung hình dự án.
+3. Gọi Image Provider (job thử lại tối đa 3 lần); prompt và ảnh qua bộ lọc an toàn của Gemini (MVP không có kiểm duyệt riêng, QĐ-135).
+4. Lưu ảnh; tạo Illustration; trừ chi phí thực × 110%, hoàn phần dư; phát `illustration.ready`.
 
 **Luồng thay thế / ngoại lệ**
 - **3a.** Lỗi sau 3 lần thử hoặc vi phạm chính sách: Illustration `FAILED`, hoàn tiền, shot có nút "Retry".
@@ -575,7 +579,7 @@
 1. Editor mở ảnh hiện hành và chọn "Describe → Edit".
 2. Editor nhập mô tả thay đổi (ví dụ "đổi sang ánh chiều").
 3. Hệ thống hiển thị giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17) và tạo job `EDIT_IMAGE`.
-4. Worker chạy moderation đầu vào, gửi ảnh gốc cùng hướng dẫn tới Image Provider (retry tối đa 3 lần), rồi chạy moderation đầu ra.
+4. Worker gửi ảnh gốc cùng hướng dẫn tới Image Provider (job thử lại tối đa 3 lần); prompt và ảnh qua bộ lọc an toàn của Gemini (MVP không có kiểm duyệt riêng, QĐ-135).
 5. Hệ thống lưu Illustration mới (`parent_illustration_id` = ảnh gốc, `instruction` = mô tả), đặt làm hiện hành, CAPTURE chi phí thực × 110%, phát `illustration.ready`.
 6. Timeline được đồng bộ ảnh mới (UC-06.15).
 
@@ -702,7 +706,7 @@
 | Giai đoạn | P2 |
 
 **Luồng chính**
-1. Hệ thống giữ tiền theo số ký tự (UC-05.17), tạo job `NARRATE_SEGMENT`.
+1. Khi sinh riêng một shot: hệ thống giữ tiền theo số ký tự (UC-05.17), tạo job `NARRATE_SEGMENT`. Khi chạy trong UC-05.07 hoặc sinh cả chương: là job con, tiền giữ ở job cha (WR-05).
 2. Thực hiện **UC-05.13a**.
 3. Thực hiện **UC-05.13b**.
 4. Gọi TTS (chia theo câu nếu vượt giới hạn, rồi nối audio); lưu audio.
@@ -810,7 +814,7 @@
 | Hậu điều kiện | **Thành công:** shot thành `VERIFIED` (sau khi sinh lại) hoặc `ACCEPTED` |
 | Kích hoạt | Mở shot từ danh sách "Cần xử lý" hoặc điểm duyệt UC-07.06 |
 | Quan hệ | được mở rộng bởi UC-05.14a |
-| Truy vết | FR-NAR-07; BR-23; seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu |
+| Truy vết | FR-NAR-07; BR-23; seq-thuyet-minh-nguyen-van, act-m05-sinh-tu-lieu; state-narration-render |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -936,7 +940,7 @@
 | Tiền điều kiện | Shot có thuyết minh `DONE` |
 | Hậu điều kiện | **Thành công:** `narrations.flagged_at` được đặt hoặc xóa theo lựa chọn. **Tối thiểu:** không đổi audio, không tốn phí |
 | Kích hoạt | Bấm "Nghe" trên shot ở bảng tiến độ, media bin hoặc storyboard |
-| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
+| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu; seq-thuyet-minh-nguyen-van, state-narration-render |
 | Giai đoạn | P2 |
 
 **Luồng chính**

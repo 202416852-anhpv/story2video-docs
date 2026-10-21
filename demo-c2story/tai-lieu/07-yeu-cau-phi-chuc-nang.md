@@ -36,7 +36,7 @@
 | Mã | Yêu cầu |
 |---|---|
 | NFR-SCAL-01 | API stateless, scale ngang; phiên lưu trong DB hoặc Redis |
-| NFR-SCAL-02 | Worker scale theo độ dài queue, riêng từng queue `orchestrator` / `llm` / `image` / `tts` / `align` / `media-proc` / `render` (05 §3, §4, §10) |
+| NFR-SCAL-02 | *(sau MVP)* Worker scale theo độ dài queue, riêng từng queue `orchestrator` / `llm` / `image` / `tts` / `align` / `media-proc` / `render` (05 §3, §4, §10). MVP: một tiến trình worker Node cho mọi queue, Render Worker và Alignment Worker tách riêng (05 §4.1, TD-01) |
 | NFR-SCAL-03 | MVP: giới hạn đồng thời toàn hệ thống bằng `concurrency` của từng queue và rate limiter của BullMQ theo hạn mức provider; 1 render đang chạy/người; ≤ 30 yêu cầu LLM/phút/người (BR-32). Sau MVP: thêm giới hạn theo người dùng bằng semaphore Redis (≤ 8 job ảnh, 8 job TTS, ADR-28) |
 | NFR-SCAL-04 | Closed beta: 20 người dùng, 5 người đồng thời. Kiến trúc không chặn scale ngang tới 10.000 MAU, 500 người dùng đồng thời (sau MVP) |
 

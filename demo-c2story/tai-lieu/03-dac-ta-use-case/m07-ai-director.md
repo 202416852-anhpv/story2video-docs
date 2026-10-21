@@ -16,7 +16,7 @@
 | Hậu điều kiện | **Thành công:** thao tác tương ứng được thực hiện như thao tác tay; hội thoại được lưu. **Tối thiểu:** không thực hiện thao tác ngoài quyền hoặc tốn phí khi chưa xác nhận |
 | Kích hoạt | Gửi tin nhắn trong panel Director |
 | Quan hệ | được mở rộng bởi UC-07.01a..d |
-| Truy vết | FR-DIR-01..03, 08; NFR-SEC-08 |
+| Truy vết | FR-DIR-01..03, 08; NFR-SEC-08; seq-director, state-tool-proposal |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -149,7 +149,7 @@
 | Hậu điều kiện | **Thành công:** mọi chương "Sẵn sàng dựng" và có bản nháp timeline. **Tối thiểu:** kế hoạch lưu bền vững; bước dở tiếp tục được; tiền giữ cho job lỗi được hoàn |
 | Kích hoạt | Bật "Tự động" trong panel Director |
 | Quan hệ | include UC-07.02a; được mở rộng bởi UC-07.03..06 |
-| Truy vết | FR-DIR-04..07; BR-09 |
+| Truy vết | FR-DIR-04..07; BR-09; seq-director |
 | Giai đoạn | Sau |
 
 **Luồng chính**

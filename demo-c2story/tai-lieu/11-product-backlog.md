@@ -26,7 +26,7 @@
 | Mô tả | Người dùng đăng nhập vào ứng dụng bằng tài khoản SSO có sẵn, nhận phiên làm việc và hồ sơ cục bộ |
 | Use case | [UC-01.01](03-dac-ta-use-case/m01-tich-hop-sso.md#uc-0101) · M01 — Tích hợp SSO & hồ sơ |
 | Giai đoạn | P0 |
-| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12; BR-30, BR-31; NFR-SEC-02; seq-dang-nhap-sso, act-m01-dang-nhap |
+| Truy vết | FR-AUTH-01..04, 06, 07, 11, 12, 13; BR-30, BR-31; NFR-SEC-02; seq-dang-nhap-sso, act-m01-dang-nhap |
 | Story point | |
 
 ```gherkin
@@ -382,9 +382,9 @@ Feature: UC-02.02 Nhập truyện giữ nguyên văn (Import)
 
   Scenario: Luồng chính
     When User dán văn bản hoặc chọn file (.txt, .md, .docx)
-    And Hệ thống thực hiện UC-02.02a và hiển thị bản xem trước (số ký tự, số đoạn)
+    And Hệ thống thực hiện UC-02.02a ở chế độ xem trước (POST /projects:import?dryRun=true, không ghi gì) và hiển thị bản xem trước (số ký tự, số đoạn)
     And User nhập tiêu đề, chọn style và tỷ lệ khung hình video (16:9 / 9:16 / 1:1)
-    And Hệ thống tạo trong một giao dịch: Project, ProjectMember(OWNER), SourceText, Chapter #1 (version = 1)
+    And Client gửi lại cùng nội dung kèm thông tin ở bước 3; hệ thống kiểm tra lại (UC-02.02a) rồi tạo trong một giao dịch: Project, ProjectMember(OWNER), SourceText, Chapter #1 (version = 1)
     And Hệ thống mở Studio ở màn hình Write và gợi ý bước 2 "Chia chương" (UC-03.03)
     Then có Project, ProjectMember(OWNER), SourceText (kèm sha256), Chapter #1 chứa toàn văn
 
@@ -589,7 +589,7 @@ Feature: UC-03.01 Xem văn bản gốc
 | Mô tả | Viết và sửa văn bản mọi chương trong một trình soạn thảo cuộn liền mạch |
 | Use case | [UC-03.02](03-dac-ta-use-case/m03-ban-thao-chuong.md#uc-0302) · M03 — Bản thảo & chương |
 | Giai đoạn | P1 |
-| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot, act-m03-ban-thao-chuong |
+| Truy vết | FR-MAN-02, 11; FR-NAR-09; BR-05, BR-06, BR-21; seq-doi-ranh-gioi-shot, act-m03-ban-thao-chuong; act-phu-kin-van-ban |
 | Story point | |
 
 ```gherkin
@@ -608,7 +608,7 @@ Feature: UC-03.02 Soạn thảo trong Workspace
   Scenario: 3a 409
     Given luồng chính đã tới bước 3
     When 409
-    Then chuyển sang UC-02.10
+    Then hệ thống cảnh báo "Chương đã đổi ở tab khác" rồi tải lại chương (BR-05); phần chữ chưa lưu bị bỏ (QĐ-147, TD-14). Sau MVP chuyển sang UC-02.10
 
   Scenario: 3b Chương đang bị khóa bởi job
     Given luồng chính đã tới bước 3
@@ -841,7 +841,7 @@ Feature: UC-03.09 Tái cấu trúc nguyên tử
   Scenario: 2a Sai version
     Given luồng chính đã tới bước 2
     When Sai version
-    Then rollback, 409 → UC-02.10
+    Then rollback, 409 → tải lại cấu trúc chương (BR-05); sau MVP xử lý theo UC-02.10
 
   Scenario: 2b Chương bị khóa
     Given luồng chính đã tới bước 2
@@ -985,7 +985,7 @@ Feature: UC-04.02a Tạo nhân vật / địa điểm / đạo cụ
     When Editor chọn loại tài sản
     And Editor nhập tên (1–80 ký tự), bí danh (≤ 10), mô tả ngoại hình, facts bất biến
     And Editor chọn một trong ba cách có ảnh tham chiếu: sinh bằng AI (UC-04.03, include, tính phí); tải ảnh lên (UC-04.04, dùng nguyên bản); hoặc bỏ qua
-    And Hệ thống lưu StoryAsset và hiển thị trong nhóm tương ứng
+    And Hệ thống lưu StoryAsset và hiển thị trong nhóm tương ứng; nếu Editor đã chọn sinh hoặc tải ảnh ở bước 3, hệ thống thực hiện UC-04.03 / UC-04.04 cho tài sản vừa lưu
     Then có StoryAsset mới (kind = CHARACTER, LOCATION hoặc PROP, version = 1)
 
   Scenario: 2a Tên trùng với tên hoặc bí danh của tài sản khác
@@ -1079,7 +1079,7 @@ Feature: UC-04.02d Gỡ khỏi dự án
   Scenario: 4a 409
     Given luồng chính đã tới bước 4
     When 409
-    Then tài sản vừa được người khác sửa; tải lại và xác nhận lại (UC-02.10)
+    Then tài sản vừa được sửa ở nơi khác; tải lại và xác nhận lại (BR-05); sau MVP xử lý theo UC-02.10
 
   Scenario: *a Về sau thêm lại tài sản cùng tên
     When Về sau thêm lại tài sản cùng tên
@@ -1142,7 +1142,7 @@ Feature: UC-04.02e Chỉnh sửa tài sản
   Scenario: 3a 409
     Given luồng chính đã tới bước 3
     When 409
-    Then tài sản vừa được người khác sửa; xử lý theo UC-02.10
+    Then tài sản vừa được sửa ở nơi khác; tải lại (BR-05); sau MVP xử lý theo UC-02.10
 
   Scenario: 4a Sau khi sửa mô tả, facts hoặc thành viên nhóm, hệ thống gợi ý "Regenerate" kèm g
     Given luồng chính đã tới bước 4
@@ -1177,15 +1177,20 @@ Feature: UC-04.03 Sinh ảnh tham chiếu
 
   Scenario: Luồng chính
     When Editor bấm "Generate" (hiện giá ước tính)
-    And Hệ thống giữ tiền, tạo job GENERATE_ASSET_IMAGE
+    And Hệ thống giữ tiền (UC-05.17), tạo job GENERATE_ASSET_IMAGE
     And Worker ghép prompt: style + Art Direction + Visual Rules + mô tả + facts; địa điểm sinh reference sheet nhiều góc nhìn
-    And Image Provider trả ảnh; moderation đầu ra; lưu ảnh; trừ tiền
+    And Image Provider trả ảnh (prompt và ảnh qua bộ lọc an toàn của Gemini (MVP không có kiểm duyệt riêng, QĐ-135)); lưu ảnh; trừ tiền
     And Giao diện hiển thị ảnh mới; phiên bản cũ vẫn xem được
     Then asset_images mới, đặt làm ảnh hiện hành; tiền bị trừ
 
   Scenario: 1a Tài sản dùng ảnh nguyên bản (BR-14)
     When Tài sản dùng ảnh nguyên bản (BR-14)
     Then nút bị ẩn
+
+  Scenario: 2a Không đủ số dư
+    Given luồng chính đã tới bước 2
+    When Không đủ số dư
+    Then 402 INSUFFICIENT_BALANCE; chạm trần chi tiêu ngày: 503 DAILY_BUDGET_EXCEEDED (BR-29); không tạo job (UC-05.17)
 
   Scenario: 4a Lỗi hoặc vi phạm chính sách
     Given luồng chính đã tới bước 4
@@ -1228,6 +1233,11 @@ Feature: UC-04.03a Sinh lại tất cả (Regenerate all)
     When Không đủ số dư
     Then 402 kèm số còn thiếu; gợi ý nạp tiền (UC-09.03) hoặc sinh lại từng tài sản
 
+  Scenario: 4b Chạm trần chi tiêu ngày
+    Given luồng chính đã tới bước 4
+    When Chạm trần chi tiêu ngày
+    Then 503 DAILY_BUDGET_EXCEEDED (BR-29); không tạo job nào
+
   Scenario: 5a Một số job lỗi sau retry
     Given luồng chính đã tới bước 5
     When Một số job lỗi sau retry
@@ -1256,7 +1266,7 @@ Feature: UC-04.04 Dùng ảnh tải lên nguyên bản
 
   Scenario: Luồng chính
     When Editor tải ảnh lên
-    And Hệ thống kiểm tra MIME, kích thước, quét malware, bỏ EXIF, moderation
+    And Hệ thống kiểm tra MIME, kích thước, quét malware, bỏ EXIF (NFR-SEC-10)
     And Hệ thống lưu ảnh làm tham chiếu, gắn cờ "use exact"
     Then tài sản có use_exact_image = true
 
@@ -1355,9 +1365,9 @@ Feature: UC-05.01 Tạo bản nháp storyboard
     Given Chương có văn bản, không bị khóa
 
   Scenario: Luồng chính
-    When Hệ thống dựng ngữ cảnh: văn bản chương, Story Assets (tên, bí danh, facts), timeline truyện, Visual Rules, Chapter rules, thời lượng mục tiêu mỗi ảnh
+    When Hệ thống dựng ngữ cảnh: văn bản chương, Story Assets (tên, bí danh, facts), timeline truyện, Visual Rules, Chapter rules *(sau MVP)*, thời lượng mục tiêu mỗi ảnh
     And Hệ thống tách câu tất định và đánh số câu
-    And Job STORYBOARD_DRAFT (tính phí theo BR-01; khi chạy trong UC-05.07 thì nằm trong giá ước tính tổng): LLM nhận danh sách câu, trả Shot[] gồm startSentence, endSentence, title, focus, cast, items, location, thời điểm, ngày, brief (Subject/Environment/Composition/Camera/Lighting/Mood/Details), caption. LLM không chép lại văn bản
+    And Job STORYBOARD_DRAFT (tính phí theo BR-01; khi Editor chạy riêng thì hệ thống hiện giá ước tính và giữ tiền theo UC-05.17; khi chạy trong UC-05.07 thì nằm trong giá ước tính tổng): LLM nhận danh sách câu, trả Shot[] gồm startSentence, endSentence, title, focus, cast, items, location, thời điểm, ngày, brief (Subject/Environment/Composition/Camera/Lighting/Mood/Details), caption. LLM không chép lại văn bản
     And Hệ thống thực hiện UC-05.01a
     And Hệ thống ánh xạ tên sang tài sản (tên + bí danh); tên không khớp đánh dấu "chưa liên kết"
     And Hệ thống lưu bản nháp, các shot (source_start, source_end, source_hash) và hiển thị đoạn nguồn nguyên văn bên cạnh mỗi shot
@@ -1368,10 +1378,15 @@ Feature: UC-05.01 Tạo bản nháp storyboard
     When LLM trả sai schema
     Then thử lại kèm thông báo lỗi, tối đa 2 lần; vẫn lỗi thì job FAILED
 
+  Scenario: 3b Không đủ số dư
+    Given luồng chính đã tới bước 3
+    When Không đủ số dư
+    Then 402 INSUFFICIENT_BALANCE; chạm trần chi tiêu ngày: 503 DAILY_BUDGET_EXCEEDED (BR-29); không tạo job (UC-05.17)
+
   Scenario: 4a Phải sửa > 20% ranh giới
     Given luồng chính đã tới bước 4
     When Phải sửa > 20% ranh giới
-    Then lưu kèm Director note cảnh báo chất lượng, gợi ý tạo lại
+    Then lưu bản nháp, hiện cảnh báo chất lượng (theo boundary_fixes), gợi ý tạo lại
 
   Scenario: 5a Có tên chưa liên kết
     Given luồng chính đã tới bước 5
@@ -1413,7 +1428,7 @@ Feature: UC-05.01a Tách câu & kiểm tra phủ kín
   Scenario: 7a boundary_fixes vượt 20% số ranh giới
     Given luồng chính đã tới bước 7
     When boundary_fixes vượt 20% số ranh giới
-    Then lưu bản nháp kèm Director note cảnh báo chất lượng và gợi ý tạo lại (UC-05.01 nhánh 4a)
+    Then lưu bản nháp, hiện cảnh báo chất lượng và gợi ý tạo lại (UC-05.01 nhánh 4a)
 
   Scenario: *a Nội dung chương đổi trong lúc xử lý (phiên bản khác)
     When Nội dung chương đổi trong lúc xử lý (phiên bản khác)
@@ -1462,7 +1477,7 @@ Feature: UC-05.02c Đặt bản nháp hiện hành
   Scenario: 3b Có xung đột phiên bản
     Given luồng chính đã tới bước 3
     When Có xung đột phiên bản
-    Then 409, xử lý theo UC-02.10
+    Then 409, tải lại bản nháp hiện hành (BR-05); sau MVP xử lý theo UC-02.10
 ```
 
 #### ST-05-03 Chia lại shot (nhiều / ít hơn)
@@ -1473,7 +1488,7 @@ Feature: UC-05.02c Đặt bản nháp hiện hành
 | Mô tả | Tạo bản nháp mới với nhiều shot hơn (mỗi nhịp truyện một ảnh) hoặc ít hơn |
 | Use case | [UC-05.03](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0503) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P1 |
-| Truy vết | FR-BOK-03; seq-storyboard-sinh-anh |
+| Truy vết | FR-BOK-03; BR-01, BR-02; seq-storyboard-sinh-anh |
 | Story point | |
 
 ```gherkin
@@ -1483,9 +1498,14 @@ Feature: UC-05.03 Chia lại shot (nhiều / ít hơn)
 
   Scenario: Luồng chính
     When Editor chọn "Nhiều hơn" hoặc "Ít hơn"
-    And Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống chạy UC-05.01 bước 1–6 với tham số tương ứng, tạo bản nháp mới (chưa hiện hành)
+    And Hệ thống hiện giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17), chạy UC-05.01 bước 1–6 với tham số tương ứng, tạo bản nháp mới (chưa hiện hành)
     And Hệ thống hiện bản mới cạnh bản hiện hành; Editor chọn "Dùng bản này" (đặt hiện hành, UC-05.02c) hoặc "Giữ bản cũ". Bản không dùng vẫn được lưu. So sánh chi tiết (UC-05.02b) và quản lý nhiều bản nháp: sau MVP
     Then bản nháp mới (RESPLIT_MORE/RESPLIT_FEWER), bản cũ giữ nguyên
+
+  Scenario: 2a Không đủ số dư
+    Given luồng chính đã tới bước 2
+    When Không đủ số dư
+    Then 402 INSUFFICIENT_BALANCE; chạm trần chi tiêu ngày: 503 DAILY_BUDGET_EXCEEDED (BR-29); không tạo job (UC-05.17)
 ```
 
 #### ST-05-06 Biên tập shot
@@ -1512,7 +1532,7 @@ Feature: UC-05.06 Biên tập shot
   Scenario: 2a 409
     Given luồng chính đã tới bước 2
     When 409
-    Then UC-02.10
+    Then tải lại shot (BR-05); sau MVP xử lý theo UC-02.10
 ```
 
 #### ST-05-06a Sửa brief, thời điểm, caption
@@ -1546,7 +1566,7 @@ Feature: UC-05.06a Sửa brief, thời điểm, caption
   Scenario: 3a 409 VERSION_CONFLICT
     Given luồng chính đã tới bước 3
     When 409 VERSION_CONFLICT
-    Then xử lý theo UC-02.10
+    Then tải lại shot (BR-05); sau MVP xử lý theo UC-02.10
 
   Scenario: *a Editor cố sửa đoạn nguồn
     When Editor cố sửa đoạn nguồn
@@ -1593,7 +1613,7 @@ Feature: UC-05.06b Gắn cast / item / location
   Scenario: 3a 409
     Given luồng chính đã tới bước 3
     When 409
-    Then xử lý theo UC-02.10
+    Then tải lại shot (BR-05); sau MVP xử lý theo UC-02.10
 ```
 
 #### ST-05-06c Tách / gộp / xóa shot
@@ -1645,7 +1665,7 @@ Feature: UC-05.06c Tách / gộp / xóa shot
   Scenario: 6b 409
     Given luồng chính đã tới bước 6
     When 409
-    Then xử lý theo UC-02.10
+    Then tải lại storyboard (BR-05); sau MVP xử lý theo UC-02.10
 ```
 
 #### ST-05-06e Viết lại brief một shot bằng AI
@@ -1695,7 +1715,7 @@ Feature: UC-05.06e Viết lại brief một shot bằng AI
   Scenario: 5a 409
     Given luồng chính đã tới bước 5
     When 409
-    Then shot đã đổi trong lúc job chạy; kết quả không ghi đè, Editor chọn áp dụng hoặc bỏ (UC-02.10)
+    Then shot đã đổi trong lúc job chạy; kết quả không ghi đè, Editor chọn áp dụng hoặc bỏ (BR-05)
 ```
 
 #### ST-05-06f Tự khớp tên với tài sản
@@ -1773,10 +1793,10 @@ Feature: UC-05.09 Sinh ảnh shot
     Given Shot có brief; đủ số dư
 
   Scenario: Luồng chính
-    When Hệ thống hiện giá ước tính (khi Editor bấm trên một shot), thực hiện UC-05.17 (giữ tiền) và tạo job GENERATE_SHOT_IMAGE
-    And Worker ghép prompt theo BR-08: style → Art Direction → Visual Rules → Chapter rules → brief + facts; đính kèm ảnh tham chiếu cast/location/item; tỷ lệ theo khung hình dự án
-    And Moderation đầu vào; gọi Image Provider (retry tối đa 3 lần)
-    And Moderation đầu ra; lưu ảnh; tạo Illustration; trừ chi phí thực × 110%, hoàn phần dư; phát illustration.ready
+    When Khi Editor bấm trên một shot: hệ thống hiện giá ước tính, thực hiện UC-05.17 (giữ tiền) và tạo job GENERATE_SHOT_IMAGE. Khi chạy trong UC-05.07: là job con, không giữ tiền riêng (WR-05)
+    And Worker ghép prompt theo BR-08: style → Art Direction → Visual Rules → Chapter rules *(sau MVP)* → brief + facts; đính kèm ảnh tham chiếu cast/location/item; tỷ lệ theo khung hình dự án
+    And Gọi Image Provider (job thử lại tối đa 3 lần); prompt và ảnh qua bộ lọc an toàn của Gemini (MVP không có kiểm duyệt riêng, QĐ-135)
+    And Lưu ảnh; tạo Illustration; trừ chi phí thực × 110%, hoàn phần dư; phát illustration.ready
     Then Illustration phiên bản mới DONE, đặt làm hiện hành; tiền trừ
 
   Scenario: 3a Lỗi sau 3 lần thử hoặc vi phạm chính sách
@@ -1832,7 +1852,7 @@ Feature: UC-05.10a Sửa ảnh theo mô tả (Describe → Edit)
     When Editor mở ảnh hiện hành và chọn "Describe → Edit"
     And Editor nhập mô tả thay đổi (ví dụ "đổi sang ánh chiều")
     And Hệ thống hiển thị giá ước tính; Editor xác nhận; hệ thống giữ tiền (UC-05.17) và tạo job EDIT_IMAGE
-    And Worker chạy moderation đầu vào, gửi ảnh gốc cùng hướng dẫn tới Image Provider (retry tối đa 3 lần), rồi chạy moderation đầu ra
+    And Worker gửi ảnh gốc cùng hướng dẫn tới Image Provider (job thử lại tối đa 3 lần); prompt và ảnh qua bộ lọc an toàn của Gemini (MVP không có kiểm duyệt riêng, QĐ-135)
     And Hệ thống lưu Illustration mới (parent_illustration_id = ảnh gốc, instruction = mô tả), đặt làm hiện hành, CAPTURE chi phí thực × 110%, phát illustration.ready
     And Timeline được đồng bộ ảnh mới (UC-06.15)
     Then Illustration mới (edit_kind = EDIT) trở thành ảnh hiện hành; ảnh cũ giữ làm phiên bản trước
@@ -2100,7 +2120,7 @@ Feature: UC-10.09 Ghi audit log
 | Mô tả | Thêm, gỡ và xem email được mời tham gia closed beta; chỉ email trong danh sách mới tạo được hồ sơ (BR-30) |
 | Use case | [UC-10.11](03-dac-ta-use-case/m10-quan-tri.md#uc-1011) · M10 — Quản trị |
 | Giai đoạn | P1 |
-| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites`; seq-quan-tri |
+| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites`; seq-quan-tri; seq-dang-nhap-sso |
 | Story point | |
 
 ```gherkin
@@ -2244,11 +2264,11 @@ Feature: UC-03.01b Nhập lại (Re-import)
     Given Dự án có văn bản; không chương nào đang bị khóa bởi job (BR-12)
 
   Scenario: Luồng chính
-    When Editor chọn "Re-import". Hệ thống cảnh báo hậu quả (mọi storyboard, ảnh, thuyết minh và timeline của các chương hiện có sẽ OUTDATED) và gợi ý lưu Archive trước (UC-03.11)
+    When Editor chọn "Re-import". Hệ thống cảnh báo hậu quả (mọi storyboard, ảnh, thuyết minh và timeline của các chương hiện có sẽ OUTDATED) và *(sau MVP)* gợi ý lưu Archive trước (UC-03.11)
     And Editor dán văn bản hoặc tải file mới (.txt, .md, .docx)
-    And Hệ thống thực hiện UC-02.02a và hiển thị bản xem trước (số ký tự, số đoạn)
+    And Hệ thống thực hiện UC-02.02a ở chế độ xem trước (PUT …/source?dryRun=true, không ghi gì) và hiển thị bản xem trước (số ký tự, số đoạn)
     And Editor xác nhận đã hiểu hậu quả
-    And Trong một giao dịch, hệ thống tạo SourceText mới, thay các chương hiện có bằng một Chapter #1 chứa toàn văn mới, cập nhật projects.current_source_id
+    And Client gửi lại cùng nội dung (If-Match); hệ thống kiểm tra lại (UC-02.02a), rồi trong một giao dịch tạo SourceText mới, thay các chương hiện có bằng một Chapter #1 chứa toàn văn mới, cập nhật projects.current_source_id
     And Hệ thống đánh dấu mọi tư liệu và timeline của các chương cũ là OUTDATED, phát chapters.restructured
     And Hệ thống mở màn hình Write và gợi ý bước "Chia chương" (UC-03.03)
     Then dự án có SourceText mới và đúng một Chapter #1 chứa toàn văn mới; tư liệu và timeline của các chương cũ chuyển OUTDATED
@@ -2442,7 +2462,7 @@ Feature: UC-04.09 Phân tích lại (Re-analyse)
 | Mô tả | Bước 4 của luồng: một thao tác sinh ảnh + thuyết minh nguyên văn cho mọi shot của một hoặc nhiều chương |
 | Use case | [UC-05.07](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0507) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 |
-| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
+| Truy vết | FR-MED-01..05; BR-01, BR-02, BR-11, BR-29; WR-05; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu; seq-storyboard-sinh-anh |
 | Story point | |
 
 ```gherkin
@@ -2545,7 +2565,7 @@ Feature: UC-05.07b Xem tiến độ theo shot
   Scenario: 3a Mất kết nối SSE
     Given luồng chính đã tới bước 3
     When Mất kết nối SSE
-    Then client nối lại với Last-Event-ID; nếu thiếu sự kiện thì tải lại ảnh chụp ở bước 1
+    Then client nối lại, tải lại ảnh chụp ở bước 1 rồi nghe tiếp (MVP không phát lại sự kiện, 06 §3, ADR-23); sau MVP nối lại với Last-Event-ID để phát lại sự kiện đã lỡ (TD-03)
 
   Scenario: 3b Job bị hủy hoặc lỗi hàng loạt
     Given luồng chính đã tới bước 3
@@ -2722,7 +2742,7 @@ Feature: UC-05.13 Sinh thuyết minh nguyên văn
     Given Shot có đoạn nguồn; đã chọn giọng; đủ số dư
 
   Scenario: Luồng chính
-    When Hệ thống giữ tiền theo số ký tự (UC-05.17), tạo job NARRATE_SEGMENT
+    When Khi sinh riêng một shot: hệ thống giữ tiền theo số ký tự (UC-05.17), tạo job NARRATE_SEGMENT. Khi chạy trong UC-05.07 hoặc sinh cả chương: là job con, tiền giữ ở job cha (WR-05)
     And Thực hiện UC-05.13a
     And Thực hiện UC-05.13b
     And Gọi TTS (chia theo câu nếu vượt giới hạn, rồi nối audio); lưu audio
@@ -2836,7 +2856,7 @@ Feature: UC-05.13b Chuẩn hóa phát âm (SSML)
 | Mô tả | Kiểm chứng lời đọc thủ công: nghe thuyết minh từng shot, đánh dấu shot đọc sai để sinh lại sau. Không bắt buộc nghe hết mới được xuất video |
 | Use case | [UC-05.18](03-dac-ta-use-case/m05-sinh-tu-lieu.md#uc-0518) · M05 — Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn |
 | Giai đoạn | P2 |
-| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu |
+| Truy vết | FR-NAR-08; BR-23, BR-34; API 2.5 `POST/DELETE …/shots/{shid}/narration:flag`; seq-sinh-tu-lieu, act-m05-sinh-tu-lieu; seq-thuyet-minh-nguyen-van, state-narration-render |
 | Story point | |
 
 ```gherkin
@@ -2903,7 +2923,7 @@ Feature: UC-09.05 Xem số dư ví
 | Mô tả | Giữ tổng chi phí AI thật của toàn hệ thống trong một ngày không vượt trần (closed beta: $10); chạm trần thì tạm dừng job mới và báo Admin |
 | Use case | [UC-10.12](03-dac-ta-use-case/m10-quan-tri.md#uc-1012) · M10 — Quản trị |
 | Giai đoạn | P2 |
-| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED`; seq-quan-tri, seq-vong-doi-job |
+| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED`; seq-quan-tri, seq-vong-doi-job; act-giu-tru-tien |
 | Story point | |
 
 ```gherkin

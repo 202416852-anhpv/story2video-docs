@@ -43,8 +43,8 @@ rectangle "M05 Sinh tư liệu: storyboard, ảnh, thuyết minh nguyên văn\n(
     usecase "UC-05.16\nTải ZIP ảnh" as UC10 #DDDDDD
 }
 rectangle "Image Provider" as IMG
-rectangle "TTS Provider" as TTS
-rectangle "STT / Aligner" as STT
+rectangle "TTS\n(TTS Server tự host;\nVbee AIVoice sau MVP)" as TTS
+rectangle "STT / Aligner\n(WhisperX tự host)" as STT
 
 Editor --> UC1
 Editor --> UC2

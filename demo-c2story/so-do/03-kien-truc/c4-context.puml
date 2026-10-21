@@ -12,7 +12,7 @@ System_Ext(pay, "Stripe (test mode)", "Checkout nạp tiền, webhook; subscript
 System_Ext(llm, "Google Gemini (LLM)", "Chia chương, phân tích, storyboard, viết lại brief, Director (sau MVP)")
 System_Ext(img, "Google Gemini Image", "Sinh và sửa ảnh có tham chiếu")
 System_Ext(tts, "Vbee AIVoice (TTS)", "Giọng đọc nguyên văn; thay TTS tự host của MVP")
-System_Ext(stt, "Aligner / STT", "Timestamp từng từ; WER cho bộ đánh giá P0 và kiểm chứng từng shot (sau MVP)")
+System_Ext(stt, "Aligner / STT (WhisperX tự host)", "Timestamp từng từ; WER cho bộ đánh giá P0 và kiểm chứng từng shot (sau MVP)")
 System_Ext(mail, "Email Service", "Cảnh báo trần chi tiêu cho Admin, thông báo xuất video")
 System_Ext(store, "Object Storage + CDN", "S3 / R2 / MinIO")
 

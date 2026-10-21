@@ -58,8 +58,8 @@ manuscript ..> editor : MediaSync.onShotsChanged
 manuscript ..> billing : FreeLimitGuard
 media ..> manuscript
 media ..> world : tài sản, Visual Rules,\nquan hệ hiệu lực
-media ..> editor : createDraftTimeline
-editor ..> media : đọc shot, ảnh, thuyết minh;\nnghe sự kiện nội bộ
+media ..> editor : createDraftTimeline,\nMediaSync.onShotsChanged
+editor ..> media : đọc shot, ảnh, thuyết minh
 editor ..> billing : FreeLimitGuard (render)
 
 ' Phụ thuộc vào platform

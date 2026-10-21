@@ -46,11 +46,11 @@ Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, quy t
 
 ## Cấu trúc tài liệu và truy vết
 
-- `tai-lieu/01` BRD → `02` SRS (FR, cột Ưu tiên MoSCoW + **GĐ**) → `03` use case (Cockburn) → `04` dữ liệu → `05` kiến trúc (ADR; §4.1 cấu hình rút gọn cho MVP theo ADR-23) → `06` API → `07` NFR → `08` quy tắc nghiệp vụ & tính phí → `09` kế hoạch + RTM → `10` thuật ngữ → `11` backlog → `12` đặc tả kỹ thuật lõi (tách câu, ánh xạ timestamp, `timeline_snapshot`) → `13` tích hợp AI bên ngoài (tổng hợp, nguồn sự thật vẫn là 05/08/09/12).
+- `tai-lieu/01` BRD → `02` SRS (FR, cột Ưu tiên MoSCoW + **GĐ**) → `03` use case (Cockburn) → `04` dữ liệu → `05` kiến trúc (ADR; §4.1 cấu hình rút gọn cho MVP theo ADR-23; §4.2 sổ nợ kỹ thuật `TD-NN`) → `06` API → `07` NFR → `08` quy tắc nghiệp vụ & tính phí → `09` kế hoạch + RTM → `10` thuật ngữ → `11` backlog → `12` đặc tả kỹ thuật lõi (tách câu, ánh xạ timestamp, `timeline_snapshot`) → `13` tích hợp AI bên ngoài (tổng hợp, nguồn sự thật vẫn là 05/08/09/12).
 - `tai-lieu/schemas/timeline-snapshot.schema.json` là hợp đồng giữa API, preview và render; sửa schema thì sửa luôn file ví dụ cạnh nó và kiểm lại (`jsonschema` Draft 2020-12), cùng các ca SNP-T* ở 12 §3.2.
 - `quyet-dinh.md` là sổ quyết định (`QĐ-xx`); mọi thay đổi phạm vi/kế hoạch ghi vào đây trước, các tài liệu khác dẫn mã QĐ ở cột Nguồn.
 - Mỗi UC có mục **Truy vết** (FR, BR, IC, NFR, API, sơ đồ); RTM gộp Truy vết của UC gốc và UC con.
-- Tiền tố mã: `FR-<PHÂN HỆ>-NN`, `BR-NN`, `IC-NN` (ràng buộc dữ liệu), `WR-NN` (quy tắc ví, 08 §4), `SYM-NN` (ký hiệu trình bày, 08 §6), `NFR-*`, `ADR-NN`, `UC-<phân hệ>.<số>[chữ]`. Nguồn thông tin: `[QS]` quan sát, `[SL]` suy luận, `[ĐX]` đề xuất của BA.
+- Tiền tố mã: `FR-<PHÂN HỆ>-NN`, `BR-NN`, `IC-NN` (ràng buộc dữ liệu), `WR-NN` (quy tắc ví, 08 §4), `SYM-NN` (ký hiệu trình bày, 08 §6), `TD-NN` (nợ kỹ thuật, sổ ở 05 §4.2), `NFR-*`, `ADR-NN`, `UC-<phân hệ>.<số>[chữ]`. Nguồn thông tin: `[QS]` quan sát, `[SL]` suy luận, `[ĐX]` đề xuất của BA.
 - Ký hiệu giai đoạn: `P0`–`P3` thuộc MVP, `Sau` = sau MVP, `✂n` = vị trí trong thứ tự cắt giảm (`09` §1.3: ✂1–6 tầng 1, ✂7–10 tầng 2; QĐ-116).
 - Lịch sử phiên bản ở README §8; thêm một dòng khi có thay đổi đáng kể.
 

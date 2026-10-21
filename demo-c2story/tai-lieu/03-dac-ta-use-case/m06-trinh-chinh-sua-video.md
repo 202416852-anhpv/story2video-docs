@@ -432,7 +432,7 @@
 | Mô tả | Cập nhật clip khi ảnh/thuyết minh được sinh lại hoặc storyboard thay đổi, **giữ** chỉnh sửa của người dùng |
 | Tiền điều kiện | Có thay đổi tư liệu kể từ phiên bản timeline hiện tại |
 | Hậu điều kiện | **Thành công:** clip trỏ tới tư liệu mới; IC-10 thỏa; clip bị ảnh hưởng được đánh dấu |
-| Kích hoạt | Mở trình chỉnh sửa (UC-06.01), sự kiện `narration.updated`/`illustration.ready`, đổi bản nháp hiện hành |
+| Kích hoạt | Mở trình chỉnh sửa (UC-06.01); thao tác làm đổi tư liệu gọi thẳng sau khi lưu: sinh / sửa / khôi phục ảnh, sinh thuyết minh, đổi bản nháp hiện hành, tách / gộp / xóa shot, dời ranh giới shot (QĐ-150) |
 | Quan hệ | extend UC-06.01 |
 | Truy vết | FR-EDT-19; BR-33; seq-chinh-sua-xuat-video, act-m06-chinh-sua-xuat-video |
 | Giai đoạn | P3 |
@@ -454,7 +454,7 @@
 
 | Mục | Nội dung |
 |---|---|
-| Tác nhân chính / phụ | Editor / Render Worker |
+| Tác nhân chính / phụ | Editor |
 | Mô tả | Bước 6: render timeline thành MP4 kèm phụ đề |
 | Tiền điều kiện | Timeline thỏa UC-06.16a |
 | Hậu điều kiện | **Thành công:** Render phiên bản mới `READY`, đặt làm bản chính, có MP4 + SRT/VTT; với tài khoản Free, lượt render và phút video của tháng được cộng. **Tối thiểu:** lỗi thì Render `FAILED`, không ảnh hưởng timeline, không tính lượt |
@@ -515,7 +515,7 @@
 | Mục | Nội dung |
 |---|---|
 | Loại | extend của UC-06.16 |
-| Tác nhân | Editor / Render Worker |
+| Tác nhân | Editor |
 | Mô tả | Xuất video thành nhiều file nhỏ (theo chương hoặc theo thời lượng tối đa), cắt ở ranh giới shot để không mất lời đọc |
 | Tiền điều kiện | Timeline thỏa UC-06.16a |
 | Hậu điều kiện | **Thành công:** nhiều Render cùng `render_group_id`, mỗi phần có `part_no`; ghép lại đủ 100% truyện. **Tối thiểu:** không cắt giữa một shot |

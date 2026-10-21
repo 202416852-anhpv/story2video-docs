@@ -45,9 +45,9 @@
 
 **Luồng chính**
 1. User dán văn bản hoặc chọn file (.txt, .md, .docx).
-2. Hệ thống thực hiện **UC-02.02a** và hiển thị bản xem trước (số ký tự, số đoạn).
+2. Hệ thống thực hiện **UC-02.02a** ở chế độ xem trước (`POST /projects:import?dryRun=true`, không ghi gì) và hiển thị bản xem trước (số ký tự, số đoạn).
 3. User nhập tiêu đề, chọn style và tỷ lệ khung hình video (16:9 / 9:16 / 1:1).
-4. Hệ thống tạo trong **một giao dịch**: Project, ProjectMember(OWNER), SourceText, Chapter #1 (`version = 1`).
+4. Client gửi lại cùng nội dung kèm thông tin ở bước 3; hệ thống kiểm tra lại (UC-02.02a) rồi tạo trong **một giao dịch**: Project, ProjectMember(OWNER), SourceText, Chapter #1 (`version = 1`).
 5. Hệ thống mở Studio ở màn hình Write và gợi ý bước 2 "Chia chương" (UC-03.03).
 
 **Luồng thay thế / ngoại lệ**
@@ -171,7 +171,7 @@
 | Tiền điều kiện | Là Owner; số thành viên chưa vượt giới hạn (định nghĩa khi có gói đăng ký) |
 | Hậu điều kiện | **Thành công:** có InviteLink hiệu lực (DB chỉ lưu SHA-256 token), hoặc link bị thu hồi |
 | Kích hoạt | Bấm "Share" |
-| Truy vết | FR-PRJ-08; NFR-SEC-04 |
+| Truy vết | FR-PRJ-08; NFR-SEC-04; seq-cong-tac-xung-dot |
 | Giai đoạn | Sau |
 
 **Luồng chính**
@@ -267,7 +267,7 @@
 | Hậu điều kiện | **Thành công:** không có ghi đè ngầm; dữ liệu của cả hai được giữ. **Tối thiểu:** bản của người lưu sau không bị mất |
 | Kích hoạt | API trả `409 VERSION_CONFLICT` khi lưu |
 | Quan hệ | được mở rộng bởi UC-02.10a, UC-02.10b; được mở rộng từ UC-03.04..08 |
-| Truy vết | FR-PRJ-11, FR-EDT-18; BR-05 |
+| Truy vết | FR-PRJ-11, FR-EDT-18; BR-05; seq-cong-tac-xung-dot |
 | Giai đoạn | Sau |
 
 **Luồng chính**

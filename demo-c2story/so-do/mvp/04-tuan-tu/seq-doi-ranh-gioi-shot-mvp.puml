@@ -9,6 +9,7 @@ actor Editor $NGUOI_DUNG
 participant "Web App\n(Workspace)" as Web $GIAO_DIEN
 box "API Server" $BOX_API
 participant "StoryboardController\n→ BoundaryService\n(manuscript → media)" as BS $API
+participant "ChapterService\n(manuscript)" as CS $API
 participant "CoverageValidator\n(AI Gateway)" as CV $AI_GATEWAY
 participant "PriceEstimator" as PE $API
 participant "JobService" as JOBS $API
@@ -27,6 +28,20 @@ Web -> BS : GET /projects/{pid}/chapters/{cid}/shot-boundaries
 BS -> DB : shots của storyboard hiện hành (order_index, source_start)\n+ bảng câu (SentenceSegmenter, cùng segmenter_version)
 BS --> Web : [{leftShotId, rightShotId, offset, sentenceIndex}]
 
+== Soạn thảo và tự lưu (UC-03.02) ==
+Editor -> Web : sửa văn bản / tiêu đề chương
+Web -> Web : tự lưu sau 2 s không gõ
+Web -> CS : PATCH /projects/{pid}/chapters/{cid} {title?, content} (If-Match)
+CS -> DB : BEGIN; chương bị job khóa? → 423, editor chỉ đọc (3b)
+CS -> DB : UPDATE chapters … version = version + 1 WHERE version = :v
+alt 0 dòng (3a)
+    CS --> Web : 409 → "Chương đã đổi ở tab khác", tải lại,\nbỏ chữ chưa lưu (QĐ-147, TD-14)
+else
+    CS -> DB : chapter_versions (snapshot); người sửa cuối
+    CS -> DB : shot có sha256(đoạn nguồn) ≠ source_hash\n→ narrations OUTDATED (BR-06, IC-09); COMMIT
+    CS --> Web : 200 ETag mới
+    CS -> RT : chapter.updated
+end
 == Kéo vạch, xem trước (dryRun) ==
 Editor -> Web : Kéo vạch giữa shot 4 và shot 5
 Web -> Web : vạch chỉ dừng ở ranh giới câu;\nchặn vượt vạch kế bên (1b); shot còn ≥ 1 câu (1a)

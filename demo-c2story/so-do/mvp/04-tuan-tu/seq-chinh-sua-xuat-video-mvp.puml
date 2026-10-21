@@ -42,6 +42,9 @@ alt chưa có
         TB -> DB : tracks + items như seq-sinh-tu-lieu (cùng hàm createDraftTimeline)
     end
 end
+opt đã có timeline và tư liệu đổi kể từ lần mở trước (UC-06.01 bước 4)
+    TC -> MS : đồng bộ (UC-06.15, như mục "Đồng bộ khi tư liệu thay đổi")
+end
 UI -> TC : GET /projects/{pid}/timelines/{tlid}
 TC --> UI : tracks + items + ETag v1
 UI -> STORE : load(timeline)
@@ -79,6 +82,7 @@ else
     else hợp lệ
         OA -> DB : ghi items; version v2; COMMIT
         OA --> OB : 200 ETag v2
+        OA -> RT : timeline.updated (UC-06.02a bước 4)
     end
 end
 
@@ -100,7 +104,8 @@ MP -> RT : asset.updated
 RT --> UI : SSE
 
 == Đồng bộ khi tư liệu thay đổi (UC-06.15) ==
-MS -> MS : nghe illustration.ready, narration.updated,\nstoryboard.current-changed, shot.updated
+[-> MS : onShotsChanged(chapterId, shotIds) — gọi thẳng sau COMMIT bởi module media:\nhandler ảnh / thuyết minh, đặt bản nháp hiện hành, tách / gộp / xóa shot,\nkhôi phục ảnh; manuscript khi dời ranh giới shot (QĐ-150)
+MS -> MS : so tư liệu hiện hành với timeline (chạy lại nhiều lần vẫn cùng kết quả);\nchưa có timeline → bỏ qua
 MS -> DB : BEGIN; ảnh mới → thay illustration_id (giữ motion, màu, chuyển cảnh);\nthuyết minh mới → thay narration_id, giữ âm lượng, cập nhật độ dài,\ndời clip phía sau theo độ chênh; shot thêm / bớt → thêm / bớt cặp clip
 MS -> DB : SFX rơi ra ngoài → về cuối clip gần nhất, đánh dấu (3a);\nuser_modified giữ; sync_flag; version++; COMMIT
 MS -> RT : timeline.updated {changedItemIds[]}

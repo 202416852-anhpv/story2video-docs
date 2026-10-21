@@ -115,23 +115,25 @@ Chi tiết nằm ở [08](08-quy-tac-nghiep-vu.md).
 
 ## 8. Rủi ro
 
+> Rủi ro có trong bảng rủi ro triển khai (09 §5) chỉ ghi mã và tên ở đây; mức và ứng phó xem 09 §5, nơi được rà ở mỗi buổi retro. Các rủi ro còn lại có nguồn tại bảng này (QĐ-146).
+
 | Mã | Rủi ro | Mức | Biện pháp |
 |---|---|---|---|
-| R-01 | Chi phí AI vượt ngân sách của PO | Trung bình | Giá = chi phí thực × 110%; trần chi tiêu ngày; mock adapter cho dev/CI; ghi chi phí thực từng job |
-| R-02 | Nội dung vi phạm trong văn bản hoặc ảnh | Cao | Moderation đầu vào và đầu ra. Văn bản truyện không bị sửa, nên khi vi phạm thì chặn và báo tác giả, không tự làm mềm câu chữ; brief ảnh do AI viết thì người dùng sửa được (BR-18) |
+| R-01 | Chi phí AI vượt ngân sách của PO | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
+| R-02 | Nội dung vi phạm trong văn bản hoặc ảnh | Cao | MVP dựa vào bộ lọc an toàn có sẵn của Gemini cho prompt và ảnh; không kiểm duyệt văn bản truyện của chính người dùng (QĐ-135). Văn bản truyện không bị sửa, nên khi vi phạm thì chặn và báo tác giả, không tự làm mềm câu chữ; brief ảnh do AI viết thì người dùng sửa được (BR-18) |
 | R-03 | Phụ thuộc một nhà cung cấp AI | Trung bình | Adapter provider, chuyển đổi qua cấu hình |
 | R-04 | Mất dữ liệu khi tái cấu trúc chương | Trung bình | Giao dịch DB; Archive và version chương sau MVP |
 | R-05 | Văn bản dài vượt context LLM | Trung bình | Xử lý theo chương; tóm tắt cuốn chiếu **chỉ dùng nội bộ cho ngữ cảnh**, không bao giờ đưa vào audio |
-| **R-06** | **TTS đọc sai hoặc bỏ chữ** (số, từ mượn, tên riêng, từ Hán Việt) | Cao | Chọn provider bằng `EVAL-wer-golden` ở P0 (ngưỡng ≤ 3%); người dùng nghe và đánh dấu sinh lại; từ điển phát âm. **Lưu ý:** từ điển phát âm nằm cuối tầng 1 của thứ tự cắt giảm (✂6); nếu bị cắt, mục tiêu WER chỉ còn dựa vào khâu chọn provider (QĐ-80) |
-| **R-07** | **LLM chia shot không phủ kín văn bản** | Cao | Validator phía server + thuật toán sửa ranh giới tất định (`act-phu-kin-van-ban.puml`) |
+| **R-06** | **TTS đọc sai hoặc bỏ chữ** (số, từ mượn, tên riêng, từ Hán Việt) | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
+| **R-07** | **LLM chia shot không phủ kín văn bản** | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
 | R-08 | Một đoạn văn dài khiến một ảnh đứng quá lâu, gây nhàm | Trung bình | Cảnh báo ảnh > 30 s; gợi ý tách shot; Ken Burns nhiều pha |
 | R-09 | SSO gián đoạn thì người dùng không đăng nhập được | Trung bình | Phiên ứng dụng vẫn hiệu lực đến hết hạn; trang lỗi thân thiện |
 | R-10 | SSO Vbee không hỗ trợ chuẩn OIDC đầy đủ (chỉ OAuth 2.0, thiếu logout hoặc JWKS) | Cao | `IdentityProviderPort` tách riêng; adapter OAuth 2.0 + userinfo; làm thêm 1–2 tuần-người lấy từ thứ tự cắt giảm (QĐ-23) |
 | R-11 | Trình chỉnh sửa timeline trên web phức tạp, chậm với video dài | Trung bình | Dùng thư viện timeline/preview có sẵn (Remotion); ảo hóa danh sách clip; chỉnh theo chương |
-| R-12 | **Năng lực nhóm không đủ** cho phạm vi MVP | Cao | MVP đã thu gọn; thứ tự cắt giảm 3 tầng; đo vận tốc ở T8 và kiểm tra 80% cuối P1, P2 (QĐ-05, QĐ-06, QĐ-91, QĐ-94) |
+| R-12 | **Năng lực nhóm không đủ** cho phạm vi MVP | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
 | R-13 | Tài khoản rác đốt tiền dùng thử | Cao | Danh sách mời beta; trần chi tiêu ngày; giới hạn kỹ thuật (BR-29, BR-30, BR-32) |
-| R-14 | Vbee giao tài liệu muộn | Trung bình | PO làm đầu mối, liên hệ từ T1; hạn chót hết tháng thứ 2; quá hạn giữ Keycloak, ghi trong báo cáo (QĐ-22) |
-| R-15 | Render / preview không đạt yêu cầu (chậm, lệch khung, máy staging yếu) | Trung bình | Benchmark ở P0; khung chạy đầu-cuối T6; spike editor ở P2; ✂9 (QĐ-90, QĐ-92, QĐ-98) |
-| R-16 | Mất năng lực vì Tết, thi, thành viên vắng | Cao | Lịch không làm việc trong kế hoạch; người dự phòng cho mỗi vai trò (QĐ-95, QĐ-96) |
-| R-17 | Báo cáo đồ án dồn cuối | Trung bình | Viết dần theo giai đoạn (QĐ-99) |
-| R-21 | Provider ảnh từ chối nhiều cảnh trong văn học (bạo lực, nghèo đói, tình dục) | Cao | Đo tỷ lệ từ chối ở P0 và tính vào tiêu chí chọn provider; prompt storyboard tả gián tiếp; người dùng sửa brief (QĐ-113) |
+| R-14 | Vbee giao tài liệu muộn | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
+| R-15 | Render / preview không đạt yêu cầu (chậm, lệch khung, máy staging yếu) | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
+| R-16 | Mất năng lực vì Tết, thi, thành viên vắng | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
+| R-17 | Báo cáo đồ án dồn cuối | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |
+| R-21 | Provider ảnh từ chối nhiều cảnh trong văn học (bạo lực, nghèo đói, tình dục) | → 09 §5 | Xem 09 §5 (xác suất, tác động, ngưỡng kích hoạt, ứng phó) |

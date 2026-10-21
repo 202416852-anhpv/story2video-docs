@@ -294,7 +294,7 @@
 | Hậu điều kiện | **Thành công:** `beta_invites` cập nhật; có audit log. **Tối thiểu:** gỡ lời mời không xóa hồ sơ đã tạo |
 | Kích hoạt | MVP: lệnh `pnpm admin:invites add\|remove\|list <email> [--note]`. Sau MVP: `/admin/invites` |
 | Quan hệ | include UC-10.09 |
-| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites`; seq-quan-tri |
+| Truy vết | FR-AUTH-11; BR-30; QĐ-25; 04 §3.1 `beta_invites`; seq-quan-tri; seq-dang-nhap-sso |
 | Giai đoạn | P1 |
 
 **Luồng chính**
@@ -325,7 +325,7 @@
 | Hậu điều kiện | **Thành công:** tại mọi thời điểm `spent + reserved ≤ cap` của ngày (IC-18), kể cả khi nhiều yêu cầu đồng thời; chi phí thực chỉ có thể vượt trần một lượng bằng phần các job đang chạy tốn hơn ước tính; Admin nhận đúng một cảnh báo cho mỗi ngưỡng mỗi ngày. **Tối thiểu:** job đang chạy không bị hủy giữa chừng |
 | Kích hoạt | Mỗi lần tạo job tốn phí (UC-05.17 bước 3); Scheduler chạy mỗi 5 phút |
 | Quan hệ | được include bởi UC-05.17 |
-| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED`; seq-quan-tri, seq-vong-doi-job |
+| Truy vết | FR-ADM-07; BR-29; IC-18; ADR-25; QĐ-39; NFR-COST-02; 04 `daily_ai_budgets`; API `503 DAILY_BUDGET_EXCEEDED`; seq-quan-tri, seq-vong-doi-job; act-giu-tru-tien |
 | Giai đoạn | P2 |
 
 **Luồng chính**

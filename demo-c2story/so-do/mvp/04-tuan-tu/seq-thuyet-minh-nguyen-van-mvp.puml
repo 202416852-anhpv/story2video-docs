@@ -13,6 +13,7 @@ participant "PronunciationService" as PS $API
 participant "JobService\n+ WalletService" as JOBS $API
 participant "Realtime (SSE)" as RT $API
 end box
+participant "editor.MediaSync" as MSYNC $API
 database PostgreSQL as DB $DU_LIEU
 box "Worker" $BOX_WORKER
 participant "NarrateSegmentHandler" as W $WORKER
@@ -119,6 +120,7 @@ loop mỗi NARRATE_SEGMENT (concurrency của queue tts, theo VRAM)
         W -> DB : BEGIN; media_files; narrations(DONE, spoken_text = R, ssml,\nnormalization_log, word_timings, duration_ms, voice_id,\nsource_hash, flagged_at = NULL); shots.current_narration_id
         W -> DB : job SUCCEEDED; [chỉ khi là job gốc] CAPTURE Σ cost × 1,10\n+ RELEASE dư; COMMIT
     end
+    W -> MSYNC : onShotsChanged(chapterId, [shotId]) khi DONE (UC-06.15)
     W -> RT : narration.updated
 end
 W -> DB : job cha xong: quyết toán cả lượt (WR-05: CAPTURE chi phí các con thành công,\nRELEASE phần còn lại) + mở khóa chương, cùng một giao dịch

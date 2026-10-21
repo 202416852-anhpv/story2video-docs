@@ -40,7 +40,7 @@
 | Hậu điều kiện | **Thành công:** Subscription `ACTIVE`; quyền lợi gói có hiệu lực. **Tối thiểu:** không kích hoạt gói khi chưa nhận webhook thanh toán |
 | Kích hoạt | Chọn gói trên Pricing |
 | Quan hệ | include UC-09.03a |
-| Truy vết | FR-BIL-02; seq-thanh-toan |
+| Truy vết | FR-BIL-02; seq-thanh-toan; state-subscription |
 | Giai đoạn | Sau |
 
 **Luồng chính**

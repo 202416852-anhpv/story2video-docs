@@ -17,7 +17,7 @@
 | Aligner | `AlignerPort` | WhisperX tự host | Montreal Forced Aligner | `word_timings` cho mọi audio của TTS tự host | P2 (bắt buộc, QĐ-122) |
 | STT | `SttPort` | WhisperX tự host | — | `EVAL-wer-golden` ở P0; kiểm chứng từng shot *(sau MVP)* | P0 / Sau |
 
-Như vậy trong MVP chỉ có **một hệ thống AI bên ngoài thật sự là Google** (LLM + ảnh). TTS, aligner, STT chạy trong hạ tầng của nhóm nhưng vẫn đi qua port và AI Gateway như provider ngoài, để đổi sang Vbee AIVoice chỉ cần thêm adapter. Không có Video provider, không có Music/SFX provider (ADR-10, QĐ-57). Render video chạy trên hạ tầng của nhóm, không gọi AI.
+Như vậy trong MVP chỉ có **một nhà cung cấp AI ngoài nhóm là Google** (LLM + ảnh). TTS, aligner, STT là hệ thống ngoài do nhóm tự vận hành trên máy GPU riêng (QĐ-149): dữ liệu không rời hạ tầng của nhóm, nhưng vẫn đi qua port và AI Gateway như mọi provider, để đổi sang Vbee AIVoice chỉ cần thêm adapter. Không có Video provider, không có Music/SFX provider (ADR-10, QĐ-57). Render video chạy trên hạ tầng của nhóm, không gọi AI.
 
 Nguồn: 05 §2, §7.3; QĐ-119..123.
 
@@ -65,7 +65,7 @@ AI Gateway **không phải một dịch vụ mạng riêng**: là thư viện Ty
 | Chuẩn bị đầu vào | `ContextBuilder` | Gom ngữ cảnh truyện cho LLM: chương, tóm tắt cuốn chiếu (chỉ dùng nội bộ), tài sản, timeline truyện |
 | | `SentenceSegmenter` | Tách câu tất định, đánh số câu để LLM chỉ trả chỉ số (12 §1) |
 | | `PromptCompiler` | Ghép prompt ảnh theo thứ tự BR-08; lưu `prompt_snapshot`; cờ ablation (QĐ-117) |
-| | `SpeechNormalizer` | Đoạn nguồn → SSML + `NormalizationMap`; không đổi chữ (12 §2) |
+| | `SpeechNormalizer` | Đoạn nguồn → `NormalizedSpeech` (bản đọc R, các đoạn giữa `PAUSE`, SSML, `NormalizationMap`; QĐ-145); không đổi chữ (12 §2) |
 | Kiểm soát | `ProviderRouter` | Chọn provider/mô hình theo loại tác vụ; timeout; phân loại lỗi (§7.1); fallback chỉ cho LLM, sang mô hình không đắt hơn (QĐ-124, 125). Mỗi lần thử của job gọi provider **một lần**; thử lại là việc của job (BullMQ backoff, QĐ-133) |
 | | `ModerationFilter` *(sau MVP)* | MVP dựa vào bộ lọc an toàn có sẵn của Gemini (QĐ-135) |
 | Giao tiếp | `Adapters` | Một adapter thật + một adapter mock cho mỗi port. MVP: `GeminiLlmAdapter`, `GeminiImageAdapter`, `SelfHostedTtsAdapter`, `WhisperXAlignerAdapter`; sau MVP: `VbeeTtsAdapter` |
@@ -87,7 +87,7 @@ Worker
    (lỗi tạm thời: jobs RETRYING → BullMQ thử lại lần sau theo backoff, tối đa 3 lần)
 ```
 
-Sơ đồ góc nhìn tích hợp AI (thư mục `../so-do/07-tich-hop-ai/`): tuần tự `seq-ai-goi-llm` (LLM), `seq-ai-sinh-anh` (ảnh), `seq-ai-tts-tu-host` (TTS tự host + WhisperX, MVP), `seq-ai-tts-vbee` (Vbee AIVoice, sau MVP), `seq-ai-danh-gia-provider` (fixture, eval); hoạt động `act-ai-goi-provider` (phân loại lỗi, thử lại, quyết toán), `act-ai-chon-provider` (chọn provider ở P0, §11); trạng thái `state-ai-loi-goi` (một lần thử trong AI Gateway), `state-ai-dau-ra` (đầu ra AI qua ranh giới tin cậy, §6).
+Sơ đồ góc nhìn tích hợp AI (thư mục `../so-do/07-tich-hop-ai/`): tuần tự `seq-ai-goi-llm` (LLM), `seq-ai-sinh-anh` (ảnh), `seq-ai-tts-tu-host` (TTS tự host + WhisperX, MVP), `seq-ai-tts-vbee` (Vbee AIVoice, sau MVP), `seq-ai-danh-gia-provider` (fixture, eval); hoạt động `act-ai-goi-provider` (phân loại lỗi, thử lại, quyết toán), `act-ai-chon-provider` (chọn provider ở P0, §11); trạng thái `state-ai-loi-goi` (một lần thử trong AI Gateway), `state-ai-dau-ra` (đầu ra AI qua ranh giới tin cậy, §6). Bản MVP (sinh tự động, không có `seq-ai-tts-vbee`): `../so-do/mvp/07-tich-hop-ai/*-mvp.puml`.
 
 ## 3. Danh mục tác vụ AI
 

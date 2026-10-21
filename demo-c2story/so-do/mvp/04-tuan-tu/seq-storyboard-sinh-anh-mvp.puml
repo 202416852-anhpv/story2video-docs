@@ -14,6 +14,7 @@ participant "IllustrationService" as IL $API
 participant "ShotService" as SH $API
 participant "Realtime (SSE)" as RT $API
 end box
+participant "editor.MediaSync" as MSYNC $API
 participant "Object Storage" as S3 $DU_LIEU
 database PostgreSQL as DB $DU_LIEU
 box "Worker" $BOX_WORKER
@@ -72,13 +73,14 @@ HD -> DB : INITIAL và chưa có hiện hành → chapters.current_storyboard_id
 HD -> RT : job.updated {draftId, boundaryFixes, unlinked}
 RT --> Web : SSE
 alt boundary_fixes > 20% (7a)
-    Web -> Editor : Director note: cảnh báo chất lượng, gợi ý tạo lại
+    Web -> Editor : cảnh báo chất lượng (boundary_fixes), gợi ý tạo lại
 end
 opt Đặt bản nháp hiện hành (UC-05.02c, sau khi chia lại)
     Editor -> Web : "Dùng bản này" (xác nhận nếu timeline đã sửa)
     Web -> SB : POST …/storyboards/{did}:set-current (If-Match)
     SB -> DB : BEGIN; khóa chương? (423); chapters.current_storyboard_id;\ntính lại chapters.media_status; COMMIT
-    SB -> RT : shot.updated, timeline.updated (editor.syncMedia, UC-06.15)
+    SB -> MSYNC : onShotsChanged(chapterId, mọi shot) sau COMMIT (UC-06.15, QĐ-150)
+    SB -> RT : shot.updated
 end
 
 == Biên tập shot (UC-05.06) ==
@@ -92,7 +94,8 @@ else Tách / gộp / xóa shot (UC-05.06c)
     SH -> SH : kiểm 1 ≤ số shot ≤ 40, mỗi shot ≥ 1 câu (2a, 2b, 4a)
     SH -> CV : validate (UC-05.01a)
     SH -> DB : UPDATE shots; narrations của shot đổi đoạn → OUTDATED (IC-09);\nshot mới chưa có ảnh / thuyết minh; COMMIT
-    SH -> RT : shot.updated → đồng bộ timeline (UC-06.15)
+    SH -> MSYNC : onShotsChanged(chapterId, shotIds) sau COMMIT (UC-06.15)
+    SH -> RT : shot.updated
 else Tự khớp tên với tài sản (UC-05.06f)
     Web -> SB : POST …/storyboards/{did}:auto-link-assets
     SB -> DB : shot_asset_refs có story_asset_id NULL;\nso raw_name với tên + bí danh (chuẩn hóa hoa thường, khoảng trắng)
@@ -138,6 +141,7 @@ loop mỗi job (concurrency của queue image)
         HI -> S3 : PUT illustrations/{id}.png
         HI -> DB : BEGIN; media_files; illustrations(DONE, edit_kind = GENERATE,\nprompt_snapshot, job_id); shots.current_illustration_id;\nCAPTURE + RELEASE dư; jobs SUCCEEDED; COMMIT
         HI -> RT : illustration.ready
+        HI -> MSYNC : onShotsChanged(chapterId, [shotId]) (UC-06.15)
     else CONTENT_POLICY / lỗi sau 3 lần
         HI -> DB : illustrations FAILED (error_code); RELEASE; jobs FAILED
         HI -> RT : job.updated (FAILED) → sửa brief rồi sinh lại (BR-18)
@@ -156,6 +160,7 @@ else hợp lệ
     IL -> DB : BEGIN; media_files; illustrations(UPLOAD, DONE,\nshot_version = shots.version, không prompt, không job);\nshots.current_illustration_id; COMMIT
     IL --> Web : 201 {illustrationId}
     IL -> RT : illustration.ready
+    IL -> MSYNC : onShotsChanged(chapterId, [shotId]) (UC-06.15)
 end
 
 == Sửa ảnh theo mô tả (UC-05.10a) / khôi phục phiên bản (UC-05.10c) ==
@@ -171,10 +176,12 @@ alt Describe → Edit (tính phí)
         HI -> DB : illustrations FAILED; RELEASE (ảnh cũ vẫn hiện hành)
     end
     HI -> RT : illustration.ready | job.updated
+    HI -> MSYNC : onShotsChanged(chapterId, [shotId]) khi thành công (UC-06.15)
 else Khôi phục phiên bản (miễn phí)
     Web -> IL : POST …/illustrations/{iid}:make-current
     IL -> DB : shots.current_illustration_id = iid (không tạo bản ghi)
     IL --> Web : 200
     IL -> RT : illustration.ready
+    IL -> MSYNC : onShotsChanged(chapterId, [shotId]) (UC-06.15)
 end
 @enduml

@@ -13,6 +13,7 @@ participant "PriceEstimator" as PE $API
 participant "Realtime (SSE)" as RT $API
 participant "JobService" as JOBS $API
 participant "editor.TimelineBuilder" as TB $API
+participant "editor.MediaSync" as MSY $API
 end box
 database PostgreSQL as DB $DU_LIEU
 queue "Redis / BullMQ\n(Flow cha–con)" as Q $DU_LIEU
@@ -86,8 +87,12 @@ Q -> ORC : mọi con đã xong (Flow)
 ORC -> DB : BEGIN; đếm trạng thái ảnh, thuyết minh của mọi shot
 alt mọi shot ảnh DONE và thuyết minh DONE
     ORC -> DB : chapters.media_status = READY_TO_EDIT
-    ORC -> TB : createDraftTimeline(chapterId) (UC-06.01a)
-    TB -> DB : timelines + tracks Video, Thuyết minh (khóa), Phụ đề (nguyên văn),\nNhạc nền, SFX; mỗi shot 1 item IMAGE + 1 item NARRATION;\nKen Burns luân phiên, crossfade 0,5 s
+    alt chương chưa có timeline
+        ORC -> TB : createDraftTimeline(chapterId) (UC-06.01a)
+        TB -> DB : timelines + tracks Video, Thuyết minh (khóa), Phụ đề (nguyên văn),\nNhạc nền, SFX; mỗi shot 1 item IMAGE + 1 item NARRATION;\nKen Burns luân phiên, crossfade 0,5 s
+    else đã có timeline (sinh lại, UC-05.07c bước 6)
+        ORC -> MSY : đồng bộ timeline theo tư liệu mới (UC-06.15)
+    end
 else còn lỗi (5a)
     ORC -> DB : chapters.media_status = NEEDS_ATTENTION
 end

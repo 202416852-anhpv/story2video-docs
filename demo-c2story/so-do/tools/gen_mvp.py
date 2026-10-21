@@ -8,7 +8,7 @@ Chạy trong demo-c2story/:  python3 so-do/tools/gen_mvp.py
 Kết quả: so-do/mvp/01-use-case/phan-ra/*-mvp.puml, so-do/mvp/02-du-lieu/erd-mvp.puml,
 so-do/mvp/02-du-lieu/domain-class-mvp.puml, bản MVP của sơ đồ có đánh dấu '@sau-mvp / '@mvp
 (03-kien-truc, 04-tuan-tu, 05-hoat-dong) và mọi sơ đồ 07-tich-hop-ai trừ seq-ai-tts-vbee; sơ đồ đầy đủ tương ứng được tô xám (#DDDDDD) phần sau MVP.
-Các sơ đồ MVP khác (tổng quan, tuần tự, trạng thái...) viết tay trong so-do/mvp/.
+Các sơ đồ MVP còn lại (tổng quan, C4, deployment, quy trình, trạng thái) viết tay trong so-do/mvp/.
 """
 import glob
 import os

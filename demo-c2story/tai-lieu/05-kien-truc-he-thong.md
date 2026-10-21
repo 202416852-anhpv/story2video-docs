@@ -27,7 +27,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-context.puml`.
 | Admin | Cấu hình giá, provider, giọng (file seed trong MVP); danh sách mời beta; nhận cảnh báo trần chi tiêu |
 | **SSO** (Keycloak tự dựng; SSO Vbee trước khi bảo vệ) | Đăng ký, đăng nhập, đăng xuất, MFA; back-channel logout (sau MVP) |
 | Payment Gateway (Stripe **test mode**, tài khoản của nhóm) | Checkout nạp tiền, webhook; customer portal sau MVP |
-| AI Providers | LLM và Image: Google Gemini (QĐ-119, QĐ-120). TTS: model tự host trong MVP (TTS Server, không phải hệ thống ngoài), Vbee AIVoice sau MVP (QĐ-121). Aligner/STT: WhisperX tự host. **Không có Video provider, không có Music/SFX provider** (QĐ-57) |
+| AI Providers | LLM và Image: Google Gemini (QĐ-119, QĐ-120). TTS: model tự host trong MVP (TTS Server), Vbee AIVoice sau MVP (QĐ-121). Aligner/STT: WhisperX tự host. TTS Server và Aligner là **hệ thống ngoài do nhóm vận hành** trên máy GPU riêng, gọi qua HTTP nội bộ (QĐ-149). **Không có Video provider, không có Music/SFX provider** (QĐ-57) |
 | Email service | Email giao dịch (cảnh báo trần chi tiêu cho Admin, thông báo xuất video) |
 | Object storage + CDN | Ảnh, audio, video, nhạc & SFX tải lên |
 
@@ -77,6 +77,27 @@ Bảng trên là thiết kế đầy đủ. MVP (3 người, 20 giờ/tuần) d�
 | RLS Postgres làm lớp phân quyền thứ hai (D-07) | Chỉ kiểm quyền ở tầng ứng dụng (`authz`) + `IT-permission-matrix` | Có cộng tác nhiều người |
 | OpenTelemetry tracing xuyên tiến trình | Log có cấu trúc kèm `jobId` làm correlation id; Sentry cho lỗi | Hệ thống nhiều instance |
 | PITR, Multi-AZ | Snapshot PostgreSQL hằng ngày (NFR-REL-05) | Production |
+
+### 4.2 Sổ nợ kỹ thuật
+
+Gom mọi chỗ MVP cố ý làm đơn giản hơn thiết kế đầy đủ. Mỗi mục có điều kiện phải trả; rà lại sổ ở cuối mỗi giai đoạn và sau closed beta. Thêm nợ mới thì ghi QĐ trước, rồi thêm một dòng ở đây (mã `TD-NN`, không dùng lại mã đã bỏ). Trả xong thì ghi "Đã trả (QĐ-xx)" ở cột Trạng thái, không xóa dòng.
+
+| Mã | Nợ (MVP làm gì) | Thiết kế đầy đủ | Rủi ro khi còn nợ | Điều kiện phải trả | Nguồn | Trạng thái |
+|---|---|---|---|---|---|---|
+| TD-01 | Một tiến trình worker Node chạy mọi queue và job lặp của Scheduler | Container riêng cho Job Workers, Media Processing Worker, Scheduler | Job nặng của một queue làm chậm queue khác | Queue bị dồn > 5 phút hoặc render làm chậm job khác | ADR-23, §4.1 | Đang nợ |
+| TD-02 | Không outbox: enqueue ngay sau commit; reconciler mỗi 1 phút đẩy lại job `QUEUED` bị sót | Outbox pattern (`outbox_events` + relay) | Crash giữa commit và enqueue làm job chậm tới 1 phút | Có cộng tác realtime nhiều người | ADR-07, ADR-23 | Đang nợ |
+| TD-03 | SSE không phát lại sự kiện; nối lại thì client tải lại ảnh chụp trạng thái | `Last-Event-ID`, phát lại từ outbox | Thêm request khi nối lại; sự kiện lỡ không có lịch sử | Cùng lúc với TD-02 | ADR-23; 06 §3; UC-05.07b 3a | Đang nợ |
+| TD-04 | IC-08 (phủ kín) chỉ kiểm ở service (`CoverageValidator`) + `PBT-coverage-validator` | Thêm constraint trigger `DEFERRABLE` trong DB | Một đường ghi shot mới quên gọi validator sẽ phá bất biến BR-20 | Có đường ghi shot ngoài module `media` | ADR-23, §4.1 | Đang nợ |
+| TD-05 | Chỉ kiểm quyền ở tầng ứng dụng (`authz`) + `IT-permission-matrix` | RLS Postgres làm lớp thứ hai | Một lỗi ở `authz` làm lộ dữ liệu giữa các dự án | Có cộng tác nhiều người | ADR-23; 04 D-07 | Đang nợ |
+| TD-06 | Log có cấu trúc kèm `jobId` + Sentry | Tracing OpenTelemetry xuyên tiến trình | Khó lần lỗi khi luồng đi qua nhiều instance | Hệ thống nhiều instance | ADR-23; QĐ-137; NFR-MNT-03 | Đang nợ |
+| TD-07 | Snapshot PostgreSQL hằng ngày, giữ 7 ngày | PITR, RPO ≤ 5 phút, RTO ≤ 2 giờ, Multi-AZ | Mất tới 24 giờ dữ liệu, kể cả sổ cái ví | Lên production (ngoài closed beta) | ADR-23; NFR-REL-05 | Đang nợ |
+| TD-08 | Giới hạn đồng thời toàn hệ thống bằng `concurrency` của queue + rate limiter BullMQ | Semaphore Redis theo người dùng (≤ 8 job ảnh, 8 job TTS) | Một người sinh nhiều chương làm người khác chờ vài phút | Vượt 5 người dùng đồng thời (NFR-SCAL-04) hoặc beta phản ánh phải chờ lâu | QĐ-132; ADR-28 | Đang nợ |
+| TD-09 | Không circuit breaker; thử lại một tầng ở mức job (3 lần) | Circuit breaker theo provider | Provider sập lâu thì mỗi job vẫn thử đủ 3 lần | Có nhiều worker và lưu lượng đủ lớn để lỗi dồn thành bão gọi lại | QĐ-133; NFR-REL-04 | Đang nợ |
+| TD-10 | Không `ModerationFilter` riêng; dựa vào bộ lọc an toàn có sẵn của Gemini | Bộ kiểm duyệt riêng của hệ thống | Phụ thuộc chính sách nội dung của Google (R-21, R-22) | Thêm provider LLM/ảnh không có bộ lọc sẵn, hoặc mở dịch vụ ngoài closed beta | QĐ-135, QĐ-148 | Đang nợ |
+| TD-11 | Render một lượt `renderMedia` của Remotion, không chia đoạn rồi nối | Chưa có phương án; chia đoạn rồi nối đã bị loại vì lỗi chuyển cảnh ở chỗ nối (§6.4), chọn khi trả nợ | Video dài render chậm, chiếm Render Worker lâu | `BENCH-render` hoặc thống kê beta vượt NFR-PERF-10 (1 phút 720p > 2 phút) | QĐ-137, QĐ-148 | Đang nợ |
+| TD-12 | `OpsBatcher` giữ lô thao tác chưa lưu trong bộ nhớ, hiện "Chưa lưu" | Hàng đợi offline lưu bền ở client | Đóng tab khi mạng lỗi thì mất thao tác timeline chưa lưu | Beta phản ánh mất thao tác, hoặc khi hỗ trợ làm việc offline | QĐ-137, QĐ-148 | Đang nợ |
+| TD-13 | Giữ Alignment Worker Python (WhisperX) vì TTS tự host không trả timestamp tin cậy | Dùng timestamp của TTS, bỏ bước căn | Thêm một dịch vụ Python và thời gian GPU cho mỗi đoạn | Đổi sang TTS có timestamp đạt `EVAL-alignment` (vd. Vbee AIVoice) | QĐ-122; ADR-23 | Đang nợ |
+| TD-14 | Workspace gặp `409`: cảnh báo rồi tải lại chương, bỏ phần chữ chưa lưu | Xử lý xung đột theo UC-02.10 (so sánh, giữ bản của mình) | Mất chữ khi một người sửa cùng chương ở hai tab | Có cộng tác nhiều người (UC-02.10), hoặc beta phản ánh mất chữ | QĐ-147; UC-03.02 3a | Đang nợ |
 
 
 ## 5. Cấu trúc API Server (C4 Level 3)
@@ -219,7 +240,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-component-editor.puml`, `../so-do/04-tuan-t
 |---|---|
 | `TimelineBuilder` | Dựng bản nháp từ tư liệu (UC-06.01a) |
 | `OpsApplier` + `NarrationGuard` | Áp lô thao tác nguyên tử, kiểm tra IC-10/BR-24, trả `422 NARRATION_LOCKED` |
-| `MediaSync` | Lắng nghe `illustration.ready`, `narration.updated`, `shot.updated`, `storyboard.current-changed`; gọi trực tiếp `onShotsChanged` sau khi dời ranh giới shot (`seq-doi-ranh-gioi-shot`); cập nhật item, dời item phía sau, giữ `user_modified`, đặt `sync_flag` |
+| `MediaSync` | Service công khai `onShotsChanged(chapterId, shotIds)`, được **gọi thẳng** sau khi commit bởi mọi chỗ làm đổi tư liệu (QĐ-150): handler ảnh, thuyết minh (worker cùng codebase), đặt bản nháp hiện hành, tách / gộp / xóa shot, khôi phục ảnh (module `media`), dời ranh giới shot (module `manuscript`). Không có sự kiện nội bộ; lần gọi bị lỡ được bù khi mở trình chỉnh sửa (UC-06.01 bước 4) và khi kiểm tra trước lúc xuất. So tư liệu hiện hành với timeline nên gọi lặp vẫn cho cùng kết quả; cập nhật item, dời item phía sau, giữ `user_modified`, đặt `sync_flag` |
 | `VersionService` *(sau MVP)* | `timeline_versions` (tự động + có tên), khôi phục |
 | `AudioAssetService` | Tải lên → job `PROCESS_AUDIO_UPLOAD`; tìm theo tên trong âm thanh của tôi. Thư viện hệ thống với Postgres FTS + `tags` và dòng ghi công CC-BY: sau MVP |
 | `ReadinessChecker` | UC-06.16a: độ phủ 100%, thuyết minh `DONE`, ảnh đủ, không `OUTDATED`, IC-10; cảnh báo shot được đánh dấu cần sinh lại |
@@ -236,7 +257,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-component-editor.puml`, `../so-do/04-tuan-t
 
 ### 6.6 Realtime
 
-**MVP (ADR-23):** sau khi commit giao dịch nghiệp vụ, API/worker publish lên Redis kênh `project:{id}` → API giữ kết nối SSE gửi về client. Không có kho sự kiện nên **không phát lại** theo `Last-Event-ID`: client nối lại thì tải lại ảnh chụp trạng thái (vd. `GET …/media`, `GET …/timelines/{id}`) rồi nghe tiếp. **Sau MVP:** sự kiện ghi vào `outbox_events` cùng giao dịch → relay publish → hỗ trợ phát lại theo `Last-Event-ID`. Sự kiện: `job.updated`, `chapter.media-ready`, `chapter.updated`, `chapters.restructured`, `shot.updated`, `illustration.ready`, `narration.updated`, `timeline.updated`, `render.progress`, `render.ready`, `asset.updated`, `wallet.updated`; `director.plan`, `member.changed` (sau MVP). Payload ở 06 §3. Ngoài ra có **sự kiện nội bộ** (EventEmitter trong tiến trình, không gửi client): `storyboard.current-changed` cho `MediaSync`.
+**MVP (ADR-23):** sau khi commit giao dịch nghiệp vụ, API/worker publish lên Redis kênh `project:{id}` → API giữ kết nối SSE gửi về client. Không có kho sự kiện nên **không phát lại** theo `Last-Event-ID`: client nối lại thì tải lại ảnh chụp trạng thái (vd. `GET …/media`, `GET …/timelines/{id}`) rồi nghe tiếp. **Sau MVP:** sự kiện ghi vào `outbox_events` cùng giao dịch → relay publish → hỗ trợ phát lại theo `Last-Event-ID`. Sự kiện: `job.updated`, `chapter.media-ready`, `chapter.updated`, `chapters.restructured`, `shot.updated`, `illustration.ready`, `narration.updated`, `timeline.updated`, `render.progress`, `render.ready`, `asset.updated`, `wallet.updated`; `director.plan`, `member.changed` (sau MVP). Payload ở 06 §3. Không có sự kiện nội bộ giữa các module: đồng bộ timeline dùng lời gọi thẳng `MediaSync.onShotsChanged` (§5.1, QĐ-150).
 
 ## 7. AI Gateway (C4 Level 3)
 
@@ -250,7 +271,7 @@ Sơ đồ: `../so-do/03-kien-truc/c4-component-ai.puml`; sơ đồ lớp mức t
 | `PromptCompiler` | Ghép prompt ảnh theo BR-08 (style → Art Direction → Visual Rules → Chapter rules → brief + facts); lưu `prompt_snapshot`. Có cờ cấu hình tắt từng phần ngữ cảnh (ảnh tham chiếu, Visual Rules, timeline truyện, quan hệ), chỉ dùng cho ablation (QĐ-117) |
 | `SentenceSegmenter` | Tách câu tất định có offset ([12 §1](12-dac-ta-ky-thuat-loi.md)) |
 | `CoverageValidator` | Kiểm tra và sửa ranh giới đoạn nguồn (BR-20) |
-| `SpeechNormalizer` | Đoạn nguồn → SSML; áp quy tắc ký hiệu SYM-01..05 (08 §6); không đổi chữ; sinh `NormalizationMap` để ánh xạ timestamp về văn bản gốc ([12 §2](12-dac-ta-ky-thuat-loi.md)) |
+| `SpeechNormalizer` | Đoạn nguồn → `NormalizedSpeech` (bản đọc R, các đoạn giữa `PAUSE`, SSML, `NormalizationMap`; QĐ-145); áp quy tắc ký hiệu SYM-01..05 (08 §6); không đổi chữ; sinh `NormalizationMap` để ánh xạ timestamp về văn bản gốc ([12 §2](12-dac-ta-ky-thuat-loi.md)) |
 | `WerScorer` | Chuẩn hóa hai phía (NFC, chữ thường, bỏ dấu câu, đọc số theo `SpeechNormalizer`, giữ dấu thanh), tính WER theo âm tiết và vị trí lệch; trừ WER nền của ASR (QĐ-111). Bộ đánh giá P0; kiểm chứng từng shot sau MVP |
 | `ModerationFilter` *(sau MVP)* | Kiểm duyệt riêng của hệ thống. MVP dựa vào bộ lọc an toàn có sẵn của Gemini (LLM, ảnh): provider chặn → `CONTENT_POLICY` (BR-18). Không kiểm duyệt văn bản truyện của chính người dùng hay audio TTS đọc đúng văn bản đó (QĐ-135) |
 | `ProviderRouter` | Chọn provider/mô hình theo loại tác vụ, ưu tiên; timeout theo loại (NFR-REL-04); phân loại lỗi tạm thời / vĩnh viễn (13 §7.1). Circuit breaker: sau MVP (QĐ-133). **Fallback chỉ cho LLM**, giữa các mô hình Gemini, và chỉ sang mô hình có `unit_cost_usd` ≤ mô hình đã báo giá (QĐ-124, QĐ-125). Ảnh ghim provider theo dự án, TTS ghim theo giọng: provider lỗi thì job lỗi tạm thời, không đổi provider |
@@ -317,7 +338,7 @@ interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hi
 | ADR-22 | **Tiền lưu micro-USD (`bigint`)**, một ví mỗi người dùng, sổ cái phân loại `TRIAL_GRANT`/`TOPUP` | Số thực; nhiều bucket như credit | Giá theo chi phí thực có nhiều chữ số thập phân; không sai số làm tròn; Free/Đã nạp tiền suy từ `topup_total_micro` (QĐ-30, QĐ-38) |
 | ADR-05 | SSE + Redis Pub/Sub cho realtime | WebSocket; CRDT (Yjs) | Luồng chủ yếu server → client; cộng tác bất đồng bộ đủ cho FR-PRJ-11 |
 | ADR-06 | Khóa lạc quan `version` + `If-Match` | Khóa bi quan; CRDT | Khớp UC-02.10 |
-| ADR-07 | Outbox pattern (`outbox_events` + relay ở Scheduler) cho cả job lẫn sự kiện realtime | Enqueue/publish trực tiếp | Không mất job/sự kiện khi crash giữa commit và publish |
+| ADR-07 | Outbox pattern (`outbox_events` + relay ở Scheduler) cho cả job lẫn sự kiện realtime *(sau MVP, ADR-23; MVP enqueue sau commit + reconciler, TD-02)* | Enqueue/publish trực tiếp | Không mất job/sự kiện khi crash giữa commit và publish |
 | ADR-08 | Stripe Checkout ở **test mode** (sandbox) cho nạp tiền; Customer Portal sau MVP | Tự làm form thẻ; tiền mã hóa (USDT) | PCI-DSS SAQ-A; tài sản mã hóa không được dùng làm phương tiện thanh toán ở Việt Nam (QĐ-30) |
 | ADR-09 | Phiên bản hóa đầu ra AI | Ghi đè | Khôi phục được; lịch sử |
 | ADR-10 | Video dựng từ ảnh tĩnh trên trình chỉnh sửa timeline, render nội bộ | AI image-to-video | Đúng mục đích video đọc truyện; chi phí gần 0; tất định |
@@ -330,7 +351,7 @@ interface SttPort      { transcribe(req: { audio: MediaRef; language: string; hi
 | ADR-17 | Tìm kiếm thư viện âm thanh bằng Postgres FTS + GIN tags *(sau MVP)* | OpenSearch | Quy mô thư viện vừa phải; bớt một hệ thống phải vận hành |
 | ADR-18 | Tách **Media Processing Worker** khỏi Render Worker | Gộp chung | Tải lên cần phản hồi nhanh; render chiếm CPU lâu |
 | ADR-19 | Director dùng **tool proposal** cho thao tác tốn phí *(sau MVP)* | Thực thi ngay | Người dùng luôn xác nhận chi phí (UC-07.01b); có dấu vết |
-| ADR-23 | **Triển khai rút gọn cho MVP** (§4.1): một tiến trình worker + render riêng; không outbox (enqueue sau commit + reconciler); bỏ worker Python khi TTS có timestamp; IC-08 chỉ ở service; không RLS, không tracing phân tán | Triển khai đủ thiết kế từ đầu | Năng lực 36 tuần-người không đủ để vận hành 8 loại tiến trình; giữ port và ranh giới module nên nâng cấp không phải viết lại. Đổi lại: một job có thể bị đẩy trễ tới 1 phút khi API chết đúng sau commit |
+| ADR-23 | **Triển khai rút gọn cho MVP** (§4.1): một tiến trình worker + render riêng; không outbox (enqueue sau commit + reconciler); giữ Alignment Worker Python vì TTS tự host không trả timestamp tin cậy (QĐ-122), bỏ được khi TTS có timestamp đạt `EVAL-alignment`; IC-08 chỉ ở service; không RLS, không tracing phân tán | Triển khai đủ thiết kế từ đầu | Năng lực 36 tuần-người không đủ để vận hành 8 loại tiến trình; giữ port và ranh giới module nên nâng cấp không phải viết lại. Đổi lại: một job có thể bị đẩy trễ tới 1 phút khi API chết đúng sau commit |
 | ADR-24 | *(Đã bỏ, QĐ-140)* Đổi tốc độ từng clip thuyết minh bằng file audio dẫn xuất | — | Bỏ tính năng đổi tốc độ từng clip: tốc độ đọc đặt một lần cho cả dự án ở bước TTS, nên không cần file dẫn xuất, job `PROCESS_AUDIO_RATE`, trạng thái "đang xử lý tốc độ" và IC-17 |
 | ADR-25 | **Trần chi tiêu ngày bằng bộ đếm nguyên tử** trong bảng `daily_ai_budgets` (câu `UPDATE … WHERE spent + reserved + x ≤ cap`), cùng giao dịch với HOLD | (a) Đọc tổng `ai_usage_records` rồi so sánh; (b) bộ đếm Redis `INCRBY` | (a) Hai yêu cầu đồng thời cùng đọc tổng cũ rồi cùng qua kiểm tra → vượt trần (race condition); (b) không cùng giao dịch với HOLD, lỗi giữa chừng làm lệch bộ đếm. Một dòng nóng mỗi ngày là đủ cho quy mô closed beta (vài yêu cầu/giây) |
 | ADR-26 | **Mọi offset văn bản tính theo code unit UTF-16** trên văn bản NFC; độ dài do ứng dụng tính (`char_count`), không dùng `char_length()` của Postgres; worker Python đổi đơn vị qua hàm dùng chung (04 D-10) | Code point ở mọi nơi; byte UTF-8 | Phần lớn code là TypeScript, chỉ số chuỗi JS là UTF-16; trộn đơn vị làm lệch phủ kín và phụ đề khi văn bản có emoji / ký tự ngoài BMP. Đổi lại: phải đổi đơn vị ở biên Python và không dùng hàm chuỗi của Postgres để cắt |

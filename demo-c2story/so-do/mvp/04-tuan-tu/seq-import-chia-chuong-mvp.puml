@@ -24,8 +24,13 @@ participant "AI Gateway\n(ContextBuilder,\nProviderRouter, Adapter)" as GW $AI_G
 participant "Google Gemini\n(Flash)" as LLM $BEN_NGOAI
 
 == Nhập truyện (UC-02.02, UC-02.02a) hoặc tạo dự án trống (UC-02.03) ==
-Editor -> Web : Dán văn bản / tải .txt .md .docx; tiêu đề, style, khung hình
-Web -> IMP : POST /projects:import (multipart | JSON)
+Editor -> Web : Dán văn bản / tải .txt .md .docx
+Web -> IMP : POST /projects:import?dryRun=true (multipart | JSON)
+IMP -> NORM : UC-02.02a (như bên dưới); **không ghi DB**
+IMP --> Web : 200 {chars, paragraphs, sourceSha256} | 400 VALIDATION_ERROR
+Web -> Editor : bản xem trước (UC-02.02 bước 2)
+Editor -> Web : tiêu đề, style, khung hình (bước 3)
+Web -> IMP : POST /projects:import (cùng nội dung, không dryRun) (QĐ-151)
 IMP -> FREE : canCreateProject(user)
 FREE -> DB : wallets.topup_total = 0 và đã có 1 dự án?
 alt Free đã có 1 dự án
@@ -47,6 +52,12 @@ MS -> DB : INSERT source_texts(content, sha256, char_count),\nchapters(#1, order
 IMP -> DB : audit_logs; COMMIT (cùng giao dịch)
 IMP --> Web : 201 {projectId, sourceSha256}
 Web -> Web : mở Studio ?v=source
+opt Tạo dự án trống (UC-02.03)
+    Web -> IMP : POST /projects {title, styleId, aspectRatio}
+    IMP -> FREE : canCreateProject(user) (403 FREE_LIMIT_REACHED như trên)
+    IMP -> DB : BEGIN; projects, project_members(OWNER),\nchapters(#1 trống, version 1); audit_logs; COMMIT
+    IMP --> Web : 201 → mở Workspace (UC-03.02)
+end
 note right of IMP : UC-02.03: POST /projects tạo dự án trống\n(cùng FREE kiểm tra, không có source_texts)
 
 == Gợi ý chia chương bằng AI (UC-03.03) ==
@@ -70,7 +81,20 @@ H -> RT : job.updated
 RT --> Web : SSE job.updated
 Web -> Editor : đánh dấu điểm chia đề xuất trên văn bản
 
-== Tái cấu trúc nguyên tử (UC-03.04 chia, 03.05 gộp, 03.06 dời ranh giới,\n03.07 thêm / xóa / đổi tên, 03.08 sắp xếp, 03.09 nguyên tử) ==
+== Thêm / đổi tên / xóa chương (UC-03.07) ==
+alt Thêm
+    Web -> MS : POST /projects/{pid}/chapters {afterChapterId, title}
+    MS -> FREE : Free và tổng chương > 3? → 403 FREE_LIMIT_REACHED (BR-27)
+    MS -> DB : INSERT chapters (order_index sau chương đã chọn, version 1)
+else Đổi tên
+    Web -> MS : PATCH /projects/{pid}/chapters/{cid} {title} (If-Match)
+    MS -> DB : UPDATE chapters … WHERE version = :v (0 dòng → 409, tải lại, BR-05)
+else Xóa (Editor đã xác nhận hệ quả)
+    Web -> MS : DELETE /projects/{pid}/chapters/{cid}
+    MS -> DB : khóa chương? → 423; xóa chương cùng storyboard, tư liệu, clip timeline
+end
+MS -> RT : chapter.updated | chapters.restructured
+== Tái cấu trúc nguyên tử (UC-03.04 chia, 03.05 gộp, 03.06 dời ranh giới,\n03.08 sắp xếp, 03.09 nguyên tử) ==
 Editor -> Web : Chấp nhận gợi ý (bỏ chọn vài điểm) hoặc thao tác tay
 Web -> RS : POST /projects/{pid}/chapters:restructure\n{operations[{op, chapterId, ifMatch, …}], acknowledgeOutdatedMedia}\n(Idempotency-Key; 06 §4.1)
 RS -> DB : BEGIN; SELECT chapters … FOR UPDATE (theo thứ tự id)
@@ -99,7 +123,11 @@ end
 
 == Nhập lại văn bản (UC-03.01b) ==
 Editor -> Web : "Re-import" (xem cảnh báo hậu quả)
-Web -> IMP : PUT /projects/{pid}/source (If-Match projects.version)
+Web -> IMP : PUT /projects/{pid}/source?dryRun=true (file | text)
+IMP -> NORM : UC-02.02a; **không ghi DB**
+IMP --> Web : 200 {chars, paragraphs, sourceSha256} → bản xem trước (bước 3)
+Editor -> Web : xác nhận đã hiểu hậu quả (bước 4)
+Web -> IMP : PUT /projects/{pid}/source (cùng nội dung, If-Match projects.version) (QĐ-151)
 IMP -> NORM : UC-02.02a như trên
 IMP -> DB : BEGIN; chương nào đang bị khóa?
 alt có (1a)

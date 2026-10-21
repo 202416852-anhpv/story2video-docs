@@ -52,7 +52,7 @@
 
 ### 1.2 Phạm vi MVP và OpenAPI viết trước
 
-- **Endpoint thuộc MVP** là mọi dòng ở §2 **không** có nhãn *(sau MVP)* (ở dòng hoặc ở tiêu đề mục). Hiện có **80 / 119** dòng endpoint thuộc MVP; phần quản trị §2.9 trong MVP là lệnh CLI/seed, không có endpoint HTTP.
+- **Endpoint thuộc MVP** là mọi dòng ở §2 **không** có nhãn *(sau MVP)* (ở dòng hoặc ở tiêu đề mục). Hiện có **86 / 120** dòng endpoint thuộc MVP; phần quản trị §2.9 trong MVP là lệnh CLI/seed, không có endpoint HTTP.
 - **Viết trước (design-first):** với mỗi module, file `openapi/<module>.yaml` (OpenAPI 3.1) cho các endpoint MVP được viết và review **trước** khi code, trong sprint đầu của giai đoạn chứa module đó (M01 ở P0; M02–M05 ở P1–P2; M06, M09 ở P3). Schema request/response dùng chung các định nghĩa ở §1.1 (lỗi), [12 §3](12-dac-ta-ky-thuat-loi.md) (`timeline_snapshot`) và quy ước tiền (chuỗi thập phân USD).
 - **Kiểm trong CI:** spec sinh từ code (NestJS Swagger) được so với file viết tay; khác biệt không có trong file viết tay làm CI thất bại (`IT-openapi-contract`). Client Web App sinh kiểu TypeScript từ file viết tay.
 - Mỗi endpoint trong file OpenAPI liệt kê đủ mã lỗi có thể trả (theo bảng §1.1) và yêu cầu `Idempotency-Key` / `If-Match` nếu có.
@@ -84,7 +84,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 |---|---|---|---|---|
 | GET | `/projects?q=&status=IN_PROGRESS\|DONE` | U | | Danh sách dự án (owner + editor); `q` tìm theo tiêu đề (không phân biệt hoa thường, dấu); `status` suy ra từ trạng thái chương (FR-PRJ-01) |
 | POST | `/projects` | U | | Tạo dự án trống; Free đã có 1 dự án: `403 FREE_LIMIT_REACHED` |
-| POST | `/projects:import` | U | | Import (multipart hoặc JSON `{title, text, styleId, aspectRatio}`), luôn giữ nguyên văn; trả `sourceSha256`; giới hạn Free như trên |
+| POST | `/projects:import` | U | | Import (multipart hoặc JSON `{title, text, styleId, aspectRatio}`), luôn giữ nguyên văn; trả `sourceSha256`; giới hạn Free như trên. `?dryRun=true`: chỉ kiểm tra và chuẩn hóa (UC-02.02a), trả `{chars, paragraphs, sourceSha256}` cho bản xem trước, không ghi gì (QĐ-151) |
 | GET | `/projects/{pid}` | E | | Chi tiết + tóm tắt tiến độ (dùng cho Map) |
 | PATCH | `/projects/{pid}` | O | | Settings (If-Match) |
 | DELETE | `/projects/{pid}` | O | | Xóa mềm |
@@ -100,7 +100,7 @@ Cột **Quyền**: `P` = public, `U` = user đăng nhập, `E` = Editor của d�
 | Method | Path | Quyền | Job | Mô tả |
 |---|---|---|---|---|
 | GET | `/projects/{pid}/source` | E | | Văn bản gốc |
-| PUT | `/projects/{pid}/source` | E | | Re-import |
+| PUT | `/projects/{pid}/source` | E | | Re-import (If-Match). `?dryRun=true`: như `/projects:import`, chỉ trả bản xem trước (QĐ-151) |
 | POST | `/projects/{pid}/source:suggest-splits` | E | ✓ | AI gợi ý điểm chia |
 | GET | `/projects/{pid}/chapters` | E | | Danh sách (không kèm content) |
 | POST | `/projects/{pid}/chapters` | E | | Thêm chương `{afterChapterId?, title, content}` |

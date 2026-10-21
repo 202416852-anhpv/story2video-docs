@@ -14,7 +14,9 @@
 | **ADR (Architecture Decision Record)** | Bản ghi một quyết định kiến trúc: lựa chọn, phương án đã loại, lý do; mã `ADR-NN` (05 §9) |
 | **C4 model** | Cách mô tả kiến trúc theo 4 mức: Context → Container → Component → Code (05) |
 | **MoSCoW** | Mức ưu tiên yêu cầu: **M** (Must) bắt buộc trong MVP; **S** (Should) làm nếu kịp; **C** (Could) sau MVP |
-| **Tiền tố mã** | `FR` yêu cầu chức năng, `BR` quy tắc nghiệp vụ, `IC` ràng buộc dữ liệu, `WR` quy tắc ví (08 §4), `SYM` ký hiệu trình bày (08 §6), `IF` giao diện ngoài, `R` rủi ro, `BO` mục tiêu nghiệp vụ, `QĐ` quyết định |
+| **Tiền tố mã** | `FR` yêu cầu chức năng, `BR` quy tắc nghiệp vụ, `IC` ràng buộc dữ liệu, `WR` quy tắc ví (08 §4), `SYM` ký hiệu trình bày (08 §6), `IF` giao diện ngoài, `R` rủi ro, `BO` mục tiêu nghiệp vụ, `TD` nợ kỹ thuật (05 §4.2), `QĐ` quyết định, `ĐX-AI` đề xuất AI đã duyệt thành QĐ (13 §12) |
+| **Tiền tố nguyên tắc, giả định** | `AG` mục tiêu kiến trúc (05 §1), `AI-P` nguyên tắc tích hợp AI (13), `D` nguyên tắc thiết kế dữ liệu (04), `A` giả định và `C` ràng buộc (01), `BP` quy trình nghiệp vụ (01), `CR` nguyên tắc clean-room (README §3) |
+| **Mã kiểm thử** | `UT-`, `IT-`, `E2E-`, `PBT-` theo loại test (09 §4.13); `EVAL-` đánh giá chất lượng AI, `BENCH-` đo hiệu năng (09 §1.5); `SEG-`, `MAP-`, `SNP-T` bất biến và ca kiểm thử của tách câu, ánh xạ timestamp, `timeline_snapshot` (12) |
 | **Sổ quyết định (QĐ-xx)** | `quyet-dinh.md`; mọi thay đổi phạm vi/kế hoạch ghi ở đây trước, các tài liệu khác dẫn mã QĐ |
 | **Nguồn thông tin `[QS]` / `[SL]` / `[ĐX]`** | Quan sát được trên hệ thống tham chiếu / suy luận / đề xuất của BA |
 | **Truy vết** | Mục trong mỗi UC liệt kê FR, BR, IC, NFR, API, sơ đồ liên quan |
@@ -23,6 +25,7 @@
 | **Giai đoạn P0–P3 / Sau** | Bốn giai đoạn phát triển thuộc MVP (P0 nền tảng & PoC … P3 editor, xuất video, thanh toán); `Sau` = sau MVP (09 §1) |
 | **Mốc M0, M1, M2…** | Điểm kiểm tra kế hoạch (vd. M0 kết thúc P0 ở T4, M2 đo vận tốc ở T8) |
 | **T1…T24** | Tuần làm việc thứ n trong kế hoạch 24 tuần |
+| **Nợ kỹ thuật (TD-NN)** | Chỗ MVP cố ý làm đơn giản hơn thiết kế đầy đủ, kèm rủi ro và điều kiện phải trả; ghi ở sổ nợ kỹ thuật 05 §4.2 |
 | **PoC (Proof of Concept)** | Bản thử nhỏ để kiểm chứng tính khả thi kỹ thuật trước khi làm thật |
 | **Thứ tự cắt giảm (✂n)** | Thứ tự bỏ tính năng khi trễ tiến độ. Tầng 1: nạp tiền sandbox (thay bằng Admin cộng tiền) → Map → phụ đề preset + chuyển cảnh nâng cao → Relationships → Timeline truyện → từ điển phát âm (QĐ-05, QĐ-116); tầng 2 ✂7–✂10 và tầng 3 ở 09 §1.3 (QĐ-91) |
 | **PO (Product Owner)** | Người chịu trách nhiệm sản phẩm và ngân sách; đầu mối làm việc với Vbee |
@@ -54,7 +57,7 @@
 | **BFF (Backend-for-Frontend)** | Mẫu thiết kế giữ token SSO ở server; trình duyệt chỉ giữ cookie phiên |
 | **Cookie `HttpOnly; Secure; SameSite=Lax`** | Cookie phiên JavaScript không đọc được, chỉ gửi qua HTTPS, không gửi kèm request chéo trang (trừ điều hướng) |
 | **CSRF / Double-submit token** | Tấn công giả mạo request từ trang khác / cách chống: gửi cùng một token ở cả cookie và header, server so khớp |
-| **MFA (Multi-Factor Authentication)** | Xác thực nhiều yếu tố (mật khẩu + OTP…); thuộc SSO, ứng dụng không làm |
+| **MFA (Multi-Factor Authentication)** | Xác thực nhiều yếu tố (mật khẩu + OTP…); thuộc SSO, ứng dụng không làm. Khác với MFA trong ngữ cảnh căn timestamp (§6) |
 | **JIT provisioning** | Tự tạo hồ sơ cục bộ ở lần đăng nhập đầu tiên từ thông tin (claims) của SSO |
 | **Back-channel logout** | SSO gọi trực tiếp tới server ứng dụng để báo đăng xuất |
 | **Đồng ý xử lý dữ liệu (consent)** | Màn hình đồng ý ở lần đăng nhập đầu theo Nghị định 13/2023/NĐ-CP; lưu thời điểm và phiên bản (BR-31). Chưa đồng ý → `403 CONSENT_REQUIRED` |
@@ -67,12 +70,13 @@
 | Thuật ngữ | Định nghĩa |
 |---|---|
 | **Project (Dự án)** | Không gian làm việc chuyển thể một truyện dài, gồm bản thảo, chương, thế giới truyện, tư liệu và video |
+| **Map (Bản đồ quy trình)** | Sơ đồ 6 chặng của dự án (Nhập truyện → … → Xuất & tải), làm nổi bật chặng hiện tại theo `projects.workflow_step`; bấm để chuyển chặng (FR-PRJ-06, UC-02.09, ✂2) |
 | **Owner / Editor** | Vai trò trong dự án: chủ sở hữu (toàn quyền) / cộng tác viên (sửa nội dung, sinh nội dung). MVP chỉ có Owner |
 | **Source text (Văn bản gốc)** | Văn bản người dùng import, trước khi chia chương |
 | **Workspace** | Trình soạn thảo liền mạch hiển thị mọi chương trên một trang cuộn |
 | **Chapter (Chương)** | Phần văn bản liên tục; đơn vị để lập storyboard, sinh tư liệu và dựng video |
 | **Restructure** | Thao tác thay đổi cấu trúc chương (chia, gộp, dời ranh giới, sắp xếp) thực hiện nguyên tử |
-| **Archive** | Ảnh chụp chỉ đọc của toàn bộ bản thảo tại một thời điểm |
+| **Archive** *(sau MVP)* | Ảnh chụp chỉ đọc của toàn bộ bản thảo tại một thời điểm |
 | **Khóa chương** | Chương bị khóa sửa khi có job đang xử lý (`chapters.locked_by_job_id`); Reconciler mở khóa nếu job đã kết thúc |
 | **Soft delete / Xóa cứng** | Đánh dấu đã xóa, ẩn ngay nhưng còn dữ liệu (dự án giữ 30 ngày) / xóa hẳn dữ liệu và media |
 | **Khóa lạc quan (optimistic lock)** | Mỗi bản ghi có `version`; client gửi `If-Match` kèm phiên bản đã đọc, server trả `409` nếu đã có người sửa trước, không ghi đè ngầm (ADR-06, BR-05) |
@@ -91,10 +95,9 @@
 | **Style (Phong cách)** | Phong cách hình ảnh chung của dự án, áp cho mọi ảnh sinh ra; Art Direction và Visual Rules bổ sung lên trên |
 | **Art Direction** | Chỉ dẫn phong cách bổ sung lên style của dự án |
 | **Visual Rules** | Luật hình ảnh có điều kiện, áp toàn dự án hoặc theo chương |
-| **Chapter rules** | Chỉ dẫn cố định cho một chương, Director tuân theo khi viết brief |
+| **Chapter rules** *(sau MVP)* | Chỉ dẫn cố định cho một chương, Director tuân theo khi viết brief |
 | **Story timeline** | Dòng thời gian truyện (ngày, mùa) gán cho từng chương |
 | **Relationship graph** | Đồ thị quan hệ giữa các nhân vật và diễn biến quan hệ |
-| **Map** | Bản đồ địa điểm của thế giới truyện (✂2) |
 
 ## 5. Storyboard và sinh tư liệu
 
@@ -106,7 +109,7 @@
 | **Vạch ranh giới shot** | Vạch mảnh giữa các câu trong Workspace, cho biết chỗ chia shot; kéo để dời ranh giới |
 | **Illustration brief** | Mô tả có cấu trúc để sinh ảnh: Subject / Environment / Composition / Camera / Lighting / Mood / Details |
 | **Caption** | Mô tả ngắn 1–2 câu của shot, dùng trong storyboard (không dùng cho audio) |
-| **Re-direct** | Viết lại brief mọi shot của chương |
+| **Re-direct** *(sau MVP)* | Viết lại brief mọi shot của chương |
 | **Mật độ ảnh** | Số ảnh trên mỗi phút audio (mặc định 3 ảnh/phút, QĐ-112) |
 | **Sinh tư liệu** | Bước 4 của luồng: storyboard tự động, rồi sinh ảnh + thuyết minh nguyên văn cho từng shot |
 | **Media bin (Tư liệu dự án)** | Danh sách ảnh và audio thuyết minh theo chương/shot; đầu vào của trình chỉnh sửa |
@@ -133,6 +136,7 @@
 | **`NormalizationMap`** | Bảng ánh xạ vị trí giữa bản đọc và văn bản gốc, để đưa timestamp từ audio về đúng chữ trong chương (12 §2) |
 | **STT / ASR (Speech-to-Text)** | Nhận dạng giọng nói thành chữ; dùng để căn timestamp và đo WER |
 | **Aligner** | Thành phần làm forced alignment (WhisperX tự host, chạy ở Alignment Worker) |
+| **MFA (Montreal Forced Aligner)** | Công cụ forced alignment mã nguồn mở, phương án dự phòng khi WhisperX không đạt `EVAL-alignment` (QĐ-122) |
 | **WhisperX** | Công cụ mã nguồn mở dựa trên Whisper, nhận dạng giọng nói và trả timestamp từng từ |
 | **Forced alignment** | Căn timestamp từng từ giữa audio và văn bản đã biết |
 | **WER (Word Error Rate)** | Tỷ lệ lỗi từ giữa văn bản gốc và nội dung STT nghe được từ audio; dùng để chọn provider TTS ở P0 và kiểm chứng từng shot (sau MVP) |
@@ -189,7 +193,7 @@
 | **`ProviderRouter`** | Thành phần chọn provider/mô hình theo loại tác vụ, đặt timeout, phân loại lỗi |
 | **Fallback** | Chuyển sang mô hình dự phòng khi mô hình chính lỗi; chỉ áp cho LLM, giữa các mô hình Gemini không đắt hơn (QĐ-124, QĐ-125) |
 | **Lỗi tạm thời / vĩnh viễn** | Lỗi có thể hết khi thử lại (timeout, 5xx, 429) / lỗi thử lại vô ích (sai đầu vào, bị moderation chặn) (13 §7.1) |
-| **TTS Server** | Dịch vụ nội bộ chạy model TTS mã nguồn mở trên GPU của nhóm, dùng cho thuyết minh trong MVP (ADR-30); sau MVP thay bằng Vbee AIVoice |
+| **TTS Server** | Hệ thống ngoài do nhóm tự vận hành (QĐ-149), chạy model TTS mã nguồn mở trên GPU của nhóm, dùng cho thuyết minh trong MVP (ADR-30); sau MVP thay bằng Vbee AIVoice |
 | **GPU / VRAM** | Card đồ họa chạy model tự host / bộ nhớ của GPU, quyết định số job TTS chạy đồng thời |
 | **Golden set** | Bộ chương mẫu nhóm tự chuẩn bị (tác phẩm hết thời hạn bảo hộ, Project Gutenberg, chương tự viết) để chọn provider và chạy eval |
 | **Eval (`EVAL-*`)** | Bài đánh giá chất lượng AI có số đo và ngưỡng, chạy trên golden set ở P0 (vd. `EVAL-wer-golden`, `EVAL-consistency`, `EVAL-cost-per-minute`) |

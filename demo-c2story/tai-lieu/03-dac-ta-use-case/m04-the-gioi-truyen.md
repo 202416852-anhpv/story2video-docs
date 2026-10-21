@@ -96,7 +96,7 @@
 1. Editor chọn loại tài sản.
 2. Editor nhập tên (1–80 ký tự), bí danh (≤ 10), mô tả ngoại hình, facts bất biến.
 3. Editor chọn một trong ba cách có ảnh tham chiếu: sinh bằng AI (**UC-04.03**, include, tính phí); tải ảnh lên (**UC-04.04**, dùng nguyên bản); hoặc bỏ qua.
-4. Hệ thống lưu StoryAsset và hiển thị trong nhóm tương ứng.
+4. Hệ thống lưu StoryAsset và hiển thị trong nhóm tương ứng; nếu Editor đã chọn sinh hoặc tải ảnh ở bước 3, hệ thống thực hiện UC-04.03 / UC-04.04 cho tài sản vừa lưu.
 
 **Luồng thay thế / ngoại lệ**
 - **2a.** Tên trùng với tên hoặc bí danh của tài sản khác: cảnh báo vì sẽ gây khớp mơ hồ ở UC-05.06f; Editor có thể vẫn tạo.
@@ -179,7 +179,7 @@
 
 **Luồng thay thế / ngoại lệ**
 - **3a.** Editor hủy: không đổi gì.
-- **4a.** `409`: tài sản vừa được người khác sửa; tải lại và xác nhận lại (UC-02.10).
+- **4a.** `409`: tài sản vừa được sửa ở nơi khác; tải lại và xác nhận lại (BR-05); sau MVP xử lý theo UC-02.10.
 - ***a.** Về sau thêm lại tài sản cùng tên: UC-05.06f có thể tự khớp lại các tham chiếu "chưa liên kết".
 
 ### UC-04.02e Chỉnh sửa tài sản
@@ -210,7 +210,7 @@
 - **2d.** Editor muốn thay ảnh tham chiếu bằng ảnh tải lên: thực hiện UC-04.04 (extend); ảnh cũ vẫn xem được trong lịch sử `asset_images`.
 - **2e.** Editor tắt "use exact" của tài sản đang dùng ảnh nguyên bản: nút "Generate" hiện lại; ảnh hiện hành giữ nguyên cho tới khi Editor chủ động sinh (UC-04.03) [ĐX].
 - **2f.** Đổi loại tài sản (`kind`) không được hỗ trợ: Editor gỡ (UC-04.02d) rồi tạo mới (UC-04.02a) [ĐX].
-- **3a.** `409`: tài sản vừa được người khác sửa; xử lý theo UC-02.10.
+- **3a.** `409`: tài sản vừa được sửa ở nơi khác; tải lại (BR-05); sau MVP xử lý theo UC-02.10.
 - **4a.** Sau khi sửa mô tả, facts hoặc thành viên nhóm, hệ thống gợi ý "Regenerate" kèm giá thay vì tự sinh lại (UC-04.03); tài sản "use exact" không có gợi ý này (BR-14).
 - **4b.** Nhân vật đổi ngoại hình theo mạch truyện (vd. cắt tóc từ chương 6): không sửa facts của tài sản đang dùng cho các chương trước, vì sinh lại ảnh ở các chương đó sẽ ra ngoại hình mới. Editor tạo tài sản riêng cho từng giai đoạn (UC-04.02a, vd. "An (trưởng thành)") và gán shot bằng UC-05.06b; trùng tên hoặc bí danh xử lý như 2a. Sau MVP: giai đoạn ngoại hình (FR-WLD-13, QĐ-142).
 - ***a.** Tài sản thêm từ thư viện cá nhân: sửa chỉ đổi bản trong dự án, không đổi bản ở thư viện (FR-LIB-05).
@@ -233,13 +233,14 @@
 
 **Luồng chính**
 1. Editor bấm "Generate" (hiện giá ước tính).
-2. Hệ thống giữ tiền, tạo job `GENERATE_ASSET_IMAGE`.
+2. Hệ thống giữ tiền (UC-05.17), tạo job `GENERATE_ASSET_IMAGE`.
 3. Worker ghép prompt: style + Art Direction + Visual Rules + mô tả + facts; địa điểm sinh reference sheet nhiều góc nhìn.
-4. Image Provider trả ảnh; moderation đầu ra; lưu ảnh; trừ tiền.
+4. Image Provider trả ảnh (prompt và ảnh qua bộ lọc an toàn của Gemini (MVP không có kiểm duyệt riêng, QĐ-135)); lưu ảnh; trừ tiền.
 5. Giao diện hiển thị ảnh mới; phiên bản cũ vẫn xem được.
 
 **Luồng thay thế / ngoại lệ**
 - **1a.** Tài sản dùng ảnh nguyên bản (BR-14): nút bị ẩn.
+- **2a.** Không đủ số dư: `402 INSUFFICIENT_BALANCE`; chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED` (BR-29); không tạo job (UC-05.17).
 - **4a.** Lỗi hoặc vi phạm chính sách: hoàn tiền, gợi ý sửa mô tả.
 
 ### UC-04.03a Sinh lại tất cả (Regenerate all)
@@ -267,6 +268,7 @@
 **Luồng thay thế / ngoại lệ**
 - **2a.** Không có tài sản nào đủ điều kiện: báo "Không có tài sản cần sinh lại", không tạo job.
 - **4a.** Không đủ số dư: `402` kèm số còn thiếu; gợi ý nạp tiền (UC-09.03) hoặc sinh lại từng tài sản.
+- **4b.** Chạm trần chi tiêu ngày: `503 DAILY_BUDGET_EXCEEDED` (BR-29); không tạo job nào.
 - **5a.** Một số job lỗi sau retry: RELEASE tiền của chúng, liệt kê tài sản lỗi và cho phép thử lại riêng từng cái.
 - ***a.** Đổi style sau khi đã có ảnh **không** tự sinh lại; hệ thống chỉ gợi ý hành động này kèm giá.
 
@@ -288,7 +290,7 @@
 
 **Luồng chính**
 1. Editor tải ảnh lên.
-2. Hệ thống kiểm tra MIME, kích thước, quét malware, bỏ EXIF, moderation.
+2. Hệ thống kiểm tra MIME, kích thước, quét malware, bỏ EXIF (NFR-SEC-10).
 3. Hệ thống lưu ảnh làm tham chiếu, gắn cờ "use exact".
 
 **Luồng thay thế / ngoại lệ**
