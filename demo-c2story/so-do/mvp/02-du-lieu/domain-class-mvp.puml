@@ -9,19 +9,19 @@ skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 60
 
-package "Định danh & Thanh toán" {
-    class User {
+package "Định danh & Thanh toán" #EEF5FF {
+    class User #D6E8FF {
         email
         displayName
         locale
         consentedAt
         consentVersion
     }
-    class BetaInvite {
+    class BetaInvite #D6E8FF {
         email
         revokedAt
     }
-    class Wallet {
+    class Wallet #D6E8FF {
         availableMicro
         heldMicro
         topupTotalMicro
@@ -34,8 +34,8 @@ package "Định danh & Thanh toán" {
     }
 }
 
-package "Dự án" {
-    class Project {
+package "Dự án" #F3FFF0 {
+    class Project #DCF5D2 {
         title
         style
         imageModel
@@ -46,11 +46,11 @@ package "Dự án" {
         workflowStep : 1..6
         +importSource(text)
     }
-    class Membership {
+    class Membership #DCF5D2 {
         role : OWNER | EDITOR
     }
-    class SourceText
-    class Chapter {
+    class SourceText #DCF5D2
+    class Chapter #DCF5D2 {
         order
         title
         content
@@ -62,39 +62,39 @@ package "Dự án" {
     }
 }
 
-package "Thế giới truyện" {
-    abstract class StoryAsset {
+package "Thế giới truyện" #FFF8E8 {
+    abstract class StoryAsset #FFE9BF {
         name
         aliases
         appearance
         facts
         +generateReference()
     }
-    class Character
-    class Location
-    class Prop
-    class Group
-    class VisualRule {
+    class Character #FFE9BF
+    class Location #FFE9BF
+    class Prop #FFE9BF
+    class Group #FFE9BF
+    class VisualRule #FFE9BF {
         instruction
         scope
     }
-    class TimelineEvent {
+    class TimelineEvent #FFE9BF {
         dayLabel
         season
     }
-    class Relationship {
+    class Relationship #FFE9BF {
         label
         dynamic
     }
 }
 
-package "Sinh tư liệu" {
-    class StoryboardDraft {
+package "Sinh tư liệu" #F5EEFF {
+    class StoryboardDraft #E6D8FF {
         name
         isCurrent
         +resplit(more|fewer)
     }
-    class Shot {
+    class Shot #E6D8FF {
         sourceStart
         sourceEnd
         sourceHash
@@ -107,22 +107,22 @@ package "Sinh tư liệu" {
         +rewrite(note)
         +generateImage()
     }
-    class Illustration {
+    class Illustration #E6D8FF {
         version
         status
         +edit(prompt)
     }
-    class NarrationSettings {
+    class NarrationSettings #E6D8FF {
         voice
         language
         speed
         symbolRules
     }
-    class PronunciationEntry {
+    class PronunciationEntry #E6D8FF {
         written
         spoken
     }
-    class Narration {
+    class Narration #E6D8FF {
         sourceHash
         wordTimings
         status : DONE|FAILED|OUTDATED…
@@ -131,8 +131,8 @@ package "Sinh tư liệu" {
     }
 }
 
-package "Trình chỉnh sửa video" {
-    class Timeline {
+package "Trình chỉnh sửa video" #FFEFEF {
+    class Timeline #FFD6D6 {
         scope : CHAPTER (PROJECT: sau MVP)
         aspectRatio
         framing
@@ -142,13 +142,13 @@ package "Trình chỉnh sửa video" {
         +syncMedia()
         +readiness() : Report
     }
-    class Track {
+    class Track #FFD6D6 {
         kind : VIDEO|OVERLAY|SUBTITLE|NARRATION|MUSIC|SFX
         locked
         muted
         volume
     }
-    class TimelineItem {
+    class TimelineItem #FFD6D6 {
         kind : IMAGE|NARRATION|TITLE|TEXT|AUDIO
         startMs
         durationMs
@@ -157,11 +157,11 @@ package "Trình chỉnh sửa video" {
         volume
         duckingDb
     }
-    class AudioAsset {
+    class AudioAsset #FFD6D6 {
         kind : MUSIC|SFX
         license
     }
-    class Render {
+    class Render #FFD6D6 {
         scope : CHAPTER|PROJECT
         versionNo
         partNo
@@ -171,8 +171,8 @@ package "Trình chỉnh sửa video" {
     }
 }
 
-package "Tự động hóa" {
-    class Job {
+package "Tự động hóa" #EAF7F7 {
+    class Job #CDEDED {
         type
         status
         heldMicro
@@ -222,6 +222,7 @@ Shot -[hidden]right- Timeline
 legend right
   **Phụ thuộc không vẽ để đỡ rối**
   • Job giữ giá ước tính / trừ chi phí thực × 110% / hoàn phần dư trên Wallet
+  • Màu theo nhóm nghiệp vụ, cùng bảng màu với ERD (erd.puml)
   • Job sinh ra Illustration, Narration, Render
 endlegend
 @enduml

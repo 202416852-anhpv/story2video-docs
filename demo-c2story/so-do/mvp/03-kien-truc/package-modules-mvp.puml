@@ -5,8 +5,10 @@
 !theme plain
 skinparam defaultFontName "Segoe UI"
 skinparam packageStyle folder
-skinparam nodesep 50
-skinparam ranksep 70
+skinparam linetype ortho
+skinparam nodesep 170
+skinparam ranksep 150
+skinparam ArrowThickness 1.2
 skinparam ArrowColor #455A64
 skinparam package {
     BorderColor #546E7A
@@ -22,12 +24,8 @@ package "API Server + Worker (NestJS, src/)" as api {
         package "M02: dự án, import,\ncài đặt, Map" as projects
         package "M03: chương, tái cấu trúc,\ndời ranh giới shot" as manuscript
         package "M04: tài sản, Visual Rules,\ntimeline truyện, quan hệ" as world
-        package "media (M05: Sinh tư liệu)" as media {
-            package "storyboard, shot" as storyboard
-            package "ảnh shot" as illustration
-            package "thuyết minh,\ntừ điển phát âm" as narration
-        }
         package "M06: timeline, sync,\nkiểm tra, render" as editor
+        package "M05: Sinh tư liệu — storyboard, shot;\nảnh shot; thuyết minh, từ điển phát âm" as media
         package "M09: ví, sổ cái,\nnạp tiền, Free" as billing
         package "M10: seed, mời,\ntrần chi tiêu ngày" as admin
     }
@@ -45,37 +43,28 @@ package "API Server + Worker (NestJS, src/)" as api {
 package "@studio/timeline-rules:\nbộ luật BR-24 dùng chung" as timeline_rules #ECEFF1
 
 ' Web App dùng chung bộ luật BR-24 với server
-web ..> timeline_rules : <<import>>
-editor ..> timeline_rules : <<import>>
-web ..> api : HTTPS /api, SSE
+web "<<import>>" ..> timeline_rules
+editor "<<import>>" ..> timeline_rules
+web "HTTPS /api, SSE" ..> api
+
+' Bố cục: admin ở góc trái để đường admin → audit không chạy sát cụm manuscript / editor
 
 ' Phụ thuộc giữa module nghiệp vụ (chỉ qua service công khai)
-auth ..> billing : openWallet, grantTrial
-projects ..> manuscript : createFromSource,\nreplaceSource
-projects ..> billing : FreeLimitGuard
-manuscript ..> media : dời ranh giới shot
-manuscript ..> editor : MediaSync.onShotsChanged
-manuscript ..> billing : FreeLimitGuard
-media ..> manuscript
-media ..> world : tài sản, Visual Rules,\nquan hệ hiệu lực
-media ..> editor : createDraftTimeline,\nMediaSync.onShotsChanged
-editor ..> media : đọc shot, ảnh, thuyết minh
-editor ..> billing : FreeLimitGuard (render)
+auth "openWallet, grantTrial" .right.> billing
+projects "createFromSource,\nreplaceSource" ..> manuscript
+projects "FreeLimitGuard" ..> billing
+manuscript <..> "dời ranh giới shot /\nđọc văn bản chương" media
+manuscript "MediaSync.\nonShotsChanged" ..> editor
+manuscript "FreeLimitGuard" ..> billing
+media ..> "tài sản, Visual Rules,\nquan hệ hiệu lực" world
+media "createDraftTimeline, onShotsChanged /\nđọc shot, ảnh, thuyết minh" <.right.> editor
+editor "FreeLimitGuard (render)" ..> billing
 
-' Phụ thuộc vào platform
-manuscript ..> jobs
-world ..> jobs
-media ..> jobs
-editor ..> jobs
-projects ..> jobs : cancelAll
-billing ..> jobs : hiện thực WalletPort
-manuscript ..> ai_gateway : SentenceSegmenter,\nCoverageValidator
-world ..> ai_gateway
-media ..> ai_gateway
-admin ..> ai_gateway : kiểm tra kết nối provider
+' Phụ thuộc vào platform: module nghiệp vụ → jobs / ai_gateway ghi trong ghi chú (không vẽ mũi tên)
+billing "hiện thực WalletPort" ..> jobs
 admin ..> audit
-jobs ..> ai_gateway : PriceEstimator, UsageMeter
-jobs ..> realtime : job.updated
+jobs "PriceEstimator, UsageMeter" ..> ai_gateway
+jobs "job.updated" ..> realtime
 
 note bottom of platform
   **Quy tắc phụ thuộc** (05 §5)
@@ -86,6 +75,12 @@ note bottom of platform
     (đảo phụ thuộc, QĐ-144).
   • Mọi module dùng authz, idempotency, realtime,
     audit, storage (không vẽ mũi tên).
+  • Module nghiệp vụ → platform (không vẽ mũi tên):
+    jobs ← manuscript, world, media, editor (tạo job);
+           projects (cancelAll)
+    ai_gateway ← world, media (gọi AI);
+           manuscript (SentenceSegmenter, CoverageValidator);
+           admin (kiểm tra kết nối provider)
   • Chỉ manuscript được ghi văn bản truyện (NFR-INT-02).
   • Hai cặp hai chiều được phép: manuscript ↔ media,
     media ↔ editor (lint kiến trúc chỉ cho đúng hai cặp này);
