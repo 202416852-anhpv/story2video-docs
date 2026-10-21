@@ -8,13 +8,11 @@ rectangle "Thiết lập khung hình & Bố cục video" {
     usecase "Tùy chỉnh màu sắc phông nền" as UC_02
     usecase "Áp dụng hiệu ứng phông nền làm mờ" as UC_03
     usecase "Cấu hình chế độ hiển thị ảnh/video (Fit / Fill)" as UC_04
-    usecase "Bật / Tắt lưới căn chỉnh bố cục" as UC_05
 }
 
 User --> UC_01
 User --> UC_02
 User --> UC_03
 User --> UC_04
-User --> UC_05
 
 @enduml
