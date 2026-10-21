@@ -1,0 +1,87 @@
+@startuml Seq_AI_TtsTuHost_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
+autonumber
+title Tích hợp AI (MVP; 13 §4.4, §7.1, §8; 12 §2): một lần thử NARRATE_SEGMENT với TTS tự host và WhisperX trên máy GPU của nhóm\nBản đọc chữ thuần theo đoạn PAUSE, tốc độ đọc, căn timestamp, đổi offset sang UTF-16, đo giây GPU\nADR-26, ADR-30; QĐ-121..123, QĐ-126, QĐ-133, QĐ-140, QĐ-145; BR-18, BR-19, BR-21
+
+box "Worker (queue tts, concurrency theo VRAM)" $BOX_WORKER
+participant "NarrateSegmentHandler" as H $WORKER
+end box
+database PostgreSQL as DB $DU_LIEU
+participant "Object Storage\n(bucket private)" as S3 $DU_LIEU
+queue "Redis / BullMQ\n(queue align)" as Q $DU_LIEU
+box "AI Gateway (thư viện)" $BOX_AI_GATEWAY
+participant "SpeechNormalizer" as N $AI_GATEWAY
+participant "ProviderRouter" as PR $AI_GATEWAY
+participant "SelfHostedTtsAdapter\n(mock ở local / CI)" as TA $AI_GATEWAY
+participant "WhisperXAlignerAdapter" as AA $AI_GATEWAY
+participant "UsageMeter" as UM $AI_GATEWAY
+end box
+box "Máy GPU của nhóm (HTTP nội bộ qua WireGuard, không ra Internet)" $BOX_BEN_NGOAI
+participant "TTS Server\n(model mã nguồn mở)" as TTS $BEN_NGOAI
+participant "Alignment Worker\n(Python, WhisperX; MFA dự phòng)" as AL $BEN_NGOAI
+end box
+
+== 1. Hình thành bản đọc (tất định, không gọi mạng) ==
+H -> DB : chapters.content; shots.source_start, source_end, source_hash;\nnarration_settings (giọng, speed 0,8–1,3×); pronunciation_entries
+H -> H : text = content[start:end] (UTF-16, ADR-26)
+alt sha256(text) ≠ source_hash
+    H -> DB : narration OUTDATED; job FAILED; **không gọi TTS**
+end
+H -> N : normalize(text, symbol_rules, entries, settings)
+N -> N : SYM-01..05; số, ngày, đơn vị; ALIAS theo từ điển\n(PHONEME bỏ qua vì capabilities.phoneme = false)
+N -> N : kiểm tra ngược: bỏ thẻ, đảo alias → chỉ thiếu\nký hiệu đã bỏ theo quy tắc (BR-19)
+N --> H : NormalizedSpeech{reading R, segments giữa PAUSE,\nssml, map}, normalization_log (QĐ-145)
+alt kiểm tra ngược sai
+    H -> DB : narration FAILED; cảnh báo P1; **không gọi TTS**
+end
+
+== 2. Tổng hợp giọng trên TTS Server ==
+H -> PR : call(TTS, {speech, voice, language, speed}, ctx{jobId, attempt})
+PR -> PR : voices.provider_id → adapter; đọc ai_models.capabilities, unit\n(provider ghim theo giọng, không fallback, QĐ-124);\ntimeout ≥ 2× thời lượng dự kiến, tối thiểu 30 s (QĐ-126)
+PR -> TA : speak(request)
+TA -> TA : dùng speech.segments (chữ thuần giữa PAUSE);\nđoạn dài chia theo câu, ≤ capabilities.maxCharsPerCall
+loop mỗi đoạn
+    TA -> TTS : POST /synthesize {text chữ thuần, speaker, speed?}
+    alt thành công
+        TTS --> TA : wav + giây GPU đã dùng
+    else máy GPU tắt / hết VRAM / timeout / 5xx
+        TTS --> TA : lỗi
+        TA -> UM : record(SECONDS, giây đã dùng, succeeded = false)
+        TA --> H : ProviderError{TRANSIENT} → jobs RETRYING,\nBullMQ backoff 2 s / 8 s / 30 s (tối đa 3 lần)
+    end
+end
+TA -> TA : ghép các đoạn, chèn khoảng lặng đúng độ dài PAUSE
+opt capabilities.speedParam = false (QĐ-140)
+    TA -> TA : FFmpeg atempo = speed (giữ cao độ),\n**trước** khi căn timestamp
+end
+TA -> TA : mã hóa mp3; duration_ms
+TA -> UM : record(provider = TTS tự host, unit = SECONDS,\ngiây GPU, attempt, request_id, succeeded = true)
+UM -> DB : INSERT ai_usage_records
+TA --> H : audio (không có timestamp)
+H -> S3 : PUT narrations/{id}.mp3
+
+== 3. Căn timestamp bằng WhisperX (capabilities.timestampsTrusted = false → luôn căn; QĐ-122) ==
+H -> AA : align(audio, R, language)
+AA -> Q : job con VERIFY_NARRATION (held = 0, WR-05)
+AA -> AA : waitUntilFinished
+Q -> AL : nhận job (xử lý tuần tự, dùng chung GPU với TTS Server)
+AL -> S3 : đọc audio
+AL -> AL : forced alignment trên R
+AL --> Q : timings[{word, start_ms, end_ms, offset}] (offset theo code point)
+Q --> AA : kết quả
+AA -> AA : code point → code unit UTF-16\n(hàm dùng chung có test, MAP-10)
+AA -> UM : record(SECONDS, giây GPU của Alignment Worker)
+AA --> H : timings trên R
+
+== 4. Ánh xạ về văn bản chương và quyết toán ==
+H -> H : timings trên R → word_timings trên tọa độ chương\nqua NormalizationMap (12 §2.3); ALIAS / EXPAND nhận\nkhoảng thời gian của cả đoạn
+H -> DB : BEGIN; media_files; narrations(DONE, spoken_text = R, word_timings,\nduration_ms, source_hash); shots.current_narration_id;\n[job gốc] CAPTURE Σ giây GPU × đơn giá × 1,10 + RELEASE dư; COMMIT
+H -> H : publish narration.updated
+note over H, AL
+  Văn bản đọc chỉ đến từ chapters.content[source_start:source_end] (BR-21).
+  Bản đọc và audio không rời hạ tầng của nhóm (13 §9).
+  Chi phí theo giây GPU của TTS Server + Alignment Worker (QĐ-123).
+end note
+@enduml

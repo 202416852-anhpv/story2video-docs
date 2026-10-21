@@ -1,0 +1,79 @@
+@startuml Seq_AI_DanhGiaProvider_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
+autonumber
+title Tích hợp AI (13 §10, §11; 09 §1.5): thêm / chọn provider bằng số liệu đo\nGhi fixture từ phản hồi thật → mock adapter → chạy eval trên golden set → so ngưỡng → ghi QĐ\nAI-P6, AI-P9; ADR-21; QĐ-70, QĐ-110..118, QĐ-123; NFR-MNT-02, NFR-MNT-06
+
+actor "Kỹ sư AI" as ENG $NGUOI_DUNG
+actor "Người chấm\n(PO / BA, 2 người)" as JUD $NGUOI_DUNG
+database "Golden set\n(5–10 chương vi, Gutenberg en,\nnhãn tay)" as GS $DU_LIEU
+database "Fixture\n(trong repo)" as FX $DU_LIEU
+database PostgreSQL as DB $DU_LIEU
+box "Công cụ eval (chạy tay, không trong CI)" $BOX_WORKER
+participant "Eval Runner" as EV $WORKER
+participant "Bộ chấm tự động\n(WerScorer, so biên từ,\nrecall / precision)" as SC $WORKER
+end box
+box "AI Gateway (thư viện)" $BOX_AI_GATEWAY
+participant "PromptCompiler\n(cờ ablation, QĐ-117)" as PC $AI_GATEWAY
+participant "Adapter thật\n(provider ứng viên)" as AD $AI_GATEWAY
+participant "UsageMeter" as UM $AI_GATEWAY
+end box
+participant "Provider ứng viên\n(Gemini / TTS tự host /\nWhisperX)" as P $BEN_NGOAI
+
+== 1. Viết adapter và ghi fixture từ phản hồi thật ==
+ENG -> AD : viết adapter cho port (LlmPort / ImagePort / TtsPort / AlignerPort);\nđổi lỗi provider sang nhóm lỗi chung (13 §7.1)
+ENG -> AD : chạy kịch bản ghi (staging, key trả phí, QĐ-128)
+AD -> P : yêu cầu mẫu: thành công, timeout,\n429, 5xx, bị chặn nội dung, sai đầu vào
+P --> AD : phản hồi thật
+AD -> FX : lưu fixture (request → response / lỗi)
+ENG -> FX : viết mock adapter đọc fixture
+note right of FX
+  Local và CI chỉ dùng mock (AI-P6, ADR-21):
+  tất định, không tốn tiền. Fixture ghi từ
+  phản hồi thật, gồm cả lỗi, để tránh mock
+  "xanh giả"; đổi provider thì ghi lại.
+end note
+
+== 2. Khai báo cấu hình (seed) ==
+ENG -> DB : seed ai_providers(code, kind, enabled = false, priority, config_ref)\nai_models(code, unit_cost_usd); voices nếu là TTS
+note right of DB
+  TTS tự host: unit_cost_usd = giá GPU/giờ ÷ 3600
+  theo BENCH-tts (đơn vị SECONDS, QĐ-123)
+end note
+
+== 3. Chạy eval trên golden set ==
+ENG -> EV : run(kind, provider, prompt_version, ablation?)
+EV -> GS : đọc chương golden + nhãn tay
+loop mỗi mẫu trong golden set
+    EV -> PC : compile(input, ablation flags)
+    PC --> EV : prompt / bản đọc R
+    EV -> AD : gọi thật (timeout theo loại)
+    AD -> P : request
+    P --> AD : đầu ra | bị chặn | lỗi
+    AD -> UM : record(…, prompt_version, seed)
+    UM -> DB : ai_usage_records (tính vào ngân sách PoC $200)
+    AD --> EV : đầu ra
+end
+par chấm tự động
+    EV -> SC : TTS: WER theo âm tiết − WER nền (EVAL-wer-golden)\nAligner: sai lệch biên từ (EVAL-alignment)\nLLM: recall / precision nhân vật (EVAL-asset-extraction)\nChi phí: Σ ai_usage_records / phút video (EVAL-cost-per-minute)
+    SC --> EV : số liệu
+else chấm bằng người (ảnh)
+    EV -> JUD : ≥ 150 shot, rubric 4 thuộc tính\n(khuôn mặt, tóc, trang phục, tuổi / vóc dáng)
+    JUD --> EV : nhãn của 2 người chấm độc lập
+    EV -> EV : Cohen's κ ≥ 0,6? tỷ lệ sai + KTC 95%\n(EVAL-consistency); tỷ lệ bị chặn (EVAL-refusal-rate)
+end
+EV --> ENG : báo cáo so với ngưỡng 09 §1.5 và provider hiện tại
+
+== 4. Quyết định ==
+alt đạt ngưỡng và tốt hơn / rẻ hơn provider hiện tại
+    ENG -> DB : ai_providers.enabled = true, priority
+    ENG -> ENG : ghi QĐ vào quyet-dinh.md; cập nhật 05 §7.3, 13 §1.1
+else không provider nào đạt
+    ENG -> ENG : áp quy tắc dự phòng 09 §1.5 (act-ai-chon-provider)
+end
+note over ENG, P
+  Chạy lại eval hồi quy liên quan mỗi khi đổi prompt, mô hình,
+  provider, giọng hoặc quy tắc chuẩn hóa (NFR-MNT-06).
+end note
+@enduml

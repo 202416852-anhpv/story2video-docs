@@ -6,7 +6,8 @@ Nguồn duy nhất:
 
 Chạy trong demo-c2story/:  python3 so-do/tools/gen_mvp.py
 Kết quả: so-do/mvp/01-use-case/phan-ra/*-mvp.puml, so-do/mvp/02-du-lieu/erd-mvp.puml,
-so-do/mvp/02-du-lieu/domain-class-mvp.puml; sơ đồ đầy đủ tương ứng được tô xám (#DDDDDD) phần sau MVP.
+so-do/mvp/02-du-lieu/domain-class-mvp.puml, bản MVP của sơ đồ có đánh dấu '@sau-mvp / '@mvp
+(03-kien-truc, 04-tuan-tu, 05-hoat-dong) và mọi sơ đồ 07-tich-hop-ai trừ seq-ai-tts-vbee; sơ đồ đầy đủ tương ứng được tô xám (#DDDDDD) phần sau MVP.
 Các sơ đồ MVP khác (tổng quan, tuần tự, trạng thái...) viết tay trong so-do/mvp/.
 """
 import glob
@@ -138,14 +139,16 @@ def domain():
     print('domain-class-mvp.puml bỏ', len(POST_CLASSES), 'lớp sau MVP')
 
 
-def marked(folder):
-    """Sơ đồ có đánh dấu (tuần tự; gói, lớp thiết kế): dòng giữa '@sau-mvp và '@/sau-mvp chỉ ở bản đầy đủ; dòng "'@mvp …" chỉ ở bản MVP."""
+def marked(folder, all_files=False, skip_files=()):
+    """Sơ đồ có đánh dấu (tuần tự; gói, lớp thiết kế): dòng giữa '@sau-mvp và '@/sau-mvp chỉ ở bản đầy đủ; dòng "'@mvp …" chỉ ở bản MVP.
+    all_files: sinh bản MVP cho mọi sơ đồ trong thư mục, trừ `skip_files` (sơ đồ toàn bộ sau MVP)."""
     d = path('so-do', folder)
+    os.makedirs(path('so-do', 'mvp', folder), exist_ok=True)
     for name in sorted(os.listdir(d)):
-        if not name.endswith('.puml'):
+        if not name.endswith('.puml') or name in skip_files:
             continue
         src = open(os.path.join(d, name), encoding='utf-8').read()
-        if "'@sau-mvp" not in src and "'@mvp " not in src:
+        if not all_files and "'@sau-mvp" not in src and "'@mvp " not in src:
             continue
         out, skip = [], False
         for l in src.split('\n'):
@@ -158,6 +161,7 @@ def marked(folder):
             elif not skip:
                 out.append(l)
         mvp = re.sub(r'@startuml (\w+)', r"@startuml \1_MVP\n' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay", '\n'.join(out), count=1)
+        mvp = mvp.replace('!include ../', '!include ../../')
         mvp = mvp.replace('!include _style-', '!include ../../' + folder + '/_style-')
         open(path('so-do', 'mvp', folder, name.replace('.puml', '-mvp.puml')), 'w', encoding='utf-8').write(mvp)
         print(name, '→ bản MVP')
@@ -170,3 +174,4 @@ if __name__ == '__main__':
     marked('03-kien-truc')
     marked('04-tuan-tu')
     marked('05-hoat-dong')
+    marked('07-tich-hop-ai', all_files=True, skip_files={'seq-ai-tts-vbee.puml'})

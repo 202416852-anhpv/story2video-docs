@@ -34,13 +34,13 @@ Phần lớn sự nhất quán giữa các file dựa trên vài "nguồn" sau. 
 | `POST_CLASSES` trong `so-do/tools/gen_mvp.py`; dòng chứa `(sau MVP)` trong lớp | `so-do/mvp/02-du-lieu/domain-class-mvp.puml` |
 | `so-do/02-du-lieu/erd.puml` | `erd-1..6-*.puml` |
 
-File sinh tự động: `so-do/mvp/01-use-case/phan-ra/*-mvp.puml`, `so-do/mvp/02-du-lieu/*`, `so-do/mvp/04-tuan-tu/*-mvp.puml`, `so-do/mvp/03-kien-truc/{package-modules,class-*}-mvp.puml` và `so-do/mvp/05-hoat-dong/act-m*-mvp.puml` (từ bản đầy đủ có đánh dấu `'@sau-mvp` … `'@/sau-mvp` và `'@mvp `), `so-do/02-du-lieu/erd-[1-6]-*.puml`, `tai-lieu/11-product-backlog.md`; màu `#DDDDDD` trên sơ đồ đầy đủ cũng do `gen_mvp.py` đặt.
+File sinh tự động: `so-do/mvp/01-use-case/phan-ra/*-mvp.puml`, `so-do/mvp/02-du-lieu/*`, `so-do/mvp/04-tuan-tu/*-mvp.puml`, `so-do/mvp/03-kien-truc/{package-modules,class-*}-mvp.puml` và `so-do/mvp/05-hoat-dong/act-m*-mvp.puml`, `so-do/mvp/07-tich-hop-ai/*-mvp.puml` (từ bản đầy đủ có đánh dấu `'@sau-mvp` … `'@/sau-mvp` và `'@mvp `), `so-do/02-du-lieu/erd-[1-6]-*.puml`, `tai-lieu/11-product-backlog.md`; màu `#DDDDDD` trên sơ đồ đầy đủ cũng do `gen_mvp.py` đặt.
 
 Mục lục `00-muc-luc.md` §5 và RTM `09` §4 **không có script**: khi thêm, đổi tên, bỏ UC hoặc đổi giai đoạn thì cập nhật tay cả hai (kể cả bảng "Tổng hợp" và §4.12 Độ phủ). Mọi mã test dùng trong RTM phải có trong danh mục `09` §4.13 và ngược lại.
 
 Sơ đồ hoạt động theo nhóm `act-m*` `!include _style-hoat-dong.iuml` (làn màu, biến `$LOI`, `$TIEN`, `$GOI_AI`, `$XONG` cho hành động). Sơ đồ tuần tự `!include _style-tuan-tu.iuml` (màu theo tầng, chú giải); participant mới gắn biến màu tầng (`$API`, `$WORKER`, …) và đặt đúng cột theo thứ tự tầng ghi trong file đó. `gen_mvp.py` tự đổi đường dẫn include cho bản MVP.
 
-`so-do/07-tich-hop-ai/` gom sơ đồ góc nhìn tích hợp AI (tuần tự, hoạt động, trạng thái) theo `tai-lieu/13`; include style bằng `../04-tuan-tu/_style-tuan-tu.iuml` / `../05-hoat-dong/_style-hoat-dong.iuml`; không có đánh dấu MVP (dùng chung, riêng `seq-ai-tts-vbee` là sau MVP), `gen_mvp.py` không xử lý thư mục này.
+`so-do/07-tich-hop-ai/` gom sơ đồ góc nhìn tích hợp AI (tuần tự, hoạt động, trạng thái) theo `tai-lieu/13`; include style bằng `../04-tuan-tu/_style-tuan-tu.iuml` / `../05-hoat-dong/_style-hoat-dong.iuml`; `gen_mvp.py` sinh bản MVP cho **mọi** sơ đồ của thư mục này vào `so-do/mvp/07-tich-hop-ai/` (đánh dấu `'@sau-mvp` / `'@mvp ` nếu có, đổi đường dẫn include), trừ `seq-ai-tts-vbee` (toàn bộ sau MVP).
 
 Sơ đồ MVP **viết tay** (tổng quan/Studio use case, C4, deployment, quy trình, 2 trạng thái — danh mục ở `so-do/mvp/README.md`) phải sửa cùng lúc với bản đầy đủ cùng tên.
 

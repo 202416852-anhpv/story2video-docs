@@ -18,7 +18,10 @@ participant "PromptCompiler\n(cờ ablation, QĐ-117)" as PC $AI_GATEWAY
 participant "Adapter thật\n(provider ứng viên)" as AD $AI_GATEWAY
 participant "UsageMeter" as UM $AI_GATEWAY
 end box
+'@sau-mvp
 participant "Provider ứng viên\n(Gemini / TTS tự host /\nWhisperX / Vbee sau MVP)" as P $BEN_NGOAI
+'@/sau-mvp
+'@mvp participant "Provider ứng viên\n(Gemini / TTS tự host /\nWhisperX)" as P $BEN_NGOAI
 
 == 1. Viết adapter và ghi fixture từ phản hồi thật ==
 ENG -> AD : viết adapter cho port (LlmPort / ImagePort / TtsPort / AlignerPort);\nđổi lỗi provider sang nhóm lỗi chung (13 §7.1)

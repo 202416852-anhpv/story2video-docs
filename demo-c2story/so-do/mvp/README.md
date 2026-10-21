@@ -7,7 +7,7 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 | Loại | Cách làm |
 |---|---|
 | Use case phân rã, ERD, mô hình miền | **Sinh tự động**, không sửa tay. Sửa sơ đồ đầy đủ (hoặc dòng "Giai đoạn" của use case trong `tai-lieu/03-dac-ta-use-case/`, đánh dấu `*(sau MVP)*` của bảng trong `tai-lieu/04`), rồi chạy trong `demo-c2story/`: `python3 so-do/tools/gen_mvp.py && python3 so-do/tools/split_erd.py` |
-| Tuần tự (`04-tuan-tu/*-mvp`); gói, lớp thiết kế (`03-kien-truc/package-modules-mvp`, `class-*-mvp`); hoạt động theo nhóm (`05-hoat-dong/act-m*-mvp`) | **Sinh tự động** bởi `gen_mvp.py` từ bản đầy đủ: dòng giữa `'@sau-mvp` và `'@/sau-mvp` chỉ có ở bản đầy đủ; dòng bắt đầu bằng `'@mvp ` chỉ có ở bản MVP |
+| Tuần tự (`04-tuan-tu/*-mvp`); gói, lớp thiết kế (`03-kien-truc/package-modules-mvp`, `class-*-mvp`); hoạt động theo nhóm (`05-hoat-dong/act-m*-mvp`); tích hợp AI (`07-tich-hop-ai/*-mvp`) | **Sinh tự động** bởi `gen_mvp.py` từ bản đầy đủ: dòng giữa `'@sau-mvp` và `'@/sau-mvp` chỉ có ở bản đầy đủ; dòng bắt đầu bằng `'@mvp ` chỉ có ở bản MVP. Thư mục `07-tich-hop-ai/` sinh bản MVP cho mọi sơ đồ (kể cả sơ đồ không có đánh dấu), trừ `seq-ai-tts-vbee` |
 | Còn lại | Viết tay; sửa cùng lúc với bản đầy đủ tương ứng |
 
 ## Danh mục
@@ -21,10 +21,11 @@ Bộ sơ đồ chỉ gồm phần thuộc **MVP (P0–P3)**, dùng cho đồ án
 | `04-tuan-tu/` | 13 sơ đồ `seq-*-mvp` (sinh tự động): `vong-doi-job`, `dang-nhap-sso`, `quan-ly-du-an`, `import-chia-chuong`, `doi-ranh-gioi-shot`, `the-gioi-truyen`, `tai-san-phong-cach`, `storyboard-sinh-anh`, `sinh-tu-lieu`, `thuyet-minh-nguyen-van`, `chinh-sua-xuat-video`, `thanh-toan`, `quan-tri` | Không back-channel logout; chỉ nạp tiền (không gói); không kiểm chứng WER từng shot (thay bằng nghe & đánh dấu); không lịch sử timeline, chia video, thư viện âm thanh; không outbox, chapter rules, xử lý xung đột cộng tác (409 → tải lại); quản trị bằng seed/CLI |
 | `05-hoat-dong/` | `act-quy-trinh-project-mvp`; `act-m01..m09-*-mvp` (6 sơ đồ theo nhóm chức năng, sinh tự động) | Không Director, Archive; bước tham gia beta; bỏ bước và chú thích sau MVP (back-channel logout, WER, chia video thành phần, gói đăng ký…) |
 | `06-trang-thai/` | `state-narration-render-mvp`, `state-chapter-media-mvp` | Thuyết minh chỉ có `DONE`, không `VERIFIED` / `NEEDS_REVIEW` / `ACCEPTED` |
+| `07-tich-hop-ai/` | 8 sơ đồ `*-mvp` (sinh tự động): tuần tự `seq-ai-goi-llm`, `seq-ai-sinh-anh`, `seq-ai-tts-tu-host`, `seq-ai-danh-gia-provider`; hoạt động `act-ai-goi-provider`, `act-ai-chon-provider`; trạng thái `state-ai-loi-goi`, `state-ai-dau-ra` | Không có `seq-ai-tts-vbee` (TTS chỉ là model tự host); provider ứng viên không gồm Vbee. Phần còn lại giống bản đầy đủ |
 
 ## Sơ đồ dùng chung (MVP giống bản đầy đủ)
 
-`05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; bộ sơ đồ tích hợp AI (13) trong `07-tich-hop-ai/` trừ `seq-ai-tts-vbee` (MVP dùng `seq-ai-tts-tu-host`); `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
+`05-hoat-dong/act-giu-tru-tien`, `act-phu-kin-van-ban`; `06-trang-thai/state-job`; `03-kien-truc/c4-component-ai`; ERD theo nhóm `02-du-lieu/erd-1..6-*` (bảng sau MVP tô xám).
 
 ## Sơ đồ chỉ có ở bản đầy đủ (toàn bộ sau MVP)
 

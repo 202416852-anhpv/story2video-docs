@@ -1,0 +1,68 @@
+@startuml Seq_AI_SinhAnh_MVP
+' Sinh tự động bởi so-do/tools/gen_mvp.py - không sửa tay
+!theme plain
+!include ../../04-tuan-tu/_style-tuan-tu.iuml
+autonumber
+title Tích hợp AI (13 §4.3, §6.3, §7.2): một lần thử của job ảnh qua AI Gateway tới Google Gemini Image\nGhép prompt BR-08, ảnh tham chiếu giữ nhất quán nhân vật, ghim provider, bộ lọc an toàn, lưu ảnh private\nGENERATE_ASSET_IMAGE, GENERATE_SHOT_IMAGE, EDIT_IMAGE; BR-08, BR-14, BR-18; QĐ-120, QĐ-124, QĐ-126, QĐ-127
+
+box "Worker (queue image, concurrency 4)" $BOX_WORKER
+participant "ShotImageHandler\n/ AssetImageHandler" as H $WORKER
+end box
+database PostgreSQL as DB $DU_LIEU
+participant "Object Storage\n(bucket private)" as S3 $DU_LIEU
+box "AI Gateway (thư viện)" $BOX_AI_GATEWAY
+participant "PromptCompiler" as PC $AI_GATEWAY
+participant "ProviderRouter" as PR $AI_GATEWAY
+participant "GeminiImageAdapter\n(mock ở local / CI)" as AD $AI_GATEWAY
+participant "UsageMeter" as UM $AI_GATEWAY
+end box
+participant "Google Gemini Image" as G $BEN_NGOAI
+
+== 1. Ghép prompt và chọn ảnh tham chiếu (tất định) ==
+H -> DB : illustrations(PENDING, shot_version = shots.version)
+H -> PC : compileShotPrompt(shotId) | compileAssetPrompt(assetId)
+PC -> DB : style, art_direction, visual_rules (dự án → chương),\nbrief 7 trường, facts, appearance, timeline truyện
+PC -> PC : ghép theo BR-08: Style → Art Direction → Visual Rules dự án\n→ Visual Rules chương → brief + facts (chỉ dẫn sau ưu tiên hơn);\nfacts, appearance chèn nguyên văn; timeline → mùa, thời điểm
+PC -> DB : ảnh tham chiếu hiện hành: cast → location → item\n(ưu tiên nhân vật, cắt theo giới hạn số ảnh của provider, 05 §7.4)
+note right of PC
+  Ảnh UPLOAD "use exact" của người dùng
+  **không** bao giờ bị gửi đi để vẽ lại
+  khi sinh hàng loạt (BR-14).
+  Cờ ablation chỉ dùng cho eval (QĐ-117).
+end note
+PC --> H : prompt, references[], aspect (khung hình dự án),\nprompt_snapshot, prompt_version
+
+== 2. Gọi provider: ghim Gemini Image, không fallback (QĐ-124) ==
+H -> PR : call(IMAGE, {prompt, references, aspect, seed?}, ctx{jobId, attempt})
+PR -> PR : provider ghim theo dự án (đổi giữa chừng làm lệch\nphong cách, nhân vật trong chương); timeout 90 s (QĐ-126)
+PR -> AD : generate(request) | edit({image, instruction})
+AD -> S3 : tải ảnh tham chiếu (MediaRef → bytes)
+AD -> AD : đổi sang định dạng provider cần\n(inline data / file upload); kiểu SDK không lộ ra ngoài adapter
+AD -> G : HTTPS generateContent\n{văn bản prompt + ảnh tham chiếu, aspect ratio}
+alt thành công
+    G --> AD : ảnh (base64) + usage
+else bị chặn bởi bộ lọc an toàn
+    G --> AD : SAFETY / không có ảnh trong phản hồi
+    AD -> AD : ProviderError{CONTENT_POLICY, retryable = false}
+else 429 / 5xx / timeout
+    G --> AD : lỗi
+    AD -> AD : ProviderError{TRANSIENT, retryable = true}
+end
+AD -> UM : record(provider, model, IMAGES, 1, cost, latency,\nrequest_id, attempt, prompt_version, seed, succeeded)
+UM -> DB : INSERT ai_usage_records
+AD --> PR : MediaRef tạm | ProviderError
+PR --> H : kết quả | lỗi đã phân loại
+
+== 3. Lưu kết quả hoặc xử lý lỗi ==
+alt thành công
+    H -> H : kiểm MIME, kích thước, tỷ lệ khung hình
+    H -> S3 : PUT illustrations/{id}.png (private)
+    H -> DB : BEGIN; media_files; illustrations(DONE, edit_kind,\nprompt_snapshot, job_id); shots.current_illustration_id;\nCAPTURE min(cost × 1,10, held) + RELEASE dư; jobs SUCCEEDED; COMMIT
+    H -> H : publish illustration.ready (người xem qua presigned URL 15 phút)
+else CONTENT_POLICY (BR-18)
+    H -> DB : illustrations FAILED (CONTENT_POLICY); RELEASE toàn bộ;\njobs FAILED; **không** lưu đầu ra, **không** tự thử lại
+    H -> H : gợi ý người dùng sửa brief rồi sinh lại (QĐ-113);\nkhông bao giờ tự sửa văn bản truyện
+else lỗi tạm thời
+    H -> DB : jobs RETRYING (BullMQ backoff 2 s / 8 s / 30 s, tối đa 3 lần,\nvẫn Gemini Image); hết lượt → FAILED + RELEASE;\nchương NEEDS_ATTENTION, sinh lại phần lỗi (UC-05.07c)
+end
+@enduml
