@@ -2,7 +2,7 @@
 
 > Ghi các quyết định đã chốt của nhóm (ngày, nội dung, lý do). Không cần duyệt riêng; khi bất đồng, PO quyết định cuối (QĐ-50).
 > Nguồn: 4 vòng câu hỏi chốt phạm vi và kế hoạch ngày 2026-10-20 (file câu hỏi đã được xóa sau khi chốt; nội dung trả lời được ghi đầy đủ ở đây). Mã ở cột Nguồn: **A/B/C/D…** = vòng 1, **V2 / V3 / V4 + số câu** = vòng 2–4.
-> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16; mục 11 áp ở phiên bản 1.18; mục 12 áp ở phiên bản 1.22; mục 14 áp ở phiên bản 1.44.
+> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16; mục 11 áp ở phiên bản 1.18; mục 12 áp ở phiên bản 1.22; mục 14 áp ở phiên bản 1.44; mục 15 áp ở phiên bản 1.45 (thêm thư mục `../prototype/`, chưa sửa 09 và 11).
 
 ## 1. Bối cảnh, năng lực, lộ trình
 
@@ -190,3 +190,10 @@ PO trả lời các câu hỏi phát sinh khi rà nợ tài liệu (QĐ-146..148
 | Mã | Quyết định | Tài liệu |
 |---|---|---|
 | QĐ-152 | **Object storage ở local và test dùng RustFS** (S3-compatible, Apache-2.0) thay MinIO. Lý do: image community của MinIO đã ngừng phát hành (`minio/minio` không còn trên Docker Hub, `quay.io` đòi đăng nhập). Code chỉ gọi API S3 qua `@aws-sdk/client-s3` nên không đổi gì ở `platform/storage`; staging/production vẫn là S3 / R2. Integration test bật RustFS bằng `GenericContainer` của Testcontainers (không có module riêng). Ghim phiên bản image khi chốt bản ổn định | 05 §10; 07 NFR-MNT-08, NFR-MNT-09; 09 §1.2, §2.3; 10; `c4-context`, `c4-container`, `deployment-mvp` (kèm bản MVP) |
+
+## 15. Prototype tiến hóa cho mốc M1 (2026-10-23)
+
+| Mã | Quyết định | Tài liệu |
+|---|---|---|
+| QĐ-153 | **Mốc M1 "Khung chạy đầu-cuối" làm bằng prototype tiến hóa** (evolutionary prototyping), không làm bản thử rồi bỏ. Phạm vi 10 use case gộp từ 24 UC: nhập truyện (UC-02.02), thế giới truyện (UC-04.01..04.03, không gồm nhóm, ảnh tải lên, Art Direction, Visual Rules), sinh tư liệu (UC-05.01, 05.07, 05.09, 05.13), xuất và tải video (UC-06.01a, 06.16, 06.17). Ràng buộc: cấu trúc mã theo 05 §5; schema là tập con của 04, bảng đã tạo thì đủ cột; API là tập con của 06; job theo ADR-29 từ đầu; hợp đồng lõi theo 12 (`seg-1`, `NormalizationMap`, `timeline_snapshot` v2). Phần làm gọn chỉ được nằm sau port có trong thiết kế MVP và ghi trong **sổ stub** `PS-01..13`; CI kiểm sổ khớp mã. Lịch T1–T6, phần P0 còn lại (Keycloak, golden set, EVAL) vẫn làm song song để đạt M0 ở T4. 14 mã test mới (★) chỉ là đề xuất, chưa vào 09 §4.13 | `../prototype/`; 09 §1.2 (M1) |
+| QĐ-154 | **Adapter thay thế cho M1:** nếu TTS Server hoặc WhisperX chưa chạy kịp, M1 được demo bằng `GeminiTtsAdapter` (PS-08) và `ProportionalAlignerAdapter` (PS-07), ghi rõ trong báo cáo mốc. Không đổi QĐ-121, QĐ-122: MVP vẫn dùng TTS tự host và WhisperX; hai adapter này phải gỡ trước M4 (hết P2) | `../prototype/02-thiet-ke-ky-thuat.md` §9; QĐ-121, QĐ-122 |
