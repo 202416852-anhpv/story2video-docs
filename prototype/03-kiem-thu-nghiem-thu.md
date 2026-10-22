@@ -8,7 +8,7 @@
 
 | Mã | Tiêu chí | Cách kiểm | UC |
 |---|---|---|---|
-| AC-01 | Nhập văn bản mẫu tạo được dự án; `chapters.content` giống hệt file sau chuẩn hóa NFC và `\n` | `IT-PRJ-import`; so `source_texts.sha256` | PT-01 |
+| AC-01 | Nhập văn bản demo tạo được dự án; `chapters.content` giống hệt file sau chuẩn hóa NFC và `\n` | `IT-PRJ-import`; so `source_texts.sha256` | PT-01 |
 | AC-02 | Một lần "Sinh tư liệu" cho ra mọi shot có ảnh và thuyết minh `DONE`; chương `READY_TO_EDIT`; có timeline bản nháp | `E2E-generate-media-chapter` | PT-02 |
 | AC-03 | Các shot phủ kín 100%, nối lại đúng bằng chương | `PBT-coverage-validator`; `GET …/coverage` | PT-02a |
 | AC-04 | Một lần "Xuất video" cho ra render `READY`; MP4 mở được, có hình, tiếng, phụ đề | `ffprobe`: 1 luồng H.264 720p, 1 luồng AAC | PT-03 |
@@ -19,8 +19,8 @@
 | AC-09 | Tải được MP4, SRT, VTT, audio qua link ký | Bấm 4 nút tải | PT-04 |
 | AC-10 | Shot lỗi không làm hỏng phần đã xong; "Sinh lại phần lỗi" chỉ chạy lại phần lỗi | ★`IT-retry-failed-only` | PT-02 |
 | AC-11 | Văn bản tiếng Anh cũng chạy hết luồng | Lặp kịch bản §2 với ~1.000 ký tự tiếng Anh | Toàn bộ |
-| AC-12 | Phân tích tài sản trên văn bản mẫu đề xuất ít nhất **Lan**, **Bố** và một địa điểm; chỉ mục được chọn mới được tạo | `IT-analyze-assets`; kiểm `story_assets` | PT-05 |
-| AC-13 | **Nhất quán nhân vật:** mọi shot có Lan đính ảnh tham chiếu của Lan; người xem nhận ra cùng một người ở ≥ 80% số shot có Lan | `illustrations.prompt_snapshot.refs`; 2 người chấm độc lập (dạng thu nhỏ của `EVAL-consistency`) | PT-02a, 02b, 07 |
+| AC-12 | Phân tích tài sản trên văn bản demo đề xuất đủ các nhân vật có tên xuất hiện ≥ 2 lần và ít nhất một địa điểm lặp lại; chỉ mục được chọn mới được tạo | `IT-analyze-assets`; kiểm `story_assets` | PT-05 |
+| AC-13 | **Nhất quán nhân vật:** mọi shot có nhân vật chính (xuất hiện ở nhiều shot nhất) đính ảnh tham chiếu của nhân vật đó; người xem nhận ra cùng một người ở ≥ 80% số shot đó | `illustrations.prompt_snapshot.refs`; 2 người chấm độc lập (dạng thu nhỏ của `EVAL-consistency`) | PT-02a, 02b, 07 |
 | AC-14 | Tạo, sửa (`If-Match`), gỡ tài sản đúng giới hạn; gỡ không đổi ảnh shot | `IT-story-asset-crud`, ★`IT-asset-unlink-on-delete` | PT-06 |
 | AC-15 | Bỏ qua thế giới truyện vẫn ra video (cảnh báo không chặn) | Lặp kịch bản §2 bỏ bước 4–5 | PT-02 |
 
@@ -45,13 +45,13 @@ pnpm install && pnpm db:migrate && pnpm db:seed
 pnpm dev                                               # web, api, worker, render-worker
 ```
 
-**Đầu vào:** [`mau/truyen-mau.txt`](mau/truyen-mau.txt): khoảng 1.000 ký tự tiếng Việt, có tiêu đề phụ `#`, ký hiệu `*Bố*`, khung tin nhắn `[…]`, số `2023`, lời thoại, một dòng phân cách `---`.
+**Đầu vào:** văn bản demo do nhóm chọn, khoảng 1.000 ký tự tiếng Việt, phải có đủ: ≥ 2 nhân vật có tên xuất hiện nhiều lần, ≥ 1 địa điểm lặp lại, một tiêu đề phụ `# …`, một chỗ nhấn mạnh `*…*`, một khung tin nhắn `[…]`, một con số, lời thoại, một dòng phân cách `---`. Lưu văn bản cùng kết quả chấm vào báo cáo mốc M1.
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
 | 1 | Mở `http://localhost:3000` | Danh sách dự án (rỗng) và nút "Nhập truyện" |
-| 2 | Chọn file mẫu, tiêu đề "Cơn mưa đầu mùa", vi, 16:9, style `watercolor`; xem trước rồi bấm "Tạo dự án" | Xem trước ≈ 1.000 ký tự; trang dự án hiện toàn văn |
-| 3 | Mở "Thế giới truyện", bấm "Phân tích bằng AI" | Sau ≈ 10–30 giây: Lan, Bố, bà chủ quán; quán nước, cánh đồng, nhà; có thể có xe đạp, điện thoại |
+| 2 | Chọn file văn bản demo, nhập tiêu đề, chọn vi, 16:9, style `watercolor`; xem trước rồi bấm "Tạo dự án" | Xem trước ≈ 1.000 ký tự; trang dự án hiện toàn văn |
+| 3 | Mở "Thế giới truyện", bấm "Phân tích bằng AI" | Sau ≈ 10–30 giây: các nhân vật có tên, các địa điểm lặp lại; có thể có vài đạo cụ |
 | 4 | Bỏ chọn đạo cụ, "Thêm vào dự án" | Tài sản xuất hiện theo nhóm, chưa có ảnh |
 | 5 | "Sinh ảnh tham chiếu cho tất cả" | Mỗi tài sản lần lượt có ảnh theo style `watercolor` |
 | 6 | Mở "Shot", bấm "Sinh tư liệu" | Vài giây sau có 3–5 shot, mỗi shot hiện đoạn nguồn nguyên văn và tài sản đã gắn; ảnh, audio lần lượt `DONE` |
@@ -63,11 +63,11 @@ pnpm dev                                               # web, api, worker, rende
 
 | Đoạn văn bản | Nghe | Phụ đề |
 |---|---|---|
-| `# Cơn mưa đầu mùa` | "Cơn mưa đầu mùa" | `# Cơn mưa đầu mùa` |
-| `*Bố* [Về ăn cơm thôi con, mẹ nấu canh chua rồi.]` | "Bố Về ăn cơm thôi con, mẹ nấu canh chua rồi." | Nguyên văn kể cả `*` và `[ ]` |
-| `Từ năm 2023, …` | Số do TTS tự đọc (chưa có `EXPAND`) | `Từ năm 2023, …` |
+| Tiêu đề phụ `# …` | Chỉ phần chữ, không đọc `#` | Nguyên văn kể cả `#` |
+| `*…*`, `[…]` | Chỉ phần chữ, không đọc `*`, `[`, `]` | Nguyên văn kể cả ký hiệu |
+| Con số | Số do TTS tự đọc (chưa có `EXPAND`) | Nguyên văn |
 | `---` | Lặng ~0,5 s | Không có phụ đề |
-| Các shot có Lan | — | Ảnh giữ cùng ngoại hình Lan |
+| Các shot có nhân vật chính | — | Ảnh giữ cùng ngoại hình nhân vật đó |
 
 ## 3. Kiểm thử
 
@@ -94,7 +94,7 @@ Mức theo 09 §4.13: UT, PBT trong `packages/core`; IT chạy API + Postgres + 
 | `UT-snapshot-schema` | SNP-T01..T08 |
 | `IT-openapi-contract` | Spec sinh từ mã khớp `openapi/*.yaml` |
 | `E2E-generate-media-chapter` | Kịch bản §2 bước 6–7 (không có báo giá) |
-| `EVAL-asset-extraction` | Chạy một lần trên văn bản mẫu + 1 chương golden nếu đã có |
+| `EVAL-asset-extraction` | Chạy một lần trên văn bản demo + 1 chương golden nếu đã có |
 
 ### 3.2 Mã mới (★, đề xuất thêm vào 09 §4.13)
 

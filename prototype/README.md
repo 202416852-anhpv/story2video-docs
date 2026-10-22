@@ -34,7 +34,7 @@
 | **Đầu vào** | Văn bản truyện vi / en, dán hoặc tải `.txt` / `.md`, ≤ 20.000 ký tự (PS-11). Kèm tiêu đề, tỷ lệ khung hình, style |
 | **Đầu vào tùy chọn** | Nhân vật, địa điểm, đạo cụ: AI đề xuất rồi User duyệt, hoặc User tự nhập; mỗi tài sản có ảnh tham chiếu |
 | **Đầu ra** | Bản render `READY` gồm MP4 720p (H.264/AAC, phụ đề in sẵn), SRT, VTT, audio thuyết minh; tải qua link ký 15 phút |
-| **Ví dụ** | [`mau/truyen-mau.txt`](mau/truyen-mau.txt); kết quả mong đợi ở [03 §2](03-kiem-thu-nghiem-thu.md) |
+| **Văn bản demo** | Nhóm tự chọn theo yêu cầu ở [03 §2](03-kiem-thu-nghiem-thu.md), kèm kết quả mong đợi |
 
 ## 4. Use case được chọn
 
@@ -89,6 +89,5 @@ Luồng: PT-01 → PT-05..07 → PT-02 → PT-03 → PT-04. Mã PT-05..07 thêm 
 | [01-dac-ta-use-case.md](01-dac-ta-use-case.md) | Đặc tả 10 use case (endpoint, job, bảng theo MVP) |
 | [02-thiet-ke-ky-thuat.md](02-thiet-ke-ky-thuat.md) | Kiến trúc, cấu trúc repo, dữ liệu, API, job, thuật toán lõi, render, **sổ stub**, lộ trình tiến hóa |
 | [03-kiem-thu-nghiem-thu.md](03-kiem-thu-nghiem-thu.md) | Tiêu chí nghiệm thu (chức năng + tiến hóa), kịch bản demo, test theo mã của 09 §4.13, kế hoạch T1–T6 |
-| [mau/truyen-mau.txt](mau/truyen-mau.txt) | Văn bản đầu vào mẫu |
 
 > Quyết định dùng prototype này làm mốc M1 ghi ở **QĐ-153**, cho phép adapter thay thế ở M1 ghi ở **QĐ-154** ([`quyet-dinh.md`](../demo-c2story/quyet-dinh.md) §15).
