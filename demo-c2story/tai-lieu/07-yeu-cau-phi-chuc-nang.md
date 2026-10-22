@@ -93,12 +93,12 @@
 | Mã | Yêu cầu |
 |---|---|
 | NFR-MNT-01 | Test coverage ≥ 80% cho module `billing` và `authz` và package `@studio/timeline-rules`; ≥ 60% toàn hệ thống |
-| NFR-MNT-09 | Nền tảng kiểm thử theo 09 §2.3: integration test chạy trên Testcontainers (Postgres, Redis, MinIO), không mock DB; property-based test bằng fast-check; OpenAPI viết trước so trong CI |
+| NFR-MNT-09 | Nền tảng kiểm thử theo 09 §2.3: integration test chạy trên Testcontainers (Postgres, Redis, RustFS), không mock DB; property-based test bằng fast-check; OpenAPI viết trước so trong CI |
 | NFR-MNT-02 | Provider AI có adapter **mock** chạy offline cho dev và CI (không cần key). Provider thật chỉ gọi khi demo và trong test E2E hằng tuần (QĐ-40) |
 | NFR-MNT-03 | MVP: log có cấu trúc, correlation id = `jobId` xuyên API → queue → worker → provider; Sentry cho lỗi. Tracing OpenTelemetry sau MVP (ADR-23) |
 | NFR-MNT-04 | Dashboard: độ dài queue, thời gian job, tỷ lệ lỗi theo provider, chi phí AI theo giờ, chi tiêu so với trần ngày, tỷ lệ job bị trừ kịch số đã giữ, độ trễ outbox relay (sau MVP), số job treo bị reconciler xử lý |
 | NFR-MNT-07 | Luật khóa thuyết minh (BR-24) nằm trong một package dùng chung client/server (`@studio/timeline-rules`), có bộ test riêng chạy ở CI (ADR-16) |
-| NFR-MNT-08 | Môi trường local chạy được toàn bộ luồng 6 bước không cần mạng ngoài: Keycloak dev realm, AI mock, MinIO, Stripe CLI (sandbox) |
+| NFR-MNT-08 | Môi trường local chạy được toàn bộ luồng 6 bước không cần mạng ngoài: Keycloak dev realm, AI mock, RustFS (QĐ-152), Stripe CLI (sandbox) |
 | NFR-MNT-05 | Migration DB có phiên bản và có thể rollback; zero-downtime (expand/contract) |
 | NFR-MNT-06 | Prompt template quản lý bằng file có phiên bản; có bộ eval hồi quy khi đổi prompt hoặc mô hình (`EVAL-consistency`, `EVAL-refusal-rate`, `EVAL-asset-extraction`, `EVAL-wer-golden`, `EVAL-alignment`, `EVAL-segmenter-golden`). Golden set: 5–10 chương tác phẩm hết thời hạn bảo hộ (tiếng Việt), Project Gutenberg (tiếng Anh) và 1–2 chương nhóm tự viết có tên riêng, số, từ mượn (QĐ-70) |
 

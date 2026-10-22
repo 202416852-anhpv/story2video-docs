@@ -232,7 +232,7 @@
 | **BullMQ** | Thư viện hàng đợi job trên Redis cho Node.js; chỉ vận chuyển job, bảng `jobs` là nguồn sự thật |
 | **Redis / Pub/Sub** | Kho dữ liệu trong bộ nhớ, dùng cho queue và bộ đếm / cơ chế phát–nhận tin nhắn của Redis, dùng đẩy sự kiện SSE giữa các instance (ADR-05) |
 | **PostgreSQL** | Hệ quản trị cơ sở dữ liệu quan hệ chính của hệ thống |
-| **Object storage (S3-compatible) / MinIO** | Kho lưu file (ảnh, audio, video) theo bucket, tương thích API Amazon S3 / phần mềm object storage mã nguồn mở dùng ở local và test |
+| **Object storage (S3-compatible) / RustFS** | Kho lưu file (ảnh, audio, video) theo bucket, tương thích API Amazon S3 / phần mềm object storage mã nguồn mở dùng ở local và test, thay MinIO (QĐ-152) |
 | **Bucket private** | Bucket không truy cập công khai; chỉ xem qua presigned URL |
 | **Scheduler / Repeatable job** | Tiến trình chạy tác vụ định kỳ / job BullMQ tự lặp theo lịch (QĐ-137) |
 | **Heartbeat** | Tín hiệu định kỳ worker gửi để báo job còn đang chạy |
@@ -266,7 +266,7 @@
 | **CI/CD** | Tích hợp liên tục (tự chạy build và test mỗi lần đẩy code) / triển khai liên tục |
 | **UT / IT / E2E** | Unit test (một hàm, lớp) / integration test (nhiều thành phần với DB, Redis thật) / end-to-end test (toàn luồng qua giao diện) |
 | **PBT (Property-based test)** | Kiểm thử bằng cách sinh ngẫu nhiên rất nhiều đầu vào và kiểm một tính chất luôn đúng (vd. phủ kín); dùng thư viện fast-check |
-| **Vitest / Testcontainers** | Framework chạy test JavaScript/TypeScript / thư viện bật PostgreSQL, Redis, MinIO thật trong container cho integration test |
+| **Vitest / Testcontainers** | Framework chạy test JavaScript/TypeScript / thư viện bật PostgreSQL, Redis, RustFS thật trong container cho integration test |
 | **Contract test (`IT-openapi-contract`)** | Test so spec sinh từ code với file OpenAPI viết tay; khác nhau thì CI thất bại |
 | **UAT (User Acceptance Testing)** | Kiểm thử chấp nhận bởi người dùng thật; ở đồ án là closed beta |
 | **p95 / p99** | Phân vị 95 / 99: 95% / 99% request nhanh hơn giá trị này |

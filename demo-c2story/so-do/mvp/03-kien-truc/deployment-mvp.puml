@@ -9,7 +9,7 @@ actor "Người dùng beta\n(10–20, được mời)" as U
 actor "Nhóm phát triển" as Dev
 
 node "Máy cá nhân (local)" as local {
-    component "docker-compose:\npostgres, redis, minio,\nKeycloak dev realm, ClamAV,\nAI mock, Stripe CLI" as dc
+    component "docker-compose:\npostgres, redis, rustfs,\nKeycloak dev realm, ClamAV,\nAI mock, Stripe CLI" as dc
 }
 
 cloud "Máy ảo staging (GitHub Student Pack / Azure for Students)" as vm {
@@ -20,7 +20,7 @@ cloud "Máy ảo staging (GitHub Student Pack / Azure for Students)" as vm {
         component "Render worker\n(Remotion + FFmpeg)" as rw
         database "PostgreSQL" as pg
         database "Redis" as rd
-        storage "MinIO / S3" as s3
+        storage "RustFS / S3" as s3
         component "Keycloak" as kc
     }
 }

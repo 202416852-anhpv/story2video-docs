@@ -2,7 +2,7 @@
 
 > Ghi các quyết định đã chốt của nhóm (ngày, nội dung, lý do). Không cần duyệt riêng; khi bất đồng, PO quyết định cuối (QĐ-50).
 > Nguồn: 4 vòng câu hỏi chốt phạm vi và kế hoạch ngày 2026-10-20 (file câu hỏi đã được xóa sau khi chốt; nội dung trả lời được ghi đầy đủ ở đây). Mã ở cột Nguồn: **A/B/C/D…** = vòng 1, **V2 / V3 / V4 + số câu** = vòng 2–4.
-> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16; mục 11 áp ở phiên bản 1.18; mục 12 áp ở phiên bản 1.22.
+> Mọi quyết định dưới đây chốt ngày **2026-10-20** và đã được áp vào bộ tài liệu phiên bản 1.12; mục 7 áp ở phiên bản 1.13; mục 8 áp ở phiên bản 1.15; mục 9 áp ở phiên bản 1.16; mục 11 áp ở phiên bản 1.18; mục 12 áp ở phiên bản 1.22; mục 14 áp ở phiên bản 1.44.
 
 ## 1. Bối cảnh, năng lực, lộ trình
 
@@ -184,3 +184,9 @@ PO trả lời các câu hỏi phát sinh khi rà nợ tài liệu (QĐ-146..148
 | QĐ-149 | **Phân loại tác nhân hệ thống** (trả lời Q4 vòng 2): thành phần được gọi qua giao diện mạng, có hợp đồng riêng (port/adapter) và triển khai độc lập là **hệ thống ngoài**, kể cả khi nhóm tự vận hành: TTS Server, STT/Aligner (WhisperX) chạy trên máy GPU riêng, Vbee AIVoice, Keycloak. **Render Worker là thành phần bên trong** hệ thống (nhận job từ queue, dùng chung DB, storage, component Remotion với preview, ADR-13), không phải tác nhân; render chỉ mô tả ở sơ đồ tuần tự và C4 container | 03 `00-muc-luc` §2, UC-06.16, UC-06.16b; 05 §2; 10; 13 §1; `uc-m05b-sinh-anh-thuyet-minh`, `uc-m06-trinh-chinh-sua-video`, `c4-context`, `c4-context-mvp` |
 | QĐ-150 | **Đồng bộ timeline bằng lời gọi thẳng, không dùng sự kiện nội bộ.** Mọi chỗ làm đổi tư liệu (handler ảnh, thuyết minh; đặt bản nháp hiện hành; tách / gộp / xóa shot; khôi phục ảnh; dời ranh giới shot) gọi `editor.MediaSync.onShotsChanged(chapterId, shotIds)` sau khi commit. `MediaSync` so tư liệu hiện hành với timeline nên gọi lặp vẫn cho cùng kết quả; lần gọi bị lỡ được bù khi mở trình chỉnh sửa (UC-06.01 bước 4) và khi kiểm tra trước lúc xuất. Bỏ sự kiện `storyboard.current-changed`; trình duyệt vẫn nhận `shot.updated`, `timeline.updated` qua SSE. Lý do: sự kiện từ worker không tới được API bằng kênh trong tiến trình, Redis Pub/Sub không lưu lại, và dời ranh giới shot đã gọi thẳng | 05 §5.1; QĐ-144; UC-06.15; `package-modules`, `seq-chinh-sua-xuat-video`, `seq-storyboard-sinh-anh`, `seq-thuyet-minh-nguyen-van` |
 | QĐ-151 | **Xem trước khi import / nhập lại:** `POST /projects:import` và `PUT /projects/{pid}/source` nhận `?dryRun=true`: chạy UC-02.02a (kiểm tra, trích chữ, chuẩn hóa) và trả `{chars, paragraphs, sourceSha256}`, không ghi gì. Client gửi lại cùng nội dung để tạo / thay thật; server kiểm tra lại. Lý do: .docx chỉ trích được ở server; cùng quy ước `dryRun` với thao tác tốn phí (06 §2) | 06 §2.2, §2.3; UC-02.02, UC-03.01b; `seq-import-chia-chuong` |
+
+## 14. Hạ tầng local khi khởi tạo repo backend (2026-10-22)
+
+| Mã | Quyết định | Tài liệu |
+|---|---|---|
+| QĐ-152 | **Object storage ở local và test dùng RustFS** (S3-compatible, Apache-2.0) thay MinIO. Lý do: image community của MinIO đã ngừng phát hành (`minio/minio` không còn trên Docker Hub, `quay.io` đòi đăng nhập). Code chỉ gọi API S3 qua `@aws-sdk/client-s3` nên không đổi gì ở `platform/storage`; staging/production vẫn là S3 / R2. Integration test bật RustFS bằng `GenericContainer` của Testcontainers (không có module riêng). Ghim phiên bản image khi chốt bản ổn định | 05 §10; 07 NFR-MNT-08, NFR-MNT-09; 09 §1.2, §2.3; 10; `c4-context`, `c4-container`, `deployment-mvp` (kèm bản MVP) |

@@ -14,7 +14,7 @@ System_Ext(img, "Google Gemini Image", "Sinh và sửa ảnh có tham chiếu")
 System_Ext(tts, "TTS Server (tự host)", "Model TTS mã nguồn mở trên máy GPU của nhóm; giọng đọc nguyên văn")
 System_Ext(stt, "Aligner / STT (WhisperX tự host)", "Timestamp từng từ; cùng máy GPU với TTS Server")
 System_Ext(mail, "Email Service", "Cảnh báo trần chi tiêu cho Admin, thông báo xuất video")
-System_Ext(store, "Object Storage + CDN", "S3 / R2 / MinIO")
+System_Ext(store, "Object Storage + CDN", "S3 / R2 / RustFS")
 
 Rel(editor, studio, "Dùng", "HTTPS")
 Rel(admin, studio, "Quản trị", "CLI / seed")

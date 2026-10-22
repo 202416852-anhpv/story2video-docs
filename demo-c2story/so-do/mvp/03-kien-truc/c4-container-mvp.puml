@@ -17,7 +17,7 @@ System_Boundary(sys, "AI Story Studio") {
     Container(cli, "Admin CLI / seed", "Node.js", "pnpm seed (giá, provider, style, giọng, system_settings); pnpm admin:invites")
     ContainerDb(db, "PostgreSQL", "16", "Nghiệp vụ, ví + sổ cái, beta_invites, idempotency, audit")
     ContainerDb(redis, "Redis", "7", "Queue, pub/sub, rate limit, cache")
-    ContainerDb(s3, "Object Storage", "S3/R2/MinIO + CDN", "Ảnh, audio, video, nhạc & SFX tải lên")
+    ContainerDb(s3, "Object Storage", "S3/R2/RustFS + CDN", "Ảnh, audio, video, nhạc & SFX tải lên")
 }
 
 System_Ext(sso, "SSO", "Keycloak / SSO Vbee")

@@ -366,7 +366,7 @@ Sơ đồ: `../so-do/03-kien-truc/deployment.puml`.
 
 | Môi trường | Mục đích | Ghi chú |
 |---|---|---|
-| `local` | Phát triển | docker-compose trên máy cá nhân: postgres, redis, minio, **Keycloak dev realm**, ClamAV; provider AI ở chế độ **mock** (fixture); Stripe CLI cho webhook |
+| `local` | Phát triển | docker-compose trên máy cá nhân: postgres, redis, RustFS (S3-compatible, QĐ-152), **Keycloak dev realm**, ClamAV; provider AI ở chế độ **mock** (fixture); Stripe CLI cho webhook |
 | `staging` | Demo, E2E hằng tuần, **closed beta** | Một máy ảo dùng ưu đãi sinh viên (GitHub Student Developer Pack, Azure for Students, QĐ-41); Keycloak (hoặc SSO Vbee khi có); Gemini thật với trần $10/ngày; Stripe test mode. **Máy GPU** chạy TTS Server + Alignment Worker: thuê theo giờ (bật khi demo, E2E, beta) hoặc máy có GPU của thành viên, chốt ở P0 theo `BENCH-tts`; nối với máy staging qua mạng riêng (WireGuard) |
 | `production` *(sau MVP)* | Vận hành | Autoscale từng loại worker theo độ dài queue |
 
