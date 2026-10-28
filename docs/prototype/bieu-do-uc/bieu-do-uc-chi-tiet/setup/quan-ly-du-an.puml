@@ -5,7 +5,6 @@ actor "Người dùng" as User
 
 rectangle "Quản lý dự án" {
     usecase "Xem danh sách dự án" as UC_01
-    usecase "Tìm kiếm / lọc dự án" as UC_02
     usecase "Tải truyện lên" as UC_03
     usecase "Kiểm tra và chuẩn hóa kỹ thuật" as UC_03a
     usecase "Tạo dự án trống" as UC_04
@@ -20,7 +19,6 @@ User --> UC_04
 User --> UC_05
 User --> UC_06
 
-UC_01 <.. UC_02 : <<extend>>
 UC_03 ..> UC_03a : <<include>>
 UC_05 <|-- UC_07
 

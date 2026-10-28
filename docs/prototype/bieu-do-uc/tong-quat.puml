@@ -1,0 +1,36 @@
+@startuml tong-quat
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI" as AI_Service
+
+rectangle "Tính năng S2V" {
+    usecase "Quản lý dự án" as UC_01
+    usecase "Phân tích story assets" as UC_02
+    usecase "Quản lý story assets" as UC_03
+    usecase "Sinh ảnh tham chiếu cho story assets" as UC_04
+    usecase "Tạo và duyệt storyboard" as UC_05
+    usecase "Sinh ảnh minh họa cho shot" as UC_06
+    usecase "Sinh thuyết minh" as UC_07
+    usecase "Tạo video" as UC_08
+    usecase "Tải video" as UC_09
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06  
+User --> UC_07
+User --> UC_08
+User --> UC_09
+
+UC_02 --> AI_Service
+UC_04 --> AI_Service
+UC_05 --> AI_Service
+UC_06 --> AI_Service
+UC_07 --> AI_Service
+UC_08 --> AI_Service
+
+@enduml
