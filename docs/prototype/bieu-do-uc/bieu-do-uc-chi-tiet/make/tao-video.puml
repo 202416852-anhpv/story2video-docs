@@ -1,0 +1,22 @@
+@startuml tao-video
+left to right direction
+
+actor "Người dùng" as User
+actor "Hệ thống Render" as Render_Service
+
+rectangle "Tạo video" {
+    usecase "Tạo video" as UC_Main
+    usecase "Kiểm tra điều kiện sẵn sàng tạo video" as UC_Check
+    usecase "Render video (Ken Burns và Fade in/out)" as UC_Render
+    usecase "Cảnh báo nhân vật có thể không nhất quán" as UC_Warn
+}
+
+User --> UC_Main
+
+UC_Main ..> UC_Check : <<include>>
+UC_Main ..> UC_Render : <<include>>
+UC_Warn ..> UC_Main : <<extend>>
+
+UC_Render --> Render_Service
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml tao-va-duyet-storyboard
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI (LLM)" as AI_LLM
+
+rectangle "Tạo và duyệt storyboard" {
+    usecase "Tạo bản nháp storyboard" as UC_01
+    usecase "Tự động phân tích truyện và\nchia shot bằng AI" as UC_01a
+    usecase "Chỉnh sửa mô tả shot" as UC_02
+    usecase "Chỉnh sửa liên kết tài sản cho shot" as UC_03
+    usecase "Duyệt storyboard" as UC_04
+    usecase "Tạo lại storyboard" as UC_05
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+
+UC_01 ..> UC_01a : <<include>>
+UC_05 ..> UC_01a : <<include>>
+
+UC_01a --> AI_LLM
+
+@enduml

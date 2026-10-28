@@ -1,0 +1,29 @@
+@startuml sinh-anh-minh-hoa-cho-shot
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI (Sinh ảnh)" as AI_IMG
+
+rectangle "Sinh ảnh minh họa cho shot" {
+    usecase "Sinh ảnh minh họa cho từng shot" as UC_01
+    usecase "Sinh ảnh minh họa hàng loạt cho tất cả các shot" as UC_02
+    usecase "Chỉnh sửa prompt mô tả hoặc nhận xét ảnh" as UC_03
+    usecase "Sinh lại ảnh minh họa cho từng shot" as UC_04
+    usecase "Sinh lại ảnh minh họa cho các shot đã sửa" as UC_05
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+
+UC_01 --> AI_IMG
+UC_02 --> AI_IMG
+UC_04 --> AI_IMG
+UC_05 --> AI_IMG
+
+UC_04 ..> UC_03 : <<extend>>
+UC_05 ..> UC_03 : <<extend>>
+
+@enduml

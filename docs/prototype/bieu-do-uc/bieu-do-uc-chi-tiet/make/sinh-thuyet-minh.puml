@@ -1,0 +1,38 @@
+@startuml sinh-thuyet-minh
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI (TTS)" as AI_TTS
+
+rectangle "Sinh thuyết minh" {
+    usecase "Cấu hình giọng đọc và ngắt nghỉ" as UC_01
+    usecase "Cấu hình cho toàn bộ Storyboard" as UC_01a
+    usecase "Cấu hình cho từng đoạn" as UC_01b
+    
+    usecase "Sinh thuyết minh cho từng shot" as UC_02
+    usecase "Sinh thuyết minh hàng loạt cho Storyboard" as UC_03
+    
+    usecase "Nghe thử và đánh dấu lỗi thuyết minh" as UC_04
+    usecase "Sinh lại thuyết minh cho từng đoạn" as UC_05
+    usecase "Sinh lại thuyết minh cho các đoạn bị đánh dấu lỗi" as UC_06
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+
+UC_01 <|-- UC_01a
+UC_01 <|-- UC_01b
+
+UC_02 --> AI_TTS
+UC_03 --> AI_TTS
+UC_05 --> AI_TTS
+UC_06 --> AI_TTS
+
+UC_05 ..> UC_04 : <<extend>>
+UC_06 ..> UC_04 : <<extend>>
+
+@enduml
