@@ -6,31 +6,24 @@ actor "AI sinh ảnh" as AI_IMG
 actor "AI phân tích truyện" as AI_LLM
 
 rectangle "Quản lý nhân vật trong truyện" {
-    usecase "Tạo nhân vật" as UC_01
     usecase "Chỉnh sửa thông tin nhân vật" as UC_02
     usecase "Xem danh sách nhân vật" as UC_03
-    usecase "Xóa nhân vật" as UC_04
     usecase "Tìm kiếm nhân vật" as UC_05
     usecase "Thêm ảnh cho nhân vật" as UC_06
     usecase "Upload ảnh thủ công" as UC_07
     usecase "Sinh ảnh bằng AI" as UC_08
     usecase "Tự động sinh danh sách nhân vật" as UC_09
     usecase "Chỉnh sửa prompt khi sinh ảnh" as UC_10
-    usecase "Thêm giọng đọc mặc định cho nhân vật" as UC_11
 }
 
-User --> UC_01
 User --> UC_02
 User --> UC_03
-User --> UC_04
 User --> UC_09
-User --> UC_11
 UC_09 --> AI_IMG
 UC_09 --> AI_LLM
 UC_08 --> AI_IMG
 
 UC_03 <.. UC_05 : <<extend>>
-UC_01 <.. UC_06 : <<extend>>
 UC_02 <.. UC_06 : <<extend>>
 UC_02 <.. UC_10 : <<extend>>
 UC_06 <|-- UC_07
