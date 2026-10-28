@@ -8,9 +8,6 @@ rectangle "Xây dựng thế giới truyện" {
     usecase "Quản lý nhân vật trong truyện" as UC_01
     usecase "Quản lý vật phẩm trong truyện" as UC_02
     usecase "Quản lý địa điểm trong truyện" as UC_03
-    usecase "Quản lý phong cách nghệ thuật của truyện" as UC_04
-    usecase "Quản lý dòng thời gian của truyện" as UC_05
-    usecase "Quản lý mối quan hệ giữa các nhân vật" as UC_06
     usecase "Quản lý tài sản truyện" as UC_07
 }
 
@@ -19,14 +16,8 @@ UC_07 <|-- UC_01
 UC_07 <|-- UC_02
 UC_07 <|-- UC_03
 
-User --> UC_04
-User --> UC_05
-User --> UC_06
-
 UC_01 --> AI_Service
 UC_02 --> AI_Service
 UC_03 --> AI_Service
-UC_05 --> AI_Service
-UC_06 --> AI_Service
 
 @enduml
