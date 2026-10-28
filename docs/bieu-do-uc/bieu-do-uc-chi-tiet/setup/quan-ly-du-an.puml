@@ -19,9 +19,9 @@ User --> UC_03
 User --> UC_04
 User --> UC_05
 User --> UC_06
-User --> UC_07
 
 UC_01 <.. UC_02 : <<extend>>
 UC_03 ..> UC_03a : <<include>>
+UC_05 <|-- UC_07
 
 @enduml
