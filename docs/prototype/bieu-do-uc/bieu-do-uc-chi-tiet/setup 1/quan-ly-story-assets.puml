@@ -1,0 +1,21 @@
+@startuml quan-ly-story-assets
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle "Quản lý story assets" {
+    usecase "Xem thông tin story assets" as UC_01
+    usecase "Chỉnh sửa thông tin story assets" as UC_02
+    usecase "Xem thông tin nhân vật" as UC_01a
+    usecase "Xem thông tin vật phẩm" as UC_01b
+    usecase "Xem thông tin địa điểm" as UC_01c
+}
+
+User --> UC_01
+User --> UC_02
+
+UC_01 <|-- UC_01a
+UC_01 <|-- UC_01b
+UC_01 <|-- UC_01c
+
+@enduml

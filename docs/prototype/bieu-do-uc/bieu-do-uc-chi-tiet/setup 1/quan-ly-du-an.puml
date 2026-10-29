@@ -1,0 +1,25 @@
+@startuml quan-ly-du-an
+left to right direction
+
+actor "Người dùng" as User
+
+rectangle "Quản lý dự án" {
+    usecase "Xem danh sách dự án" as UC_01
+    usecase "Tải truyện lên" as UC_03
+    usecase "Kiểm tra và chuẩn hóa kỹ thuật" as UC_03a
+    usecase "Tạo dự án trống" as UC_04
+    usecase "Cài đặt dự án" as UC_05
+    usecase "Xóa dự án" as UC_06
+    usecase "Chọn phong cách nghệ thuật khi\nsinh ảnh cho dự án" as UC_07
+}
+
+User --> UC_01
+User --> UC_03
+User --> UC_04
+User --> UC_05
+User --> UC_06
+
+UC_03 ..> UC_03a : <<include>>
+UC_05 <|-- UC_07
+
+@enduml

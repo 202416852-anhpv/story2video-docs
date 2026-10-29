@@ -1,0 +1,28 @@
+@startuml sinh-anh-tham-chieu
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI (Sinh ảnh)" as AI_IMG
+
+rectangle "Sinh ảnh tham chiếu cho story assets" {
+    usecase "Sinh ảnh tham chiếu cho từng story asset" as UC_01
+    usecase "Sinh ảnh tham chiếu cho tất cả story assets" as UC_02
+    usecase "Tạo lại ảnh tham chiếu cho từng story asset" as UC_03
+    usecase "Tạo lại ảnh tham chiếu cho tất cả story assets" as UC_04
+    usecase "Hiển thị thông báo cần cập nhật shot" as UC_05
+}
+
+User --> UC_01
+User --> UC_02
+User --> UC_03
+User --> UC_04
+
+UC_01 --> AI_IMG
+UC_02 --> AI_IMG
+UC_03 --> AI_IMG
+UC_04 --> AI_IMG
+
+UC_05 ..> UC_03 : <<extend>>
+UC_05 ..> UC_04 : <<extend>>
+
+@enduml

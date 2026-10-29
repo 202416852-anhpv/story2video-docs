@@ -1,0 +1,24 @@
+@startuml phan-tich-story-assets
+left to right direction
+
+actor "Người dùng" as User
+actor "Dịch vụ AI (LLM)" as AI_LLM
+
+rectangle "Phân tích story assets" {
+    usecase "Phân tích story assets" as UC_Main
+    usecase "Tự động phân tích truyện và\nđề xuất story assets" as UC_01
+    usecase "Chỉnh sửa thông tin đề xuất story assets" as UC_02
+    usecase "Duyệt và thêm story assets vào dự án" as UC_03
+}
+
+User --> UC_Main
+User --> UC_02
+User --> UC_03
+
+UC_Main ..> UC_01 : <<include>>
+UC_02 ..> UC_Main : <<extend>>
+UC_Main ..> UC_03 : <<include>>
+
+UC_01 --> AI_LLM
+
+@enduml
